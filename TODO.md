@@ -1,205 +1,72 @@
 # VOL.STUDIO — iş listesi
 
-Repo geneli işlerin tek kaydıdır. Karar, kanıt ve kapsam
-[monorepo denetiminde](docs/monorepo-audit.md); UI alt görevleri
-[UI TODO](docs/ui/TODO.md), audio ayrıntıları
-[audio TODO](devtools/audio-synth/TODO.md) içindedir. Sahip görev burada
-tekrar kopyalanmaz. Açık iş `[ ]`; biten iş tek satırla `## Kapatılanlar`a
-taşınır. Eksik kapanış yeni görevdir.
+Repo geneli açık işlerin sahibidir. UI alt işleri [UI TODO](docs/ui/TODO.md),
+audio işleri [audio TODO](devtools/audio-synth/TODO.md) içindedir; aynı iş
+birden fazla listede checkbox olarak tutulmaz. Tasarım kararları ve teknik
+kanıt [monorepo denetimindedir](docs/monorepo-audit.md).
 
-Kullanıcı mimari, kök, belge ve gerekçeli silme/taşıma/birleştirme kararlarını
-yetkilendirdi. F01–F03 sonuçları rapor §18, F04 kaynak uygulaması ve açık native kabul rapor §19, F05–F06 kaynak
-uygulaması ve kalan işler rapor §20'dedir.
-**F01–F03 ve F05–F06 kaynak işleri kapalı; F04/F07–F10 açıktır.**
-2026-10-09'da B21–B30 kaynak kusurları ve regresyonları uygulandı.
-F04.6/F05.7/F06.5/F08.7/F10.9/F10.10 Kapatılanlar'a taşındı;
-UI bulguları kendi sahibinde kapalı, bütün aile matrisi açıktır.
-Faz numarası bağımsız işleri gereksiz seri bekletmez; gerçek ön koşul ve
-kaynak çakışması korunur. Cihaz bağlılığı kabul değildir.
-Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
+`[ ]` açık, `[x]` kanıtıyla kapanmış iştir. Kimlikler tekildir; eski kimlikler
+başka işe verilmez. Her açık madde yalnız kalan işi ve kısa bir **Kapanır**
+ölçütünü taşır. Kapsamdan çıkarılan iş tamamlandı olarak işaretlenmez.
+Görev doğrulaması ilgili davranışla sınırlıdır; repo kapılarının sözleşmesi
+[AGENTS.md](AGENTS.md) ve [kapı belgesindedir](docs/gates.md).
 
 ## Açık
 
-### F04 — Kalıcılık, async sahiplik ve native yaşam döngüsü
+### F04 — Kalıcılık ve native yaşam döngüsü
 
-Ön koşul: F02 doğrulama zemini; UI yeniden tasarımı beklenmez. VT3/SD8/D2
-servis borçları ilgili cihaz kabulüyle birlikte kalır.
+- [ ] **[P1] F04.4 — Steam callback ve kapanış kabulü.** Windows kayıt/kapanış regresyonları mevcut. Kalan: gerçek Steam popup/overlay ve metin callback yaşamı, SDK drop ve Deck SIGTERM zaman aşımı nedeni. **Kapanır:** kısa native turda son değer, callback temizliği ve kapanış sonucu kaydedilir; cihaz kabulünün sahibi F08.6'dır.
 
-- [ ] **[P1] F04.4 — Kapanış protokolü ve Steam callback sahibi.** Gerçek SDK guard/pump/drop ve ACK yarışı düzeltildi; Windows yerel turunda pencere kapatma isteği (WM_CLOSE) sonrası son değer ve temiz çıkış, yazım ortasında sert öldürme (5 tur, onaylanan her yazım kalıcı) kanıtlandı (`games/vol-test/scripts/native-store-tour.mjs`). Kapanır: fiziksel Steam popup/overlay ve text callback yaşamı + drop testi (Steam istemcisi ve cihaz gerekir, F08.6); timedOut kök nedeni/süre gerekçesi (Deck SIGTERM turu, F08.6).
+### F07 — CORE UI ve VOL.SHOWCASE
 
-### F07 — UI oyun arayüzü kimliği ve tek VOL.SHOWCASE
+Açık UI işlerinin tek sahibi [UI TODO](docs/ui/TODO.md)'dur. Katalog,
+erişilebilirlik ve kısa native kontroller orada izlenir; burada ikinci
+checkbox veya toplam tutulmaz.
 
-Ön koşul: F01/F02 ve ilgili F04 düzeltmesi. Bütün açık alt işin sahibi
-[UI TODO](docs/ui/TODO.md) (2026-10-07'de yeniden yazıldı: tema çifti, malzeme, ikon, imleç ve
-ses sıfırdan; kimlik önce, aileler sonra); ayrıntı burada tekrar checkbox'a çevrilmez.
-Windows geliştirme/ilk native referans önce; Linux/Deck kabulü F08'dir. **F07 kapanır:** UI-13.5.
+### F08 — Linux ve Steam Deck
 
-Aşağıdaki satırlar indekstir; kapanış checkbox'ı ve ölçütleri yalnız UI TODO'dadır.
+- [ ] **[P2] F08.2 — Paylaşılabilir cihaz kanıtı.** **Kapanır:** success/failed/timedOut ayrımı sanitizer roundtrip'te korunur; host/SLR4 doğru etiketlenir; schema/runId/stamp zinciri doğrulanır, gizli adres veya cihaz/kullanıcı kimliği dışarı çıkmaz.
+- [ ] **[P1] F08.3 — Host ve SLR4 görünür açılışı.** Açılış kanıtları mevcut; codec ve paket/runtime bağının kalan teknik kabulü ayrıştırılır. **Kapanır:** aynı ürün paketi için host ve gerçek SLR4 pencere/ekran görüntüsü ile OGG çözme/çıkış sonucu ayrı kaydedilir; ölçülmeyen çıktı NOT-RUN kalır.
+- [ ] **[P1] F08.4 — Windows'tan Deck devkit zinciri.** **Kapanır:** keşif/DNS/SSH/build/aktarım/launch/screenshot kısa uçtan uca turda doğrulanır; başarısız preflight görünürdür ve mevcut shell-kapalı SSH quoting korunur.
+- [ ] **[P1] F08.6 — Steam, kayıt ve uyku olayları.** **Kapanır:** overlay/QAM, fiziksel kol, Steam metni/haptik, tek uyku/uyanma ve terminate/SIGKILL senaryolarında son değer, saat/ses toparlanması ve kaynak temizliği kaydedilir; libmanette sorunu dump/tekrar veya karşıt kanıtla ayrılır. F04.4 aynı kabulü tekrar sahiplenmez.
 
-**Durum (2026-10-11): F07 AÇIK** — 16 UI görevi açık. İlk üç tam `signoff` WebKit'te düştü; ardından **aynı performans değişikliği öncesi çalışma ağacında üç ardışık tam PASS** alındı (48,4 / 47,0 / 48,1 dk; [rapor §25](docs/monorepo-audit.md)). Bu, açık UI/cihaz/insan kabullerini veya sonraki kod değişikliklerini onaylamaz. Gerçek kalan iş [UI TODO "Gerçek kalan iş"](docs/ui/TODO.md) tablosundadır.
+### F09 — Mevcut ürünün platform ve sunum işleri
 
-- **F07.1 — Dalga 0, zemin ve kanıt (tamam):** UI-06.1, UI-00.1–00.7; registry, iki motor, axe, ölçüm, boyut payı, browser probu.
-- **F07.2 — Dalga 1, kimlik:** UI-01.6–01.9 tema çifti/malzeme/ikon/imleç, UI-02.6–02.8 yeni ses, UI-07.2–07.3 i18n/font, UI-06.2–06.4 Windows native vitrin; paralel.
-- **F07.3 — Dalga 2, dikey dilim ve aileler:** UI-01.10 + UI-02.9 → UI-03 (Button) → UI-04/05/08/09/10 fan-out, UI-07.4, UI-11.1–11.2, UI-12.2–12.3.
-- **F07.4 — Dalga 3, platform ve tam kabul:** UI-11.3–11.4, UI-12.1, UI-12.4, UI-13; cihaz/insan kabulleri ayrı PASS/FAIL/NOT-RUN.
+- [ ] **[P1] F09.1 — Windows ürün kabulü.** **Kapanır:** paketli NSIS/WebView2 kurulum/açılış/kaldırma; DPI 125/150/200; klavye/kol/metin/clipboard, ekran kipi, ses, kayıt ve kapanış kısa işlevsel turda doğrulanır.
+- [ ] **[P1] F09.2 — Android ürün kabulünün kalanı.** Lenovo'nun güncel paketinde 18 çevrimdışı ve 16 ağ kontrolü geçti. **Kapanır:** güncel Samsung turu, fiziksel ≥600dp Android 16 yön davranışı ve gerçek bölünmüş ekran ölçülür; yoğunluk benzetimi fiziksel cihaz yerine sayılmaz.
+- [ ] **[P2] F09.5 — VOL.TEST görsel/ses değerlendirmesi.** Örümcek gölgeleri, Manta, çekirdek/duyarga, hasar/can izi, çevrimiçi HUD, batış ve Goliath yerleşimi teknik olarak doğrulandı. **Kapanır:** kullanıcı değerlendirmesi kaydedilir ve bu yapının Samsung görünür turu tamamlanır.
+- [ ] **[P2] F09.6 — Yetenek sesleri ve sunumu.** **Kapanır:** kalkan açılış/emilim/kapanış ve kuşatma kurulum sesleri audio-synth teknik kabulüyle yayımlanır; animasyon/kubbe değerlendirmesi ve kısa Samsung/Deck yetenek turu kaydedilir.
+- [ ] **[P2] F09.7 — Menü, arka plan ve geliştirici ayarları.** **Kapanır:** sağ şerit geçişi, araç alayının ritmi/yoğunluğu, okunurluk ve ayarlar Samsung/Lenovo/Deck'te kısa örneklerle değerlendirilir; menü ve en uzak yakınlaştırma kare ölçümü kendi kapsamıyla raporlanır.
+- [ ] **[P2] F09.8 — Sıçrayıcılar ve dünya katmanları.** **Kapanır:** Jackal/Panther/Rhino kontrolü ve oranları; yürüyüş/dönüş/sıçrama/iniş, bitki/kaya, göl/buz/batış ve ses sunumu kısa gerçek oyun turunda birim başına değerlendirilir; bot dengesi insan oyunuyla karşılaştırılır.
+- [ ] **[P2] F09.9 — Barracuda, Leviathan ve mech değerlendirmesi.** **Kapanır:** araç oranı, adım hissi, bacak/silah okunurluğu, telefon garajı ve botlarla ölçülmüş denge gerçek oyun turunda değerlendirilir.
+- [ ] **[P2] F09.10 — Yenilenen oyun seslerinin değerlendirmesi.** **Kapanır:** 49 oyun sesinin kullanıcı dinleme sonucu kaydedilir; kabul edilmeyen program düzeltilip teknik yayın kapısıyla yeniden yayımlanır.
 
-B24 çift kök olayı ve B25 geç restore UI-02.8/UI-13.2'de kaynak/regresyonla kapalı;
-B26 scoped mini harita teması ve B28 erişilebilir adın dil geçişi de kapalı.
-UI-07/UI-08'in bütün aile/platform işleri bundan türetilmez. Kaynaklı tekrar ve kapanış rapor §4'tedir;
-ayrı checkbox defteri açılmaz.
+### F10 — Güvenlik ve sınırlı bakım
 
-### F08 — Linux builder ve Deck kabulünü yeniden kur
+- [ ] **[P3] F10.2 — Majör bağımlılık geçişleri.** **Kapanır:** ESLint/stylelint/jsdom/Vitest/TypeScript geçişleri yayımlanmış destek matrisiyle tek tek ve ilgili paket doğrulamasıyla uygulanır; ilgisiz toplu yükseltme yapılmaz.
+- [ ] **[P3] F10.3 — Sıkı indeks ve ölçüm doğruluğu.** **Kapanır:** CORE noUncheckedIndexedAccess varsayımları daraltılır, scaling ortak şema kullanır; A/A gürültüsü, desteklenmeyen iz ve retry ayrımı negatif fixture'larla doğrulanır, ölçülen kapsam korunur.
+- [ ] **[P3] F10.4 — Haptik scheduler kararı.** **Kapanır:** mevcut driver/scheduler gecikme, eşzamanlılık ve iptal örnekleriyle ölçülür; worker gerekiyorsa tek sahipli geçiş regresyonla uygulanır, gerekmiyorsa ölçümle mevcut mimari korunur.
+- [ ] **[P3] F10.5 — Yeni donanım profilleri.** **Kapanır:** OLED Deck/Steam Machine erişilebilir olduğunda ayrı kısa frame/runtime profili alınır; başka cihazın sonucu taşınmaz.
+- [ ] **F10.6 — Dal bakımı.** **Kapanır:** merge hedefleri belirlenir, eski yerel/uzak dalların erişilebilir işi korunur; Git bakımı kayıp commit/çalışma olmadan ayrı işlemde tamamlanır.
+- [ ] **[P3] F10.12 — Tauri minör geçişi.** Ön koşul: F09.1/F09.2 native temel çizgisi. **Kapanır:** planlanan Tauri geçişinde Cargo/pnpm sürüm paritesi ve Rust kapısı korunur; Windows/Android/Linux kısa native karşılaştırması yapılır, çözülen advisory kayıtları kaldırılır; toplu cargo update yapılmaz.
 
-Ön koşul: F02/F04/F06'nın ilgili teknik teslimi. Genel controller/Steam/
-kalıcılık mekanizmaları silinmez; frozen lifecycle ile askıya alma taklit edilmez.
+### F11 — Testlerin sağlamlığı
 
-- [ ] **[P1] F08.1 — Linux üretim profili ve fail-closed ELF.** Windows'tan ayrı bağımlılık ağacı/builder; AppDir/steamrt4/GStreamer. B08 `readelf` yok/başarısız, okunamayan ELF, ELF içermeyen paket ve geçersiz GLIBC sınırı artık `glibc-cap.mjs` ile reddedilir (`glibcCap.test.mjs` negatifleri); GLIBC/ABI ayrıştırma ve sınır içi fixture da geçer. Kapanır: ayrı Linux builder'da üretilmiş gerçek steamrt4 AppDir'in ELF/GLIBC taraması ve GStreamer/OGG teknik probu; Linux/Deck görünür açılışı F08.3 sahibindedir.
-- [ ] **[P2] F08.2 — Paylaşılabilir doğru kanıt.** B09 outcome/requestId/normalize reason ve B10 runtime ortamı korunur. Kapanır: sanitizer roundtrip success/failed/timedOut ayrımı; host/SLR4 yanlış etiketlenmez; gizli adres/seri/kullanıcı yok; schema/runId/stamp zinciri.
-- [ ] **[P1] F08.3 — Host ve SLR4 gerçek açılış.** VOL.TEST Linux görünür pencere/screenshot, ayrı SLR4 kısayolu/OGG. Kapanır: VT2/VT5 ve eski D1-codec gerçek paket/commit/runtime kaydı; host kabulü SLR4 yerine sayılmaz.
-- [ ] **[P1] F08.4 — Windows'tan devkit uçtan uca.** Keşif/DNS/SSH/transfer/builder açık preflight. Kapanır: eski D1-deck zinciri gerçek build→yükleme→launch→ölçüm→screenshot; mevcut shell-kapalı SSH quoting korunur.
-- [ ] **[P1] F08.5 — Gamescope ve ürün yük bütçesi.** Sonda kontrol grubu, UI laboratuvarı ve VOL.TEST ayrı. Kapanır: host/SLR4 1280×800 bütün yüklerde ≥59 FPS/p95≤18 ms; sunum/CPU kök nedeni ve eşli önce/sonra profil; sıcak tek pencere tüm kabul sayılmaz.
-- [ ] **[P1] F08.6 — Gerçek Steam/kayıt/uyku ve açık cihaz işleri.** Overlay/QAM/kol/metin/haptik, SD3/SD8/D0/VT-H2 ve terminate/SIGKILL. Kapanır: gerçek olay/son değer/saat/ses/uyanış; libmanette nedeni dump/tekrar veya karşıt kanıtla ayrılır; yapılmayan his/elle işlem açık kalır.
+- [ ] **[P3] F11.9 — Sabit beklemelerin daraltılması.** **Kapanır:** mevcut sabit beklemeler dosya bazında olay/koşula çevrilir veya gerçek zaman ölçümü gerekçesiyle bırakılır; fixedWaitBudget gerçekleşen azalışa indirilir, timeout artırılarak hata gizlenmez.
 
-### F09 — Windows/Android ürün kabulü ve yeni oyun
+### F13 — Network ve mevcut oyun tüketicisi
 
-Ön koşul: F04/F06 ve gerekli UI teknik yüzeyi. Bağlı tablet/Deck hazır
-erişim sağlar; kurulu uygulamanın mevcut commit olması ayrıca doğrulanır.
+- [ ] **[P1] F13.3 — Üretim ağ sınırları.** Protokol/istemci/sunucu, origin/IP/katılım/oda sınırları ve yerel native bağlantı kanıtı mevcut. **Kapanır:** hesap kimliği/auth sağlayıcısı, internet WSS ve uzak endpoint CSP/taşıma, süreç keşfi, savaş sisi ve hedeflere ait paketli bağlantı matrisi ayrı teknik kabulle tamamlanır.
+- [ ] **[P1] F13.6 — Bozuk ağ ve oturum senaryoları.** **Kapanır:** düzeltme/snap sayaçları, gerçek paket kaybı ve sınırlı bozuk-payload korpusu; maç sonu/doğuş/çift kopuş/sunucu boşaltma/arka plan-ağ değişimi ayrı senaryolarda sınanır; Node/Chromium/WebKit/Android manevra/çarpışma/ateş öngörüsü deterministiktir. Gecikme telafisi yalnız ölçüm gerektirirse eklenir.
+- [ ] **[P1] F13.7 — Ajan laboratuvarı ve bot sürücüsü.** AgentLab ve bütçeli temel sürücü mevcut. **Kapanır:** betikli girdi senaryoları ve senaryo başına kayıt/hüküm eklenir; istemci başına bayt ve uzlaştırma sayaçları sunucu metrics yüzeyinde yayımlanır.
 
-- [ ] **[P1] F09.1 — Windows gerçek ürün.** NSIS/WebView2 kurulum/açılış/kaldırma, DPI125/150/200, klavye/kol/metin/clipboard/ekran kipi/ses/kayıt/kapanış. Kapanır: installer ve paketli native profil; B01/K4/store sonuçları gerçek örnekte; konfigürasyon testi fiziksel kabul yerine sayılmaz.
-- [ ] **[P1] F09.2 — Android görünür/native profil (KISMİ; açık).** Windows toolchain'den APK, tablet Activity/ActionMode/insets/yön/arka plan dönüşü/geri/titreşim. 2026-10-11 (ikinci tur): `bccd7ac4` temiz ağacından `aarch64` debug APK üretildi (SHA-256 `dec0e1af…`); iki cihaza kuruldu ve cihazdan çekilen `base.apk`ın SHA-256'sı derlenen artifact ile **bayt bayt aynı** (sürüm commit'e bağlandı). `scripts/android/device-tour.mjs` ile kilit aşılmadan adb girdisi ve WebView kanalıyla tur koşuldu (`docs/android.md` → Cihaz turu): **Lenovo (Android 14) 11 PASS / 2 NOT-RUN / 0 FAIL, Samsung (Android 16) 13 PASS / 1 NOT-RUN / 0 FAIL.** PASS: soğuk açılış, yatay görünüm ve dokunmatik işaretçi, güvenli alan (Samsung sol 36 CSS px; HUD payı uyguluyor), geri tuşu (1. basış duraklatma paneli, 2. basış devam; süreç kapanmaz), arka plana gidip dönüş (süreç ve sayfa aynı, kareler akıyor), dört yön isteğinde yatay kilit (Activity yeniden yaratılmaz), ekran klavyesi açılışı ve metin alanının klavye üstünde kalması, Samsung'da titreşim isteği çalındı (`finished`). **Samsung'un yeni APK'daki görünür paneli artık PASS** (kilit açıkken; ekran görüntüsü incelendi). Android 16: yön kilidi hem 384dp telefonda hem yoğunluk benzetimiyle ≈640dp'de yatay kaldı; **benzetim fiziksel ≥600dp cihaz değildir.** İlk iki turun NOT-RUN'ları: Lenovo'da titreşim ayarı kapalı (`mVibrateOn=false`) ve native seçim/ActionMode sınanamadı. **2026-10-12 (üçüncü tur, Lenovo Android 14, `981ace30` temiz ağacından APK, SHA-256 `4194e810…`, kurulu = artifact): 16 PASS / 1 NOT-RUN / 0 FAIL.** Kök neden bulundu: WebView `contextmenu` varsayılanı engellenirse seçim tutamaklarını gösterir ama Kes/Kopyala/Yapıştır çubuğunu AÇMAZ; `suppressNativeMenus` ve kabuk `native_menus.js` düzenlenebilir alanda dokunma kaynaklı olayı artık engellemez (fare/tuval engelli kalır). Cihazda: uzun basış `contextmenu` üretir ve engellenmez, çubukta Kes/Kopyala/Tümünü seç/Yapıştır görünür, Kes alanın değerini siler, Yapıştır geri getirir; tur titreşim anahtarını yalnız o adımda açıp geri yazar, çalınan istek var (`finished`). Elle ölçüldü (turda yok): Gboard kayan modda alan odakta kalır ve giriş kabul edilir, görsel görünüm küçülmez; `am start --windowingMode 3/4` ile bölünmüş ekran kurulamadı (pencere boyutu değişmedi). NOT-RUN: `type=number` alanında seçim aralığı API'si yok (çubuk düğümleri seçimi kanıtlar); bölünmüş ekran; Samsung/Android 16 düzeltme sonrası yeniden tur (cihaz bağlı değildi). Uzun oturum ve insan kabulü açık. Üç tam yeşil `signoff` native cihaz kabulü yerine geçmez. Kapanır: fiziksel ≥600dp Android 16 cihazda yön iddiası ve düzeltme sonrası Samsung turu; gerçek bölünmüş ekran; uzun oturum; insan kabulü.
-- [ ] **[P1] F09.3 — Oyun hissi ve uzun oturum.** VT-H3/VT-W/VT-Q/VT4/VT-H2 ve Samsung kısa dış dokunma. Kapanır: gerçek nişan/ateş eşiği/iç-dış bölge/hareket/kar-çoklu tank-atış bütçesi; ses olay/oynatma/uyanış teknik doğrulaması; insan beyanı nişan/dokunma/haptik hissi içindir, ses dinleme kabulü değildir; Samsung olmadan onun kabulü yazılmaz.
-- [ ] **[P1] F09.4 — VT7 ilk ürün doğrulaması.** Yeni oyun rehberi/template üretimi. Kapanır: temiz alanda üretilen özgün kimlikli paket ilk signoff'u geçer; Cargo/lifecycle/quality/ikon/port/i18n ve devtools'suz build sözleşmesi; mevcut advisory redi atlanmaz.
-- [ ] **[P2] F09.5 — 15 Ekim VOL.TEST görsel/ses turunun insan kabulü.** Örümcek bacak gölgesi, Manta yeniden çizimi, çekirdek nabzı ve yaylı duyargalar, hasar sayıları ve can izi, sıkı çevrimiçi HUD (VersusBar/RankList/ActivityFeed), batış sesi (`sink`) ve Goliath garaj oturtması ajan tarafından ekran görüntüsü ve teknik kapıyla doğrulandı; beğeni ve dinleme kabulü yapılmadı. Kapanır: kullanıcı beyanı (VT-R6 gibi kayda geçer); Samsung bu yapıda kilitli olduğu için cihaz turu NOT-RUN'dır, tekrar koşulur.
-- [ ] **[P2] F09.6 — Araç yetenekleri: ses ve insan kabulü.** Arachnid/Widow sıçrayışı, Goliath kalkanı ve Manta/Barracuda/Leviathan yetenekleri (aşırı yük, çarpma atağı, kuşatma) sim, görünüm, HUD ve botla teslim edildi; kalkan ve kuşatmanın kendi sesi yoktur (yeni ses sentezlenmedi, `AUDIO.skillEvent` `null`). Kapanır: audio-synth'te kalkan açılış/emilim/kapanış ve kuşatma kurulum sesleri ve teknik kabulü; animasyon ve kubbe estetiğinin insan beğenisi (kullanıcı beyanı), Samsung/Deck cihaz turu.
-- [ ] **[P2] F09.6 — Barracuda, Leviathan ve mech kategorisinin insan kabulü.** İki yeni süzülen ve iki bacaklı üç robot (Warhound, Templar, Juggernaut) bot düellosu ve birim testleriyle dengelendi; çizim oranı, adım hissi, bacak/silah okunurluğu ve telefon garajı insan gözüyle bakılmadı. Kapanır: gerçek oyun turunda araç başına el ile onay ya da düzeltme; botlarla ölçülen denge insan oyunuyla doğrulanır. İlk kullanıcı turu (15 Ekim) duyarga katmanı, Leviathan top yeri, Barracuda pervane yuvası ve mech eklemlerini düzeltti; kalan görsel zayıflıklar (özellikle Warhound'un küçük gövdesi) aynı kapanış ölçütündedir.
-- [ ] **[P2] F09.7 — Sağ şerit menüsü, canlı arka plan ve geliştirici ayarlarının insan kabulü.** Bütün ekranlar sağ şeritte kayarak geçer; menülerin arkasında oyunun gerçek simülasyonuyla savaşsız bir yürüyüş alayı döner: araçlar ekran dışından girip çaprazdan ya da yandan geçer, bütün modeller sırayla sergilenir (`BackdropScene`, kalite `low`da kapalı); geliştirici ekranı mevsim, hava, araç ve alay yoğunluğunu anında uygular. Birim ve E2E (Chromium) ile ekran görüntüsü ajan tarafından doğrulandı; alayın ritmi ve yoğunluğu, şerit geçiş hissi, arka planın okunurluğu ve düşük sınıf cihazda (Android/Deck) kare maliyeti insan gözüyle ve cihazda bakılmadı. Çayır döşemeleri iki dokuya indirildi; yazılım GL'de ölçüldü, gerçek GPU ve düşük sınıf cihaz ölçümü cihaz turuna bağlıdır. Kapanır: Samsung/Lenovo/Deck'te menü açılışı ve en uzak yakınlaştırma kare hızı ölçümü ile kullanıcı beyanı.
-- [ ] **[P2] F09.8 — Sıçrayıcı kategorisi ve yeni dünya katmanlarının insan kabulü.** Jackal, Panther ve Rhino (dört ayaklı sıçrayıcılar: sekme yürüyüşü, Space ile balistik sıçrayış, kaya üstünden geçiş) ile göl dalgası/buz kırılması, bölgesel bitki örtüsü, kaya çıkıntıları ve sunucuda kalıcı iklim bot düellosu, birim testleri ve ekran görüntüleriyle doğrulandı; v2 yeniden tasarımın (hayvan gövdesi, nişana bakan kafa, savrulan kuyruk, dijitigrat bacak; iniş kayması ve çömelmesi, daha sakin sekme) insan gözüyle ve elle bakılmadı; sıçrayışın kontrol hissi, bacak/gövde oranı, alev ve toz sunumu, bitki çizimi ve sesler (sekme, sıçrayış, iniş), yürüyüş/dönüş hissi (koşuda geniş yay, sert dönüşte basış, gövde kayması) ile gölde dibe çökme ve batış animasyonu insan gözüyle ve kulağıyla bakılmadı. Kapanır: gerçek oyun turunda birim başına el ile onay ya da düzeltme; botlarla ölçülen denge (Jackal %42, Panther %50, Rhino %58) insan oyunuyla doğrulanır; kaya içine inen sıçrayıcının duvar çözümüyle dışarı itilmesi yumuşatılacaksa ayrı iş açılır.
-- [ ] **[P2] F09.7 — Yeniden yazılan oyun seslerinin insan dinleme kabulü.** UI dışındaki 49 oyun sesi (motor devirleri, 9 silah atışı, palet/bacak/ayak/sekme/pervane/servo/kayma/atılım döngüleri, atılım/sıçrayış/iniş/kopma/batış, top-patlama-isabet-çarpma-fren aileleri) eski teslimlere bakmadan gerçekçi, dolgun ve alçak enerjili programlarla sıfırdan sentezlendi; yalnız ölçüm (seviye, tepe, spektral bant, kenet) ve kanonik doğrulama yapıldı, gerçeklik ya da beğeni iddiası yoktur. Kapanır: kullanıcı dinleme beyanı; kabul edilmeyen ses programı düzeltilip yeniden yayımlanır.
+### F14 — Son cihaz kabulü
 
-### F10 — Güvenlik, ratchet ve koşullu bakım
-
-Güvenlik F02'den itibaren bağımsız erken yürütülür; bu fazın son sıra numarası
-release redini ertelemek için gerekçe değildir.
-
-- [ ] **[P3] F10.2 — S7 majör geçişler.** ESLint/stylelint/jsdom/Vitest/TypeScript hedefleri gerçekten yayımlanmış destek matrisiyle tek tek. Kapanır: her geçiş ilgili paket/test/kapıyla; toplu latest ve ilgisiz mimari göç yok.
-- [ ] **[P3] F10.3 — Sıkı indeks ve teknik ratchet.** CORE noUncheckedIndexedAccess varsayımları daraltılır; scaling ortak şemalı okuyucu. WebKit prob kalibrasyonu ilk örnekte −0,05 ms, mevcut retry’da +3,42 ms verdi; ölçüm hassasiyeti açık. Kapanır: A/A gürültü ve desteklenmeyen iz ayrımı tekrarlanabilir fixture/karşıt kontrolle, retry başarı diye saklanmadan; tip kapısı negatif fixture'ı; ölçülen kapsam korunur (eşik düşürme/bozuk config denetimi F11.4 ile kapandı).
-- [ ] **[P3] F10.4 — A20 haptik yürütme kararı.** Mevcut scheduler/driver gecikme, eşzamanlılık ve iptal ölçülür. Kapanır: worker gerekliyse tek scheduler geçişi regresyon+önce/sonra ölçüm; gerekmiyorsa kanıtlı koruma kararı; sırf önerilmiş diye worker eklenmez.
-- [ ] **[P3] F10.12 — Tauri 2.12 geçişi.** Tauri 2.11.5 → 2.12.2 (tauri-utils 2.10 → urlpattern 0.6) beş `unic-*` bakımsızlık uyarısını kaldırır; wry 0.57, tao 0.37, muda 0.20 ve webview2-com yerel katmanı değiştirir (gtk-rs 0.18 kalır, glib uyarısı sürer). Ön koşul: F09.1/F09.2 yerel temel çizgisi; karşılaştırılacak Windows/Android turu olmadan yerel katman değişimi kanıtsızdır. Kapanır: Cargo/pnpm Tauri sürüm paritesi (`tauriPlugins`), `rust` kapısı, Windows yerel ürün turu (kurulum, kapanış, kurtarma), Android ve Linux yerel kanıtı ayrı ayrı; beş `unic-*` kaydı `securityPolicy.json`dan silinir; toplu `cargo update` yok.
-- [ ] **[P1] F10.13 — Kapı ölçek eşikleri ve kabul edilemez E2E maliyeti (AÇIK).** Kapı süresi etki alanıyla büyümeli, repo boyutuyla değil; yalnız `contract`, `format-check`, `coverage`, `coverage-audio` her değişiklikte repo geneli koşar. Tetikler: soğuk `high` 20 dk, CORE düzenlemesinden sonra `high` 15 dk, `coverage` 5 dk, `contract` 90 sn veya vitrin `e2e` **10 dk** aşımı. Vitrin tetiği 2026-10-11'de **21,5 dk** ile tuttu; iki farklı `vite` yük etkeni araştırıldı (rapor §22.2). İlk müdahale olarak zaman ölçen sınamalar `QUIET_SPECS` sessiz şeridine, E2E ise pre-push `high`dan `signoff`a taşındı ve `hostLoad.mjs` ön kontrolü eklendi: **yük ayrıldı, E2E hızlanmadı**. İlk başarısız koşularda vitrin E2E **22,6 / 26,3 dk**; yeni üç tam PASS dizisinde de **yaklaşık 24–26 dk**. Tam `signoff` **48,4 / 47,0 / 48,1 dk** sürdü. Bu süreler **kabul edilemez**, üç yeşil koşu yalnız mevcut doğruluğu kanıtlar. **Kapanır:** zaman dağılımını/motor ve spec maliyetini profil et, kapsam veya gerçek ölçüm kanıtını zayıflatmadan hedefe yönelik performans düzeltmesi yap, `e2e`yi 10 dk eşiğine indir ya da ölçüme dayalı açık yeni bütçe kararı al; gerçek **önce/sonra sürelerini** ve performans değişikliği sonrasında **en az üç ardışık tam yeşil `signoff`** sonucunu [kapı raporuna](docs/gates.md) kaydet. Eski **343 sn** vitrin bütçesi bayattır; maliyet yalnız push yolundan çıkarılarak çözülmüş sayılmaz. Son üç tam PASS performans değişiklikleri **öncesine** aittir, sonraki düzeltmenin kanıtı değildir.
-      **İlk hedefli performans kanıtı (2026-10-11; tam kapı değil):** Chromium
-      `themeMatrix.spec.ts` içindeki axe skin × yoğunluk matrisi, eski standart
-      `scan` ile **5/5 PASS, 2,1 dk**; `scanCached` ile **5/5 PASS, 1,6 dk**
-      ölçüldü (bu alt kümede yaklaşık **%24 süre azalması**, 0,5 dk).
-      Optimizasyon axe'i sayfa başına bir kez yükler; her profil için `buttons`
-      ve `forms` sekmelerinde **iki standart `scan`** ile `violations` ve
-      `incomplete` sonuçlarının eşitliğini sınar. Bu, yalnızca ölçülen
-      Chromium axe skin matrisi alt kümesinin karşılaştırmasıdır; toplam
-      vitrin E2E'ye ya da 48 dakikalık `signoff`a **%24 kazanç**
-      atfedilemez. Optimizasyondan sonra tek tam `signoff` koşuldu (`eb81a52c`, 37,7 dk, 18/18 PASS, vitrin E2E 20,5 dk; ön yük %8): **tek koşudur**, nedeni profillenmedi, 10 dk eşiği ve üç ardışık yeşil karşılanmadı;
-      F10.13 **AÇIK** ([denetim §25](docs/monorepo-audit.md)).
-- [ ] **[P3] F10.5 — Yeni donanım kapsamı.** OLED Deck/Steam Machine. Kapanır: ilgili donanım bulunduğunda ayrı frame/runtime profili; eldeki cihaz kabulü bu işi sahte kapatmaz, Windows devamını bloke etmez.
-- [ ] **F10.6 — K3/K5 dal bakımı.** Birleştirme hedefleri ve eski yerel/uzak dalların erişilebilir işi ayrı git operasyonu olarak ele alınır. Kapanır: kayıp commit/çalışma sıfır, açık hedef ve test/snapshot kanıtı; rapor teslimi merge/branch silme yapılmış sayılmaz.
-
-### F11 — Kapı güvencesi, kanıt bütünlüğü ve ölçek (2026-10-11 taze tur)
-
-Kaynak: bütün kapıların taze koşusu, bilerek kusur ekleyen negatif kontroller ve koşucunun tersine mühendisliği;
-ölçüm, yöntem ve sınırlar [rapor §22](docs/monorepo-audit.md). Özet (`--fresh`, 8 çekirdek, ön yük ≤%11):
-`quick` 87,8 sn, `fast` 6,0 dk, `high` 4,7 dk geçti; **`signoff` DÜŞTÜ** (27,1 dk: vitrin e2e WebKit'te 1 aralıklı
-zaman aşımı; koşucu orada durduğu için dört aşama koşulmadı, ayrı koşuldu ve geçti: `coverage-audio` 547 sn,
-`audio-verify` 101 sn, `security-js` 3 sn, `security-rust` 4 sn). **İkinci taze `signoff` de DÜŞTÜ** (30,6 dk,
-ön yük %4; e2e 26,3 dk): bu kez başka bir WebKit testi, sessiz şeritte tek işçiyle `motionMeasure.spec.ts:124`,
-60 sn zaman aşımı. **Sonraki üçüncü `signoff` da DÜŞTÜ** (36,2 dk): WebKit ana şeridinde
-`hudStates.spec.ts:248:3` XPBar testi 15 sn `toHaveClass` beklentisinden düştü
-(447 geçti / 16 atlandı / 1 düştü; sessiz şerit geçti). Önceki iki turun 0/2 sonucu tarihsel kanıttır;
-ilk başarısız dizide **0/3 yeşil `signoff`** vardı. Üçüncü başarısız koşuda dört sonraki aşama `notRun` kaydedildi;
-önceki bağımsız aşama PASS sonuçları bu koşuya devredilemez.
-**Sonraki tam koşu dizisi (2026-10-11, aynı performans değişikliği öncesi çalışma ağacı): üç ardışık tam `signoff` PASS, 48,4 / 47,0 / 48,1 dk; üçüncü koşu 18/18 PASS.** E2E sonrasındaki `coverage-audio`, `audio-verify`, `security-js`, `security-rust` aşamaları bu dizide gerçekten koşuldu. Üç yeşil sonuç önceki düşüşlerin geçmiş kanıtını silmez; F11.1'de kök neden/gerçek pointer, F11.2'de yeni arşivin gerçek tam kapı hata entegrasyonu açık. Güncel düzen (`eb81a52c`, kapı bekçileri dahil) için tam `signoff` **18/18 PASS, 37,7 dk**; e2e 1058 geçti / 21 atlandı / 0 düştü, atlama bütçesi ve sayaç aynı koşuda denetlendi ([rapor §26](docs/monorepo-audit.md)); bu tek koşu F11.1/F11.2 kök neden kanıtı değildir.
-Negatif kontrol: bilerek eklenen 10 kusurun 10'u `quick`te beklenen aşamada yakalandı; kapsam eşiğini düşürmek GEÇTİ;
-kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını sınadı.
-
-- [ ] **[P1] F11.1 — WebKit test kök nedeni / gerçek pointer regresyonu (tarihsel 0/3 FAIL; ardından 3/3 tam PASS, AÇIK).** (a) `dialogPatterns.spec.ts:116`
-      (kayıt çakışması, bekleme sırasında iptal; ana şerit): `Cancel` tıklaması 60 sn bekledi — "`.vol-showcase-card__body`
-      işaretçiyi örtüyor / öğe kararsız / DOM'dan ayrıldı"; aynı spec izole ve `--repeat-each=5` ile iki motorda 50/50
-      geçti. (b) `motionMeasure.spec.ts:124` flaş sınırı, azaltılmış hareket kapalı (sessiz şerit, tek işçi, ön yük %4):
-      120 art arda `click()` döngüsü 60 sn'yi aştı; WebKit'te iki varyant birinci koşuda 33,8 / 30,2 sn, ikincide
-  > 60 sn (düştü) / 53,0 sn sürdü; Chromium 15,5 / 11,1 sn → 21,2 / 17,4 sn: koşular arası ~2 kat sapma, bütçenin
-  > %50–100'ünü kullanıyor, payı yok. (a)/(b) kök nedenleri BİLİNMİYOR; ilk koşuların eski ortak
-  > `test-results` izleri sonraki koşuda silinmişti. Yeni E2E çalıştırıcısı sonraki hata izlerini ayrı arşivler (F11.2).
-  > Kapanır: (a) için yük altında yeniden üretim ya da iz analiziyle kök neden (zamanlama
-  > yarışı mı, katmanın örtüldüğü gerçek istif/odak kusuru mu); (b) için WebKit'te tıklama başına maliyetin ölçümü ve
-  > testin süre sınırından bağımsız (döngü sayısı/doğrudan olay) yeniden kurulması;
-  > (c) üçüncü tur: `hudStates.spec.ts:248:3`, XPBar çoklu seviye testi; `aria-valuenow=125`,
-  > `aria-valuemax=325` ve seviye etiketi doğrulandıktan sonra `vol-xp-bar--level-up` sınıfı
-  > 15 sn içinde bulunmadı (`expect(locator).toHaveClass(expected) failed`).
-  > **(c) hedefli düzeltme/doğrulama:** `hudStates.spec.ts` geçici (600 ms) `level-up`
-  > sınıfını `click()` RPC'sinden SONRA sorguluyordu; sınıf test gözlemine kadar kalkabiliyordu.
-  > Tıklamadan ÖNCE kurulan `MutationObserver` sınıf geçişini, normal animasyonu ve hareket azaltmadaki
-  > sabit vurguyu yakalar. Hedefli tekrarlar WebKit **6/6**, Chromium **6/6** PASS;
-  > bunlar gerçek XPBar davranışının tüm kapıda güvenceye alındığı veya ilk iki farklı
-  > WebKit kusurunun giderildiği anlamına gelmez. **Kapanır:** (a)/(b) kök neden/regresyonları
-  > ve (c) dahil tam ağaçta üç art arda yeşil `signoff`; retry ya da zaman aşımı
-  > büyütmeyle hata gizlenmez. **Üç ardışık tam PASS artık sağlandı (48,4/47,0/48,1 dk); ancak kapanış SAĞLANMADI:**
-  > (a) `dialogPatterns` iptali, (b) `motionMeasure` flaş serisi artık sayfa içinden
-  > `element.click()` kullanıyor; bu akış eski gerçek Playwright pointer
-  > hit-testing/actionability arızalarını tek başına sınamaz. (a)/(b) kök nedenlerinin
-  > ayrıştırılması ve gerçek işaretçiyle karşıt/regresyon kanıtı hâlâ gerekli.
-  > Son üç PASS **performans değişikliklerinden önceki ağaca aittir**. F11.1 **AÇIK (kısmi)**.
-- [ ] **[P1] F11.2 — Kanıt bütünlüğü: koşulmayan ve düşen kanıt.** **Kısmen düzeltildi:** `gateRunner.mjs`
-      erken düşüşten sonra koşulmayan aşamaları JSON'da `status: notRun` olarak üretir; regresyonu
-      `gateRunner.test.mjs`dedir. Bekleyen birimler de `notRun` raporlanır. `report.mjs`
-      Playwright test dosyasını/satırını/başlığını ve hata sebebini çıkarır (`report.test.mjs` fixture).
-      **Üçüncü gerçek `signoff` ile doğrulandı:** XPBar hatası `kind: test`,
-      `reason: expect(locator).toHaveClass(expected) failed` olarak sınıflandı; dört sonraki
-      aşama `notRun` göründü. Önceki iki `signoff` çıktısında bu iyileştirmeler yoktu.
-      **Yeni kısmi iyileştirme:** vitrin `e2e.mjs` her motor/şerit için ayrı
-      Playwright çıktı dizini kullanır; hata bağlamını ve varsa Playwright'ın
-      ürettiği `trace.zip` / `report.json` kanıtını git dışı kalite önbelleğinde
-      arşivler, başarılı koşu kendi geçici çıktısını siler. Zorla düşürülen **her iki
-      motor** için dosyalar üretildi; ardından gelen başarılı koşu arşivleri silmedi
-      (ilk elle hata-yolu doğrulaması). **Otomatik RED→GREEN regresyon artık VAR:**
-      `scripts/quality/tests/e2eArchive.test.mjs` **5/5 PASS**,
-      `scripts/quality/tests/e2eConfig.test.mjs` **3/3 PASS** (2026-10-11,
-      worker-2). Tarayıcı/Vite açmayan gerçek Node sahte Playwright alt süreçleri,
-      Chromium/WebKit seçili hata izlerini, JSON `trace.zip` ek yolu yeniden
-      bağlamayı, ana şerit hatasında sessiz şeritlerin koşmasını, rapor
-      eksikliğinde `error-context.json` ve izi korumayı, sonraki PASS'te
-      eski arşivi silmemeyi, 14 gün/10 koşu ve 2 günlük geçici çıktı
-      temizliğini sınar. **10→11 hata koşusu regresyonu düzeltildi:**
-      `e2e.mjs` hem başlangıçta hem **tüm şeritler tamamlanınca** budar;
-      yeni başarısızlık koşu sonunda arşiv sayısını 10'un üstünde bırakmaz.
-      Arşiv yalnız **yereldir**, değişmez/uzak kayıt değildir;
-      `last-failure.log` ayrı ve geçicidir. Önceki üç tam yeşil `signoff`
-      bu son otomatik arşiv düzeltmesinden **önce** koşuldu; hata yolunu
-      tetiklemedi. **Kalan kapanış ölçütü:** güncel düzenle gerçek tam
-      `signoff`/kapı hata yolunda Playwright izi → motor/şerit arşivi →
-      kapı raporu/`notRun` zincirinin uçtan uca kanıtı ve güncel
-      değişikliklerden sonra taze tam `signoff` doğrulaması.
-      F11.2 **AÇIK (entegrasyon kısmi)**.
-- [ ] **[P3] F11.9 — Sabit beklemeler yük altında kırılganlık üretir (KISMİ).** **Yapıldı:** `fixedWaits.mjs`
-      bekçisi `waitForTimeout` sayısını test dosyası başına bütçeler (`quality.json` → `fixedWaitBudget`; ölçülen
-      56 çağrı / 21 dosya; artış ve unutulmuş bütçe `contract`ta düşer). **Açık:** mevcut 56 bekleme olay/koşul
-      ifadesine çevrilmedi (stress.spec 9, visual.spec 5, hudInteraction 6 en büyükleri; yük testlerinin 7 sn ve 1,5 sn
-      beklemeleri süre geçirmenin kendisidir). Kapanır: her biri koşula çevrilir ya da gerekçeli bırakılıp bütçe düşer;
-      F11.1'in kök nedeniyle birlikte ele alınır.
-- [ ] **[P3] F11.10 — Yürütme maliyeti adayları (ölçüldü, benimsenmedi).** CORE testlerinde jsdom ortamı 250
-      dosyada 287 işçi-sn, testlerin kendisi 36 işçi-sn; VOL.TEST 105/38, vitrin 45/85. DOM gerektirmeyen dosyaları
-      `@vitest-environment node`a ayırmak ve ESLint `--cache` (tip bilgili kural bağımlılık değişimini önbellek
-      anahtarında görmez: negatif kontrol şart) adaydır. Kapanır: önce/sonra ölçüm ve en az 3 yeşil koşu; kazanç %10'un
-      altındaysa "Ölçülüp benimsenmeyenler"e yazılıp reddedilir. Tetik değil, ölçüm işi; F10.13 tetiği tutana dek açık.
-
-### F13 — Onaylanan backend yönü ve ilk gerçek tüketici
-
-- [ ] **[P1] F13.3 — Ağ sertleştirme (KISMİ).** Teslim: `@volstudio/network` protokol/istemci/sunucu zemini, ayrı derlenen Node odası, gerçek WS katılımı, dolu oda ve hız suistimali regresyonu, Chromium/WebKit E2E ve paketli Windows WebView2 smoke. Origin izin listesi, HTTP/IP/soket katılım sınırları, oda oluşturma seçeneklerinin süreç içi sahipliği ve toplam oda tavanı kaynak/regresyonla korunuyor ([rapor §28](docs/monorepo-audit.md)). `VITE_VOLTEST_SERVER` ve geliştirme adres seçimi mevcut. Hâlâ yok: üretim hesap kimliği/auth sağlayıcısı ve internet WSS kabulü, uzak endpoint için paket CSP/taşıma kabulü, süreç keşfi, savaş sisi ve bütün hedeflerde **paketli** ağ matrisi. Kapanır: bu kalemlerin her biri ölçülmüş kabulle geçer; loopback ve debug cihaz turu internet/release kabulü yerine sayılmaz.
-- [ ] **[P1] F13.5 — Kapasite ve soak kabulü.** Çok istemcili bot sürücüsüyle N oda × 12 oyuncu yükü, istemci başına bant, adım süresi p50/p95/p99, bellek eğrisi; 1 saat sonra 24 saat açık kalış; Windows ve Steam Deck. Kapanır: oda başına ölçülmüş makine bütçesi (`quality.json`) ve tekrar koşulabilir soak kaydı; ölçülmeyen cihaza kabul yazılmaz.
-- [ ] **[P1] F13.6 — Bozuk ağ altında ölçüm ve oturum yaşam döngüsü (KISMİ).** Teslim: gecikme/titreşim/TCP bekleyişi vekili ve Chromium/WebKit bütçeli E2E; IP/katılım/oda tavanı, sınırlı yavaş tüketici kuyruğu ve bozuk payload regresyonları. Lenovo'nun paketli debug WebView'inde erken kopuş, aynı oyuncu/iklimle dönüş, süresi dolan oturum ve yeniden giriş PASS ([rapor §28](docs/monorepo-audit.md)). Hâlâ yok: istemci düzeltme/snap sayaçları, gerçek paket kaybı, geniş fuzz; maç sonu/doğuş/çift kopuş/sunucu boşaltma/arka plan-ağ değişimi matrisi; Node/Chromium/WebKit/Android arasında manevra, çarpışma ve ateş öngörü determinizmi. Gecikme telafisi yalnız ölçüm gerektirirse. Kapanır: her madde bütçe veya negatif regresyonla; release/uzak ağ ve insan sunum beğenisi debug loopback kabulünden türetilmez.
-- [ ] **[P1] F13.7 — VOL.TEST ajan laboratuvarı ve bot sürücüsü (KISMİ).** Teslim (14 Ekim): `?lab=1` ile açılan `window.volLab` (`state`, `telemetry`, `events`, `input`, `release`, `mark`, `jsonl`; sınırlı halka; komut kaydı ile DESIGN tablosu eşitlik testi, gerçek tarayıcıda doğrulandı), `games/vol-test/scripts/drive.ts` hükmü (`--profile lan --ops`: özet `quality.json` → `fleetBudget`'a karşı `judgeFleet` ile yargılanır, düşerse çıkış 1; sunucu adım/olay döngüsü/atılan istemci `/metrics`'ten). Hâlâ yok: betikli girdi senaryoları (sürücü bugün sabit sürüş/ateş deseni koşar), istemci başına bayt ve uzlaştırma sayaçlarının sunucu `/metrics`'inde yayımı, her senaryo için kayıt dosyası. Kapanır: betikli senaryoların her biri için tekrarlanabilir ölçüm kaydı ve hüküm; sunucuda istemci başına bayt/uzlaştırma sayacı.
-
-### F14 — VOL.TEST üzerinden CORE ve network sağlamlaştırması
-
-- [ ] **[P1] F14.1 — Dört ajanlı kaynak ve cihaz turu (KISMİ).** 116 tekilleştirilmiş kusur düzeltildi; generic sahiplik CORE/network'e taşındı. Son temiz `922a83dd` kaynağında taze signoff 18/18 PASS (63,6 dk; E2E 1.170 PASS / 21 mevcut SKIP / 0 FAIL/flaky). Aynı frontend'den yeniden üretilmiş paketlerde Lenovo 18+16 kontrol ve gerçek SLR4 altında Deck'in tam kol gezinme döngüsü PASS; kurulu hash'ler eşit. 24 istemci/65 sn üretim build'i kabulü de geçti. Kalan: son Deck paketi ağ turu başlarken cihaz erişimi yeniden kayboldu; yeni paketin ağ kabulü tamamlanmadı ([rapor §28](docs/monorepo-audit.md)). Kapanır: erişim geri geldiğinde aynı paketin ağ turu kanıtlanır; üretim ağı/soak/insan kabulleri kendi F13/F09 işlerinde açık kalır.
+- [ ] **[P1] F14.1 — Deck'in son paket ağ turu.** Son kaynakta Lenovo 18+16 ve gerçek SLR4 kol gezinmesi geçti; son Deck ağ turu erişim kaybıyla NOT-RUN kaldı. **Kapanır:** aynı paketin erken kopuş/aynı oturumla dönüş, süre aşımı/çevrimdışı dönüş, yeniden giriş ve temiz çıkış akışları kısa cihaz turunda kaydedilir; tura ait geçici süreçlerin temizliği doğrulanır. Eski paketin ağ sonucu yeniye taşınmaz.
 
 ## Kapatılanlar
 
+- [x] F08.1 — Temiz 922a83dd kaynağından ayrı steamrt4 SDK builder ile AppDir/AppImage üretildi; 280 ELF GLIBC≤2.41, yasak sürücü kütüphanesi sıfır, 14 GStreamer eklentisi ve OGG/Vorbis çözümü PASS ([kanıt §28](docs/monorepo-audit.md)).
 - [x] F13.4 — Backend araştırması kullanıcı kararıyla güncellendi: Colyseus, VOL.TEST ilk tüketici, resmî sunucu ve Windows/Linux/Android/Steam hedefi; web yayını yok. 20 dünya × 8–14 oyuncu karar verilmemiş senaryo, deneyler yerel kanıt; kalıcı entegrasyon F13.3'tür.
 - [x] F13.2 — Colyseus lisans/Cloud/VPS/mini PC, çok oyunlu repo yerleşimi ve üretim kabul kapsamı çapraz kaynaklarla genişletildi; 12 sunucu kontrolü ×3, Phaser 4 iki motor/gecikme, kötüye kullanım ve encoder/fizik ölçümleri [raporda](docs/backend-research.md). WebKit temiz kabulü FAIL; test harness'ı üretim entegrasyonu veya tam dünya/cihaz kabulü değildir.
 - [x] F13.1 — 24 oyunculu co-op/PvP otomasyon, RTS ve aksiyon backend araştırması kaynaklarla tamamlandı; Colyseus/Talo/Nakama/SpacetimeDB/özel taşıma ayrımı, repo sınırları ve gerçek Node + 24 istemcili simülasyon uyum deneyi [raporda](docs/backend-research.md). Üretim yükü, kalıcılık, prediction ve cihaz kabulü yapılmış sayılmaz; önerilen backend yerleşimi henüz uygulanmadı.
@@ -248,7 +115,7 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
 - [x] F06.1 — Mermi, adımın süpürdüğü parçayı gövdenin yönlü ayak iziyle keser (segment–OBB ilk temas); olay/itki/önizleme temas noktasını görür, en erken hedef ve sahip dışlaması deterministik.
 - [x] F06.2 — Duvar sert sınırdır: araç teması sonrası duvar yeniden çözülür (en çok 4 geçiş); 4×4000 adım ve köşe yığınında hiçbir gövde köşesi dünya dışında kalmaz, kalan örtüşme ≈0,05 birim.
 - [x] F06.3 — Saf simülasyon CORE'a yalnız alt yüzeylerle bağlanır; beş senaryo Node'da DOM/CSS yükleyicisi olmadan seedli koşar ve vitest sonucuyla birebir aynıdır.
-- [x] F06.4 — `093e4c8d` commitinde alınan cihaz referansı: Deck host AppImage 10 dk çoklu tank/kar/yüksek + sanal kolla sürekli ateş ve dönüş = 60 FPS medyan, p95 19 ms (hedef 18 ms'nin 1 ms üstünde, F08.5'e devredildi), 5 kare >34 ms; Lenovo tablet 10 dk boş jank %0,04 / çoklu tank jank %3,97, bellek büyümesi yok (`docs/steam-deck.md`, `docs/android.md`).
+- [x] F06.4 — `093e4c8d` commitinde alınan cihaz referansı: Deck host AppImage 10 dk çoklu tank/kar/yüksek + sanal kolla sürekli ateş ve dönüş = 60 FPS medyan, p95 19 ms (hedef 18 ms'nin 1 ms üstünde), 5 kare >34 ms; Lenovo tablet 10 dk boş jank %0,04 / çoklu tank jank %3,97, bellek büyümesi yok (`docs/steam-deck.md`, `docs/android.md`).
 - [x] Monorepo denetim raporu docs'a yerleştirildi; 20 bulgu, 43 belge kararı ve bütün açık işler F01–F10'a eşlendi.
 - [x] Visual Studio C++ Build Tools kuruldu; güncel doctor/bootstrap doğruluğu F02.1 ile tamamlandı.
 - [x] Just kabuğu Git kurulumundan seçilir; WSL gölgesi ortam teşhisinde ayrılır.

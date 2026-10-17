@@ -14,18 +14,15 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 | `high`    | pre-push         | `quick` + `build` + `bundle` + `scaling` + `audio-test` + `rust` + `coverage` + `coverage-shape` |
 | `signoff` | sürüm öncesi     | `high` + `e2e` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`             |
 
-`e2e` pre-push kapısında değildir (2026-10-11 kararı): ilk başarısız
-koşularda vitrin E2E 22,6 ve 26,3 dk sürdü; sonraki başarısız `signoff`
-36,2 dk'da WebKit E2E hatasıyla düştü. Ardından **aynı performans değişikliği
-öncesi çalışma ağacında üç tam `signoff` PASS** (48,4 / 47,0 / 48,1 dk),
-ancak vitrin E2E yine 24–26 dk seviyesinde. Kapı bekçileri eklendikten sonraki taze koşu (`eb81a52c`): **18/18 PASS, 37,7 dk**, vitrin E2E 20,5 dk ([rapor §26](monorepo-audit.md)); tek koşudur. Kaynak sağlamlaştırma değişikliklerinin nihai taze koşusu da **18/18 PASS, 41,8 dk**; vitrin E2E 21,5 dk, tam audio kapsamı 9,0 dk sürdü ([rapor §27](monorepo-audit.md)).
-Son VOL.TEST/CORE/network sağlamlaştırma turunun temiz `922a83dd` kaynağı da
-**18/18 PASS, 63,6 dk** verdi: vitrin E2E 23,8 dk, ürün E2E 16,7 dk, tam ses
-kapsamı 9,2 dk. E2E 1.170 PASS / 21 mevcut SKIP, sıfır FAIL/flaky;
-başlangıç yükü %23 ve bütün aşamalar tazeydi ([rapor §28](monorepo-audit.md)).
-Bedel: görsel, erişilebilirlik ve etkileşim gerilemeleri push'ta değil `signoff`ta yakalanır. Bir arayüz
-değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` (yüzey kaydı + build + iki motorlu e2e) koşar. **20–26 dk vitrin E2E maliyeti kabul edilemez**; yalnız push yolundan
-çıkarılmıştır, henüz hızlandırılmamıştır: bkz. [F10.13](../TODO.md).
+`e2e` pre-push kapısında değildir (2026-10-11 kararı); `high` ve `signoff`
+bileşimi yukarıdaki tabloda tanımlıdır. Son VOL.TEST/CORE/network
+sağlamlaştırma turunun temiz `922a83dd` kaynağı **18/18 PASS, 63,6 dk** verdi:
+vitrin E2E 23,8 dk, ürün E2E 16,7 dk, tam ses kapsamı 9,2 dk. E2E 1.170 PASS /
+21 mevcut SKIP, sıfır FAIL/flaky; başlangıç yükü %23 ve bütün aşamalar tazeydi
+([rapor §28](monorepo-audit.md)). Görsel, erişilebilirlik ve etkileşim
+regresyonları `signoff`ta sınanır; UI değişikliğinde push öncesi
+`pnpm exec just ui-check` yüzey kaydı, build ve iki motorlu vitrin E2E'sini koşar.
+Bu süreler kendi koşusuna aittir; kapıdan çıkarma bir hızlanma ölçümü değildir.
 
 ## Signoff onayı
 
@@ -70,7 +67,7 @@ koşan düz yoldur. Koşucu altı şey yapar:
    alınır; tarayıcısız sahte Playwright alt süreçleriyle otomatik hata arşivi
    regresyonu **5/5 PASS** (`e2eArchive.test.mjs`), yapılandırma testleri
    **3/3 PASS** (`e2eConfig.test.mjs`). Gerçek tam `signoff` hata
-   zincirinin uçtan uca entegrasyon kanıtı hâlâ [F11.2](../TODO.md) işidir.
+   zinciri için fixture geçişi tek başına gerçek tarayıcı hatasının kanıtı değildir.
 4. **Yük ön kontrolü** ([`hostLoad.mjs`](../scripts/quality/hostLoad.mjs)). `quick` dışındaki kapılar başlamadan
    makinenin meşgul oranını bir saniye örnekler; %30'u aşıyorsa yiyen süreçleri PID, oran ve komut satırıyla yazar
    (bu depoya ait olanlar `[repo]` işaretlidir ve kapatma komutu önerilir). Yalnız uyarır: kapıyı düşürmez, süreç
@@ -305,69 +302,22 @@ belge `high` için "yaklaşık 13,4 dk" diyordu: o sayı `e2e` pre-push kapısı
 toplanmıştı; `e2e` `signoff`a taşındığından geçersizdir. Girdisi hiç değişmemiş ağaçta `quick` 2 sn, `high`
 yaklaşık 13 sn sürer (önceki ölçüm, bu turda yeniden ölçülmedi).
 
-**Sonraki `signoff` (2026-10-11):** 36,2 dk sonunda yeniden **FAIL** (toplam 0/3
-yeşil). Vitrin E2E ana WebKit şeridi 447 PASS / 16 SKIP / 1 FAIL:
-`hudStates.spec.ts:248:3` XPBar çoklu seviye testinde 15 sn boyunca beklenen
-`vol-xp-bar--level-up` sınıfı görülmedi (`expect(locator).toHaveClass(expected) failed`).
-Chromium ana şeridi ve iki motorun sessiz şeridi geçti; VOL.TEST E2E birimi
-çalışmadı. Dört sonraki aşama (`coverage-audio`, `audio-verify`, `security-js`,
-`security-rust`) JSON'da `notRun` oldu; önceki ayrı PASS kanıtları bu turu
-yeşil yapmaz. Playwright düşüşü `kind: test` olarak sınıflandırıldı;
-`last-failure.log` ve bu turun trace'i o an geçiciydi. `fast`/`high` PASS, F11.1/F11.2
-açık ([tarihsel denetim §23](monorepo-audit.md)); sonraki yeşil seri [§25](monorepo-audit.md)'tedir.
+**Tarihsel hata ve sonraki geçişler (2026-10-11):** üçüncü tam koşu XPBar'ın
+600 ms'lik vurgu sınıfını gözlemlemekte başarısız oldu. Tıklamadan önce
+kurulan MutationObserver sonrasında hedefli WebKit/Chromium 6/6 ve aynı
+performans değişikliği öncesi ağaçta üç tam PASS (48,4 / 47,0 / 48,1 dk)
+alındı. Bunlar kendi ağacının doğruluk kanıtıdır; Android/Deck/insan kabulü
+veya bir performans düzeltmesinin ölçümü değildir. Sayfa içi `element.click()`
+gerçek pointer hit-testing yolunu tek başına doğrulamaz. Ayrıntılı tarihsel
+kanıt [denetim §23–25](monorepo-audit.md)'tedir.
 
-**Üçüncü koşu sonrası hedefli doğrulama, tam kapı değil (2026-10-11):**
-`hudStates.spec.ts`, 600 ms'lik XPBar vurgu sınıfını `click()` tamamlandıktan
-sonra yakalamaya çalışmak yerine tıklamadan **önce** `MutationObserver`
-kurar; sınıf geçişini ve animasyon/gölge kanıtını olay anında toplar.
-Hedefli WebKit **6/6**, Chromium **6/6** PASS. Bu test düzeneği iyileştirmesi
-önceki iki ayrı WebKit hatasının kök nedenini tek başına çözmez. **Sonrasında
-üç art arda başarılı tam `signoff` elde edildi**, fakat F11.1'in
-gerçek pointer/actionability regresyonu ve (a)/(b) kök neden ölçütleri
-**açık**; eski Playwright tıklamalarını sayfa içi `element.click()` ile
-değiştirmek gerçek hit-testing testinin yerine geçmez.
-
-**Hata arşivi, hedefli hata-yolu doğrulaması (F11.2 KISMİ):**
-`devtools/vol-showcase/scripts/e2e.mjs` her motor/şerit için ayrı
-Playwright `outputDir` ve JSON raporu yapılandırır. Başarısız şeridin
-`error-context.json` ve varsa `trace.zip` / `report.json` kanıtı
-git dışı `node_modules` kalite önbelleğine arşivlenir. Worker-2'nin
-iki motoru da zorla düşürdüğü sınamada arşiv dosyaları oluştu;
-ardından başarılı çalıştırma eski hata kanıtını silmedi. **Yeni otomatik
-RED→GREEN arşiv regresyonu** `scripts/quality/tests/e2eArchive.test.mjs`
-**5/5 PASS**; `e2eConfig.test.mjs` **3/3 PASS**. Gerçek Node alt süreçli
-sahte Playwright testi iki motorun trace/JSON arşivini, JSON ek yollarının
-taşınınca güncellenmesini, ana/sessiz şerit ayrımını, rapor bulunmayan hata
-durumunu, sonraki PASS'in eski arşivi korumasını ve yaş/sayı budamasını
-doğrular; tarayıcı/Vite açmaz. **10→11 hata regresyonu düzeltildi:**
-çalıştırıcı hem başlangıçta hem **koşu sonunda** 14 gün/10 hata koşusu
-sınırını uygular, scratch dosyalarını 2 güne kadar tutar. Başarılı geçici
-çıktı temizlenir; genel `last-failure.log` kalıcı değildir. Arşiv
-yereldir, merkezi/değişmez kayıt değildir; bu kayıt özelliği bir PASS
-iddiası sayılmaz. Önceki üç tam yeşil `signoff` yeni arşiv değişikliği
-**öncesine** aittir ve gerçek tam başarısızlık yolunu sınamaz.
-**F11.2 açık kalan:** güncel kodda gerçek tam `signoff` hatasının
-kapı raporu/`notRun` ile arşivlenmiş Playwright izine bağlanmasının
-uçtan uca doğrulanması ve son kod değişikliklerinden sonra taze tam
-`signoff` kanıtı;
-[tarihsel §24 ve güncel §25](monorepo-audit.md).
-
-**Üç ardışık tam PASS — performans değişiklikleri öncesi çalışma ağacı
-(2026-10-11, denetim §25):**
-
-| Tam koşu      | Duvar süresi | Sonuç          | Kanıt sınırı                                                                                                    |
-| ------------- | ------------ | -------------- | --------------------------------------------------------------------------------------------------------------- |
-| Yeşil seri #1 | 48,4 dk      | PASS           | Tam kapı; vitrin + VOL.TEST E2E ve E2E sonrası aşamalar geçti                                                   |
-| Yeşil seri #2 | 47,0 dk      | PASS           | Aynı değişiklik öncesi çalışma ağacı, tam kapı                                                                  |
-| Yeşil seri #3 | 48,1 dk      | **18/18 PASS** | Üçüncü tam kapı; `coverage-audio`, `audio-verify`, `security-js`, `security-rust` E2E'den sonra gerçekten koştu |
-
-**Sonuç:** Önceki üç WebKit FAIL koşusu tarihsel olarak geçerlidir; onların
-ardından **3/3 tam PASS** doğrulandı. Bu doğruluk kanıtı F11.1/F11.2'nin
-açık regresyon/kök neden işlerini kapatmaz, Android/Deck/insan kabulü değildir.
-Vitrin E2E'nin **24–26 dk** olması 10 dk tetik eşiğini ağır biçimde aşıyor;
-F10.13'te ölçüme dayalı performans müdahalesi ve müdahale **sonrası**
-yeni tam kapı kanıtı gerekir. Bu kayıt bir performans düzeltmesi
-**sonrasında koşulmuş `signoff`** olarak yorumlanamaz.
+**Hata arşivi:** `devtools/vol-showcase/scripts/e2e.mjs` motor/şerit başına
+ayrı outputDir/JSON kullanır; hata bağlamını ve varsa trace/report kanıtını
+yerel kalite önbelleğine arşivler. Başarılı koşu eski hata kanıtını silmez;
+başarısız arşiv 14 gün/10 koşu, geçici çıktı 2 günle sınırlıdır. Başlangıçta
+ve koşu sonunda budanır. Gerçek Node alt süreçli fixture regresyonları
+`e2eArchive.test.mjs` 5/5, `e2eConfig.test.mjs` 3/3 PASS'tir. Fixture geçişi,
+gerçek tam tarayıcı hatasının uçtan uca kanıtı olarak yorumlanmaz.
 
 Makbuzlu `quick`, tek dosya düzenlemesinden sonra yalnız etkilenen birimi koşar (önceki ölçüm: yaprak paket
 kaynağı ~45 sn, betik ~38 sn, belge ~35 sn; taban `contract` 28–35 sn tek başına). Birden çok birim
@@ -378,7 +328,7 @@ Süre ölçen testler yük altında kararsızlaşır; bu yüzden `scaling` ve `e
 koşar, audio-synth işçi sayısı sınırlıdır (`devtools/audio-synth/vitest.config.ts`) ve
 vitrin motorları yalnız birbirleriyle eşzamanlıdır. **Taze turda vitrin `e2e` bu düzende bile iki koşunun
 ikisinde de bir WebKit testinde zaman aşımına uğradı** (`dialogPatterns.spec.ts:116` ana şerit; `motionMeasure.spec.ts:124`
-sessiz şerit, tek işçi, ön yük %4; ilki izole tekrarda 50/50 geçti; TODO F11.1): düzen kararsızlığı tamamen önlemez.
+sessiz şerit, tek işçi, ön yük %4; ilki izole tekrarda 50/50 geçti): düzen kararsızlığı tamamen önlemez.
 
 **Sessiz şerit.** Zamanı ÖLÇEN ve süre sınırı koyan beş vitrin spec'i (`QUIET_SPECS` →
 `busyFeedback`, `latency`, `motionMeasure`, `performance`, `probe`) iki motor ve dört işçi
@@ -421,17 +371,17 @@ körlemesine tekrarlamayın.
 
 ## Kapı sağlığı: ne yakalar, ne yakalamaz
 
-| Kapı                                            | Yakaladığı                                                                     | Bilinen sınır                                                                                                                                                                                                                                                                                                                                    |
-| ----------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `contract`                                      | katman, döngü, i18n, port, ikon, kilit, belge-gerçek uyumu, bekçilerin kendisi | repo geneline bakar; yalnız yazılmış bekçiyi zorlar; betik kapsamı satır/dal/işlev eşiklidir ama yüklenmeyen CLI'lar gerekçeli listelidir (`scriptCoverage.acknowledged`)                                                                                                                                                                        |
-| `typecheck`, `lint`, `lint-css`, `format-check` | tip, kural ve biçim ihlalleri                                                  | çalışma zamanı davranışını sınamaz                                                                                                                                                                                                                                                                                                               |
-| `test`, `coverage`                              | birim ve yönetişim testleri; kapsam eşikleri ve şekil denetimi                 | `test` eşik uygulamaz (yeşil görünüp `high`'ı kırabilir); eşik düşürmeyi önceki tabana göre reddeden ratchet eksik (F11.4)                                                                                                                                                                                                                       |
-| `audio-test`                                    | audio-synth'in sabit alt kümesi + değişenle ilişkili testler                   | alt küme tam takımın yerini tutmaz; tam kanıt `test` ve `coverage-audio`'dadır                                                                                                                                                                                                                                                                   |
-| `rust`                                          | `fmt`, `clippy -D warnings`, `test`                                            | yalnız host hedefi; Linux/Android native kanıtı ayrı                                                                                                                                                                                                                                                                                             |
-| `e2e`                                           | iki motorda axe, yerleşim, durum matrisi, sahte dil, piksel                    | piksel temeli yalnız Chromium ve işletim sistemi başına: kayıtlı küme yalnız `win32`dir, Linux temeli yoktur (o makinede tam yenilenmedikçe NOT-RUN) ve eksik platform kümesi `contract`ta düşer; atlamalar sayılır ve `skipBudget`la sınırlıdır (aşağıdaki motor boşlukları tablosu); yük altında aralıklı zaman aşımı görülebilir (TODO F11.1) |
-| `scaling`, `bundle`                             | algoritmik ölçekleme oranı, gzip bütçesi                                       | süre eşiği yoktur; cihaz performansı kapı değildir                                                                                                                                                                                                                                                                                               |
-| `coverage-audio`, `audio-verify`                | tam audio kapsamı; yayınlanmış her sesin yeniden render kimliği                | dinleme kanıtı değildir (insan beyanı gerekir)                                                                                                                                                                                                                                                                                                   |
-| `security-js`, `security-rust`                  | bilinen advisory; kayıtsız yeni risk, bayat kayıt, yayımlanmış düzeltme        | kayıtlı riskler gerçek olarak durur (aşağıdaki politika); zamana bağlıdır, yeni advisory kapıyı sonradan kırabilir                                                                                                                                                                                                                               |
+| Kapı                                            | Yakaladığı                                                                     | Bilinen sınır                                                                                                                                                                                                                                                                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `contract`                                      | katman, döngü, i18n, port, ikon, kilit, belge-gerçek uyumu, bekçilerin kendisi | repo geneline bakar; yalnız yazılmış bekçiyi zorlar; betik kapsamı satır/dal/işlev eşiklidir ama yüklenmeyen CLI'lar gerekçeli listelidir (`scriptCoverage.acknowledged`)                                                                                                                                                           |
+| `typecheck`, `lint`, `lint-css`, `format-check` | tip, kural ve biçim ihlalleri                                                  | çalışma zamanı davranışını sınamaz                                                                                                                                                                                                                                                                                                  |
+| `test`, `coverage`                              | birim ve yönetişim testleri; kapsam eşikleri ve şekil denetimi                 | `test` eşik uygulamaz (yeşil görünüp `high`'ı kırabilir); eşik düşürmeyi önceki tabana göre reddeden ratchet eksik (F11.4)                                                                                                                                                                                                          |
+| `audio-test`                                    | audio-synth'in sabit alt kümesi + değişenle ilişkili testler                   | alt küme tam takımın yerini tutmaz; tam kanıt `test` ve `coverage-audio`'dadır                                                                                                                                                                                                                                                      |
+| `rust`                                          | `fmt`, `clippy -D warnings`, `test`                                            | yalnız host hedefi; Linux/Android native kanıtı ayrı                                                                                                                                                                                                                                                                                |
+| `e2e`                                           | iki motorda axe, yerleşim, durum matrisi, sahte dil, piksel                    | piksel temeli yalnız Chromium ve işletim sistemi başına: kayıtlı küme yalnız `win32`dir, Linux temeli yoktur (o makinede tam yenilenmedikçe NOT-RUN) ve eksik platform kümesi `contract`ta düşer; atlamalar sayılır ve `skipBudget`la sınırlıdır (aşağıdaki motor boşlukları tablosu); yük altında aralıklı zaman aşımı görülebilir |
+| `scaling`, `bundle`                             | algoritmik ölçekleme oranı, gzip bütçesi                                       | süre eşiği yoktur; cihaz performansı kapı değildir                                                                                                                                                                                                                                                                                  |
+| `coverage-audio`, `audio-verify`                | tam audio kapsamı; yayınlanmış her sesin yeniden render kimliği                | dinleme kanıtı değildir (insan beyanı gerekir)                                                                                                                                                                                                                                                                                      |
+| `security-js`, `security-rust`                  | bilinen advisory; kayıtsız yeni risk, bayat kayıt, yayımlanmış düzeltme        | kayıtlı riskler gerçek olarak durur (aşağıdaki politika); zamana bağlıdır, yeni advisory kapıyı sonradan kırabilir                                                                                                                                                                                                                  |
 
 **Negatif kontrol (2026-10-11, `quick`):** bilerek eklenen kusurlardan tip hatası, `no-floating-promises`, biçim,
 CSS sınıf adı, 1001 satırlık izlenen ve izlenmeyen dosya, katman ihlali, kodlanmış görünen metin, kırık belge

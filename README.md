@@ -55,13 +55,11 @@ pnpm exec just --list      # tekil kapılar
 Düşen tek kapı bağımsız yeniden çalıştırılır. Koşulmayan kapı geçmiş sayılmaz;
 cihaz ölçümü ve insan dinlemesi otomatik kapıların yerine geçmez.
 
-**2026-10-11 kapı kanıtı:** Aynı performans değişikliği öncesi çalışma ağacında
-üç ardışık tam `signoff` **PASS** (48,4 / 47,0 / 48,1 dk; üçüncü koşu 18/18).
-Ancak vitrin E2E yaklaşık **24–26 dk** sürdüğünden maliyet kabul edilebilir
-değil ([F10.13](TODO.md)); bu sonuçlar sonraki performans/arşiv değişikliklerini,
-F11.1'in açık gerçek pointer/kök neden ve F11.2'nin açık tam kapı hata
-entegrasyonu işlerini veya native cihaz kabulünü onaylamaz. E2E `high` içinde değil; UI değişikliğinde ayrıca
-`pnpm exec just ui-check` gerekir ([kapı sonuçları](docs/gates.md)).
+**Son kaynak kapısı (2026-10-17, `922a83dd`):** taze `signoff` **18/18 PASS**,
+63,6 dk; E2E 1.170 PASS / 21 mevcut SKIP / 0 FAIL/flaky. Bu kayıt kendi kaynak
+ağacını doğrular; native cihaz kabulleri ayrı raporlanır. E2E `high` içinde
+değildir; UI değişikliğinde ayrıca `pnpm exec just ui-check` gerekir
+([kapı sonuçları](docs/gates.md), [denetim §28](docs/monorepo-audit.md)).
 
 ## Belgeler
 

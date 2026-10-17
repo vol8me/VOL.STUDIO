@@ -10,7 +10,8 @@ Zorunlu dinleme kabulü kaldırıldı; teknik kabulün tam kapı kanıtı kök
 
 ## Açık
 
-Açık audio işi yoktur; repo geneli kalan işler kök [TODO](../../TODO.md) F05.5–F05.6 sahibindedir.
+Bu pakette açık iş yoktur. VOL.TEST yetenek sesleri ve kullanıcı değerlendirmeleri
+kök [TODO](../../TODO.md) F09.6/F09.10 sahibindedir.
 
 ## Kapatılanlar
 

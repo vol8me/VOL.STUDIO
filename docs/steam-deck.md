@@ -93,7 +93,7 @@ arayüzü kalır).
   vitrinin dokunma sekmesi). **Doğrulama (SLR4, 2026-10-10, gamescope, LCD Deck, ekran görüntüsü):** Curve Editor
   (ızgara, eğri, noktalar) ve HUD sekmesindeki Minimap (ızgara, bloklar, işaretler) çiziliyor; yama öncesi aynı
   derlemede Curve Editor boştu. Doğrulanmayanlar: dokunma sekmesinin dünya kamerası tuvali ve **HOST derlemesinde yamalı
-  koşu** (UI-13.3 A/B). Phaser/WebGL oyun tuvali bu ölçümün **dışındadır**: canvas kullanan oyun, kabuğun gamescope
+  koşu**; host/SLR4 aynı örnekle A/B değildir. Phaser/WebGL oyun tuvali bu ölçümün **dışındadır**: canvas kullanan oyun, kabuğun gamescope
   kuralını kendi tuvaliyle yeniden sınamadan teslim edilmez (UI-12 / F08).
 - **.desktop şablonu tuzağı:** `devtools/vol-showcase/src-tauri/linux.desktop.hbs` anahtar=değer satır biçimidir. Biçimleyici (Prettier'ın
   Handlebars ayrıştırıcısı) satırları tek satıra birleştirince AppImage paketlemesi bozulur ve Deck'te pencere boş
@@ -165,7 +165,7 @@ ateş tetiğini sürekli basılı tutup sol çubuğu dört yönde döndürdü. 6
 (en düşük 58,9), p95 19 ms (pencere aralığı 19–20), p99 medyan 21 ms (en çok 25); 34 ms'yi aşan kare toplam 5,
 20 ms'yi aşan 662 (≈%1,8). Paket gücü 7,2 → 6,1 W, GPU sıcaklığı 56 → 61 °C, pil bağlı değildi. **p95 ≤18 ms hedefi
 1 ms farkla karşılanmadı** (kare aralığı 16,7/20 ms basamaklarında kümelenir; vsync zamanlayıcısı ve host/SLR4 farkı
-SLR4 derlemesiyle yeniden ölçülür, F08.5). GPU/panel süreleri `null`. Bu, fiziksel kol, gerçek uyku ve Steam
+bu ölçüm SLR4 kabulü değildir). GPU/panel süreleri `null`. Bu, fiziksel kol, gerçek uyku ve Steam
 istemci kabulü değildir.
 
 ### 15 Ekim yapısı, 120 saniyelik ölçüm
@@ -174,7 +174,7 @@ istemci kabulü değildir.
 duyargalar, hasar sayıları, göller ve batış sesi dahil), aynı Deck, gamescope, 1280×800, çoklu tank, kar, yüksek
 kalite, ölçüm kipi, girdi verilmedi. 12 pencerede (10 sn) FPS 52,7 → 59,9: ilk iki pencere ısınmadır (52,7 ve 56,8
 FPS, p95 29 ve 23 ms), sonraki on pencerede 58,1–59,9 FPS ve p95 19–21 ms; 34 ms'yi aşan kare toplam 30. **≥59 FPS ve
-p95 ≤18 ms hedefi (F08.5) karşılanmadı**: ısınma dışında bile p95 19–21 ms'dedir ve karelerin 16,7/20 ms basamaklarında
+p95 ≤18 ms ürün hedefi karşılanmadı**: ısınma dışında bile p95 19–21 ms'dedir ve karelerin 16,7/20 ms basamaklarında
 kümelenmesi önceki ölçümle aynıdır. Ekran görüntüsü yeni HUD'u (can/enerji çubukları, harita ve göller) ve 60 FPS
 göstergesini gösterir. Bu fiziksel kol, gerçek uyku ve Steam istemci kabulü değildir; SLR4 derlemesi ve insan
 beğenisi yapılmadı.
@@ -226,7 +226,7 @@ adım adım yürüyüşte ekran görüntüsüyle sonucu doğrulayın (düğme ba
 için `DISPLAY=:1 xdotool` çalışır.
 
 Sınırlar: host derlemesi (Ubuntu WebKitGTK 2.4x, Cairo CPU boyama) ve SLR4 sayıları birbirinden ayrı ölçülmüştür;
-birbirinin yerine geçmez ve **host/SLR4 aynı örnekle A/B** UI-13.3'tedir. SLR4 koşusu **ısınmamış** tek pencere
+birbirinin yerine geçmez; bu kayıt **host/SLR4 aynı örnekle A/B** kanıtı değildir. SLR4 koşusu **ısınmamış** tek pencere
 ölçümüdür (10 dk termal ve MangoHud/gamescope sunum istatistiği NOT-RUN). CPU governor/termal etkisi ve oyun
 (Phaser/WebGL) FPS'i ayrıdır (VOL.TEST 60 medyan, p95 19 ms; yukarıdaki bölüm). Oyun arayüzüne taşınırken aynı ilke
 geçerlidir: bağımsız HUD plakalarını (kart boyunda) katmana terfi ettir, devasa tek katman kurma.

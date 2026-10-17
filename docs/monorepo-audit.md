@@ -1567,8 +1567,8 @@ Chromium 66/0, WebKit 65/1 (PASS/SKIP). Vitrin 23,8 dk, ürün 16,7 dk,
 tam ses kapsamı 9,2 dk sürdü. Kaynak koşu boyunca değişmedi. Bu sonuç
 önceki başarısız veya kesilen koşuların yerine geçen nihai kapı kanıtıdır;
 atlamalar [kapı sözleşmesindeki](gates.md) mevcut motor boşluklarıdır.
-Tek yeşil koşu F10.13'ün performans kabulü değildir: vitrin hâlâ 10 dk
-hedefini aşar; ürünün bozuk ağ ve araç matrisiyle toplam E2E 40,6 dk'dır.
+Tek yeşil koşu performans iyileştirmesi kanıtı değildir; ürünün bozuk ağ ve
+araç matrisiyle toplam E2E 40,6 dk'dır.
 
 ### Üretim sunucu build'i ve native cihaz kanıtı
 

@@ -8,7 +8,7 @@ malzeme, tok ses, imleç ve hareket hissi; web paneli değil. Mevcut vitrin
 | ------------------------------------------------ | ------------------------------- |
 | Tasarım dili, etkileşim, mimari ve gerekçeler    | [CONTRACT](CONTRACT.md)         |
 | Canlı sınıf/export yüzeyi, tüketici ve tier      | [CATALOG](CATALOG.md)           |
-| Yön, dalgalar, açık görevler ve kapanışlar       | [TODO](TODO.md)                 |
+| Açık görevler ve teknik kapanışlar               | [TODO](TODO.md)                 |
 | Test profilleri, ölçüler ve gerçek kabul yöntemi | [VERIFICATION](VERIFICATION.md) |
 
 Kimlik (tema çifti, malzeme, ikon, imleç, ses) önce kurulur; Button dikey dilimi bunları uçtan
