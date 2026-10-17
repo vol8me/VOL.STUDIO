@@ -106,7 +106,6 @@
     "floorPct": 50,
     "minLines": 50,
     "acknowledged": {
-      "scripts/quality/gate.mjs": "Kapı koşucusunun CLI girişidir; her `pnpm quick|high|signoff` koşusu onu çalıştırır. Mantığı gateRunner.mjs, signoffRecord.mjs ve counts.mjs testlerindedir.",
       "scripts/quality/cli/workspace-contract.mjs": "Sözleşme bekçilerinin CLI birleştiricisidir; `contract` aşamasının `cli` birimi her koşuda onu çalıştırır. Bekçilerin her biri kendi birim testindedir.",
       "scripts/quality/cli/bundle-report.mjs": "Betik justfile tarifiyle (`bundle`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
       "scripts/quality/cli/scaling-report.mjs": "Betik justfile tarifiyle (`scaling`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",

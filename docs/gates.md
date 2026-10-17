@@ -31,6 +31,8 @@ pnpm exec just --list
 
 `pnpm exec just <tarif>` önbelleksiz düz yoldur; pnpm birleşik kapısı
 [gate.mjs](../scripts/quality/gate.mjs) ile sıralama, makbuz ve raporu yönetir.
+`--json` stdout'ta yalnız JSON raporu bırakır; `--verbose` ile birlikte
+kullanıldığında çocuk süreç günlükleri stderr'e akar.
 
 ## Signoff onayı ve kaynak bağı
 

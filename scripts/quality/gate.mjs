@@ -163,7 +163,7 @@ function main() {
       let output = '';
       const take = (chunk) => {
         const text = chunk.toString('utf8');
-        if (verbose && mode.live) process.stdout.write(text);
+        if (verbose && mode.live) (asJson ? process.stderr : process.stdout).write(text);
         output += text;
         if (output.length > OUTPUT_CAP) output = output.slice(-OUTPUT_CAP);
       };
