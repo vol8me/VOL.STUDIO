@@ -1122,11 +1122,11 @@
     {
       "export": "FocusNavController",
       "kind": "class",
-      "tier": 2,
+      "tier": 1,
       "phase": "UI-12",
       "anchor": "A5",
       "archetype": "mechanism",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["ShowcaseApp.ts"],
       "tests": [
         {
@@ -1136,8 +1136,33 @@
         {
           "file": "core/tests/ui/gamepadPointer.test.ts",
           "title": "pointer sahibi A focus activation yolunu tüketir ve çift click üretmez"
+        },
+        {
+          "file": "core/tests/ui/focus/focusBackAndRange.test.ts",
+          "title": "geri sahipliği kapalıyken B ve Escape oyuna kalır; açıldığında yeni basış geri üretir"
         }
-      ]
+      ],
+      "extraStates": ["keyboard", "gamepad"],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cardPickerIntent.test.ts",
+            "title": "koldan bilinçli A niyeti aynı senkron click için izin verir"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/focus/focusBackAndRange.test.ts",
+            "title": "geri sahipliği kapalıyken B ve Escape oyuna kalır; açıldığında yeni basış geri üretir"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "core/tests/ui/focus/focusBackAndRange.test.ts",
+            "title": "geri sahipliği kapalıyken B ve Escape oyuna kalır; açıldığında yeni basış geri üretir"
+          }
+        ]
+      }
     },
     {
       "export": "FpsMeter",

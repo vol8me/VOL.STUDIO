@@ -44,11 +44,15 @@ Paketleme ayrıntıları [Linux rehberindedir](linux.md).
 aynı `chrome105` frontend'den steamrt4 SDK `4.0.20260805.254769` release
 AppImage üretildi. 280 ELF dosyası GLIBC ≤ 2.41 sınırında, yasak GPU sürücü
 kütüphanesi sıfır; 14 GStreamer eklentisi ve paketli OGG/Vorbis çözme PASS.
-Cihaz hazırlıkta `gamescope-wl` ile GameMode'da erişilebildi; güncel paket
-öncesinde mDNS ve bilinen SSH adresi erişilemez oldu. Tek hedefli uyandırma
-denemesi de erişim sağlamadı. Güncel deploy/paket hash'i, GameMode/ağ ve
-SLR4 runtime **NOT-RUN**; fiziksel erişim bekleniyor. Bu SDK/paket kanıtı
-çalışma zamanı kabulü değildir; [rapor §28](monorepo-audit.md) kapsamı ayırır.
+Geçici erişim kaybı sonrası cihazdaki ikili ve AppRun hash'leri eşleşti.
+Resmî sabit runtime arşivinin SHA-256'sı doğrulanıp ayrı devkit alanına kuruldu;
+gerçek oyun süreci `steamrt`/`4`/`4.0.20260805.254769` kökünde ve pressure-vessel
+içinde çalıştı. GameMode menüsü ve kısa HTTP/WS ağ turu PASS: erken kopuşta
+aynı oda/oyuncu ve iklimle dönüş, uzun kopuşta çevrimdışı alıştırmaya dönüş,
+yeniden katılım ve çıkış. Sanal kol START ile duraklatıyor ve oyunda hareket
+ediyor; **menü/garaj D-pad/A/B gezinmesi FAIL**. CORE tüketim düzeltmesinin
+güncel paket kabulü bekleniyor. Fiziksel düğmeler, uyku/uyanma, WSS/WAN ve
+uzun oturum bu koşuda NOT-RUN; [rapor §28](monorepo-audit.md) kapsamı ayırır.
 
 ### Host derlemesiyle vitrin (SLR4 kabı yokken)
 

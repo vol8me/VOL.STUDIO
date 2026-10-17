@@ -34,6 +34,15 @@ Simülasyon olay kuyruğunu sahne her karede bir kez boşaltır. Görünüm mode
 kurallarını üretmez ve modele geri yazmaz. Listener, timer, ses ve native
 abonelikler sahibinin kapanışında sökülür.
 
+`GameServices` ürün ömründe tek CORE `FocusNavController` sahiplenir. Menü,
+garaj, ayarlar ve duraklatma katmanında yön/A gezinmesi ve B/Escape geri
+sahipliği açıktır; World oynanışında bu sahiplik kapanır. Oynarken B fren,
+Escape/Start duraklatma girdisi olarak `PlayerControls`ta kalır. Menü ve
+oyun geçişi aynı durumu native Steam Input action set'ine de taşır. İç
+ayar/geliştirici ekranından geri önce duraklatma ana ekranına döner; üst
+modal kapanınca aynı olay alttaki katmanı kapatmaz. Gezinme, odak ve geri
+yığını oyunda yeniden uygulanmaz.
+
 Sıfır süreli adım modelde yan etki üretmez: komut okunmaz, ateş ve temas çözümü
 çalışmaz. Geçersiz süre ve doğuş konumu durum değişmeden reddedilir. Olay kuyruğu
 adım dışındaki hasar/iyileştirme çağrılarında da sınırlıdır. Senaryo hedeflemesi

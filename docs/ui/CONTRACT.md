@@ -352,6 +352,9 @@ Popup Escape'i yalnız son açılan Popup üzerinden ortak geri yığınına ile
 sonra Modal açılmışsa o katman kapanır. ContextMenu kendi Escape kapanışını tüketir;
 aynı tuş dış Popup veya Modal'ı kapatmaz. İç Popover kapanışında odak dış katmandaki
 tetikleyicide kalır.
+FocusNav ve Modal aynı Escape'i iki kez işlemez; `defaultPrevented` katmanlar
+arasında korunur. Görünür `dialog` ve `alertdialog` aynı modal odak sınırını
+kullanır; onay diyaloğundan alttaki denetimlere yön gezinmesi sızmaz.
 
 Toast görünür yığın ≤3, kritik > ödül > bilgi; rutin 2–5 s. Hover/focus
 zamanı durdurur; aksiyonlu/kritik bildirim erişim kaybedecek biçimde silinmez.

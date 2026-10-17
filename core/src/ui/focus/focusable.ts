@@ -15,7 +15,7 @@ export const FOCUSABLE_SELECTOR =
  */
 
 /** Açık bir modal diyalogun görünür ve inert-olmayan hâli. */
-const DIALOG_SELECTOR = '[role="dialog"][aria-modal="true"]';
+const DIALOG_SELECTOR = ':is([role="dialog"], [role="alertdialog"])[aria-modal="true"]';
 
 function isNavigable(element: HTMLElement): boolean {
   // `inert` bir atasoyda bulunan eleman odak ve olay alamaz — kapalı

@@ -1,5 +1,6 @@
 import type { MessageKey } from '@/i18n/keys';
 import { DisposableScope } from '@volstudio/core/lifecycle';
+import { pushBackHandler } from '@volstudio/core';
 import { i18next } from '@volstudio/core/i18n';
 import { Button, Modal } from '@volstudio/core/ui';
 import type { GameSettings } from '@/app/GameSettings';
@@ -40,6 +41,7 @@ export class PauseOverlay {
   private actionButtons: Array<{ action: PauseAction; button: Button }> = [];
   private closingFromGame = false;
   private view: View = 'main';
+  private viewScope = new DisposableScope();
 
   constructor(
     onResume: () => void,
@@ -47,6 +49,7 @@ export class PauseOverlay {
     displayAvailable = false,
     private readonly live = false,
   ) {
+    this.scope.addSubscription(() => this.viewScope.dispose());
     this.modal = new Modal({
       className: 'vt-pause',
       closeOnScrimClick: false,
@@ -142,11 +145,21 @@ export class PauseOverlay {
 
   /** Şeridin içindeki ekranı değiştirir; geri dönüşte odak açan düğmeye verilir. */
   private show(view: View, focus = false): void {
+    this.viewScope.dispose();
+    this.viewScope = new DisposableScope();
     const from = this.view;
     this.view = view;
     this.frame.element.hidden = view !== 'main';
     if (this.settingsScreen) this.settingsScreen.element.hidden = view !== 'settings';
     if (this.devScreen) this.devScreen.element.hidden = view !== 'dev';
+    if (view !== 'main') {
+      this.viewScope.addSubscription(
+        pushBackHandler(() => {
+          this.show('main', true);
+          return true;
+        }),
+      );
+    }
     if (!focus) return;
     if (view === 'settings') this.settingsScreen?.focus();
     else if (view === 'dev') this.devScreen?.focus();

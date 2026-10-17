@@ -40,11 +40,11 @@ export class DisplayModeController {
   private readonly onError: (error: unknown) => void;
   private applyQueue: Promise<void> = Promise.resolve();
   private applyGeneration = 0;
+  private settledApplyGeneration = 0;
   private applyFailure: { error: unknown } | null = null;
   private preferenceFailure: { error: unknown } | null = null;
   private readonly preferenceWrites = new Set<Promise<void>>();
   private preferenceGeneration = 0;
-  private applyingFullscreen = false;
   private readonly scope = new DisposableScope();
   /** Pencereye en son uygulanan boyut: tercih deposundaki başka bir değişim pencereyi yeniden ortalamaz. */
   private appliedSize: string | null = null;
@@ -119,10 +119,17 @@ export class DisplayModeController {
 
   private apply(): Promise<void> {
     if (this.destroyed) return Promise.resolve();
+    return this.queueApply((generation) => this.applyLatest(generation));
+  }
+
+  private queueApply(operation: (generation: number) => Promise<void>): Promise<void> {
     const generation = ++this.applyGeneration;
     const run = this.applyQueue
-      .then(() => this.applyLatest(generation))
-      .catch((error: unknown) => this.recordApplyError(error));
+      .then(() => operation(generation))
+      .catch((error: unknown) => this.recordApplyError(error))
+      .finally(() => {
+        this.settledApplyGeneration = generation;
+      });
     this.applyQueue = run;
     return run;
   }
@@ -133,24 +140,14 @@ export class DisplayModeController {
     const wantsFullscreen = this.options.getMode() === 'fullscreen';
 
     if (!this.window.isAvailable()) {
-      this.applyingFullscreen = true;
-      try {
-        await this.fullscreen.setFullscreen(wantsFullscreen);
-      } finally {
-        this.applyingFullscreen = false;
-      }
+      await this.fullscreen.setFullscreen(wantsFullscreen);
       return;
     }
 
     const isFullscreen = await this.window.isFullscreen();
     if (this.isStale(generation)) return;
     if (isFullscreen !== wantsFullscreen) {
-      this.applyingFullscreen = true;
-      try {
-        await this.window.setFullscreen(wantsFullscreen);
-      } finally {
-        this.applyingFullscreen = false;
-      }
+      await this.window.setFullscreen(wantsFullscreen);
       // Tam ekrandan çıkış ve girişte pencere boyutu sistemin elindedir: pencereliye dönünce yeniden uygulanır.
       this.appliedSize = null;
     }
@@ -177,8 +174,9 @@ export class DisplayModeController {
   }
 
   private syncMode(active: boolean): void {
-    // Kendi gecikmeli pencere olayımız daha yeni kullanıcı niyetini kalıcı tercihten silemez.
-    if (this.destroyed || this.applyingFullscreen) return;
+    // Resize probu setter bittikten sonra, yeni niyetin durum sorgusu beklerken dönebilir.
+    // Kuyruğa alınan en son niyet tamamen işlenmeden bu yankı tercihe geri yazılamaz.
+    if (this.destroyed || this.settledApplyGeneration !== this.applyGeneration) return;
     const pending = this.persistMode(toMode(active))
       .catch((error: unknown) => {
         try {
@@ -208,17 +206,13 @@ export class DisplayModeController {
 
   private async toggleNative(): Promise<void> {
     if (this.destroyed) return;
-    const generation = ++this.applyGeneration;
-    const run = this.applyQueue
-      .then(async () => {
-        if (this.isStale(generation)) return;
-        const active = await this.window.isFullscreen();
-        if (this.isStale(generation)) return;
-        await this.persistMode(toMode(!active));
-        if (!this.destroyed) void this.apply();
-      })
-      .catch((error: unknown) => this.recordApplyError(error));
-    this.applyQueue = run;
+    const run = this.queueApply(async (generation) => {
+      if (this.isStale(generation)) return;
+      const active = await this.window.isFullscreen();
+      if (this.isStale(generation)) return;
+      await this.persistMode(toMode(!active));
+      if (!this.destroyed) void this.apply();
+    });
     // setMode aboneliği aynı kuyruğa yeni uygulama ekleyebilir; kuyruğun
     // içinden flush beklemek uygulamayı kendi kendisine kilitler.
     await run;

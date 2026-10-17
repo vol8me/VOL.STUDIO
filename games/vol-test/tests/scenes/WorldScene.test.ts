@@ -3,6 +3,7 @@ import { GameServices } from '@/app/GameServices';
 import * as Platform from '@volstudio/tauri-v2';
 import type * as CoreModule from '@volstudio/core';
 import { triggerBack, Vector2, type InputState } from '@volstudio/core';
+import { GAMEPAD_BUTTON, type PadLike } from '@volstudio/core';
 import { TANK } from '@/config/tank';
 import { WORLD } from '@/config/world';
 import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
@@ -145,6 +146,77 @@ afterEach(() => {
 });
 
 describe('WorldScene', { timeout: 20_000 }, () => {
+  it('ürün gezinmesi sürüş B ve oklarını devralmaz; Start ve Escape duraklatmayı bir kez değiştirir', async () => {
+    let buttons: readonly number[] = [];
+    const previous = Object.getOwnPropertyDescriptor(navigator, 'getGamepads');
+    const pad = (): PadLike => ({
+      id: 'world-navigation',
+      index: 0,
+      connected: true,
+      mapping: 'standard',
+      axes: [0, 0],
+      buttons: Array.from({ length: 17 }, (_, index) => ({
+        pressed: buttons.includes(index),
+        value: buttons.includes(index) ? 1 : 0,
+      })),
+    });
+    Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: () => [pad()] });
+    const poll = async (...next: number[]): Promise<void> => {
+      buttons = next;
+      await new Promise<void>((done) => requestAnimationFrame(() => done()));
+    };
+    const services = await GameServices.create();
+    const { frame, parent } = mount(services);
+    const key = (type: string, key: string): KeyboardEvent => {
+      const event = new KeyboardEvent(type, { key, bubbles: true, cancelable: true });
+      document.dispatchEvent(event);
+      return event;
+    };
+    try {
+      expect(services.isPaused).toBe(false);
+      for (const code of ['ArrowDown', 'ArrowLeft', ' ']) {
+        expect(key('keydown', code).defaultPrevented).toBe(false);
+      }
+      await poll(GAMEPAD_BUTTON.secondary);
+      frame({ press: ['brake', 'fire'] });
+      expect(pauseOpen(parent)).toBeNull();
+      await poll();
+      frame();
+      frame({ press: ['pause'] });
+      await poll(GAMEPAD_BUTTON.start);
+      expect(pauseOpen(parent)).not.toBeNull();
+      expect(services.isPaused).toBe(true);
+      await poll();
+      frame();
+      await poll(GAMEPAD_BUTTON.secondary);
+      expect(pauseOpen(parent)).toBeNull();
+      expect(services.isPaused).toBe(false);
+      await poll();
+      frame();
+      expect(key('keydown', 'Escape').defaultPrevented).toBe(false);
+      frame({ press: ['pause'] });
+      expect(pauseOpen(parent)).not.toBeNull();
+      key('keyup', 'Escape');
+      frame();
+      parent.querySelector<HTMLButtonElement>('[data-testid="pause-settings"]')!.click();
+      parent.querySelector<HTMLElement>('[data-testid="settings-back"]')!.focus();
+      expect(key('keydown', 'Escape').defaultPrevented).toBe(true);
+      frame({ press: ['pause'] });
+      expect(pauseOpen(parent)).not.toBeNull();
+      expect(parent.querySelector<HTMLElement>('[data-testid="settings"]')!.hidden).toBe(true);
+      key('keyup', 'Escape');
+      frame();
+      expect(key('keydown', 'Escape').defaultPrevented).toBe(true);
+      frame({ press: ['pause'] });
+      expect(pauseOpen(parent)).toBeNull();
+      expect(services.isPaused).toBe(false);
+    } finally {
+      services.dispose();
+      if (previous) Object.defineProperty(navigator, 'getGamepads', previous);
+      else Reflect.deleteProperty(navigator, 'getGamepads');
+    }
+  });
+
   it('ham, kabul edilen ve düşen süreyi gerçek saat raporundan ölçüme taşır', async () => {
     const frame = vi.fn();
     const services = await GameServices.create();

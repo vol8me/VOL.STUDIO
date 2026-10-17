@@ -164,19 +164,22 @@ describe('FocusNavController', () => {
     expect(document.activeElement).toBe(second);
   });
 
-  it('açık modal varken adaylar diyalog içeriğiyle sınırlanır', () => {
-    makeButton(0, 0);
-    const dialog = document.createElement('div');
-    dialog.setAttribute('role', 'dialog');
-    dialog.setAttribute('aria-modal', 'true');
-    const inside = document.createElement('button');
-    place(inside, 50, 50);
-    dialog.appendChild(inside);
-    // Diyalogun kendisi de görünür olmalı.
-    place(dialog, 0, 0, 500, 500);
-    document.body.appendChild(dialog);
-    expect(listFocusable()).toEqual([inside]);
-  });
+  it.each(['dialog', 'alertdialog'])(
+    'açık %s varken adaylar diyalog içeriğiyle sınırlanır',
+    (role) => {
+      makeButton(0, 0);
+      const dialog = document.createElement('div');
+      dialog.setAttribute('role', role);
+      dialog.setAttribute('aria-modal', 'true');
+      const inside = document.createElement('button');
+      place(inside, 50, 50);
+      dialog.appendChild(inside);
+      // Diyalogun kendisi de görünür olmalı.
+      place(dialog, 0, 0, 500, 500);
+      document.body.appendChild(dialog);
+      expect(listFocusable()).toEqual([inside]);
+    },
+  );
 
   it('kol D-pad kenarı hareket ettir, A etkinleştir, B geri yapar', () => {
     const a = makeButton(0, 0);

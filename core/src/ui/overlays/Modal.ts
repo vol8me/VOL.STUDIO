@@ -87,10 +87,12 @@ export class Modal {
     this.element.appendChild(this.content);
 
     this.boundKeydown = (event) => {
+      if (event.defaultPrevented) return;
       if (openModals[openModals.length - 1] !== this) {
         return;
       }
       if (event.key === 'Escape') {
+        event.preventDefault();
         this.close();
       } else if (event.key === 'Tab') {
         this.trapFocus(event);

@@ -3,6 +3,7 @@ import {
   applyVolViewport,
   DisposableScope,
   shouldUseTouchControls,
+  triggerBack,
   type SimulationClockFrame,
 } from '@volstudio/core';
 import { AimGuide } from '@/view/effects/AimGuide';
@@ -98,6 +99,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create(data?: WorldStartData): void {
+    void this.services?.setPaused(false);
     this.clockFrame = undefined;
     this.scope = new DisposableScope();
     applyVolViewport(this);
@@ -274,6 +276,11 @@ export class WorldScene extends Phaser.Scene {
         suppressPauseInput: () => this.controls.suppress('pause'),
       }),
     );
+    // CORE geri yığını alt ayar ekranını kapatmış olabilir; aynı Escape'in Phaser kenarı
+    // duraklatma katmanını ikinci kez kapatmasın. Dinleyici ürünün FocusNav'inden sonra kurulur.
+    this.scope.addListener(document, 'keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && event.defaultPrevented) this.controls.suppress('pause');
+    });
 
     if (this.services) {
       this.scope.addSubscription(this.services.onPause(() => this.pause.pause()));
@@ -347,7 +354,10 @@ export class WorldScene extends Phaser.Scene {
     diagnostics?.setInput(this.controls.snapshot());
     const player = this.driver.player;
     const command = this.controls.read(this.aimOrigin.x, this.aimOrigin.y, delta);
-    if (this.controls.pressed('pause')) this.pause.toggle();
+    if (this.controls.pressed('pause')) {
+      if (this.pause.paused) triggerBack();
+      else this.pause.pause();
+    }
 
     const paused = this.pause.paused;
     this.cursor.update({

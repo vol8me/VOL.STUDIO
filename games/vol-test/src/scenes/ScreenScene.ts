@@ -74,6 +74,7 @@ export abstract class ScreenScene extends Phaser.Scene {
     this.scope = new DisposableScope();
     this.leaving = false;
     this.published = undefined;
+    void this.services.setPaused(true);
     applyVolViewport(this);
     this.ui = this.scope.addDestroyable(
       new UIRoot(this.game.canvas.parentElement ?? document.body),
@@ -100,7 +101,7 @@ export abstract class ScreenScene extends Phaser.Scene {
     // araç o arada panelin içinde bir alana odaklandıysa (yazmaya başladıysa) odak çalınmaz.
     const focus = requestAnimationFrame(() => {
       const active = document.activeElement;
-      if (active && active !== document.body && screen.element.contains(active)) return;
+      if (active && active !== document.body && this.ui.element.contains(active)) return;
       screen.focus();
     });
     this.scope.addSubscription(() => cancelAnimationFrame(focus));

@@ -315,6 +315,13 @@ ve fonts alt yollarını kullanır. `Sheet` Modal geri/odak sözleşmesini ve d�
 ScrollView'ı birleştirir; iç popup önce kendi Escape'ini tüketir. `StatsPanel`
 kimlikli grupları DOM'u yıkmadan günceller; stat hesabı tüketicinindir.
 
+`FocusNavController` ürün ömründe tek kez kurulur. `isNavigationActive`
+yön/A gezinmesini, varsayılanı açık `isBackActive` ise B/Escape geri
+sahipliğini ayrı belirler. Oynanıştaki tuş anlamı tüketiciye aittir; CORE
+fren veya duraklatma kuralı taşımaz. Kapalı politikada da tutulan tuşlar
+izlenir; menüye geçiş eski basışı yeni niyet saymaz. Görünür en üst
+`dialog` ve `alertdialog` odak sınırıdır; tüketilmiş Escape alt modala inmez.
+
 `VersusBar`, `RankList` ve `ActivityFeed` sıkı HUD sunumudur: ikisi iki taraflı
 hedef şeridi ve sabit satırlı sıralamadır, üçüncüsü kısa ömürlü olay akışıdır.
 Kaydırma ve geçmiş yoktur; satırlar kimliğe göre yerinde güncellenir. Puan

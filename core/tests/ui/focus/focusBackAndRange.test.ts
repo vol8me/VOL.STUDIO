@@ -135,6 +135,45 @@ describe('FocusNav geri basış yaşam döngüsü', () => {
     expect(backs).toBe(2);
   });
 
+  it('geri sahipliği kapalıyken B ve Escape oyuna kalır; açıldığında yeni basış geri üretir', () => {
+    nav.destroy();
+    let active = false;
+    nav = new FocusNavController({
+      getGamepads: () => [pad],
+      isNavigationActive: () => active,
+      isBackActive: () => active,
+    });
+    nav.start();
+    pad = makePad(true);
+    nav.pollPad(pad);
+    expect(nav.back()).toBe(false);
+    expect(escape('keydown').defaultPrevented).toBe(false);
+    expect(backs).toBe(0);
+    active = true;
+    nav.pollPad(pad);
+    expect(backs).toBe(0);
+    expect(escape('keydown').defaultPrevented).toBe(true);
+    expect(escape('keydown', document, true).defaultPrevented).toBe(true);
+    expect(backs).toBe(0);
+    pad = makePad();
+    nav.pollPad(pad);
+    escape('keyup');
+    expect(escape('keydown').defaultPrevented).toBe(true);
+    expect(backs).toBe(1);
+    escape('keyup');
+    pad = makePad(true);
+    nav.pollPad(pad);
+    expect(backs).toBe(2);
+  });
+
+  it('yön gezinmesi kapalıyken geri sahipliği varsayılan olarak sürer', () => {
+    nav.destroy();
+    nav = new FocusNavController({ isNavigationActive: () => false });
+    nav.start();
+    nav.pollPad(makePad(true));
+    expect(backs).toBe(1);
+  });
+
   it('pencere odağı kaybolunca Escape tutuşu sonraki basışı kilitlemez', () => {
     escape('keydown');
     window.dispatchEvent(new Event('blur'));

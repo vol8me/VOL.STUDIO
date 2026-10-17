@@ -116,7 +116,7 @@ describe('GameServices', () => {
       expect(resolveGlyphFamily('gamepad', services!.glyphContext)).toBe('xbox'),
     );
     expect(services.glyphContext.virtualPad?.vid).toBe(0x045e);
-    expect(bridge.actionSets).toEqual(['Gameplay', 'Menu', 'Menu']);
+    expect(bridge.actionSets).toEqual(['Menu', 'Menu', 'Menu']);
     // Kol ayrılınca native ipucu da silinir; sıradaki Gamepad.id gerçeği kazanır.
     bridge.glyphContext = {};
     bridge.pads = [];
@@ -146,9 +146,9 @@ describe('GameServices', () => {
     bridge.steamReady = true;
     window.dispatchEvent(new Event('focus'));
     await vi.waitFor(() => expect(services!.steam.available).toBe(true));
-    expect(bridge.actionSets).toEqual(['Gameplay']);
+    expect(bridge.actionSets).toEqual(['Menu']);
     await services.setPaused(true);
-    expect(bridge.actionSets).toEqual(['Gameplay', 'Menu']);
+    expect(bridge.actionSets).toEqual(['Menu', 'Menu']);
     bridge.steamReady = false;
   });
 
@@ -175,7 +175,7 @@ describe('GameServices', () => {
     finish({ steamworksType: 'xboxone' });
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(resolveGlyphFamily('gamepad', services.glyphContext)).toBe('playstation');
-    expect(bridge.actionSets).toEqual(['Gameplay']);
+    expect(bridge.actionSets).toEqual(['Menu']);
     bridge.glyphLookup = () => {
       throw new Error('Sökülen dinleyici çağrıldı.');
     };
@@ -419,10 +419,11 @@ describe('GameServices', () => {
     });
     services = await GameServices.create();
     expect(services.steam.available).toBe(true);
-    expect(bridge.actionSets).toEqual(['Gameplay']);
-    await services.setPaused(true);
+    expect(bridge.actionSets).toEqual(['Menu']);
+    expect(services.isPaused).toBe(true);
     await services.setPaused(false);
-    expect(bridge.actionSets).toEqual(['Gameplay', 'Menu', 'Gameplay']);
+    await services.setPaused(true);
+    expect(bridge.actionSets).toEqual(['Menu', 'Gameplay', 'Menu']);
     bridge.steamReady = false;
   });
   it('uyku ve kapanış son cihaz tercihini ve ilerlemeyi iki kapsamda boşaltır', async () => {

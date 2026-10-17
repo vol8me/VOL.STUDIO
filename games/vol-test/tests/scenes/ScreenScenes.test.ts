@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type * as CoreModule from '@volstudio/core';
 import { getBackHandlerCount, triggerBack } from '@volstudio/core';
 import { i18next } from '@volstudio/core/i18n';
-import type { GameServices } from '@/app/GameServices';
+import { GAMEPAD_BUTTON, type PadLike } from '@volstudio/core';
+import { GameServices } from '@/app/GameServices';
 import { FACTION_AUTO, type GamePreferences } from '@/app/GameSettings';
 import { BACKDROP } from '@/config/backdrop';
 import { VEHICLES } from '@/config/vehicles';
@@ -69,6 +70,52 @@ interface Harness<T extends ScreenScene> {
 }
 
 const harnesses: Array<Harness<ScreenScene>> = [];
+const liveServices: GameServices[] = [];
+const navigationCleanups: Array<() => void> = [];
+
+const frame = (): Promise<void> => new Promise((done) => requestAnimationFrame(() => done()));
+
+async function navigationProduct() {
+  let pressed: readonly number[] = [];
+  const pad = (): PadLike => ({
+    id: 'navigation-test',
+    index: 0,
+    connected: true,
+    mapping: 'standard',
+    axes: [0, 0],
+    buttons: Array.from({ length: 17 }, (_, index) => ({
+      pressed: pressed.includes(index),
+      value: pressed.includes(index) ? 1 : 0,
+    })),
+  });
+  vi.stubGlobal(
+    'navigator',
+    new Proxy(navigator, {
+      get: (target, key): unknown =>
+        key === 'getGamepads' ? () => [pad()] : Reflect.get(target, key, target),
+    }),
+  );
+  const measure = vi
+    .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+    .mockImplementation(function (this: HTMLElement) {
+      if (this.hidden || this.inert) return new DOMRect();
+      for (let node = this.parentElement; node; node = node.parentElement) {
+        if (node.hidden || node.inert) return new DOMRect();
+      }
+      const elements = [...document.querySelectorAll('button, input, [tabindex]')];
+      return new DOMRect(0, Math.max(0, elements.indexOf(this)) * 50, 160, 40);
+    });
+  navigationCleanups.push(() => measure.mockRestore());
+  const env = await GameServices.create();
+  liveServices.push(env);
+  return {
+    env,
+    pad: async (...buttons: number[]) => {
+      pressed = buttons;
+      await frame();
+    },
+  };
+}
 
 function services(
   overrides: Partial<GamePreferences> = {},
@@ -116,6 +163,7 @@ function services(
         },
       },
       onResume: () => () => undefined,
+      setPaused: () => Promise.resolve(),
     } as unknown as GameServices,
   };
 }
@@ -178,6 +226,9 @@ afterEach(async () => {
     harness.shutdown();
     harness.parent.remove();
   }
+  for (const service of liveServices.splice(0)) service.dispose();
+  for (const cleanup of navigationCleanups.splice(0).reverse()) cleanup();
+  vi.unstubAllGlobals();
   vi.clearAllMocks();
   await i18next.changeLanguage('tr');
 });
@@ -211,6 +262,105 @@ describe('ScreenScene arayüz sesi', () => {
 });
 
 describe('ScreenScene odağı', () => {
+  it('ürün servisi menü ok gezinmesini kurar ve sahne değişince garajın geri yoluna bağlanır', async () => {
+    const { env } = await navigationProduct();
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    await frame();
+    const arrow = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      bubbles: true,
+      cancelable: true,
+    });
+    document.activeElement!.dispatchEvent(arrow);
+    expect(arrow.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(menu.find('menu-practice'));
+    expect(env.isPaused).toBe(true);
+    menu.shutdown();
+    menu.parent.remove();
+    const garage = mount(() => new GarageScene(env));
+    await frame();
+    document.activeElement!.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+    );
+    garage.finishFade();
+    expect(garage.start).toHaveBeenCalledExactlyOnceWith('Menu', {});
+    env.dispose();
+    const after = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      bubbles: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(after);
+    expect(after.defaultPrevented).toBe(false);
+  });
+
+  it('ürün yoklaması D-pad aşağı ve A ile ilk menüden alıştırmaya geçer', async () => {
+    const { env, pad } = await navigationProduct();
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    await frame();
+    await pad(GAMEPAD_BUTTON.dpadDown);
+    expect(document.activeElement).toBe(menu.find('menu-practice'));
+    await pad();
+    await pad(GAMEPAD_BUTTON.primary);
+    menu.finishFade();
+    expect(menu.start).toHaveBeenCalledExactlyOnceWith('World', {});
+  });
+
+  it('A ile açılan garaj aynı tutuşu yeniden etkinleştirmez; B menüye bir kez döner', async () => {
+    const { env, pad } = await navigationProduct();
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    await frame();
+    await pad(GAMEPAD_BUTTON.primary);
+    menu.finishFade();
+    expect(menu.start).toHaveBeenCalledExactlyOnceWith('Garage', {});
+    menu.shutdown();
+    menu.parent.remove();
+    const update = vi.spyOn(env.settings, 'update');
+    const garage = mount(() => new GarageScene(env));
+    await frame();
+    await pad(GAMEPAD_BUTTON.primary);
+    expect(update).not.toHaveBeenCalled();
+    await pad();
+    await pad(GAMEPAD_BUTTON.secondary);
+    await pad(GAMEPAD_BUTTON.secondary);
+    garage.finishFade();
+    expect(garage.start).toHaveBeenCalledExactlyOnceWith('Menu', {});
+  });
+
+  it('metin okları ve Tab native kalır; işaretçi odak halkasını kaldırır', async () => {
+    const { env, pad } = await navigationProduct();
+    const garage = mount(() => new GarageScene(env));
+    await frame();
+    await pad(GAMEPAD_BUTTON.dpadDown);
+    expect(document.querySelector('.vol-focusnav-current')).not.toBeNull();
+    document.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(document.querySelector('.vol-focusnav-current')).toBeNull();
+    const name = garage.find<HTMLInputElement>('garage-name');
+    name.focus();
+    for (const key of ['ArrowDown', 'ArrowLeft', 'Tab']) {
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      name.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+      expect(document.activeElement).toBe(name);
+    }
+  });
+
+  it('ürün kol gezinmesi ses kaydırıcısını ayarlar; dikey yönde denetimden çıkar', async () => {
+    const { env, pad } = await navigationProduct();
+    await env.settings.update({ volume: 0.5 });
+    const settings = mount(() => new SettingsScene(env));
+    await frame();
+    const volume = settings.find('settings-volume').querySelector<HTMLInputElement>('input')!;
+    volume.focus();
+    await pad(GAMEPAD_BUTTON.dpadRight);
+    expect(env.settings.get().volume).toBeCloseTo(0.55);
+    expect(document.activeElement).toBe(volume);
+    await pad();
+    await pad(GAMEPAD_BUTTON.dpadDown);
+    expect(document.activeElement).not.toBe(volume);
+    expect(env.settings.get().volume).toBeCloseTo(0.55);
+  });
+
   it('ilk karede varsayılan öğeye odak verir, ama kullanıcının seçtiği alanı çalmaz', async () => {
     const frame = (): Promise<void> => new Promise((done) => requestAnimationFrame(() => done()));
     const { services: env } = services();

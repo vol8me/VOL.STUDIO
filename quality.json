@@ -158,14 +158,14 @@
     }
   },
   "bundles": {
-    "$comment": "Gzip level 9; uygulama, vendor ve CSS ayrı ölçülür. VOL.TEST CORE/network sağlamlaştırmasında başlangıç commit kaynakları Vite load katmanında okunarak çalışma ağacı değiştirilmeden karşılaştırıldı: vitrin app 237782 → 238480 B (+698 B), VOL.TEST app 304617 → 307203 B (+2586 B). Artış; yaşam döngüsü/kuyruk, girdi/metin ve sayısal pencere korumaları ile simülasyon/ağ payload doğrulamalarının çalışma zamanı maliyetidir. Ortak mekanizmalar CORE/network içinde tekilleştirildi. App bütçeleri kapının ölçtüğü 232.9 ve 300.0 KiB değerlerine güncellendi (önce 232.2/297.8); vendor ve CSS byte olarak aynı, eşikleri değişmedi. Uygulama kodu vendor içine taşınmadı; kapsam, atlama ve güvenlik eşikleri korunur. Kanıt ve kapsam docs/monorepo-audit.md §28; genel bütçe işi TODO.md F10.13. Önceki büyüme gerekçeleri Git geçmişindedir.",
+    "$comment": "Gzip level 9; uygulama, vendor ve CSS ayrı ölçülür. CORE/network sağlamlaştırması ve cihazda bulunan CORE gezinme tüketimi sonrası başlangıç 1f87893a kaynaklarıyla karşılaştırma: vitrin app 237782 → 238522 B (+740 B), VOL.TEST app 304617 → 309318 B (+4701 B). Son niyet kuyruğu, sınır doğrulamaları ve ortak sayısal pencere yanında ürün ömürlü FocusNav ile menü/oynanış geri sahipliği gerçek Deck kusurunu kapatır. İlk sağlamlaştırma ölçümüne göre son pencere/kol düzeltmelerinin ek bedeli vitrin +42 B, oyun +2115 B. App bütçeleri ölçülen 232.9/302.1 KiB değerleridir (oturum başlangıcı 232.2/297.8); vendor ve CSS baytları aynı, eşikleri değişmedi. Uygulama vendor içine taşınmadı; kapsam, atlama, güvenlik ve genel timeout korunur. Kanıt ve kapsam docs/monorepo-audit.md §28; genel bütçe işi TODO.md F10.13. Önceki büyüme gerekçeleri Git geçmişindedir.",
     "devtools/vol-showcase": {
       "app": 232.9,
       "vendor": 1,
       "css": 31.9
     },
     "games/vol-test": {
-      "app": 300,
+      "app": 302.1,
       "vendor": 360,
       "css": 30
     }

@@ -36,6 +36,8 @@ export interface FocusNavOptions {
   getGamepads?: () => readonly (PadLike | null)[];
   /** Yön ve A gezinmesi; B/Escape/Menu ortak geri yolunu kullanmayı sürdürür. */
   isNavigationActive?: () => boolean;
+  /** B/Escape geri sahipliği; varsayılan true. Kapalıyken basışlar tüketiciye kalır, yön/A politikasından bağımsızdır. */
+  isBackActive?: () => boolean;
   /** Çubuk tekrarının monoton saati; varsayılan `performance.now`. */
   now?: () => number;
   /** true dönerse A niyetini tüketir; ör. sanal pointer down/up sahibidir. */
@@ -276,6 +278,7 @@ export class FocusNavController {
 
   /** Geri yığınına düşürür (B / Escape / Android geri). */
   back(): boolean {
+    if (this.options.isBackActive?.() === false) return false;
     if (isEditingTarget(this.focused)) return false;
     this.clearRing();
     return triggerBack();
@@ -299,6 +302,10 @@ export class FocusNavController {
   private onKeydown(event: KeyboardEvent): void {
     if (this.dispatchingArrow) return;
     if (event.key === 'Escape') {
+      if (this.options.isBackActive?.() === false) {
+        this.escapeHeld = true;
+        return;
+      }
       if (event.defaultPrevented || isEditingTarget(event.target)) {
         this.escapeHeld = true;
         return;

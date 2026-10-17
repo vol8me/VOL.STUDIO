@@ -11,7 +11,7 @@ import {
   type GlyphFamilyContext,
   type ScopedStores,
 } from '@volstudio/core';
-import { CursorController } from '@volstudio/core/ui';
+import { CursorController, FocusNavController } from '@volstudio/core/ui';
 import {
   androidScreenOrientation,
   activateSteamActionSet,
@@ -70,7 +70,7 @@ export class GameServices {
   private readonly resumeListeners = new Set<() => Promise<void>>();
   private released = false;
   private readonly stores: ScopedStores;
-  private paused = false;
+  private paused = true;
   private inputGeneration = 0;
   private inputQueue: Promise<void> = Promise.resolve();
 
@@ -87,6 +87,14 @@ export class GameServices {
     this.settings = new GameSettings(store, navigator.userAgent);
     this.progress = new GameProgress(store);
     this.cursors = this.scope.add(new CursorController({ mode: 'ui' }));
+    const navigation = this.scope.addDestroyable(
+      new FocusNavController({
+        isNavigationActive: () => this.paused,
+        // Oynarken B fren, Escape/Start PlayerControls'un duraklatma girdisidir.
+        isBackActive: () => this.paused,
+      }),
+    );
+    navigation.start();
     this.scope.addSubscription(() => this.settings.dispose());
     this.scope.addSubscription(() => this.progress.dispose());
     this.displayAvailable =
@@ -229,7 +237,7 @@ export class GameServices {
     return this.steamState;
   }
 
-  /** Oyun duraklatılmış mı (`setPaused`); uyarlanır çözünürlük duraklatmada ölçmez. */
+  /** Menüde ya da duraklatmada UI girdisi sahip midir; uyarlanır çözünürlük burada ölçmez. */
   get isPaused(): boolean {
     return this.paused;
   }

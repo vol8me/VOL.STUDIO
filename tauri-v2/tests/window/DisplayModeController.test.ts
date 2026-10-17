@@ -5,8 +5,19 @@ import {
   type DisplayMode,
   type DisplayModeControllerOptions,
 } from '../../src/window/DisplayModeController';
+import { TauriWindowAdapter } from '../../src/window/TauriWindowAdapter';
 
 vi.mock('@tauri-apps/api/core', () => ({ isTauri: () => false, invoke: vi.fn() }));
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((accept, decline) => {
+    resolve = accept;
+    reject = decline;
+  });
+  return { promise, resolve, reject };
+}
 
 function makePreference(initial: DisplayMode) {
   let mode = initial;
@@ -138,6 +149,147 @@ describe('DisplayModeController — native pencere', () => {
     release();
     await controller.flush();
     expect(preference.getMode()).toBe('windowed');
+    expect(native.adapter.setFullscreen).toHaveBeenLastCalledWith(false);
+  });
+
+  it('gerçek adaptörün geç resize probu bekleyen yeni pencere sorgusunu geçersiz kılamaz', async () => {
+    const preference = makePreference('windowed');
+    const fullscreenWritten = deferred<void>();
+    const fullscreenStarted = deferred<void>();
+    let active = false;
+    let resize!: () => void;
+    const target = {
+      center: vi.fn().mockResolvedValue(undefined),
+      onResized: vi.fn((listener: () => void) => {
+        resize = listener;
+        return Promise.resolve(vi.fn());
+      }),
+      setFullscreen: vi.fn((next: boolean) => {
+        active = next;
+        if (next) {
+          fullscreenStarted.resolve();
+          return fullscreenWritten.promise;
+        }
+        return Promise.resolve();
+      }),
+      setSize: vi.fn().mockResolvedValue(undefined),
+    };
+    const readFullscreen = vi.fn(() => Promise.resolve(active));
+    const adapter = new TauriWindowAdapter({ enabled: true, window: target, readFullscreen });
+    const controller = create({ ...preference, windowAdapter: adapter });
+    await controller.start();
+
+    await preference.setMode('fullscreen');
+    await fullscreenStarted.promise;
+    await preference.setMode('windowed');
+    const probeStarted = deferred<void>();
+    const oldProbe = deferred<boolean>();
+    readFullscreen.mockImplementationOnce(() => {
+      probeStarted.resolve();
+      return oldProbe.promise;
+    });
+    resize();
+    await probeStarted.promise;
+
+    const windowedReadStarted = deferred<void>();
+    const windowedRead = deferred<boolean>();
+    readFullscreen.mockImplementationOnce(() => {
+      windowedReadStarted.resolve();
+      return windowedRead.promise;
+    });
+    fullscreenWritten.resolve();
+    await windowedReadStarted.promise;
+    oldProbe.resolve(true);
+    // Adaptör bu promise'i önce beklemeye başladı; onun bildirimi önce çalışır.
+    await oldProbe.promise;
+    windowedRead.resolve(true);
+    await controller.flush();
+
+    expect(preference.getMode()).toBe('windowed');
+    expect(preference.setMode.mock.calls).toEqual([['fullscreen'], ['windowed']]);
+    expect(target.setFullscreen.mock.calls).toEqual([[true], [false]]);
+
+    resize();
+    await vi.waitFor(() => expect(preference.setMode).toHaveBeenCalledTimes(3));
+    await controller.flush();
+    active = true;
+    resize();
+    await vi.waitFor(() => expect(preference.getMode()).toBe('fullscreen'));
+    await controller.flush();
+    expect(target.setFullscreen.mock.calls).toEqual([[true], [false]]);
+  });
+
+  it('henüz başlamayan birleşmiş uygulamaların son niyetini native olay geri alamaz', async () => {
+    const preference = makePreference('windowed');
+    const native = makeNativeWindow();
+    const controller = create({ ...preference, windowAdapter: native.adapter });
+    await controller.start();
+
+    const first = preference.setMode('fullscreen');
+    const last = preference.setMode('windowed');
+    native.emitNative(true);
+    await Promise.all([first, last]);
+    await controller.flush();
+
+    expect(preference.getMode()).toBe('windowed');
+    expect(native.adapter.setFullscreen.mock.calls).toEqual([[false]]);
+    native.emitNative(true);
+    expect(preference.getMode()).toBe('fullscreen');
+    await controller.flush();
+  });
+
+  it.each(['sorgu', 'uygulama'] as const)(
+    'native %s reddinden sonra boşta gelen pencere yöneticisi değişimi kabul edilir',
+    async (stage) => {
+      const preference = makePreference('windowed');
+      const native = makeNativeWindow();
+      const onError = vi.fn();
+      const controller = create({ ...preference, windowAdapter: native.adapter, onError });
+      await controller.start();
+      const started = deferred<void>();
+      const operation = deferred<never>();
+      const pending = () => {
+        started.resolve();
+        return operation.promise;
+      };
+      if (stage === 'sorgu') native.adapter.isFullscreen.mockImplementationOnce(pending);
+      else native.adapter.setFullscreen.mockImplementationOnce(pending);
+
+      await preference.setMode('fullscreen');
+      await started.promise;
+      native.emitNative(false);
+      expect(preference.getMode()).toBe('fullscreen');
+      const failure = new Error('native pencere reddetti');
+      operation.reject(failure);
+      await expect(controller.flush()).rejects.toBe(failure);
+
+      native.emitNative(false);
+      expect(preference.getMode()).toBe('windowed');
+      await expect(controller.flush()).resolves.toBeUndefined();
+      expect(onError).toHaveBeenCalledExactlyOnceWith(failure);
+    },
+  );
+
+  it('F11 durum sorgusu beklerken native yankı toggle niyetini iptal edemez', async () => {
+    const preference = makePreference('windowed');
+    const native = makeNativeWindow();
+    const controller = create({ ...preference, windowAdapter: native.adapter });
+    await controller.start();
+    const started = deferred<void>();
+    const read = deferred<boolean>();
+    native.adapter.isFullscreen.mockImplementationOnce(() => {
+      started.resolve();
+      return read.promise;
+    });
+
+    const toggled = controller.toggle();
+    await started.promise;
+    native.emitNative(true);
+    read.resolve(true);
+    await toggled;
+
+    expect(preference.getMode()).toBe('windowed');
+    expect(preference.setMode).toHaveBeenCalledExactlyOnceWith('windowed');
     expect(native.adapter.setFullscreen).toHaveBeenLastCalledWith(false);
   });
 
