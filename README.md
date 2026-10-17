@@ -55,30 +55,30 @@ pnpm exec just --list      # tekil kapılar
 Düşen tek kapı bağımsız yeniden çalıştırılır. Koşulmayan kapı geçmiş sayılmaz;
 cihaz ölçümü ve insan dinlemesi otomatik kapıların yerine geçmez.
 
-E2E `high` içinde değildir; `signoff` kapsamındadır. UI değişikliğinde ayrıca
-`pnpm exec just ui-check` gerekir. Güncel kaynak, koşulan kapılar ve ölçülmeyen
-kabuller [denetim §29](docs/monorepo-audit.md)'dadır; önceki tam kaynak/cihaz
-turunun sahibi §28'dir. Her kayıt yalnız kendi kaynak ağacını doğrular
-([kapı sözleşmesi](docs/gates.md)).
+Monorepo sürümünün kaynağı kök [package.json](package.json) dosyasıdır.
+E2E `high` içinde değildir; `signoff` kapsamındadır.
+UI değişikliğinde ayrıca `pnpm exec just ui-check` gerekir. Güncel sorumluluklar
+ve ölçülmeyen kabuller [denetimde](docs/monorepo-audit.md), kaynakla bağlı
+kanıtın biçimi [kapı sözleşmesindedir](docs/gates.md).
 
 ## Belgeler
 
-| Konu                            | Belge                                                                     |
-| ------------------------------- | ------------------------------------------------------------------------- |
-| Çalışma sözleşmesi              | [AGENTS.md](AGENTS.md)                                                    |
-| Kapılar ve raporlar             | [docs/gates.md](docs/gates.md)                                            |
-| Motor                           | [core/README.md](core/README.md)                                          |
-| Native kabuk                    | [tauri-v2/README.md](tauri-v2/README.md)                                  |
-| Linux                           | [docs/linux.md](docs/linux.md)                                            |
-| Steam Deck                      | [docs/steam-deck.md](docs/steam-deck.md)                                  |
-| Android                         | [docs/android.md](docs/android.md)                                        |
-| Ses üretimi                     | [audio-synth/README.md](devtools/audio-synth/README.md)                   |
-| Rig üretimi                     | [pen.dev/README.md](devtools/pen.dev/README.md)                           |
-| UI kataloğu                     | [vol-showcase/README.md](devtools/vol-showcase/README.md)                 |
-| UI sözleşmesi ve iş listesi     | [CORE UI belge rehberi](docs/ui/README.md)                                |
-| Açık işler                      | [TODO.md](TODO.md)                                                        |
-| Teknik değerlendirme            | [Monorepo denetimi ve iyileştirme kararları](docs/monorepo-audit.md)      |
-| Multiplayer backend araştırması | [Kalıcı 8–12 oyunculu otomasyon/TD araştırması](docs/backend-research.md) |
+| Konu                        | Belge                                                                |
+| --------------------------- | -------------------------------------------------------------------- |
+| Çalışma sözleşmesi          | [AGENTS.md](AGENTS.md)                                               |
+| Kapılar ve raporlar         | [docs/gates.md](docs/gates.md)                                       |
+| Motor                       | [core/README.md](core/README.md)                                     |
+| Native kabuk                | [tauri-v2/README.md](tauri-v2/README.md)                             |
+| Linux                       | [docs/linux.md](docs/linux.md)                                       |
+| Steam Deck                  | [docs/steam-deck.md](docs/steam-deck.md)                             |
+| Android                     | [docs/android.md](docs/android.md)                                   |
+| Ses üretimi                 | [audio-synth/README.md](devtools/audio-synth/README.md)              |
+| Rig üretimi                 | [pen.dev/README.md](devtools/pen.dev/README.md)                      |
+| UI kataloğu                 | [vol-showcase/README.md](devtools/vol-showcase/README.md)            |
+| UI sözleşmesi ve iş listesi | [CORE UI belge rehberi](docs/ui/README.md)                           |
+| Açık işler                  | [TODO.md](TODO.md)                                                   |
+| Teknik değerlendirme        | [Monorepo denetimi ve iyileştirme kararları](docs/monorepo-audit.md) |
+| Multiplayer mimarisi        | [network/DESIGN.md](network/DESIGN.md)                               |
 
 ## Lisans
 

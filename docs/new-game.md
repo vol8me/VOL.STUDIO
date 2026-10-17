@@ -83,7 +83,7 @@ girdi kabul edilir ve her sabit sim adımında en fazla bir niyet işlenir.
 
 Bağlantı bütçesi dünyaya bağlıdır. Çok sayıda varlığı olan, oyuncusuz da işleyen bir dünyada tam
 durumu `Schema` ile çoğaltmak pahalıdır; ilgi alanı çerçevesi ya da deterministik adım gibi seçenekler
-ölçüyle seçilir ([araştırma](backend-research.md)). Deterministik yol savaş sisini ve gizli bilgiyi
+ölçüyle seçilir ([network tasarımı](../network/DESIGN.md)). Deterministik yol savaş sisini ve gizli bilgiyi
 taşımaz. Karar, oyunun gizli bilgi ihtiyacına göre verilir.
 
 Bağlantı açıldığında `DisposableScope` ve oda aboneliğinin `dispose()` yolu
@@ -92,7 +92,7 @@ güvenli yayın uçları WSS/HTTPS'e ve auth token politikasına uyarlanır.
 Oyuncu konumu, takım, hasar ve ekonomi yalnız sunucuda değiştirilir. Kalıcı
 dünya için her dünya bir writer, snapshot+journal, komut idempotency, yeniden
 bağlanma ve görünürlük/chunk bütçesi olmadan yayın kabul edilmez.
-[Araştırma ve maliyet](backend-research.md), [paket](../network/README.md).
+[Network tasarımı](../network/DESIGN.md), [paket](../network/README.md).
 
 ## Kendiliğinden olanlar
 

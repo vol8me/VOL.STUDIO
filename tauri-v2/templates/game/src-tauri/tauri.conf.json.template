@@ -1,7 +1,7 @@
 {
   "productName": "{{TITLE}}",
   "mainBinaryName": "{{TITLE}}",
-  "version": "0.1.0",
+  "version": "../../../package.json",
   "identifier": "{{ID}}",
   "build": {
     "beforeDevCommand": "pnpm --filter @volstudio/{{NAME}} dev",

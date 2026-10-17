@@ -18,6 +18,8 @@ import {
   REGISTRY_PATH,
   stateCoverage,
   suggestEvidence,
+  uiSurface,
+  volTestImports,
   validateRepoUiRegistry,
 } from '../uiRegistry.mjs';
 
@@ -47,7 +49,27 @@ function printStates(phases) {
   }
 }
 
-if (flag === '--suggest' && name) {
+if (flag === '--summary') {
+  const surface = uiSurface(root);
+  const usage = volTestImports(root, new Set(surface.classes.map((entry) => entry.name)));
+  const registry = JSON.parse(readFileSync(resolve(root, REGISTRY_PATH), 'utf8'));
+  const fixtures = JSON.parse(readFileSync(resolve(root, STATE_FIXTURES_PATH), 'utf8'));
+  const rows = stateCoverage(registry, { tier: 1, fixtures });
+  const sum = (key) => rows.reduce((total, row) => total + row[key].length, 0);
+  console.log(
+    JSON.stringify(
+      {
+        classes: surface.classes.length,
+        helpers: surface.helpers.length,
+        types: surface.types,
+        directClasses: usage.used.size,
+        tier1: { bound: sum('bound'), fixtured: sum('fixtured'), open: sum('open'), na: sum('na') },
+      },
+      null,
+      2,
+    ),
+  );
+} else if (flag === '--suggest' && name) {
   const found = suggestEvidence(root, name, 5);
   if (found.length === 0) {
     console.log(`${name}: doğrulama taşıyan test bulunamadı; registry'ye gap (sahip görevli) yaz.`);
@@ -62,6 +84,8 @@ if (flag === '--suggest' && name) {
   console.log(`[ui-registry] ${problems.length === 0 ? 'geçerli' : `${problems.length} ihlal`}`);
   process.exit(problems.length === 0 ? 0 : 1);
 } else {
-  console.error('Kullanım: ui-registry.mjs --check | --suggest <ExportAdı> | --states [UI-NN ...]');
+  console.error(
+    'Kullanım: ui-registry.mjs --check | --summary | --suggest <ExportAdı> | --states [UI-NN ...]',
+  );
   process.exit(2);
 }

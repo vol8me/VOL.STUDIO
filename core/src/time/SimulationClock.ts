@@ -40,11 +40,16 @@ export class SimulationClock {
   private readonly partialStepPolicy: PartialStepPolicy;
 
   constructor(config: SimulationClockConfig) {
+    config = {
+      fixedStepMs: config.fixedStepMs,
+      maxStepsPerFrame: config.maxStepsPerFrame,
+      partialStep: config.partialStep,
+    };
     if (!Number.isFinite(config.fixedStepMs) || config.fixedStepMs <= 0)
       throw new RangeError('SimulationClock: fixedStepMs pozitif ve sonlu olmalı');
     if (!Number.isSafeInteger(config.maxStepsPerFrame) || config.maxStepsPerFrame <= 0)
       throw new RangeError('SimulationClock: maxStepsPerFrame pozitif tam sayı olmalı');
-    this.config = { ...config };
+    this.config = config;
     this.partialStepPolicy = config.partialStep ?? 'simulate';
   }
 

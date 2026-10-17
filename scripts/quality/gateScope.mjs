@@ -11,7 +11,7 @@
  *  - `closure`: bir paketin kendisi + `@volstudio/*` bağımlılık kapanışı + kök
  *    yapılandırma + paketlerin GERÇEKTEN başvurduğu betikler (`deriveSharedInputs`).
  *    Betik dizinindeki başka dosya paket sonucunu etkilemez.
- *  - `crate`: bir Rust crate'inin dizini + path bağımlılıkları + Cargo kökü.
+ *  - `crate`: bir Rust crate'inin yolları + path bağımlılıkları + Cargo kökü.
  *
  * Paketin başka dizine uzandığı bir dosya okuması `findScopeEscapes` ile bekçilenir.
  */
@@ -109,7 +109,7 @@ const isBaseFile = (graph, path) => isGlobalFile(graph, path) && !under(path, SC
 /**
  * @typedef {{ kind: 'repo' } | { kind: 'code' }
  *   | { kind: 'closure', package: string }
- *   | { kind: 'crate', dirs: string[] }} Scope
+ *   | { kind: 'crate', paths: string[] }} Scope
  *
  * @param {Scope} scope
  * @param {Map<string, Set<string>>} [shared] `deriveSharedInputs` sonucu; `closure` için
@@ -129,7 +129,7 @@ export function scopeInclude(graph, scope, shared = new Map()) {
   }
   if (scope.kind === 'crate') {
     return (path) =>
-      underAny(path, scope.dirs) ||
+      underAny(path, scope.paths) ||
       CARGO_ROOT_FILES.includes(path) ||
       underAny(path, CARGO_ROOT_DIRS);
   }

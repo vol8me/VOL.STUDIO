@@ -74,6 +74,14 @@ export class GazeDriver {
   private saccading = false;
 
   constructor(config: GazeDriverConfig, random: Random = createRandom()) {
+    config = {
+      radiusPx: config.radiusPx,
+      holdMsMin: config.holdMsMin,
+      holdMsMax: config.holdMsMax,
+      saccadeMs: config.saccadeMs,
+      minRadiusRatio: config.minRadiusRatio,
+      alertHoldScale: config.alertHoldScale,
+    };
     requireFinite(config.radiusPx, 'GazeDriverConfig.radiusPx');
     requireFinite(config.holdMsMin, 'GazeDriverConfig.holdMsMin');
     requireFinite(config.holdMsMax, 'GazeDriverConfig.holdMsMax');
@@ -87,8 +95,19 @@ export class GazeDriver {
 
     this.config = {
       ...config,
-      minRadiusRatio: clamp01(config.minRadiusRatio ?? DEFAULT_MIN_RADIUS_RATIO),
-      alertHoldScale: Math.max(0, config.alertHoldScale ?? DEFAULT_ALERT_HOLD_SCALE),
+      minRadiusRatio: clamp01(
+        requireFinite(
+          config.minRadiusRatio ?? DEFAULT_MIN_RADIUS_RATIO,
+          'GazeDriverConfig.minRadiusRatio',
+        ),
+      ),
+      alertHoldScale: Math.max(
+        0,
+        requireFinite(
+          config.alertHoldScale ?? DEFAULT_ALERT_HOLD_SCALE,
+          'GazeDriverConfig.alertHoldScale',
+        ),
+      ),
     };
     this.random = random;
     this.holdRemainingMs = this.rollHoldMs(0);

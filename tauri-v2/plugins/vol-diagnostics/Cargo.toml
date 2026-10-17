@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-vol-diagnostics"
-version = "0.1.0"
+version.workspace = true
 description = "VOL.STUDIO ölçüm sondası köprüsü — ortam/env, kapanış ve uyku gözlemi JSONL kaydına yazılır"
 authors = ["VOL.STUDIO"]
 edition = "2021"

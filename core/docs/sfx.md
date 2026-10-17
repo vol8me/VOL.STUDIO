@@ -132,3 +132,5 @@ Ana, UI, SFX, müzik ve konuşma seviyeleri ile sessizlik cihaz kapsamlıdır
 (`device.volui:audio`). Kit yalnız UI yolunu (`master × ui`) uygular; ürün diğer
 kanalları `channelGain` ile kendi otobüslerine bağlar. Bozuk kayıt sessizce
 varsayılana iner.
+
+Çalma katmanı [CORE tasarımını](../DESIGN.md), üretim ve yayın [audio-synth sözleşmesini](../../devtools/audio-synth/DESIGN.md) tüketir.

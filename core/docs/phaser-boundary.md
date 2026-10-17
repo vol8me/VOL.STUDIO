@@ -43,3 +43,5 @@ WebGL kurulamadığında Canvas'a düşebilir. Geri düşüş diagnostics snapsh
 overlay ve cihaz ölçümünde görünür; başarılı WebGL ile aynı kabul edilmez.
 Açık webgl isteği fallback kabul etmez. Phaser sürümünün yeteneği kaynak,
 gerçek boot ve hedef cihazla birlikte doğrulanır.
+
+Ortak mekanizma ve sunum sahipliği [CORE tasarımındadır](../DESIGN.md).

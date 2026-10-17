@@ -111,7 +111,6 @@
       "scripts/quality/cli/bundle-report.mjs": "Betik justfile tarifiyle (`bundle`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
       "scripts/quality/cli/scaling-report.mjs": "Betik justfile tarifiyle (`scaling`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
       "scripts/quality/cli/coverage-shape-report.mjs": "Betik justfile tarifiyle (`coverage-shape`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
-      "scripts/quality/cli/ui-registry.mjs": "Betik justfile tarifiyle (`ui-registry --check`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
       "scripts/quality/audioVerify.mjs": "Betik justfile tarifiyle (`audio-verify`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
       "scripts/quality/cleanWorkspace.mjs": "Betik `just clean` tarifiyle çalışır ve disk siler; test edilmez, tarifi yalnız kullanıcı çalıştırır.",
       "scripts/doctor.mjs": "Betik `pnpm run doctor:env` ile çalışır; ortam araçlarını yoklar, çıktısı makineye bağlıdır.",
@@ -144,14 +143,14 @@
     }
   },
   "bundles": {
-    "$comment": "Gzip level 9; uygulama/vendor/CSS ayrı ölçülür. Sıkı CORE indeks invariantları, generic odak dönüşü, eksik UI durum/sunumları ve gerçek uzlaştırma raporlayıcısı sonrası vitrin app 238522 → 239587 B (+1065), VOL.TEST app 309318 → 310529 B (+1211; bunun 427 B kısmı sınırlı PredictionStepper ve tüketicisidir). Vitrin CSS 32876 B: katman ailesi malzemesi, hover ve reduced-motion düzeltmeleri; bütçe 31.9 → ölçülen 32.1 KiB. App bütçeleri 232.9 → 234 ve 302.1 → 303.3 KiB; ek yüzde payı yoktur. Vendor içine uygulama taşınmadı; vendor/CSS oyun bütçesi aynı, kapsam/güvenlik/timeout gevşemedi. Ölçüm ve sınırlar docs/monorepo-audit.md §29, kapı sözleşmesi docs/gates.md içindedir. Önceki büyüme gerekçeleri Git geçmişindedir.",
+    "$comment": "Gzip level 9; uygulama/vendor/CSS ayrı ölçülür. 0.2.0 yapılandırma/listener snapshot ve sonlu rig/efekt girdisi düzeltmelerinden sonra vitrin app 239587 → 239651 B, VOL.TEST app 310529 → 310678 B ölçüldü. Oyun app bütçesi yalnız ölçülen 303.4 KiB olur (önce 303.3); yüzde payı eklenmedi. Vitrin app 234, vendor/CSS ve bütün kapsam/güvenlik/timeout eşikleri aynı. Önceki büyüme gerekçeleri Git geçmişindedir; yöntem docs/gates.md içindedir.",
     "devtools/vol-showcase": {
       "app": 234,
       "vendor": 1,
       "css": 32.1
     },
     "games/vol-test": {
-      "app": 303.3,
+      "app": 303.4,
       "vendor": 360,
       "css": 30
     }
@@ -181,6 +180,10 @@
       "toolAgent": {
         "lines": 40,
         "words": 250
+      },
+      "technical": {
+        "lines": 650,
+        "words": 6500
       }
     },
     "paths": [
@@ -203,6 +206,106 @@
       {
         "path": "docs/ui/README.md",
         "role": "hub"
+      },
+      {
+        "path": "core/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "core/docs/i18n.md",
+        "role": "technical"
+      },
+      {
+        "path": "core/docs/music-engine.md",
+        "role": "technical"
+      },
+      {
+        "path": "core/docs/phaser-boundary.md",
+        "role": "technical"
+      },
+      {
+        "path": "core/docs/primitives.md",
+        "role": "technical"
+      },
+      {
+        "path": "core/docs/sfx.md",
+        "role": "technical"
+      },
+      {
+        "path": "devtools/audio-synth/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "devtools/deck/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "devtools/pen.dev/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "devtools/vol-showcase/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/android.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/gates.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/linux.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/monorepo-audit.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/new-game.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/steam-deck.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/ui/CATALOG.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/ui/CONTRACT.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/ui/VERIFICATION.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/windows.md",
+        "role": "technical"
+      },
+      {
+        "path": "games/vol-test/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "network/docs/drive.md",
+        "role": "technical"
+      },
+      {
+        "path": "network/docs/server.md",
+        "role": "technical"
+      },
+      {
+        "path": "tauri-v2/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "network/DESIGN.md",
+        "role": "technical"
       }
     ],
     "exceptions": []

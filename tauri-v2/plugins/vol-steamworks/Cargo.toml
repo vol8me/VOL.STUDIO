@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-vol-steamworks"
-version = "0.1.0"
+version.workspace = true
 description = "VOL.STUDIO isteğe bağlı Steamworks köprüsü — Steam Input, kayan klavye, overlay ve Steam Cloud"
 authors = ["VOL.STUDIO"]
 edition = "2021"

@@ -27,6 +27,34 @@ function driveForward(gait: LegGait, frames: number, speedPxPerSec = 200) {
 }
 
 describe('LegGait', () => {
+  it('prototipteki bacak geometrisi kaybolmaz; sonradan giriş mutasyonu iç durumu değiştirmez', () => {
+    const inherited = LEGS.map((leg) => Object.create(leg) as LegGaitLeg);
+    const gait = new LegGait(inherited, CONFIG);
+    inherited[0].homeX = 999;
+    gait.update(0, 0, 0, 0, 0, DT);
+    expect(gait.homeX(0)).toBe(LEGS[0].homeX);
+    expect(gait.footY(0)).toBe(LEGS[0].homeY);
+  });
+
+  it.each(['homeX', 'homeY', 'group'] as const)(
+    'sonlu olmayan %s ilk adım beklenmeden reddedilir',
+    (key) => {
+      for (const value of [NaN, Infinity, -Infinity])
+        expect(() => new LegGait([{ ...LEGS[0], [key]: value }], CONFIG)).toThrow(key);
+    },
+  );
+  it('prototipteki yapılandırma aynı ayak/adım davranışını üretir', () => {
+    const a = new LegGait(LEGS, Object.create(CONFIG) as typeof CONFIG);
+    const b = new LegGait(LEGS, CONFIG);
+    for (let i = 0; i < 40; i++) {
+      a.update(i * 4, 0, 0, 250, 0, DT);
+      b.update(i * 4, 0, 0, 250, 0, DT);
+      for (let leg = 0; leg < LEGS.length; leg++) {
+        expect(a.footX(leg)).toBe(b.footX(leg));
+        expect(a.isStepping(leg)).toBe(b.isStepping(leg));
+      }
+    }
+  });
   it('geçersiz bacak indeksi tüm okumalarda RangeError verir ve yürüyüşü bozmaz', () => {
     const gait = new LegGait(LEGS, CONFIG);
     const read = [

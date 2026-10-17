@@ -4,6 +4,23 @@ import { PredictionStepper } from '../../src/client/predictionStepper';
 const OPTIONS = { maxSliceMs: 1000 / 30, maxSlices: 2, maxSteps: 8 };
 
 describe('PredictionStepper', () => {
+  it('prototip/getter seçeneklerini bir kez okuyup sabitler', () => {
+    let reads = 0;
+    const options = Object.create({
+      get maxSliceMs() {
+        reads++;
+        return OPTIONS.maxSliceMs;
+      },
+      maxSlices: 2,
+      maxSteps: 8,
+    }) as typeof OPTIONS;
+    const tick = vi.fn(() => 0);
+    const stepper = new PredictionStepper({ tick }, options);
+    stepper.advance(0, vi.fn());
+    stepper.advance(100, vi.fn());
+    expect(tick).toHaveBeenCalledTimes(3);
+    expect(reads).toBe(1);
+  });
   it('ilk tick tabandır; her ara tick bütçesi sonraki tick başlamadan tüketilir', () => {
     let consumed = 0;
     const tick = vi.fn((at: number) => {

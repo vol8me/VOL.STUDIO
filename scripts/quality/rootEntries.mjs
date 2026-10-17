@@ -27,7 +27,7 @@ export const ROOT_ENTRIES = {
   devtools: 'Geliştirme araçları paketleri',
   docs: 'Repo geneli belgeler ve marka görselleri',
   'eslint.config.mjs': 'ESLint düz yapılandırması köke bağlıdır',
-  games: { reason: 'Ürün paketleri', optional: true },
+  games: 'Ürün paketleri ve gerçek CORE tüketicisi',
   justfile: 'Kalite kapısı tarifleri',
   network:
     'Ortak multiplayer paketi: sürümlü protokol, istemci, Colyseus sunucu çalışma zamanı ve işletim kapısı',
@@ -47,6 +47,7 @@ export function rootEntriesOf(files) {
   return [...new Set(files.map((file) => file.split('/')[0]))].sort();
 }
 
+/** @param {Record<string, string | { reason: string, optional?: boolean }>} allowed */
 export function validateRootEntries(entries, root, allowed = ROOT_ENTRIES) {
   const problems = [];
   for (const entry of entries) {

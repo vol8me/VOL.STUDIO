@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-vol-haptics"
-version = "0.1.0"
+version.workspace = true
 description = "VOL.STUDIO Android native titreşim motoru köprüsü"
 authors = ["VOL.STUDIO"]
 edition = "2021"

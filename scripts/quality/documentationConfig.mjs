@@ -5,6 +5,7 @@ export const DOCUMENTATION_LIMITS = {
   rootAgent: { lines: 120, words: 1000 },
   pencilAgent: { lines: 80, words: 650 },
   toolAgent: { lines: 40, words: 250 },
+  technical: { lines: 650, words: 6500 },
 };
 const ROLES = new Set([...Object.keys(DOCUMENTATION_LIMITS), 'reference', 'legal', 'generated']);
 const object = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);

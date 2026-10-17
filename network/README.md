@@ -57,6 +57,6 @@ pnpm --filter @volstudio/network test:coverage
 pnpm --filter @volstudio/vol-test server:dev
 ```
 
-Bu bir **yerel prototiptir**: üretim kimlik doğrulaması, durable dünya kaydı,
-region/interest/fog filtreleri ve cihazlar arası düzeltmeli hareket yoktur. Karar ve maliyet
-varsayımları [backend araştırmasındadır](../docs/backend-research.md).
+Üretim kimlik doğrulaması, kalıcı dünya kaydı ve region/interest/fog filtreleri
+henüz tamamlanmadı. Öngörü/uzlaştırma vardır; cihazlar arası kabul ve internet
+üretim kapsamı [tasarımda](DESIGN.md) ayrı tutulur.

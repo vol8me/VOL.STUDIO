@@ -12,6 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { gameIcon, gameIco } from './new-game-icon.mjs';
 import { loadQualityConfig } from './quality/config.mjs';
+import { readReleaseVersion } from './quality/releaseVersion.mjs';
 
 const template = fileURLToPath(new URL('../tauri-v2/templates/game/', import.meta.url));
 const json = (path) => JSON.parse(readFileSync(path, 'utf8'));
@@ -95,6 +96,7 @@ export function createGame(root, options) {
   if (quality.packages[result.packageName] || bundles[result.path] || scaling[result.path])
     throw new Error('Kalite kaydı mevcut.');
   const values = {
+    VERSION: readReleaseVersion(root),
     NAME: options.name,
     ID: options.id,
     TITLE: result.title,

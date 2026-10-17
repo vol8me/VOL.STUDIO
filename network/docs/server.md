@@ -11,8 +11,8 @@ aralığı adım süresine eşitler; Node `setInterval` kesirli milisaniyeyi kı
 tetikleme 33,33 ms'lik adımı yaklaşık her yüz tetiklemede bir kaçırır ve adımlar arası p99 iki adıma
 (~66 ms) çıkar. `StepClock` adım süresinden kısa aralıkla (adımın üçte biri, 4–10 ms) çağrılıp geçen
 süreyi biriktirir. Uzun duraklamadan sonra en çok `maxCatchUp` (5) adım koşulur, kalan borç atılır.
-Tetikleyici `Room.setTimestep`tir; Colyseus oda kapanınca aralığı kendisi temizler. Ölçüm
-[araştırmadadır](../../docs/backend-research.md).
+Tetikleyici `Room.setTimestep`tir; Colyseus oda kapanınca aralığı kendisi temizler.
+Ölçüm yöntemi [sürücü sözleşmesinde](drive.md), framework kararı [tasarımdadır](../DESIGN.md).
 
 ## Ana makine ve kapanış
 

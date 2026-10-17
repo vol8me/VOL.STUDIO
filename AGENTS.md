@@ -91,6 +91,8 @@ sözleşmedir. İş ve kısa “Kapanır:” ölçütü TODO'dadır; biten iş K
 tek satır taşınır. Geçici plan belgesi açılmaz. Belgeler bugünü anlatır,
 tarihçe git'tedir. Yorum yalnız koddan çıkarılamayan sözleşme veya tuzağı söyler.
 Kodla belge aynı değişiklikte güncellenir; ayrıntılı denetim [rapordadır](docs/monorepo-audit.md).
+Teknik DESIGN/docs belgeleri `quality.json` documentation kaydında bütçelenir;
+elle çoğaltılan yüzey listesi ve geçmiş koşu dökümü yerine sahibi kaynak gösterilir.
 
 Platform sahipleri: [Windows](docs/windows.md), [Linux](docs/linux.md),
 [Steam Deck](docs/steam-deck.md), [Android](docs/android.md).

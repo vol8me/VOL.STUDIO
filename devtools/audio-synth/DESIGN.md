@@ -274,3 +274,5 @@ verir. Eski `regression/decisions.json` hiçbir API tarafından okunmaz veya
 yazılmaz; yerel kullanıcı bu kullanılmayan dosyayı temizleyebilir. Hiçbir
 review mekanik başarıya veya yeni bir insan kabul kaydına dönüştürülmez.
 Job, program, düğüm/render yüzeyi ve asset manifesti bu geçişte sürüm almaz.
+
+Başlangıç ve çalıştırma komutları [README](README.md), açık işler [TODO](TODO.md) sahibindedir.

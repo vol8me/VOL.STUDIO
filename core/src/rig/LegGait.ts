@@ -148,6 +148,13 @@ export class LegGait {
   private initialised = false;
 
   constructor(legs: readonly LegGaitLeg[], config: LegGaitConfig) {
+    config = {
+      stepTriggerPx: config.stepTriggerPx,
+      stepDurationMs: config.stepDurationMs,
+      stepLeadSeconds: config.stepLeadSeconds,
+      maxStrainPx: config.maxStrainPx,
+      turnWindow: config.turnWindow,
+    };
     if (legs.length === 0) {
       throw new Error('LegGait: en az bir bacak gerekli');
     }
@@ -167,9 +174,14 @@ export class LegGait {
       }
     }
 
-    this.config = { ...config };
+    this.config = config;
     this.states = legs.map((leg) => ({
-      leg: { ...leg },
+      leg: {
+        homeX: requireFinite(leg.homeX, 'LegGaitLeg.homeX'),
+        homeY: requireFinite(leg.homeY, 'LegGaitLeg.homeY'),
+        group: requireFinite(leg.group, 'LegGaitLeg.group'),
+        freeStep: leg.freeStep,
+      },
       strideScale: resolveStrideScale(leg.strideScale),
       plantedX: 0,
       plantedY: 0,

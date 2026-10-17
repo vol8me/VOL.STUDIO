@@ -16,7 +16,7 @@ sorumluluklardır. Host araçları `pnpm run doctor:env`, Android profili
 
 Araç denetiminin yeşili installer, oyun performansı, Steam olayları veya
 dokunma/haptik hissi kabulü değildir. Güncel kanıt ve açık işler
-[denetim](monorepo-audit.md#18-f01f03-uygulama-durumu) ve [kök TODO](../TODO.md)
+[denetim](monorepo-audit.md#windows) ve [kök TODO](../TODO.md)
 içindedir.
 
 ## Host kurulumu
@@ -125,7 +125,7 @@ gerekir; birleşik kapı bu sırayı kendi sağlar.
 `steamworks` feature'lı Cargo binary'si SDK runtime DLL'ini de gerektirir;
 yalnız Cargo derlemesi paketli açılış kanıtı değildir. DLL ve izin bağının
 NSIS tesliminde doğrulanması F09.1, store/flush native ürün turu F04 sahibindedir.
-Güncel kaynak, Rust disk ve SDK sahiplik kanıtı [F04 raporundadır](monorepo-audit.md#19-f04-uygulama-durumu).
+Güncel kaynak, Rust disk ve SDK sahiplik kanıtı [F04 raporundadır](monorepo-audit.md#kalıcılık-ve-yaşam-döngüsü).
 
 Ölçülen Node 22.23.1 profilinde Unicode yolda senkron public kopyası native
 süreci çökertebildi. Ortak public hook'u asenkron kopyayı tamamlanana kadar

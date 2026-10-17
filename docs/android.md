@@ -240,8 +240,8 @@ node scripts/android/device-tour.mjs --serial <no> --apk <app-universal-debug.ap
   Geçici USB bildirimi kapatılarak çevrimiçi HUD/dünya görüntüsü de alındı;
   bildirim veya USB için kalıcı ayar değiştirilmedi.
   Bu local HTTP/WS debug kabulüdür; release WSS/TLS, internet, fiziksel
-  haptik/ses ve Samsung'da bu kaynak için kabul NOT-RUN'dır. Ayrıntı
-  [sağlamlaştırma raporu §28](monorepo-audit.md) içindedir.
+  haptik/ses ve Samsung'da bu kaynak için kabul NOT-RUN'dır. Eski turun
+  ayrıntıları Git geçmişinde, güncel kapsam [monorepo denetimindedir](monorepo-audit.md).
 
 ## Fiziksel kabulün kanıt sınırı
 

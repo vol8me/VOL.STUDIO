@@ -22,6 +22,11 @@ export class PredictionStepper {
     private readonly predict: Pick<Predict, 'tick'>,
     options: PredictionStepperOptions,
   ) {
+    options = {
+      maxSliceMs: options.maxSliceMs,
+      maxSlices: options.maxSlices,
+      maxSteps: options.maxSteps,
+    };
     if (
       !Number.isFinite(options.maxSliceMs) ||
       options.maxSliceMs <= 0 ||
@@ -31,7 +36,7 @@ export class PredictionStepper {
       options.maxSteps < 1
     )
       throw new RangeError('Öngörü dilimi, dilim sayısı ve girdi sınırı pozitif olmalı.');
-    this.options = { ...options };
+    this.options = options;
   }
 
   advance(nowMs: number, consume: () => void): number {

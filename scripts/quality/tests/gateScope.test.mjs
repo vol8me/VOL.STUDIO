@@ -143,7 +143,7 @@ test('closure kapsamı: paket + türetilen betikler + kök yapılandırma; başk
 
 test('crate kapsamı: crate + path bağımlılıkları + Cargo kökü; JS yapılandırması hayır', () => {
   const graph = graphOf('p');
-  const include = scopeInclude(graph, { kind: 'crate', dirs: ['p/src-tauri', 'plugins/x'] });
+  const include = scopeInclude(graph, { kind: 'crate', paths: ['p/src-tauri', 'plugins/x'] });
   assert.equal(include('p/src-tauri/src/lib.rs'), true);
   assert.equal(include('plugins/x/Cargo.toml'), true);
   assert.equal(include('Cargo.lock'), true);

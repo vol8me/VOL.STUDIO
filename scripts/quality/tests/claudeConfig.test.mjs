@@ -34,11 +34,7 @@ test('paylaşılan ayar modeli ve danışmanı bildirir, alt ajan modelini zorla
   // Zorlama açıkken ajan tanımındaki model alanı yok sayılır: genel amaçlı ajan da en ucuz modele
   // düşer ve araştırma ajanı Haiku'nun uydurma riskine açılır. Kişisel tercih yerel ayardadır.
   for (const key of FORCING) {
-    assert.equal(
-      settings.env?.[key],
-      undefined,
-      `${key} projede ayarlanmaz (docs/claude-workflow.md)`,
-    );
+    assert.equal(settings.env?.[key], undefined, `${key} projede ayarlanmaz (CLAUDE.md)`);
   }
 });
 
@@ -62,7 +58,7 @@ test('her alt ajan tanımı ad, açıklama, model ve açık araç listesi taşı
 });
 
 test('ajan açıklaması ne zaman kullanılmayacağını söyler', () => {
-  // Ölçümde alt ajan küçük işte doğrudan çalışmadan pahalı ve yavaştı (docs/claude-workflow.md):
+  // Ölçümde alt ajan küçük işte doğrudan çalışmadan pahalı ve yavaştı (CLAUDE.md):
   // açıklama dar tutulmazsa model her aramayı devreder.
   for (const { file, meta } of agents()) {
     assert.match(meta.description, /KULLANMA/, `${file}: description "KULLANMA" cümlesi taşımalı`);
