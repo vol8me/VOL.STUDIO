@@ -25,7 +25,6 @@ checkbox veya toplam tutulmaz.
 
 ### F08 — Linux ve Steam Deck
 
-- [ ] **[P2] F08.2 — Paylaşılabilir cihaz kanıtı.** **Kapanır:** success/failed/timedOut ayrımı sanitizer roundtrip'te korunur; host/SLR4 doğru etiketlenir; schema/runId/stamp zinciri doğrulanır, gizli adres veya cihaz/kullanıcı kimliği dışarı çıkmaz.
 - [ ] **[P1] F08.3 — Host ve SLR4 görünür açılışı.** Açılış kanıtları mevcut; codec ve paket/runtime bağının kalan teknik kabulü ayrıştırılır. **Kapanır:** aynı ürün paketi için host ve gerçek SLR4 pencere/ekran görüntüsü ile OGG çözme/çıkış sonucu ayrı kaydedilir; ölçülmeyen çıktı NOT-RUN kalır.
 - [ ] **[P1] F08.4 — Windows'tan Deck devkit zinciri.** **Kapanır:** keşif/DNS/SSH/build/aktarım/launch/screenshot kısa uçtan uca turda doğrulanır; başarısız preflight görünürdür ve mevcut shell-kapalı SSH quoting korunur.
 - [ ] **[P1] F08.6 — Steam, kayıt ve uyku olayları.** **Kapanır:** overlay/QAM, fiziksel kol, Steam metni/haptik, tek uyku/uyanma ve terminate/SIGKILL senaryolarında son değer, saat/ses toparlanması ve kaynak temizliği kaydedilir; libmanette sorunu dump/tekrar veya karşıt kanıtla ayrılır. F04.4 aynı kabulü tekrar sahiplenmez.
@@ -43,22 +42,15 @@ checkbox veya toplam tutulmaz.
 
 ### F10 — Güvenlik ve sınırlı bakım
 
-- [ ] **[P3] F10.2 — Majör bağımlılık geçişleri.** **Kapanır:** ESLint/stylelint/jsdom/Vitest/TypeScript geçişleri yayımlanmış destek matrisiyle tek tek ve ilgili paket doğrulamasıyla uygulanır; ilgisiz toplu yükseltme yapılmaz.
-- [ ] **[P3] F10.3 — Sıkı indeks ve ölçüm doğruluğu.** **Kapanır:** CORE noUncheckedIndexedAccess varsayımları daraltılır, scaling ortak şema kullanır; A/A gürültüsü, desteklenmeyen iz ve retry ayrımı negatif fixture'larla doğrulanır, ölçülen kapsam korunur.
 - [ ] **[P3] F10.4 — Haptik scheduler kararı.** **Kapanır:** mevcut driver/scheduler gecikme, eşzamanlılık ve iptal örnekleriyle ölçülür; worker gerekiyorsa tek sahipli geçiş regresyonla uygulanır, gerekmiyorsa ölçümle mevcut mimari korunur.
 - [ ] **[P3] F10.5 — Yeni donanım profilleri.** **Kapanır:** OLED Deck/Steam Machine erişilebilir olduğunda ayrı kısa frame/runtime profili alınır; başka cihazın sonucu taşınmaz.
 - [ ] **F10.6 — Dal bakımı.** **Kapanır:** merge hedefleri belirlenir, eski yerel/uzak dalların erişilebilir işi korunur; Git bakımı kayıp commit/çalışma olmadan ayrı işlemde tamamlanır.
 - [ ] **[P3] F10.12 — Tauri minör geçişi.** Ön koşul: F09.1/F09.2 native temel çizgisi. **Kapanır:** planlanan Tauri geçişinde Cargo/pnpm sürüm paritesi ve Rust kapısı korunur; Windows/Android/Linux kısa native karşılaştırması yapılır, çözülen advisory kayıtları kaldırılır; toplu cargo update yapılmaz.
 
-### F11 — Testlerin sağlamlığı
-
-- [ ] **[P3] F11.9 — Sabit beklemelerin daraltılması.** **Kapanır:** mevcut sabit beklemeler dosya bazında olay/koşula çevrilir veya gerçek zaman ölçümü gerekçesiyle bırakılır; fixedWaitBudget gerçekleşen azalışa indirilir, timeout artırılarak hata gizlenmez.
-
 ### F13 — Network ve mevcut oyun tüketicisi
 
 - [ ] **[P1] F13.3 — Üretim ağ sınırları.** Protokol/istemci/sunucu, origin/IP/katılım/oda sınırları ve yerel native bağlantı kanıtı mevcut. **Kapanır:** hesap kimliği/auth sağlayıcısı, internet WSS ve uzak endpoint CSP/taşıma, süreç keşfi, savaş sisi ve hedeflere ait paketli bağlantı matrisi ayrı teknik kabulle tamamlanır.
-- [ ] **[P1] F13.6 — Bozuk ağ ve oturum senaryoları.** **Kapanır:** düzeltme/snap sayaçları, gerçek paket kaybı ve sınırlı bozuk-payload korpusu; maç sonu/doğuş/çift kopuş/sunucu boşaltma/arka plan-ağ değişimi ayrı senaryolarda sınanır; Node/Chromium/WebKit/Android manevra/çarpışma/ateş öngörüsü deterministiktir. Gecikme telafisi yalnız ölçüm gerektirirse eklenir.
-- [ ] **[P1] F13.7 — Ajan laboratuvarı ve bot sürücüsü.** AgentLab ve bütçeli temel sürücü mevcut. **Kapanır:** betikli girdi senaryoları ve senaryo başına kayıt/hüküm eklenir; istemci başına bayt ve uzlaştırma sayaçları sunucu metrics yüzeyinde yayımlanır.
+- [ ] **[P1] F13.6 — Bozuk ağ ve oturum senaryoları.** Doğrulanan düzeltme/snap sayaçları ve sınırlı SDK adımlaması mevcut (§29). **Kapanır:** gerçek paket kaybı ve sınırlı bozuk-payload korpusu; maç sonu/doğuş/çift kopuş/sunucu boşaltma/arka plan-ağ değişimi ayrı senaryolarda sınanır; Node/Chromium/WebKit/Android manevra/çarpışma/ateş öngörüsü deterministiktir. Gecikme telafisi yalnız ölçüm gerektirirse eklenir.
 
 ### F14 — Son cihaz kabulü
 
@@ -66,6 +58,12 @@ checkbox veya toplam tutulmaz.
 
 ## Kapatılanlar
 
+- [x] F10.2 — Desteklenen ESLint 10/stylelint 17/jsdom 30/Vitest 5 geçişleri high, tam UI, oyun E2E ve tam ses kapsamıyla doğrulandı; TypeScript parser desteğinin sınırında 6.0.3 tutuldu (§29).
+
+- [x] F08.2 — Native sonuç/runtime, sürüm/UUID/damga ve kayıt kaybı zinciri roundtrip ve gerçek probe bundle regresyonlarıyla korundu; başarısız son flush ölçüm kabulünü düşürür (§29).
+- [x] F10.3 — CORE sıkı indeks denetimi, tüketici/generator ortak scaling şeması, A/A/iz/retry doğruluğu regresyonlarla ve high + ayrı UI kapısıyla doğrulandı (§29).
+- [x] F11.9 — 39 sabit bekleme olay/koşula çevrildi, iptal edilen laboratuvarın dördü silindi; gerekçeli 13 çağrıya düşen bütçe ve iki motorlu tam UI geçti (§29).
+- [x] F13.7 — Gerçek SDK ile üç betikli bot senaryosu, gerçek soket baytları ve doğrulanan uzlaştırma metrics yüzeyi; HTTP/abort/JSONL ömrü regresyonları ve high geçti (§29).
 - [x] F08.1 — Temiz 922a83dd kaynağından ayrı steamrt4 SDK builder ile AppDir/AppImage üretildi; 280 ELF GLIBC≤2.41, yasak sürücü kütüphanesi sıfır, 14 GStreamer eklentisi ve OGG/Vorbis çözümü PASS ([kanıt §28](docs/monorepo-audit.md)).
 - [x] F13.4 — Backend araştırması kullanıcı kararıyla güncellendi: Colyseus, VOL.TEST ilk tüketici, resmî sunucu ve Windows/Linux/Android/Steam hedefi; web yayını yok. 20 dünya × 8–14 oyuncu karar verilmemiş senaryo, deneyler yerel kanıt; kalıcı entegrasyon F13.3'tür.
 - [x] F13.2 — Colyseus lisans/Cloud/VPS/mini PC, çok oyunlu repo yerleşimi ve üretim kabul kapsamı çapraz kaynaklarla genişletildi; 12 sunucu kontrolü ×3, Phaser 4 iki motor/gecikme, kötüye kullanım ve encoder/fizik ölçümleri [raporda](docs/backend-research.md). WebKit temiz kabulü FAIL; test harness'ı üretim entegrasyonu veya tam dünya/cihaz kabulü değildir.

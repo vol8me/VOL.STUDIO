@@ -21,7 +21,7 @@ function pointer(
   type: string,
   init: Partial<PointerEventInit> & { pointerId: number; clientX?: number; clientY?: number },
 ): PointerEvent {
-  return new PointerEvent(type, { bubbles: true, cancelable: true, ...init });
+  return new PointerEvent(type, { isPrimary: true, bubbles: true, cancelable: true, ...init });
 }
 
 afterEach(() => {

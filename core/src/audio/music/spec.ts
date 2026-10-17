@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import type { MusicCue, MusicState, MusicTrack, Stem, StemGainMap } from './types';
 
 /**
@@ -260,7 +261,9 @@ export function toMusicTrack(spec: MusicAssetSpecV1, options: MusicTrackOptions)
   }));
   const defaultState =
     options.defaultState ??
-    (spec.states && spec.states.length > 0 ? { intensity: spec.states[0].intensity } : undefined);
+    (spec.states && spec.states.length > 0
+      ? { intensity: requiredAt(spec.states, 0).intensity }
+      : undefined);
   return {
     id: spec.musicId,
     bpm: quarterBpm(spec),

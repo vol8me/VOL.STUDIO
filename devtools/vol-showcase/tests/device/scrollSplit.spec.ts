@@ -1,3 +1,4 @@
+import { settleFrames, settleScroll } from '../e2e/support/settle';
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -41,7 +42,7 @@ async function openTab(page: Page, tab: ShowcaseTab): Promise<void> {
   await page
     .locator(`[role="tabpanel"][id$="-panel-${tab}"]:not([aria-hidden="true"])`)
     .waitFor({ timeout: 15_000 });
-  await page.waitForTimeout(400);
+  await settleFrames(page);
 }
 
 interface Split {
@@ -176,7 +177,7 @@ async function swipeUp(page: Page, target: Locator, distance: number): Promise<v
     ],
     10,
   );
-  await page.waitForTimeout(500);
+  await settleScroll(target);
 }
 
 test('cihaz: ScrollView ve VirtualList parmakla kayar; iç alan sona ulaşınca kaydırma dış panele geçer', async ({
@@ -226,7 +227,7 @@ test('cihaz: ScrollView ve VirtualList parmakla kayar; iç alan sona ulaşınca 
     [{ from: { x: point.x, y: point.y + 80 }, to: { x: point.x, y: point.y - 80 } }],
     10,
   );
-  await page.waitForTimeout(500);
+  await expect.poll(outerScroll).toBeGreaterThan(outerBefore);
   const outerAfter = await outerScroll();
   expect(outerAfter, 'kaydırma dış panele geçmedi (iç alan kaydırmayı hapsediyor)').toBeGreaterThan(
     outerBefore,

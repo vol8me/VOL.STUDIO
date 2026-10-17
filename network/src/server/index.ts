@@ -1,4 +1,5 @@
 export { isEntryModule } from './entry';
+export { ClientMetricsRegistry } from './clientMetrics';
 export { envChoice, envFlag, envInteger, envText, listenSettings, opsSettings } from './env';
 export type { Env, ListenSettings } from './env';
 export {

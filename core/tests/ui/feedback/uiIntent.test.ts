@@ -53,6 +53,10 @@ function record(bus: UiIntentBus, options: { haptics?: boolean } = {}): UiIntent
  */
 function trustedClick(detail: number): MouseEvent {
   const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail });
+  return trustedEvent(event);
+}
+
+function trustedEvent<T extends Event>(event: T): T {
   return new Proxy(event, {
     get(target, key) {
       if (key === 'isTrusted') return true;
@@ -63,6 +67,28 @@ function trustedClick(detail: number): MouseEvent {
 }
 
 describe('tek niyet / tek olay', () => {
+  it('boş pointerType klavye/sentetik tıklamayı dokunma saymaz; mouse/touch/pen ayrılır', () => {
+    const { element, bus } = root();
+    const seen = record(bus);
+    const target = document.createElement('button');
+    element.append(target);
+    const request = { kind: 'press' as const, origin: 'Button', target };
+    for (const pointerType of ['mouse', 'touch', 'pen']) {
+      bus.emit({ ...request, event: new PointerEvent('click', { pointerType }) });
+    }
+    bus.emit({ ...request, event: new PointerEvent('click', { pointerType: '' }) });
+    bus.emit({ ...request, event: trustedEvent(new PointerEvent('click', { detail: 0 })) });
+    bus.emit({ ...request, event: trustedEvent(new PointerEvent('click', { detail: 1 })) });
+    expect(seen.map((intent) => intent.source)).toEqual([
+      'pointer',
+      'touch',
+      'touch',
+      'synthetic',
+      'keyboard',
+      'pointer',
+    ]);
+  });
+
   it('bir fiziksel işaretçi etkinleştirmesi (pointerdown, pointerup, click) tek niyet üretir', () => {
     const { element, bus } = root();
     const seen = record(bus);

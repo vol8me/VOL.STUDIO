@@ -1,3 +1,4 @@
+import { requiredNumberAt } from '../collections/requiredAt';
 import { MinHeap } from '../collections/MinHeap';
 import { ORTHOGONAL_NEIGHBOURS, type GridPoint } from './Grid';
 
@@ -75,7 +76,8 @@ export class FlowField {
       // Sonuç yine doğrudur (gevşetme canlı `costs` okur) ama iş boşa gider.
       const staleKey = queue.peekKey()!;
       const current = queue.pop()!;
-      if (staleKey > this.costs[current]) continue;
+      const currentCost = requiredNumberAt(this.costs, current);
+      if (staleKey > currentCost) continue;
       const col = current % cols;
       const row = Math.floor(current / cols);
       // Ters taramada kenar, komşudan mevcut hücreye girişin maliyetini taşır.
@@ -91,10 +93,10 @@ export class FlowField {
         if (!isWalkable(point)) continue;
 
         const diagonal = offset.col !== 0 && offset.row !== 0;
-        const candidate = this.costs[current] + step * (diagonal ? Math.SQRT2 : 1);
+        const candidate = currentCost + step * (diagonal ? Math.SQRT2 : 1);
         const nextIndex = nr * cols + nc;
 
-        if (candidate < this.costs[nextIndex]) {
+        if (candidate < requiredNumberAt(this.costs, nextIndex)) {
           this.costs[nextIndex] = candidate;
           // Alan hedeften geriye kuruluyor: komşunun "sonrakisi" biziz.
           this.next[nextIndex] = current;
@@ -107,13 +109,13 @@ export class FlowField {
   /** Hücrenin hedefe toplam maliyeti; ulaşılamıyorsa `Infinity`. */
   getCost(col: number, row: number): number {
     if (!this.inBounds(col, row)) return Infinity;
-    return this.costs[row * this.cols + col];
+    return requiredNumberAt(this.costs, row * this.cols + col);
   }
 
   /** Hedefe doğru bir sonraki hücre; hedefteyse ya da ulaşılamıyorsa `null`. */
   getNext(col: number, row: number): GridPoint | null {
     if (!this.inBounds(col, row)) return null;
-    const index = this.next[row * this.cols + col];
+    const index = requiredNumberAt(this.next, row * this.cols + col);
     if (index < 0) return null;
     return { col: index % this.cols, row: Math.floor(index / this.cols) };
   }

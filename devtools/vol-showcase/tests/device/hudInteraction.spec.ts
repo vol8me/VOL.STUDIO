@@ -1,3 +1,4 @@
+import { settleFrames } from '../e2e/support/settle';
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -46,7 +47,7 @@ async function open(page: Page, tab: 'hud' | 'touch' | 'advanced'): Promise<void
   await page
     .locator(`[role="tabpanel"][id$="-panel-${tab}"]:not([aria-hidden="true"])`)
     .waitFor({ timeout: 15_000 });
-  await page.waitForTimeout(500);
+  await settleFrames(page);
 }
 
 const cardOf = (page: Page, inner: string): Locator =>
@@ -83,7 +84,7 @@ async function reveal(page: Page, card: Locator, node: Locator): Promise<void> {
   const viewport = card.locator('.vol-skill-tree__viewport');
   for (let attempt = 0; attempt < 3; attempt += 1) {
     await viewport.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(150);
+    await settleFrames(page);
     const view = (await viewport.boundingBox())!;
     const box = (await node.boundingBox())!;
     const centerX = box.x + box.width / 2;
@@ -103,7 +104,7 @@ async function reveal(page: Page, card: Locator, node: Locator): Promise<void> {
       y: Math.min(Math.max(from.y + deltaY, view.y + 4), view.y + view.height - 4),
     };
     await gesture(page, [{ from, to }], 12);
-    await page.waitForTimeout(250);
+    await settleFrames(page);
   }
   throw new Error('düğüm parmakla kaydırılarak görünüm penceresine getirilemedi');
 }
@@ -272,7 +273,7 @@ test('cihaz: SlotGrid öğesi "Taşı" + hücreye dokunarak taşınır (tek drop
     [{ from, to: { x: target!.x + target!.width / 2, y: target!.y + target!.height / 2 } }],
     14,
   );
-  await page.waitForTimeout(300);
+  await expect.poll(() => log(card2)).toMatch(/pick:SlotGrid drop:SlotGrid$/);
   const dragLog = await log(card2);
   save('hudInteraction-slotgrid.json', { cellSize, moveSize, tapLog, dragLog });
   expect(dragLog, 'parmakla sürükleme pick + drop verir').toMatch(/pick:SlotGrid drop:SlotGrid$/);

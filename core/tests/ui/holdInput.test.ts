@@ -200,6 +200,8 @@ describe('Joystick klavye eşdeğeri', () => {
     const base = stick.element.querySelector<HTMLElement>('.vol-joystick__base')!;
     expect(base.tabIndex).toBe(0);
     expect(base.getAttribute('aria-label')).toBe('Sol çubuk');
+    base.focus();
+    expect(document.activeElement).toBe(base);
     key(base, 'keydown', 'ArrowRight');
     expect(onMove).toHaveBeenLastCalledWith({ x: 1, y: 0 });
     key(base, 'keydown', 'ArrowDown');

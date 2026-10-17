@@ -1,4 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   aaNoise,
   baselineScopes,
@@ -47,6 +50,42 @@ function complete(over: Partial<Record<ScopeName, Scope>> = {}): UiPerfReport {
 }
 
 test.describe('rapor düzeneği sahte PASS üretmez', () => {
+  test('retry önceki FAIL ham kaydını silemez; her deneme kimliği ve indeksiyle saklanır', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'vol-ui-attempts-'));
+    try {
+      writeReport(
+        'fixture',
+        { verdict: 'fail', sample: 120 },
+        { directory, retry: 0, testId: 'fixture' },
+      );
+      const attempts = join(directory, 'attempts', 'fixture');
+      const firstFile = readdirSync(attempts)[0];
+      const before = readFileSync(join(attempts, firstFile), 'utf8');
+      writeReport(
+        'fixture',
+        { verdict: 'pass', sample: 30 },
+        { directory, retry: 1, testId: 'fixture' },
+      );
+      expect(readFileSync(join(attempts, firstFile), 'utf8')).toBe(before);
+      const rows = readdirSync(attempts).map(
+        (name) =>
+          JSON.parse(readFileSync(join(attempts, name), 'utf8')) as {
+            attempt: { id: string; retry: number; testId: string };
+            document: { verdict: string };
+          },
+      );
+      expect(rows).toHaveLength(2);
+      expect(new Set(rows.map((row) => row.attempt.id)).size).toBe(2);
+      expect(rows.map((row) => row.attempt.retry).sort()).toEqual([0, 1]);
+      expect(rows.every((row) => row.attempt.testId === 'fixture')).toBe(true);
+      expect(rows.map((row) => row.document.verdict).sort()).toEqual(['fail', 'pass']);
+      expect(() => writeReport('../outside', {}, { directory })).toThrow(/dosya adı/);
+      expect(() => writeReport('fixture', {}, { directory, retry: -1 })).toThrow(/indeksi/);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   test('tam, sunulan kareye dayalı ve sınır altı rapor geçer', () => {
     expect(judge(complete())).toEqual({ verdict: 'pass', reasons: [] });
   });
@@ -213,17 +252,21 @@ test.describe('vitrin etkileşiminin UI JS maliyeti (gerçek tarayıcı)', () =>
       aa: { samples: run.a1.length + run.a2.length, noiseMs: noise },
     };
     const verdict = judge(report);
-    writeReport(`${info.project.name}-performance`, {
-      report,
-      verdict,
-      probes: {
-        tabSwitchJs: {
-          note: 'sekme tıklamasının eşzamanlı JS süresi (stil/yerleşim/çizim hariç); kare başına UI JS değildir',
-          a1: distribution(run.a1),
-          a2: distribution(run.a2),
+    writeReport(
+      `${info.project.name}-performance`,
+      {
+        report,
+        verdict,
+        probes: {
+          tabSwitchJs: {
+            note: 'sekme tıklamasının eşzamanlı JS süresi (stil/yerleşim/çizim hariç); kare başına UI JS değildir',
+            a1: distribution(run.a1),
+            a2: distribution(run.a2),
+          },
         },
       },
-    });
+      { retry: info.retry, testId: info.testId, repeatEachIndex: info.repeatEachIndex },
+    );
 
     // 5 tur × sekme sayısı; sekme eklenince sabit değil listeden türer.
     expect(run.a1.length).toBe(SHOWCASE_TABS.length * 5);

@@ -1144,6 +1144,11 @@ bit bit alıp bekleyen girdileri yeniden oynatır (sapma `data-drift-peak` ile �
 `interpolationDelayMs` geriden iki yama arasında ara değerlenir; olaylar aynı görüntü zamanına
 ertelenir ki atış ve ölüm tankın göründüğü yerle örtüşsün. Aşağıdakiler sözleşmedir:
 
+- `OnlineDriver` ve betikli botlar network `PredictionStepper`ını tüketir: uzun kare iki sınırlı
+  SDK tick'ine bölünür, her bütçe hemen gönderilir. Son dilim iki simülasyon adımıdır;
+  kesirli saat artığı dahil toplam girdi `NETWORK.inputBuffer` sınırını aşamaz. İkinci saat
+  biriktiricisi yoktur; çok uzun kesintinin eski kısmını SDK bırakabilir. Poz bütün dilimlerden
+  sonra okunur, kapanış ve callback hatası yeni girdi üretimini durdurur.
 - Çizim pozu `tank.previous` içinde ara değerlidir; sahne çevrimiçi alfa 0 ile çizer.
 - Kendi `fired` yankısı bastırılır (öngörü atışı zaten gösterdi); yerel mermi yerelde ilerler.
 - Hava ve yeşillik sunucu iklimidir (`CLIMATE_MESSAGE`); istemci yalnız sunumu uygular, yüzey etkisi (tutuş,
@@ -1169,6 +1174,21 @@ Sunucu işletimi (ortam değişkenleri ve sınırların gerekçesi [network sunu
 köken izin listesi) kurar; `VOL_NET_OPS_PORT` verilirse loopback'te `/healthz`, `/metrics` ve `/logs` açılır.
 `/metrics` her dünya odası için insan sayısı, adım süresi özeti (ortalama, p95, en büyük) ve trafik özeti
 (istemci sayısı, kuyruktaki ve toplam gönderilen/alınan bayt, atılan yavaş tüketici) ile kapı sayaçlarını verir.
+`clients[]` oda içi anonim istemci sırası ve araç numarasıyla gerçek soket baytlarını ayrı yayımlar;
+`measured: false` ölçümün yokluğudur. `PredictedPilot`, gerçek SDK `step.isReplay` ve `onReconcile`
+callbacklerini network `ReconciliationReporter` ile sayar. Canlı/yeniden oynatılan adım, uzlaştırma,
+düzeltme ve sıçrama sayısı ile son/en büyük düzeltme `NETWORK.metricsReportMs` aralığında bildirilir.
+Büyüklük SDK'nın sayısal poz alanları arasındaki en büyük mutlak farktır; Öklid uzaklığı değildir.
+`ClientMetricsRegistry` monoton sayaç, şema ve kabul hızını doğrular; `/metrics` bu değeri
+`source: 'client-reported'` ve rapor yaşıyla sunar. Sunucu kendi fizik doğrulaması olarak kullanmaz.
+Oda ayrılışı kayıt defterini bırakır, kopma sırasında son beyan yaşlanır; yeni soketin baytı sıfırdan başlar.
+
+`drive --scenario all` boşta bekleme, ilk gövde yönünde hızlanma–fren–dönüş ve nişanla ateş
+akışlarını gerçek SDK ve oyunun aynı `PredictedPilot`/dünya geometrisiyle koşar. Faz ve hüküm her
+senaryo için JSONL'ye yazılır. Yetkili durumun ilerleyişi, fren hızı ve sunucunun ateş olayları
+denetlenir; eksik bayt/uzlaştırma ölçümü tam kabul üretmez. `--profile` mevcut kalite bütçesini
+her senaryoya ayrı uygular. Rapor oda/oturum kimliği taşımaz. Bu başsız tur çizim veya cihaz kabulü
+değildir; komutlar ve kayıt sözleşmesi [network sürücü belgesindedir](../../network/docs/drive.md#betikli-senaryolar).
 Oda adım süresi geçmişi CORE `RollingWindow` mekanizmasını tüketir; örnek sayısı ve milisaniye sunumu
 sunucuya aittir.
 Yazma kuyruğu `NETWORK.slowConsumer.limitBytes` üstünde tolerans süresince kalan istemci `1013` koduyla atılır.
@@ -1231,7 +1251,7 @@ Sunucu tarafı `games/vol-test/scripts/drive.ts` ile ölçülür: `--profile lan
 `fleetBudget` profiline karşı yargılar (`@volstudio/network/drive` `judgeFleet`) ve geçmezse süreç 1 ile
 çıkar; `/metrics` verilmezse sunucu maddeleri atlanır ve hüküm tamamlanmış sayılmaz. 14 Ekim ölçümü
 (8 istemci, 30 sn, yerel sunucu): katılım p99 34-49 ms, yama aralığı p99 65 ms, bot başına 16,1 yama/s,
-sunucu adım p95 1,2-1,3 ms; bu LAN ölçümüdür, kapasite ya da soak kabulü değildir (F13.5).
+sunucu adım p95 1,2-1,3 ms; bu yerel loopback ölçümüdür, kapasite ya da soak kabulü değildir (F13.5).
 
 ## Doğrulama
 

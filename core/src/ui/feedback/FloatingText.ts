@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { UI_TIMING } from '../../constants';
 import type { Random } from '@volstudio/core/random';
 
@@ -78,7 +79,7 @@ export class FloatingTextManager {
     const randomUnit = this.random ? this.random.bipolar() : Math.random() * 2 - 1;
     const offsetX = jitter > 0 ? randomUnit * jitter : 0;
 
-    while (this.active.length >= this.maxActive) this.recycle(this.active[0]);
+    while (this.active.length >= this.maxActive) this.recycle(requiredAt(this.active, 0));
 
     const el = this.pool.pop() ?? document.createElement('div');
     el.className = `vol-floating-text vol-floating-text--${variant}`;

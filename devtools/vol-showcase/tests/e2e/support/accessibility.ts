@@ -201,13 +201,18 @@ export const LAYER_SCENARIOS: readonly LayerScenario[] = [
   {
     scope: 'forms/select',
     tab: 'forms',
-    trigger: (page) => page.locator('.vol-select').first(),
+    trigger: (page) =>
+      page.getByRole('tabpanel').filter({ visible: true }).locator('.vol-select').first(),
     root: (page) => page.locator('.vol-select__listbox.vol-popup--visible'),
   },
   {
     scope: 'forms/osk',
     tab: 'forms',
-    trigger: (page) => button(page, en.forms.onScreenKeyboardOpen),
+    trigger: (page) =>
+      page
+        .getByRole('tabpanel')
+        .filter({ visible: true })
+        .getByRole('button', { name: en.forms.onScreenKeyboardOpen, exact: true }),
     root: (page) => page.locator('.vol-osk'),
   },
 ];

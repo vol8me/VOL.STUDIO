@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { i18next } from '../../i18n/I18n';
 
 /** Sıralama satırının sunum verisi: puanlama ve sıralama kuralı çağırana aittir. */
@@ -137,7 +138,7 @@ export class RankList {
     const shown = rows.slice(0, this.capacity).map((row, index) => ({ row, rank: index + 1 }));
     const ownIndex = rows.findIndex((row) => row.self === true);
     if (ownIndex >= this.capacity)
-      shown[shown.length - 1] = { row: rows[ownIndex], rank: ownIndex + 1 };
+      shown[shown.length - 1] = { row: requiredAt(rows, ownIndex), rank: ownIndex + 1 };
     return shown;
   }
 

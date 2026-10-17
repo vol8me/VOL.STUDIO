@@ -101,7 +101,7 @@ test('gönderilen her kanonik bank için görünümde hash/manifest/ölçüm/kal
   for (const game of readdirSync(games, { withFileTypes: true })) {
     if (!game.isDirectory()) continue;
     const directory = join(games, game.name, 'audio-banks');
-    let files = [];
+    let files;
     try {
       files = readdirSync(directory).filter((file) => file.endsWith('.json'));
     } catch {

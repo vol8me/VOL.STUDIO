@@ -32,6 +32,17 @@
   transform: scale(0.94);
 }
 
+.vol-hold-button:is(:hover, .vol-gamepad-hover):where(:not(:disabled, .vol-hold-button--pressed)) {
+  background-color: var(--vol-ui-hover-fill);
+  border-color: var(--vol-ui-brand-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-hold-button {
+    transition: background-color var(--vol-transition-fast);
+  }
+}
+
 .vol-hold-button:disabled {
   cursor: var(--vol-cursor-default, default);
   background: var(--vol-ui-disabled-fill);

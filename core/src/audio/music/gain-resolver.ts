@@ -1,21 +1,23 @@
+import { requiredAt } from '../../collections/requiredAt';
 import type { MusicState, Stem, StemGainMap } from './types';
 
 /** İki `IntensityGainPoint` arasında linear interpolasyon yapar. */
 function interpolateGain(points: { threshold: number; gain: number }[], value: number): number {
   if (points.length === 0) return 0;
-  if (value <= points[0].threshold) return points[0].gain;
-  if (value >= points[points.length - 1].threshold) return points[points.length - 1].gain;
+  if (value <= requiredAt(points, 0).threshold) return requiredAt(points, 0).gain;
+  if (value >= requiredAt(points, points.length - 1).threshold)
+    return requiredAt(points, points.length - 1).gain;
 
   for (let i = 0; i < points.length - 1; i++) {
-    const a = points[i];
-    const b = points[i + 1];
+    const a = requiredAt(points, i);
+    const b = requiredAt(points, i + 1);
     if (value >= a.threshold && value <= b.threshold) {
       const t =
         b.threshold === a.threshold ? 0 : (value - a.threshold) / (b.threshold - a.threshold);
       return a.gain + t * (b.gain - a.gain);
     }
   }
-  return points[points.length - 1].gain;
+  return requiredAt(points, points.length - 1).gain;
 }
 
 /** Bir gain map'ten ilgili state değerine göre gain değeri döner. */

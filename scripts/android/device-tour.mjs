@@ -223,7 +223,7 @@ const PAGE_STATE = `(() => {
 /** @type {{ screenOff?: string, accelerometer?: string, rotation?: string, density?: string, vibrateOn?: string }} */
 const original = {};
 let page = null;
-let pid = null;
+let pid;
 const tourStart = Date.now();
 let verdictExit = 0;
 

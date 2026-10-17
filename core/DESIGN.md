@@ -12,6 +12,12 @@ importları CORE'a girmez. Phaser importları kayıtlı köprülerle sınırlıd
 [Phaser sınırı](docs/phaser-boundary.md) kayıtların ve kapının sözleşmesidir.
 Public tip değişikliği yüzey kilidi ve yönetişim testiyle bilinçli yapılır.
 
+Kaynak ve benchmark kodu `noUncheckedIndexedAccess` ile derlenir. Opsiyonel
+hücreler açıkça ele alınır; algoritmanın dolu hücre invariantı iç `requiredAt`
+yardımcısıyla sınır ve seyrek hücre kontrolü taşır. Sabit boyutlu veri tuple ile
+anlatılır. Test fixture'ları önceki strict profili koruyan ayrı projede derlenir;
+paketin `typecheck` komutu iki projeyi de denetler.
+
 ## Yaşam döngüsü ve durum
 
 Listener, timer ve abonelikler kapanışta kaldırılır. Birden çok bağımsız

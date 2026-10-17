@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import { clamp01 } from '../math/interpolation';
 import { finiteOr, requireFinite } from '../math/numeric';
 
@@ -243,11 +244,11 @@ export class LegGait {
 
   /** Ayağın o kareki dünya-uzayı X'i (adım sırasında interpolasyonlu). */
   footX(index: number): number {
-    return this.states[index].footX;
+    return requiredAt(this.states, index).footX;
   }
 
   footY(index: number): number {
-    return this.states[index].footY;
+    return requiredAt(this.states, index).footY;
   }
 
   /**
@@ -255,16 +256,16 @@ export class LegGait {
    * tüketici karar verir; üstten bakışta "yukarı" ekran ekseni değildir.
    */
   lift(index: number): number {
-    return this.states[index].lift;
+    return requiredAt(this.states, index).lift;
   }
 
   isStepping(index: number): boolean {
-    return this.states[index].stepping;
+    return requiredAt(this.states, index).stepping;
   }
 
   /** Yalnızca adımın tamamlandığı KAREDE true — temas efektlerinin tetiği. */
   justPlanted(index: number): boolean {
-    return this.states[index].justPlanted;
+    return requiredAt(this.states, index).justPlanted;
   }
 
   /**
@@ -275,11 +276,11 @@ export class LegGait {
    * `setLegHome` ile yazılan değerin okunmuş hâlidir.
    */
   homeX(index: number): number {
-    return this.states[index].leg.homeX;
+    return requiredAt(this.states, index).leg.homeX;
   }
 
   homeY(index: number): number {
-    return this.states[index].leg.homeY;
+    return requiredAt(this.states, index).leg.homeY;
   }
 
   /**
@@ -288,7 +289,7 @@ export class LegGait {
    * gidiyordur ve gerginliği bir karar girdisi değildir.
    */
   strain(index: number): number {
-    return this.states[index].strain;
+    return requiredAt(this.states, index).strain;
   }
 
   /** Ayakları gövdenin altına, adımsız hâlde yeniden yerleştirir. */

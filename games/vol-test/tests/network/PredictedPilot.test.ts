@@ -13,6 +13,7 @@ import { command } from '../support/sim';
 import { STRIKER } from '@/config/vehicles';
 
 interface SimConfig {
+  onReconcile(): void;
   readonly snap: number;
   readonly warnOnDivergence: number | undefined;
   step(ctx: { isReplay: boolean }, world: { vehicle: Vehicle; space: World }, input: unknown): void;
@@ -42,6 +43,7 @@ function wire(stepMs = GAME.simulationStepMs, record = recordOf()) {
     send: vi.fn(() => 42),
   };
   const reconciler = {
+    lastCorrectionMag: 0,
     drift: { ema: 0.25, peak: 1 },
     pose: vi.fn(() => ({ x: 7, y: 8, hull: 0, turret: 0, pitch: 0, roll: 0 })),
     dispose: vi.fn(),
@@ -53,7 +55,7 @@ function wire(stepMs = GAME.simulationStepMs, record = recordOf()) {
       return reconciler;
     }),
   };
-  const room = { input: vi.fn(() => handle) };
+  const room = { input: vi.fn(() => handle), send: vi.fn() };
   const fired = vi.fn();
   const build = () =>
     new PredictedPilot({
@@ -64,8 +66,37 @@ function wire(stepMs = GAME.simulationStepMs, record = recordOf()) {
       divergenceTolerance: 0.5,
       onFired: fired,
     });
-  return { build, handle, reconciler, predict, fired, record, config: () => config! };
+  return { build, handle, reconciler, predict, fired, record, room, config: () => config! };
 }
+
+it('SDK callbacklerinden gerçek düzeltme/sıçrama/yeniden oynatma sayaçlarını bildirir', () => {
+  const run = wire();
+  const pilot = run.build();
+  const world = {
+    vehicle: pilot.vehicle,
+    space: new World(WORLD.width, WORLD.height, WORLD.gridStep),
+  };
+  run.config().step({ isReplay: false }, world, command());
+  run.config().step({ isReplay: true }, world, command());
+  run.config().onReconcile();
+  run.reconciler.lastCorrectionMag = 2;
+  run.config().onReconcile();
+  run.reconciler.lastCorrectionMag = 200;
+  run.config().onReconcile();
+  expect(pilot.reportMetrics(0)).toBe(true);
+  expect(run.room.send).toHaveBeenCalledWith('net:client-metrics', {
+    sequence: 1,
+    liveSteps: 1,
+    replaySteps: 1,
+    reconciliations: 3,
+    corrections: 2,
+    snaps: 1,
+    correctionLast: 200,
+    correctionMax: 200,
+  });
+  pilot.dispose();
+  expect(pilot.reportMetrics(1000)).toBe(false);
+});
 
 describe('PredictedPilot kurulum', () => {
   it('sunucunun yetkili durumunu araca kurar', () => {

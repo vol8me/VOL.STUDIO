@@ -1,9 +1,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+  existsSync,
+  symlinkSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { createGame } from '../../new-game.mjs';
+import { loadQualityConfig } from '../config.mjs';
+import { scalingRatios } from '../scalingBudget.mjs';
 
 function fixture(run) {
   const root = mkdtempSync(join(tmpdir(), 'vol-new-game-'));
@@ -37,7 +48,7 @@ test('yeni oyun gerçek dosya ağacını ve bütün kalite kayıtlarını üreti
     assert.equal(config.build.devUrl, `http://localhost:${options.port}`);
     for (const icon of config.bundle.icon)
       assert.ok(existsSync(join(root, 'games/new-demo/src-tauri', icon)));
-    const quality = JSON.parse(readFileSync(join(root, 'quality.json')));
+    const quality = loadQualityConfig(join(root, 'quality.json'));
     assert.ok(quality.packages[result.packageName]);
     assert.ok(quality.bundles[result.path]);
     assert.ok(quality.scaling[result.path].$measure);
@@ -55,6 +66,25 @@ test('yeni oyun gerçek dosya ağacını ve bütün kalite kayıtlarını üreti
       readFileSync(join(root, result.path, 'vite.config.ts'), 'utf8').includes('coreAliases()'),
     );
     assert.throws(() => createGame(root, options), /mevcut/);
+  }));
+
+test('üretilen scaling betiği gerçek CORE tüketimiyle ortak rapor okuyucusunu besler', () =>
+  fixture((root, options) => {
+    const result = createGame(root, options);
+    const packageDirectory = join(root, result.path);
+    const scope = join(packageDirectory, 'node_modules/@volstudio');
+    mkdirSync(scope, { recursive: true });
+    symlinkSync(resolve(import.meta.dirname, '../../../core'), join(scope, 'core'), 'junction');
+    const raw = execFileSync(
+      process.execPath,
+      ['--import', import.meta.resolve('tsx'), join(packageDirectory, 'scripts/scaling.ts')],
+      { cwd: packageDirectory, encoding: 'utf8' },
+    );
+    const quality = JSON.parse(readFileSync(join(root, 'quality.json')));
+    const budget = quality.scaling[result.path];
+    const ratios = scalingRatios(JSON.parse(raw), budget.$measure.series, ['spatial512Over128']);
+    assert.ok(Number.isFinite(ratios.spatial512Over128) && ratios.spatial512Over128 > 0);
+    assert.deepEqual(budget.$measure, { script: 'scripts/scaling.ts', series: 'spatial' });
   }));
 
 test('geçersiz ad, kimlik ve port hiçbir dosyayı değiştirmez', () =>

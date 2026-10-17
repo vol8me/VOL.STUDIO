@@ -11,22 +11,27 @@ export interface TrafficClient {
 }
 
 export interface ClientTraffic {
+  /** Gerçek Node soket sayaçları okunabildi mi? `false` iken toplamlar ölçüm değildir. */
+  readonly measured: boolean;
   /** Soketin yazma kuyruğunda bekleyen bayt; tüketici yavaşsa büyür. */
   readonly bufferedBytes: number;
-  /** Bağlantı boyunca gönderilen ve alınan toplam bayt (taşıma katmanı dahil). */
+  /** Node soket akışının baytları: WebSocket çerçeveleri dahil; IP/TLS tel maliyeti değildir. */
   readonly sentBytes: number;
   readonly receivedBytes: number;
 }
 
 /**
- * İstemci başına trafik. Alanlar `ws`nin iç yapısından okunur ve yoksa 0 döner: ölçüm eksik
- * olabilir ama sunucuyu düşüremez.
+ * İstemci başına trafik. `ws`nin gerçek soket sayaçları yoksa `measured: false` döner;
+ * JSON uzunluğu veya paket tahmini gerçek bayt yerine kullanılmaz.
  */
 export function clientTraffic(client: TrafficClient): ClientTraffic {
   const socket = (client.ref ?? {}) as SocketLike;
   const finite = (value: number | undefined): number =>
-    typeof value === 'number' && Number.isFinite(value) ? value : 0;
+    typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : 0;
   return {
+    measured: [socket._socket?.bytesWritten, socket._socket?.bytesRead].every(
+      (value) => typeof value === 'number' && Number.isFinite(value) && value >= 0,
+    ),
     bufferedBytes: finite(socket.bufferedAmount),
     sentBytes: finite(socket._socket?.bytesWritten),
     receivedBytes: finite(socket._socket?.bytesRead),

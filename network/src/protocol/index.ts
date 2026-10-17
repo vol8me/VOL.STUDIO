@@ -11,3 +11,5 @@ export {
   sanitizeName,
 } from './join';
 export type { JoinOptions, JoinRejection, ParsedJoin } from './join';
+export { CLIENT_METRICS_MESSAGE, isReconciliationSample } from './clientMetrics';
+export type { ReconciliationSample } from './clientMetrics';

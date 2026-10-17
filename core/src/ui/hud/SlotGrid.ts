@@ -827,31 +827,41 @@ export class SlotGrid {
 
       const allowSwap = this.onSwapRequestHandler?.(draggedItem.id, fromIndex, toIndex) ?? false;
       if (!allowSwap) return false;
+      // Tüketici karar verirken envanteri yenileyebilir veya bileşeni sökebilir.
+      // Eski referansla yeni öğeleri taşımak veri kaybına ve yanlış drop niyetine yol açar.
+      if (
+        this.scope.isDisposed() ||
+        this.items[fromIndex] !== draggedItem ||
+        this.items[toIndex] !== targetItem
+      )
+        return false;
 
-      this.applySwap(fromIndex, toIndex);
-      return true;
+      return this.applySwap(fromIndex, toIndex);
     }
 
-    this.applyMove(fromIndex, toIndex);
-    return true;
+    return this.applyMove(fromIndex, toIndex);
   }
 
   /** State'i günceller ve DOM'u diff ile senkronize eder. */
-  private applyMove(fromIndex: number, toIndex: number): void {
+  private applyMove(fromIndex: number, toIndex: number): boolean {
     const item = this.items[fromIndex];
+    if (!item) return false;
     delete this.items[fromIndex];
     this.items[toIndex] = item;
     this.syncItems();
     this.onMoveHandler?.(item.id, fromIndex, toIndex);
+    return true;
   }
 
-  private applySwap(fromIndex: number, toIndex: number): void {
+  private applySwap(fromIndex: number, toIndex: number): boolean {
     const a = this.items[fromIndex];
     const b = this.items[toIndex];
+    if (!a || !b) return false;
     this.items[fromIndex] = b;
     this.items[toIndex] = a;
     this.syncItems();
     this.onMoveHandler?.(a.id, fromIndex, toIndex);
     this.onMoveHandler?.(b.id, toIndex, fromIndex);
+    return true;
   }
 }

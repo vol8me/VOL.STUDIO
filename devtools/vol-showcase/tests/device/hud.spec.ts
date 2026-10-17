@@ -1,3 +1,4 @@
+import { settleFrames } from '../e2e/support/settle';
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -39,7 +40,7 @@ async function openHud(page: Page): Promise<void> {
   await page
     .locator('[role="tabpanel"][id$="-panel-hud"]:not([aria-hidden="true"])')
     .waitFor({ timeout: 15_000 });
-  await page.waitForTimeout(500);
+  await settleFrames(page);
 }
 
 /** Etkin panelde, iki dilde de eşleşen düğme. */

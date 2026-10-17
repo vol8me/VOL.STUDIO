@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { Popup, type PopupPlacement } from './Popup';
 
@@ -176,7 +177,7 @@ export class ContextMenu {
     const count = this.itemButtons.length;
     for (let step = 1; step <= count; step++) {
       const candidate = (from + direction * step + count) % count;
-      if (!this.itemButtons[candidate].disabled) {
+      if (!requiredAt(this.itemButtons, candidate).disabled) {
         return candidate;
       }
     }
@@ -185,7 +186,7 @@ export class ContextMenu {
 
   private lastEnabledIndex(): number {
     for (let i = this.itemButtons.length - 1; i >= 0; i--) {
-      if (!this.itemButtons[i].disabled) return i;
+      if (!requiredAt(this.itemButtons, i).disabled) return i;
     }
     return -1;
   }

@@ -161,7 +161,7 @@ export class SettingsModel {
   }
 
   resetAll(): void {
-    for (const key of Object.keys(this.fields)) this.applyDraft(key, this.fields[key].defaultValue);
+    for (const key of Object.keys(this.fields)) this.applyDraft(key, this.spec(key).defaultValue);
     this.emit();
   }
 
@@ -188,7 +188,7 @@ export class SettingsModel {
 
     const snapshot = new Map(this.drafts);
     const dirtyScopes = SCOPES.filter((scope) =>
-      [...snapshot.keys()].some((key) => this.fields[key].scope === scope),
+      [...snapshot.keys()].some((key) => this.spec(key).scope === scope),
     );
     this.busy = true;
     this.emit();
@@ -209,7 +209,7 @@ export class SettingsModel {
         }
         saved.push(scope);
         for (const [key, value] of snapshot) {
-          if (this.fields[key].scope !== scope) continue;
+          if (this.spec(key).scope !== scope) continue;
           this.committedValues.set(key, value);
           // Yazım sürerken aynı alan yeniden düzenlendiyse taslak (yeni değer) kirli kalır.
           if (same(this.drafts.get(key), value)) this.drafts.delete(key);
@@ -256,7 +256,7 @@ export class SettingsModel {
   private applyDraft(key: string, value: unknown): void {
     if (same(value, this.committedValues.get(key))) this.drafts.delete(key);
     else this.drafts.set(key, value);
-    const problem = this.fields[key].validate?.(value) ?? null;
+    const problem = this.spec(key).validate?.(value) ?? null;
     if (problem === null) this.errors.delete(key);
     else this.errors.set(key, problem);
   }

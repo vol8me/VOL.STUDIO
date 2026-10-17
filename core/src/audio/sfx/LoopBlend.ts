@@ -1,3 +1,4 @@
+import { requiredNumberAt } from '../../collections/requiredAt';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { StemLoader } from '../music/loader';
 import { clamp, clamp01 } from '../../math/interpolation';
@@ -54,18 +55,18 @@ export function loopBlendWeights(positions: readonly number[], level: number): n
   const weights = positions.map(() => 0);
   if (positions.length === 0) return weights;
   const x = finiteOr(level, 0);
-  if (x <= positions[0]) {
+  if (x <= requiredNumberAt(positions, 0)) {
     weights[0] = 1;
     return weights;
   }
   const last = positions.length - 1;
-  if (x >= positions[last]) {
+  if (x >= requiredNumberAt(positions, last)) {
     weights[last] = 1;
     return weights;
   }
   for (let index = 0; index < last; index++) {
-    const from = positions[index];
-    const to = positions[index + 1];
+    const from = requiredNumberAt(positions, index);
+    const to = requiredNumberAt(positions, index + 1);
     if (x < from || x > to) continue;
     const t = to > from ? (x - from) / (to - from) : 0;
     weights[index] = Math.cos((t * Math.PI) / 2);

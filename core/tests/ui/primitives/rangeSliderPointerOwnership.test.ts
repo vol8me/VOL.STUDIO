@@ -31,7 +31,14 @@ function pointer(
   extra: PointerEventInit = {},
 ) {
   track.dispatchEvent(
-    new PointerEvent(type, { pointerId, clientX, bubbles: true, button: 0, ...extra }),
+    new PointerEvent(type, {
+      isPrimary: true,
+      pointerId,
+      clientX,
+      bubbles: true,
+      button: 0,
+      ...extra,
+    }),
   );
 }
 

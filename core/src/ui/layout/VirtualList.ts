@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { scrollByArrowKey } from './arrowScroll';
 
 export interface VirtualListOptions<T> {
@@ -145,7 +146,7 @@ export class VirtualList<T> {
       row.setAttribute('aria-posinset', String(i + 1));
       row.setAttribute('aria-setsize', String(this.items.length));
       row.style.height = `${this.itemHeight}px`;
-      row.appendChild(this.renderItemFn(this.items[i], i));
+      row.appendChild(this.renderItemFn(requiredAt(this.items, i), i));
       fragment.appendChild(row);
     }
     this.viewport.appendChild(fragment);

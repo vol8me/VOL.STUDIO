@@ -251,11 +251,12 @@ keyboard/gamepad/touch/reduced-motion; %30 uzunluk ve 6 haneli sayı temel
 matristir. Her satırın applicable/fixture/assertion bağı veya gerekçeli
 N/A'sı vardır. Text'e sahte loading, UIRoot'a sahte görsel varyant eklenmez.
 Tier-1 tam matris, tier-2 kendi uygulanabilir durum/lifecycle matrisi;
-89 public sınıf ve public yardımcılar kayıt dışı kalmaz.
+Public sınıflar ve yardımcılar [katalogda](CATALOG.md) kayıt dışı kalmaz.
 
-Select açıkken disabled/recommit, Slider adı/saydam hit alanı, Checkbox
-semantiği, PauseResume sayaç sahipliği, DualAxis child jestleri, OSK abort ve
-ToolButton ayrı örneği açık görevlerdir.
+`contract`, tier-1 uygulanabilir hücrelerin tamamını zorunlu tutar: test bağı,
+doğrulanmış durum fixture'ı veya export'a özgü kaynak gerekçeli N/A gerekir.
+Yeni arketip ekseni ya da export kanıtsız hücre eklerse kapı düşer. Test bağı
+başlık, gerçek export kullanımı, assertion ve durum işaretiyle doğrulanır.
 Normal vitrin kartında adının bulunması durumların sınandığı anlamına gelmez.
 
 ## 9. Erişilebilirlik
@@ -264,7 +265,7 @@ Axe tag'leri `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`;
 violations fail, incomplete gerekçeli elle inceleme. İstisna exact
 rule+selector+gerekçe+owner+yeniden inceleme ölçütü taşır; blanket snapshot
 waiver yoktur. Axe tek başına AA uygunluğunu veya gerçek AT deneyimini kanıtlamaz.
-Her sürüm adayında klavye-only, ekran okuyucu, %200/reflow ve kol-only
+Her sürüm adayında klavye-only, %200/reflow ve kol-only
 gerçek akış yapılır. Focus örtülmez, drag tek alternatifi olmaz;
 auth varsa tekrar giriş/yapıştırma/parola yöneticisi ölçütleri geçerlidir.
 Renk körlüğü/grayscale fixture'ı ve renk dışı anlam kontrolü bulunur;
@@ -382,7 +383,7 @@ maxLength, multiline ve geç async sonuçlar sahipli TextEntry oturumudur.
 Insets önce mevcut WebView forwarding ile ölçülür. Android OS/API35 tek
 başına visualViewport yetersizliği kanıtı değildir. Native WindowInsets
 sağlayıcısı gerçekten gereken profilde fallback olur; JS geometry yedeği,
-CSS px dönüşümü ve tek padding sahibi vardır. Docked/floating/split IME,
+CSS px dönüşümü ve tek padding sahibi vardır. Sistem klavyesi,
 rotation, çentik, sistem barları ve predictive-back ayrı gerçek probe'lardır.
 Deck native dialog/floating/OSK yolları capability'ye göre seçilir;
 password mask, multiline, abort, timeout, owner destroy ve overlay yokluğu

@@ -78,7 +78,6 @@ test.describe('axe: kart katmanları', () => {
       await page.getByRole('button', { name: layer.open, exact: true }).click();
       const root = page.locator('.vol-showcase-card-layer:not([hidden])');
       await root.first().waitFor();
-      await page.waitForTimeout(500);
       expectReconciled(`layer/${layer.scope}`, await scan(page, root));
     });
   }

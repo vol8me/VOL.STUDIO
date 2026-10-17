@@ -1,3 +1,4 @@
+import { requiredAt } from './requiredAt';
 import type { Random } from '../random/random';
 
 export interface DeckOptions {
@@ -51,7 +52,7 @@ export class Deck<T> {
       // discardPile readonly; referans takası yerine elemanları taşıp temizle.
       // splice(0, n) her elemanı kaydırırdı; push + length=0 O(n) ama kaydırma yok.
       for (let i = 0; i < this.discardPile.length; i++) {
-        this.drawPile[i] = this.discardPile[i];
+        this.drawPile[i] = requiredAt(this.discardPile, i);
       }
       this.drawPile.length = this.discardPile.length;
       this.discardPile.length = 0;
@@ -106,7 +107,7 @@ export class Deck<T> {
    */
   reset(): void {
     for (let i = 0; i < this.discardPile.length; i++) {
-      this.drawPile.push(this.discardPile[i]);
+      this.drawPile.push(requiredAt(this.discardPile, i));
     }
     this.discardPile.length = 0;
     this.shuffleDrawPile();
@@ -122,7 +123,10 @@ export class Deck<T> {
   private shuffleDrawPile(): void {
     for (let i = this.drawPile.length - 1; i > 0; i--) {
       const j = Math.floor(this.random.next() * (i + 1));
-      [this.drawPile[i], this.drawPile[j]] = [this.drawPile[j], this.drawPile[i]];
+      [this.drawPile[i], this.drawPile[j]] = [
+        requiredAt(this.drawPile, j),
+        requiredAt(this.drawPile, i),
+      ];
     }
   }
 }

@@ -15,6 +15,7 @@ import {
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid, svgIcon } from './shared';
 import { ICON_COPY, ICON_EDIT, ICON_SHARE, ICON_TRASH } from './icons';
+import { buildNestedInputDemo } from './nestedInputDemo';
 import {
   buildDialogPatternsDemo,
   buildGuidedTourDemo,
@@ -153,9 +154,14 @@ function buildModalDemo(uiRootElement: HTMLElement, disposables: DisposableScope
   disposables.addDestroyables(result);
 
   const modal = new Modal({
-    onClose: () => result.setContent(i18next.t('volui:panels.modalClosed')),
+    onClose: () => {
+      nested?.cancel();
+      result.setContent(i18next.t('volui:panels.modalClosed'));
+    },
   }).add(new Text(i18next.t('volui:panels.gamePaused'), { variant: 'heading', tag: 'h2' }));
   disposables.addDestroyables(modal);
+  const nested = buildNestedInputDemo(disposables, modal.element);
+  modal.add(nested);
 
   const resumeButton = new Button(i18next.t('volui:panels.resume'), {
     variant: 'primary',

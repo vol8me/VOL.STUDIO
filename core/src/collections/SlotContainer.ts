@@ -1,3 +1,4 @@
+import { requiredAt } from './requiredAt';
 /** Bir slottaki yığın. */
 export interface Slot<TItem> {
   item: TItem;
@@ -166,8 +167,8 @@ export class SlotContainer<TItem> {
     if (a === b) return this.inRange(a);
     if (!this.inRange(a) || !this.inRange(b)) return false;
 
-    const from = this.slots[a];
-    const to = this.slots[b];
+    const from = requiredAt(this.slots, a);
+    const to = requiredAt(this.slots, b);
 
     if (from && to && this.isSameItem(from.item, to.item)) {
       const limit = Math.max(1, Math.floor(this.maxStack(to.item)));

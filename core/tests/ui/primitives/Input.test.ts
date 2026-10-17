@@ -2,6 +2,40 @@ import { describe, expect, it, vi } from 'vitest';
 import { Input } from '../../../src/ui/primitives/Input';
 
 describe('Input tamamlanmış değer sözleşmesi', () => {
+  it('disabled Input native odağı ve tıklamayı engeller; yeniden açılınca erişilir', () => {
+    const input = new Input({ value: 'saklı', disabled: true });
+    const click = vi.fn();
+    input.element.addEventListener('click', click);
+    document.body.append(input.element);
+    input.element.focus();
+    input.element.click();
+    expect(input.element.disabled).toBe(true);
+    expect(document.activeElement).not.toBe(input.element);
+    expect(click).not.toHaveBeenCalled();
+    expect(input.getValue()).toBe('saklı');
+    input.setDisabled(false);
+    input.element.focus();
+    input.element.click();
+    expect(document.activeElement).toBe(input.element);
+    expect(click).toHaveBeenCalledTimes(1);
+    input.destroy();
+  });
+
+  it('boş ve altı haneli sayı metni programatik ayarda olay üretmeden korunur', () => {
+    const onInput = vi.fn();
+    const onCommit = vi.fn();
+    const emptyValue = '';
+    const input = new Input({ type: 'number', onInput, onCommit });
+    expect(input.getValue()).toBe(emptyValue);
+    input.setValue('999999');
+    expect(input.getValue()).toBe('999999');
+    input.setValue(emptyValue);
+    expect(input.element.value).toBe(emptyValue);
+    expect(onInput).not.toHaveBeenCalled();
+    expect(onCommit).not.toHaveBeenCalled();
+    input.destroy();
+  });
+
   it('Enter gönderimi tamamlanan güncel modeli okur', () => {
     let saved = 'eski';
     const submitted: string[] = [];

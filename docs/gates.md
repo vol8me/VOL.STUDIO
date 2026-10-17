@@ -7,6 +7,25 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 
 ## Birleşik kapılar
 
+Araç zinciri Node 22.23.1 ile doğrulanır: ESLint 10.12.0 ve
+typescript-eslint 8.71.2, Stylelint 17.16.0 ve standard config 40.0.0,
+jsdom 30.1.3, Vitest/coverage-v8 5.0.5 aynı kilitte yaşar.
+[ESLint 10](https://eslint.org/docs/latest/use/migrate-to-10.0.0),
+[Stylelint 17](https://stylelint.io/migration-guide/to-17/) ve
+[Vitest 5](https://vitest.dev/guide/migration/) geçişleri kuralları
+bastırmadan uygulanır. TypeScript 6.0.3 korunur: yayımlanmış
+typescript-eslint 8.71.2 peer aralığı `>=4.8.4 <6.1.0` olduğundan
+TypeScript 7 bu zincirde destekli değildir. Sürüm yükseltmesi peer
+uyarısını bastırmak veya kapsam eşiğini düşürmek için gerekçe değildir.
+
+CORE kaynakları `noUncheckedIndexedAccess` ile denetlenir; fixture testleri
+önceki strict profiliyle ayrı projede denetlenir. İki proje de aynı
+`typecheck` tarifindedir. Ölçekleme üreticileri `schemaVersion: 1`,
+`unit: ms/step`, `series: { ad: [{ input, value }] }` ortak raporunu verir.
+Okuyucu her girdiyi tekil pozitif tam sayı, süreyi sonlu pozitif değer
+olarak doğrular. Eksik/tekrarlı örnek veya taşan oran kabul değildir;
+oranlar JIT, önbellek ve zamanlayıcı gürültüsünden bağımsız sayılmaz.
+
 | Kapı      | Ne zaman         | Bileşim                                                                                          |
 | --------- | ---------------- | ------------------------------------------------------------------------------------------------ |
 | `quick`   | pre-commit       | `node-pin` + `contract` + `format-check` + `typecheck` + `lint` + `lint-css`                     |
@@ -15,8 +34,9 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 | `signoff` | sürüm öncesi     | `high` + `e2e` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`             |
 
 `e2e` pre-push kapısında değildir (2026-10-11 kararı); `high` ve `signoff`
-bileşimi yukarıdaki tabloda tanımlıdır. Son VOL.TEST/CORE/network
-sağlamlaştırma turunun temiz `922a83dd` kaynağı **18/18 PASS, 63,6 dk** verdi:
+bileşimi yukarıdaki tabloda tanımlıdır. Güncel kaynak ve ayrı kapı kanıtları
+[rapor §29](monorepo-audit.md)'dadır. Önceki VOL.TEST/CORE/network
+turunun temiz `922a83dd` kaynağı **18/18 PASS, 63,6 dk** verdi:
 vitrin E2E 23,8 dk, ürün E2E 16,7 dk, tam ses kapsamı 9,2 dk. E2E 1.170 PASS /
 21 mevcut SKIP, sıfır FAIL/flaky; başlangıç yükü %23 ve bütün aşamalar tazeydi
 ([rapor §28](monorepo-audit.md)). Görsel, erişilebilirlik ve etkileşim
@@ -27,7 +47,7 @@ Bu süreler kendi koşusuna aittir; kapıdan çıkarma bir hızlanma ölçümü 
 ## Signoff onayı
 
 `pnpm signoff` kullanıcının onayı olmadan koşulmaz; ajan da koşucu da bunu kendiliğinden başlatmaz.
-Gerekçe: ~40 dk'lık tam koşu makineyi tutar (yük altında zamana duyarlı testleri de sarsar), e2e piksel
+Gerekçe: yaklaşık bir saatlik tam koşu makineyi tutar (yük altında zamana duyarlı testleri de sarsar), e2e piksel
 temellerini değiştirebilir ve `high` yeşilken zaten kanıtlanan aşamaları tekrar eder. Onay istenirken şu
 dördü yazılır: hangi değişiklik hangi aşamayı kanıtsız bırakıyor, `high`in kanıtladığı kısım, tahmini süre,
 düşerse çalışma ağacının durumu. Kullanıcı açıkça serbest bıraktıysa onayın kapsadığı koşu ya da oturum
@@ -269,6 +289,18 @@ kırar.
 
 ## Süre bütçesi
 
+**Güncel ölçüm (2026-10-17):** Windows 11, 8 mantıksal çekirdekte son `high`
+645,3 sn sürdü. Statik dalganın en uzun aşaması `contract` 140,6 sn,
+`audio-test` 155,0 sn, `coverage` 323,3 sn oldu. Rust girdileri değişmediği
+için içerik makbuzundan doğrulandı; bu sonuç bütünüyle makbuzsuz `--fresh`
+koşu değildir. Ayrı tam vitrin E2E 1.624,7 sn, tam ses kapsamı 614,4 sn sürdü.
+Ayrı VOL.TEST E2E 17,1 dk sürdü (131 PASS / 1 mevcut SKIP).
+Güncel `quick`/`fast` ve tam `signoff` ayrıca ölçülmedi; bu süreler toplanıp
+yapılmamış birleşik kapı ölçümü üretilmez. Kaynak ve kapsam [denetim §29](monorepo-audit.md)'dadır.
+
+Aşağıdaki tablo **2026-10-11'in tarihsel ölçümüdür**; bugünkü araç zinciri
+ve test sayıları için süre tahmini değildir.
+
 Windows 11, 8 mantıksal çekirdek. İki sütun ayrı yöntemdir ve karıştırılmaz: **tek başına** önceki ölçümdür
 (boş makine, ısınmış önbellek, aşama tek koşar); **taze tur** 2026-10-11'de kapı koşucusunun `--fresh` koşusudur
 (makbuzsuz, ön yük ≤%11; statik aşamalar birlikte koştuğundan her biri tek başınadan uzundur, toplam duvar süresi
@@ -330,9 +362,10 @@ vitrin motorları yalnız birbirleriyle eşzamanlıdır. **Taze turda vitrin `e2
 ikisinde de bir WebKit testinde zaman aşımına uğradı** (`dialogPatterns.spec.ts:116` ana şerit; `motionMeasure.spec.ts:124`
 sessiz şerit, tek işçi, ön yük %4; ilki izole tekrarda 50/50 geçti): düzen kararsızlığı tamamen önlemez.
 
-**Sessiz şerit.** Zamanı ÖLÇEN ve süre sınırı koyan beş vitrin spec'i (`QUIET_SPECS` →
-`busyFeedback`, `latency`, `motionMeasure`, `performance`, `probe`) iki motor ve dört işçi
-eşzamanlıyken kararsızdı (WebKit'te meşgul durumun tabana eklediği süre ve flaş sınırının
+**Sessiz şerit.** Zamanı ölçen ve süre sınırı koyan altı vitrin spec'i (`QUIET_SPECS` →
+`busyFeedback`, `latency`, `motionMeasure`, `performance`, `probe`, `responseSlice`)
+bu şerittedir. İlk beşinin iki motor ve dört işçiyle eşzamanlı koşusu kararsızdı
+(WebKit'te meşgul durumun tabana eklediği süre ve flaş sınırının
 devreye girmesi düştü); tek başına, tek işçiyle koşunca geçtiler. `devtools/vol-showcase/scripts/e2e.mjs` tam koşuyu
 ikiye böler: ana şeritte geri kalan her şey motorlar eşzamanlı, ardından bu spec'ler motor motor
 ve tek işçiyle. Şeritler yalnız tam koşuyu böler: `e2eConfig` bekçisi her spec dosyasının HER

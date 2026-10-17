@@ -28,19 +28,22 @@ function generatedProbeImport(root, available, file, specifier, path) {
   )
     return false;
   const source = resolve(root, 'core/src/time/frameSummary.ts');
+  const entry = resolve(root, 'devtools/deck/scripts/probe-metrics-entry.mjs');
   const generator = resolve(root, 'devtools/deck/scripts/probe-metrics.mjs');
   const builder = resolve(root, 'scripts/linux/build-steamrt4.mjs');
-  if (![source, generator, builder].every((entry) => available.has(entry))) return false;
+  if (![source, entry, generator, builder].every((path) => available.has(path))) return false;
   try {
     const generatedBy = readFileSync(generator, 'utf8');
     const builtBy = readFileSync(builder, 'utf8');
     return (
-      /readFileSync\s*\(\s*join\s*\(\s*root\s*,\s*['"]core\/src\/time\/frameSummary\.ts['"]\s*\)/.test(
+      sourceImports(readFileSync(entry, 'utf8'), entry).includes('@volstudio/core/time') &&
+      sourceImports(generatedBy, generator).includes('esbuild') &&
+      /\bbuildSync\s*\(/.test(generatedBy) &&
+      /\bbundle\s*:\s*true\b/.test(generatedBy) &&
+      /\bentryPoints\s*:\s*\[\s*join\s*\(\s*root\s*,\s*['"]devtools\/deck\/scripts\/probe-metrics-entry\.mjs['"]\s*\)/.test(
         generatedBy,
       ) &&
-      /\bts\.transpileModule\s*\(/.test(generatedBy) &&
-      /\bdirectory\s*=\s*join\s*\(\s*webDir\s*,\s*['"]vendor['"]\s*\)/.test(generatedBy) &&
-      /writeFileSync\s*\(\s*join\s*\(\s*directory\s*,\s*['"]frame-summary\.js['"]\s*\)\s*,\s*result\.outputText/.test(
+      /\boutfile\s*:\s*join\s*\(\s*webDir\s*,\s*['"]vendor\/frame-summary\.js['"]\s*\)/.test(
         generatedBy,
       ) &&
       sourceImports(builtBy, builder).includes('../../devtools/deck/scripts/probe-metrics.mjs') &&

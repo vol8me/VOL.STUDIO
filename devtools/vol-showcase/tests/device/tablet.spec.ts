@@ -1,3 +1,4 @@
+import { settleFrames, settleTransitions } from '../e2e/support/settle';
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -74,7 +75,7 @@ async function selectTab(page: Page, tab: ShowcaseTab): Promise<void> {
   await page
     .locator(`[role="tabpanel"][id$="-panel-${tab}"]:not([aria-hidden="true"])`)
     .waitFor({ timeout: 15_000 });
-  await page.waitForTimeout(250);
+  await settleFrames(page);
 }
 
 interface Viewport {
@@ -193,7 +194,7 @@ test('cihaz: ekran klavyesi dokunmayla yazılır; sembol, dil ve vazgeç çalı�
   await touchTap(page, trigger);
   const osk = page.locator('.vol-osk');
   await osk.waitFor({ timeout: 10_000 });
-  await page.waitForTimeout(300);
+  await settleTransitions(page);
   await shot(page, 'osk-letters.png');
 
   const geometry = await page.evaluate(() => {
@@ -247,7 +248,7 @@ test('cihaz: katmanlar çizilir; diyalog kutusu sayfanın üstünde, katmanlar e
     page.locator('.vol-showcase-card', { hasText: /modal/i }).locator('button').first(),
   );
   await page.locator('.vol-modal--visible').first().waitFor({ timeout: 10_000 });
-  await page.waitForTimeout(300);
+  await settleTransitions(page);
   await shot(page, 'layer-modal.png');
   await page.keyboard.press('Escape');
 
@@ -324,7 +325,6 @@ test('cihaz: dokunma → ilk görünür geri bildirim gecikmesi (rAF + mesaj tur
     samples.push(
       await page.evaluate(() => (window as unknown as { __latency: Promise<number> }).__latency),
     );
-    await page.waitForTimeout(120);
   }
   const sorted = [...samples].sort((a, b) => a - b);
   const at = (q: number): number =>

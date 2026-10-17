@@ -1,3 +1,4 @@
+import { settleFrames } from './support/settle';
 import { expect, test, type Page } from '@playwright/test';
 import { key, loadAxeRecords, scan, scanCached } from './support/accessibility';
 import { openShowcase, selectTab, SHOWCASE_TABS, type ShowcaseTab } from './support/determinism';
@@ -327,7 +328,7 @@ test.describe('yerleşim kayması', () => {
       await page.locator('.vol-showcase-skin-button').click();
       await expect(page.locator('html')).toHaveAttribute('data-vol-theme', 'aurum');
       await settle(page);
-      await page.waitForTimeout(150);
+      await settleFrames(page);
       const shifts = await page.evaluate(() => (window as unknown as { shifts: string[] }).shifts);
       // Ölçülen: yalnız bir ::before sözde öğesinde ~6e-7 (piksel altı yuvarlama); gerçek kutu kayması yok. Bütçe "iyi" eşiğinin (0,1)
       // binde biridir: bundan büyük her kayma gerçek bir yerleşim değişimidir.

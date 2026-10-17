@@ -4,6 +4,8 @@ import { DisposableScope, VirtualActionSource, VirtualStickSource } from '@volst
 import { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
 import { WAR } from '@/config/war';
+import { GAME } from '@/config/game';
+import { NETWORK } from '@/config/network';
 import { WEATHER } from '@/config/weather';
 import { WeatherSystem } from '@/sim/weather/WeatherSystem';
 import { WORLD } from '@/config/world';
@@ -143,6 +145,54 @@ const byId = (parent: HTMLElement, id: string): HTMLElement =>
   parent.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
 
 describe('OnlineDriver sürüş', () => {
+  it('gerçek SDK uzun render karesindeki altı sabit girdiyi beşe düşürmez', async () => {
+    const { driver, steps } = await rig();
+    driver.advance(0, 0, false);
+    driver.advance(100, 100, false);
+    expect(steps.count).toBe(6);
+    expect(driver.world.pilot.input.sentCount).toBe(6);
+    for (let at = 200; at <= 1000; at += 100) driver.advance(at, 100, false);
+    // 60 Hz'nin ikili kesri sınırda son adımı erteleyebilir; borç kaybolmadan sonraki tick'te gelir.
+    driver.advance(1000 + 1e-6, 0, false);
+    expect(steps.count).toBe(60);
+    expect(driver.world.pilot.input.sentCount).toBe(60);
+  });
+
+  it('normal 60 Hz kadansında gerçek SDK bir saniyede 60 girdi tüketir', async () => {
+    const { driver, steps } = await rig();
+    driver.advance(0, 0, false);
+    for (let frame = 1; frame <= 60; frame++)
+      driver.advance(frame * GAME.simulationStepMs + 1e-6, GAME.simulationStepMs, false);
+    expect(steps.count).toBe(60);
+  });
+
+  it.each([0, GAME.simulationStepMs / 2, GAME.simulationStepMs - 1e-6])(
+    'kesirli SDK artığı %s iken uzun hitch girdi tamponunu aşmaz',
+    async (offset) => {
+      const { driver, steps } = await rig();
+      driver.advance(0, 0, false);
+      driver.advance(offset, offset, false);
+      for (const gap of [100, 1000, 1e6, 1e9]) {
+        const before = steps.count;
+        // SDK duvar damgası sıçrar; Phaser'ın hava/efekt delta'sı ayrı ve sınırlıdır.
+        driver.advance(gap + offset, GAME.simulationStepMs, false);
+        expect(steps.count - before).toBeGreaterThan(0);
+        expect(steps.count - before).toBeLessThanOrEqual(NETWORK.inputBuffer);
+      }
+    },
+  );
+
+  it('son poz bütün dilimler tüketildikten sonra okunur; kapanış yeni girdi üretmez', async () => {
+    const { driver, scope, steps } = await rig();
+    driver.advance(0, 0, false);
+    const advance = vi.spyOn(driver.world, 'advance');
+    advance.mockImplementation(() => expect(steps.count).toBe(6));
+    driver.advance(100, 100, false);
+    scope.dispose();
+    driver.advance(200, 100, false);
+    expect(steps.count).toBe(6);
+  });
+
   it('en büyük sapma sönümlü tepe düştükten sonra da kalır', async () => {
     const { driver, session, run } = await rig();
     run();

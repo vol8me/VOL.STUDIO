@@ -76,7 +76,7 @@ test('cihaz: VOL.TEST sol çubuğu gerçek dokunuşla tankı sürer ve bırakıl
   shot('voltest-stick-moving.png');
   await release(held);
 
-  // Bırakınca tank durur: iki okuma arasında konum değişmez.
+  // Bırakınca tankın fiziksel sönümü 1,5 s gözlenir; sonraki bağımsız 700 ms pencerede konum değişmez.
   await page.waitForTimeout(1500);
   const settled = await position(page);
   await page.waitForTimeout(700);

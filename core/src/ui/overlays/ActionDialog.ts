@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { Button, type ButtonVariant } from '../primitives/Button';
 import { Text } from '../primitives/Text';
 import { i18next } from '../../i18n/I18n';
@@ -85,7 +86,7 @@ function validate(options: ActionDialogOptions): void {
 function defaultFocusId(options: ActionDialogOptions): string {
   const { actions, cancelId } = options;
   if (actions.some((action) => action.variant === 'danger')) return cancelId;
-  return (actions.find((action) => action.variant === 'primary') ?? actions[0]).id;
+  return (actions.find((action) => action.variant === 'primary') ?? requiredAt(actions, 0)).id;
 }
 
 /**

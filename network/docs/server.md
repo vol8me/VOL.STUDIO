@@ -95,8 +95,25 @@ büyük harf normalleştirilir; kullanıcı bilgisi, sorgu veya fragment taşıy
 (`bufferedAmount`) `limitBytes` (256 KiB) üstünde `graceMs` (5 sn) kesintisiz kalırsa istemci
 `1013` koduyla atılır. Aksi halde bağlantıyı kesmeden yavaş okuyan istemci sunucu belleğini şişirirdi.
 Oda döngüsünden saniyede birkaç kez çağrılır; kısa dalgalanma bağışlanır. `clientTraffic(client)`
-istemci başına kuyruktaki bayt ile toplam gönderilen/alınan baytı verir; alanlar `ws`nin iç yapısından
-okunur, yoksa 0 döner (ölçüm eksik olabilir, sunucuyu düşüremez).
+istemci başına kuyruktaki bayt ile toplam gönderilen/alınan baytı verir. `sentBytes`/`receivedBytes`
+gerçek `ws._socket.bytesWritten`/`bytesRead` sayaçlarıdır: Node soket akışının baytlarıdır, WebSocket
+çerçeveleri dahildir; IP/TLS tel maliyeti ölçülmez. JSON uzunluğu tahmini kullanılmaz. Alanlar
+okunamıyorsa `measured: false` ve sıfır yer tutucular döner; bu ölçülmüş sıfır değildir. Yeniden
+bağlantı yeni soket sayaçları başlatır, oda toplamları yalnız o anda bağlı soketleri kapsar.
+
+### İstemci uzlaştırma beyanı
+
+`ReconciliationReporter` (`./client`), SDK'nın gerçek canlı/yeniden oynatma adımlarını ve uzlaştırma
+callbacklerini sayar; kendi timer'ını kurmaz. `flush(nowMs)` oyun tarafından belirlenen aralıkta
+`CLIENT_METRICS_MESSAGE` (`./protocol`) ile bildirilir. Düzeltme büyüklüğü ölçülmüyorsa `null`dır;
+oyun SDK sözleşmesine göre düzeltme büyüklüğünü ve sıçrama kararını verir. Ölçü birimi oyunundur.
+
+`ClientMetricsRegistry` (`./server`) yalnız `open` edilmiş istemcileri tutar. Şema, güvenli tam sayı,
+monoton sıra/sayaç ve varsayılan 250 ms kabul aralığı sınanır; bilinmeyen alanlar saklanmaz.
+`forget`/`clear` kapanışta çağrılır. `read` sonucu `source: 'client-reported'` ve `ageMs` taşır:
+bunlar sunucunun doğruladığı fizik sonucu veya güvenlik kararı değildir. Bildirim yoksa `null`
+döner. VOL.TEST `/metrics.rooms[].clients[]` bu beyanı gerçek soket trafiğinden ayrı yayımlar;
+istemci numarası oda içi anonim sıradır, oturum kimliği veya görünen ad değildir.
 
 ## Günlük
 

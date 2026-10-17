@@ -127,26 +127,12 @@
   },
   "fixedWaitBudget": {
     "$comment": "Tarayıcı testlerindeki waitForTimeout sayısı dosya başına (scripts/quality/fixedWaits.mjs). Artış düşürür; azalış bütçenin düşürülmesini ister. Olay/koşul bekleyen ifadeye çevrilen dosya buradan çıkar.",
-    "devtools/vol-showcase/tests/device/hud.spec.ts": 1,
-    "devtools/vol-showcase/tests/device/hudInteraction.spec.ts": 6,
-    "devtools/vol-showcase/tests/device/scrollSplit.spec.ts": 3,
-    "devtools/vol-showcase/tests/device/tablet.spec.ts": 4,
-    "devtools/vol-showcase/tests/device/textEntry.spec.ts": 4,
-    "devtools/vol-showcase/tests/device/touch.ts": 2,
-    "devtools/vol-showcase/tests/device/touchInput.spec.ts": 1,
+    "devtools/vol-showcase/tests/device/hudInteraction.spec.ts": 2,
+    "devtools/vol-showcase/tests/device/touch.ts": 1,
     "devtools/vol-showcase/tests/device/volTest.spec.ts": 2,
-    "devtools/vol-showcase/tests/e2e/accessibility.spec.ts": 1,
-    "devtools/vol-showcase/tests/e2e/fontLoad.spec.ts": 2,
     "devtools/vol-showcase/tests/e2e/gamepad.spec.ts": 2,
-    "devtools/vol-showcase/tests/e2e/hudStates.spec.ts": 2,
-    "devtools/vol-showcase/tests/e2e/idleCost.spec.ts": 1,
     "devtools/vol-showcase/tests/e2e/motionMeasure.spec.ts": 1,
-    "devtools/vol-showcase/tests/e2e/probe.spec.ts": 3,
-    "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts": 1,
     "devtools/vol-showcase/tests/e2e/scrollSplit.spec.ts": 2,
-    "devtools/vol-showcase/tests/e2e/stress.spec.ts": 9,
-    "devtools/vol-showcase/tests/e2e/themeMatrix.spec.ts": 1,
-    "devtools/vol-showcase/tests/e2e/visual.spec.ts": 5,
     "games/vol-test/tests/e2e/world.spec.ts": 3
   },
   "coverageRuns": {
@@ -158,14 +144,14 @@
     }
   },
   "bundles": {
-    "$comment": "Gzip level 9; uygulama, vendor ve CSS ayrı ölçülür. CORE/network sağlamlaştırması ve cihazda bulunan CORE gezinme tüketimi sonrası başlangıç 1f87893a kaynaklarıyla karşılaştırma: vitrin app 237782 → 238522 B (+740 B), VOL.TEST app 304617 → 309318 B (+4701 B). Son niyet kuyruğu, sınır doğrulamaları ve ortak sayısal pencere yanında ürün ömürlü FocusNav ile menü/oynanış geri sahipliği gerçek Deck kusurunu kapatır. İlk sağlamlaştırma ölçümüne göre son pencere/kol düzeltmelerinin ek bedeli vitrin +42 B, oyun +2115 B. App bütçeleri ölçülen 232.9/302.1 KiB değerleridir (oturum başlangıcı 232.2/297.8); vendor ve CSS baytları aynı, eşikleri değişmedi. Uygulama vendor içine taşınmadı; kapsam, atlama, güvenlik ve genel timeout korunur. Kanıt ve kapsam docs/monorepo-audit.md §28; kapı sürelerinin ölçüm kapsamı docs/gates.md içindedir. Önceki büyüme gerekçeleri Git geçmişindedir.",
+    "$comment": "Gzip level 9; uygulama/vendor/CSS ayrı ölçülür. Sıkı CORE indeks invariantları, generic odak dönüşü, eksik UI durum/sunumları ve gerçek uzlaştırma raporlayıcısı sonrası vitrin app 238522 → 239587 B (+1065), VOL.TEST app 309318 → 310529 B (+1211; bunun 427 B kısmı sınırlı PredictionStepper ve tüketicisidir). Vitrin CSS 32876 B: katman ailesi malzemesi, hover ve reduced-motion düzeltmeleri; bütçe 31.9 → ölçülen 32.1 KiB. App bütçeleri 232.9 → 234 ve 302.1 → 303.3 KiB; ek yüzde payı yoktur. Vendor içine uygulama taşınmadı; vendor/CSS oyun bütçesi aynı, kapsam/güvenlik/timeout gevşemedi. Ölçüm ve sınırlar docs/monorepo-audit.md §29, kapı sözleşmesi docs/gates.md içindedir. Önceki büyüme gerekçeleri Git geçmişindedir.",
     "devtools/vol-showcase": {
-      "app": 232.9,
+      "app": 234,
       "vendor": 1,
-      "css": 31.9
+      "css": 32.1
     },
     "games/vol-test": {
-      "app": 302.1,
+      "app": 303.3,
       "vendor": 360,
       "css": 30
     }
@@ -226,18 +212,14 @@
     "core": {
       "$measure": {
         "script": "scripts/scaling.ts",
-        "series": "spatial",
-        "input": "entities",
-        "value": "ms"
+        "series": "spatial"
       },
       "spatial512Over128": 6
     },
     "games/vol-test": {
       "$measure": {
         "script": "scripts/scaling.ts",
-        "series": "projectiles",
-        "input": "count",
-        "value": "ms"
+        "series": "projectiles"
       },
       "projectiles512Over128": 6
     }

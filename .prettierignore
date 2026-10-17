@@ -2,6 +2,9 @@ node_modules/
 dist/
 dist-server/
 target/
+devtools/deck/records/
+devtools/vol-showcase/records/
+games/vol-test/records/
 build/
 **/pnpm-lock.yaml
 **/*.min.js

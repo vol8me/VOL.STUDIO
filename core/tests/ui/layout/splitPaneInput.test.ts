@@ -29,7 +29,7 @@ function pointer(
   type: string,
   init: { pointerId: number; clientX?: number; isPrimary?: boolean; button?: number },
 ): PointerEvent {
-  return new PointerEvent(type, { bubbles: true, cancelable: true, ...init });
+  return new PointerEvent(type, { isPrimary: true, bubbles: true, cancelable: true, ...init });
 }
 
 function escape(): KeyboardEvent {

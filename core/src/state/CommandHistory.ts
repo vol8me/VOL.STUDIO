@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import { requireFinite } from '../math/numeric';
 
 export interface HistoryCommand {
@@ -237,7 +238,7 @@ export class CommandHistory {
         for (const command of frozen) command.apply();
       },
       revert: () => {
-        for (let index = frozen.length - 1; index >= 0; index--) frozen[index].revert();
+        for (let index = frozen.length - 1; index >= 0; index--) requiredAt(frozen, index).revert();
       },
     };
   }
@@ -288,7 +289,7 @@ export class CommandTransaction {
     let firstError: unknown;
     for (let index = this.commands.length - 1; index >= 0; index--) {
       try {
-        this.commands[index].revert();
+        requiredAt(this.commands, index).revert();
       } catch (error) {
         firstError ??= error;
       }

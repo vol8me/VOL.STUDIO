@@ -100,6 +100,13 @@
   overflow: hidden;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .vol-event-log__row--enter,
+  .vol-event-log__row--leave {
+    animation: none;
+  }
+}
+
 @keyframes vol-event-log-row-leave {
   0% {
     opacity: 1;

@@ -1,3 +1,4 @@
+import { settleFrames } from '../e2e/support/settle';
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -38,7 +39,7 @@ async function openTab(page: Page, tab: ShowcaseTab): Promise<void> {
   await page
     .locator(`[role="tabpanel"][id$="-panel-${tab}"]:not([aria-hidden="true"])`)
     .waitFor({ timeout: 15_000 });
-  await page.waitForTimeout(400);
+  await settleFrames(page);
 }
 
 const demoOf = (page: Page, selector: string): Locator =>

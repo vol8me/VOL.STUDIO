@@ -13,6 +13,17 @@ afterEach(() => {
 });
 
 describe('EventLog', () => {
+  it('boş günlük altı haneli olayı ve zaman damgasını taşır; clear tekrar boşaltır', () => {
+    const log = track(new EventLog());
+    const emptyRows = 0;
+    expect(log.element.querySelectorAll('.vol-event-log__row')).toHaveLength(emptyRows);
+    log.push({ text: '999999', timestamp: '100000' });
+    expect(log.element.querySelector('.vol-event-log__text')?.textContent).toBe('999999');
+    expect(log.element.querySelector('.vol-event-log__timestamp')?.textContent).toBe('100000');
+    log.clear();
+    expect(log.element.querySelectorAll('.vol-event-log__row')).toHaveLength(0);
+  });
+
   it('push yeni bir satır ekler, en yeni satır DOM sırasında en sonda olur', () => {
     const log = track(new EventLog());
     log.push({ text: 'Oyun başladı' });
@@ -137,6 +148,13 @@ describe('EventLog', () => {
 });
 
 describe('Text', () => {
+  it('altı haneli serbest metni sayıya çevirmeden ve kısaltmadan korur', () => {
+    const text = track(new Text('999999'));
+    expect(text.element.textContent).toBe('999999');
+    text.setContent('100000');
+    expect(text.element.textContent).toBe('100000');
+  });
+
   it('varsayılan tag=p, variant=body ile oluşturulur', () => {
     const text = track(new Text('Merhaba'));
     expect(text.element.tagName).toBe('P');

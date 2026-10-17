@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import { requireFinite } from '../math/numeric';
 
 /** Uzamsal indekse girebilecek en az koşul: bir konum. */
@@ -302,7 +303,7 @@ export class SpatialIndex<T extends SpatialEntity> {
   /** Sıradaki yeniden kullanılabilir tampon — ardışık sorgular çakışmasın diye. */
   private nextBuffer(): T[] {
     const slot = this.resultIndex;
-    const result = this.resultBuffers[slot];
+    const result = requiredAt(this.resultBuffers, slot);
     this.resultIndex = (this.resultIndex + 1) % this.resultBuffers.length;
     this.lastStamp = ++this.queryCounter;
     this.bufferStamps[slot] = this.lastStamp;
@@ -384,7 +385,7 @@ export class SpatialIndex<T extends SpatialEntity> {
     const radiusSq = radius * radius;
     let count = start;
     for (let i = start; i < out.length; i++) {
-      const entity = out[i];
+      const entity = requiredAt(out, i);
       const dx = entity.x - x;
       const dy = entity.y - y;
       const inside = Number.isFinite(radiusSq)

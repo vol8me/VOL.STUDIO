@@ -200,6 +200,27 @@ describe('SlotGrid tek niyet', () => {
 });
 
 describe('SlotGrid dokun-yerleştir', () => {
+  it('SlotGrid takas kararı envanteri değiştirirse eski öğeleri taşımaz ve drop yaymaz', () => {
+    const onMove = vi.fn();
+    grid = new SlotGrid({
+      slotCount: 12,
+      columns: COLUMNS,
+      items: { 0: item('a'), 2: item('b') },
+      onMove,
+      onSwapRequest: () => {
+        grid!.setItem(2, item('replacement'));
+        return true;
+      },
+    });
+    document.body.append(grid.element);
+    mockGridGeometry(grid, COLUMNS);
+    grid.beginMove(0);
+    tap(itemAt(2), 2);
+    expect(grid.getItem(0)?.id).toBe('a');
+    expect(grid.getItem(2)?.id).toBe('replacement');
+    expect(onMove).not.toHaveBeenCalled();
+  });
+
   it('SlotGrid tutulan öğe varken boş hücreye dokunmak hedefi seçip bırakır; tek drop niyeti', () => {
     const { grid: g, seen, onMove } = mount({ 0: item('a') });
     g.beginMove(0);

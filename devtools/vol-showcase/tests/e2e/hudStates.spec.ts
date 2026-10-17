@@ -184,8 +184,7 @@ test.describe('Bar durumları', () => {
         (element) => getComputedStyle(element.querySelector('.vol-bar__fill')!).transform,
       );
     const first = await sample();
-    await page.waitForTimeout(350);
-    expect(await sample()).not.toBe(first);
+    await expect.poll(sample).not.toBe(first);
 
     await press(page, 'Busy');
     await expect(target).not.toHaveAttribute('aria-busy', /.*/);
@@ -344,9 +343,9 @@ test.describe('TimerBar işlevsel zaman', () => {
         parseFloat(element.querySelector<HTMLElement>('.vol-timer-bar__fill')!.style.width),
       );
     const first = await width();
-    await page.waitForTimeout(700);
-    const second = await width();
-    expect(second, 'boşalan çubuk hareket azaltmada da küçülür').not.toBe(first);
+    await expect
+      .poll(width, { message: 'boşalan çubuk hareket azaltmada da küçülür' })
+      .not.toBe(first);
     await expect(timer).toHaveAttribute('aria-valuetext', / s left$/);
   });
 
@@ -405,22 +404,27 @@ test.describe('FloatingTextManager', () => {
     await page.emulateMedia(NORMAL);
     await openHud(page);
     await press(page, 'Critical');
+    let sampledScale = 0;
     await expect
       .poll(
-        async () =>
-          (await settledTransform(page, '.vol-floating-text--emphasis.vol-floating-text--visible'))
-            ?.a ?? 0,
+        async () => {
+          sampledScale =
+            (
+              await settledTransform(
+                page,
+                '.vol-floating-text--emphasis.vol-floating-text--visible',
+              )
+            )?.a ?? 0;
+          return sampledScale;
+        },
         {
           timeout: 3000,
           intervals: [50],
         },
       )
       .toBeGreaterThan(1.1);
-    const matrix = await settledTransform(
-      page,
-      '.vol-floating-text--emphasis.vol-floating-text--visible',
-    );
-    expect(matrix!.a).toBeLessThan(1.25);
+    // Kısa ömürlü metin ikinci IPC okumasından önce sökülebilir; iki sınır aynı örneğe aittir.
+    expect(sampledScale).toBeLessThan(1.25);
   });
 
   test('hareket azaltmada vurgu ölçeklenmez ve metin yükselmez', async ({ page }) => {

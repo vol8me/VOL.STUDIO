@@ -8,6 +8,6 @@ const spatial = [128, 512].map((count) => {
     for (let run = 0; run < 200; run++) index.rebuild(entities);
     return (performance.now() - started) / 200;
   }).sort((a, b) => a - b);
-  return { count, ms: samples[Math.floor(samples.length / 2)] };
+  return { input: count, value: samples[Math.floor(samples.length / 2)] };
 });
-console.log(JSON.stringify({ spatial }));
+console.log(JSON.stringify({ schemaVersion: 1, unit: 'ms/step', series: { spatial } }));

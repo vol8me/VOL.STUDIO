@@ -279,6 +279,7 @@ test.describe('pencere %200 ve %400 büyütme (dış panel kayar, bölme ezilmez
       .toBeLessThan(1);
 
     const before = await outer.evaluate((element) => element.scrollTop);
+    // Wheel serileri motorun zaman tabanlı scroll-latching sınırıyla ayrılır; DOM scrollTop sonu jest sonu değildir.
     await page.waitForTimeout(800);
     await page.mouse.wheel(0, 300);
     await expect
@@ -424,6 +425,7 @@ test.describe('DualAxisScrollPanel (sürükleme tek yol değildir)', () => {
       .toBeLessThan(1);
     const outer = page.locator('.vol-tabs__panels');
     const before = await outer.evaluate((element) => element.scrollTop);
+    // Wheel serileri motorun zaman tabanlı scroll-latching sınırıyla ayrılır; DOM scrollTop sonu jest sonu değildir.
     await page.waitForTimeout(800);
     await page.mouse.wheel(0, 300);
     await expect

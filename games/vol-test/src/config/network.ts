@@ -1,58 +1,34 @@
-/** Çok oyunculu oda değerleri yalnız oyunun yapılandırmasındadır. */
 export const NETWORK = {
-  /**
-   * Dünya başına eşzamanlı insan. Dolu dünyadan sonra `joinOrCreate` bir taşma dünyası kurar;
-   * ölçüm kanıtı olmadan artırılmaz (bkz. DESIGN: kapasite).
-   */
+  /** Dolu dünyadan sonra taşma odası kurulur; ölçüm kanıtı olmadan artırılmaz. */
   maxPlayers: 24,
   /** Birincil ve taşma odalarının toplam güvenlik tavanı; ölçülmüş oyuncu kapasitesi değildir. */
   maxRooms: 4,
-  /**
-   * Sunucunun ve istemci öngörüsünün sabit adım hızı (Hz). `GAME.simulationStepMs` ile aynı
-   * adımdır (testle kilitli): öngörü ve yeniden oynatma sunucuyla aynı `dt` ile ilerler.
-   */
+  /** Sunucu ve öngörü `GAME.simulationStepMs` ile aynı adımı kullanır (testle kilitli). */
   tickRate: 60,
-  /**
-   * İstemci her sabit adımda bir girdi yollar (60/sn) ve Colyseus bunların hepsini mesaj sayar.
-   * Bağlantı durup toplu boşalınca bir saniyelik pencereye iki saniyelik girdi sığabilir; sınır
-   * nominalin dört katıdır, aşan istemci Colyseus tarafından düşürülür.
-   */
+  /** Geciken girdiler toplu boşalabilir; nominal 60/sn'nin dört katı aşılırsa bağlantı düşer. */
   maxMessagesPerSecond: 240,
-  /** Tek sunucu olay paketindeki üst sınır; bozuk yayın istemciyi sınırsız iş yaptıramaz. */
   maxEventBatch: 4096,
   /** Geliştirme sunucusu; üretim adresi derleme zamanı `VITE_VOLTEST_SERVER` ile verilir. */
   defaultEndpoint: 'http://127.0.0.1:2567',
-  /** Ad vermeyen oyuncuya atanan ad; araç numarası eklenir. */
   fallbackName: 'Pilot',
-  /**
-   * Bu mesafeden (birim) büyük konum sıçraması yeniden doğma/ışınlanmadır: kayan düzeltme ya da ara
-   * değer değil, anında yerleştirme uygulanır.
-   */
+  /** Büyük sıçrama yeniden doğma/ışınlanma sayılır; ara değer uygulanmaz. */
   snapDistance: 180,
-  /** Sunucu durum yayını aralığı; uzlaştırma ve uzak araç ara değeri bu aralıkla beslenir. */
   patchRateMs: 50,
   /** Girdi gelmeyen adımda son niyetin kaç sabit adım daha tutulacağı (ateş tutulmaz). */
   inputHoldSteps: 6,
-  /** Sunucunun oyuncu başına tamponladığı en çok girdi; aşılırsa en eskisi atılır. */
+  /** Sınır aşılınca en eski girdi atılır. */
   inputBuffer: 8,
-  /**
-   * Tüketime başlamadan önce tamponda bekletilen girdi sayısı (titreşim tamponu). Sunucu her adımda
-   * dünyayı ilerlettiği için girdisi geç kalan araç boşta adım atar; istemcinin tahmin etmediği bu
-   * adım düzeltme olarak geri döner. Bir adımlık pay, `lead - 1` adımı aşmayan geç kalmayı eler.
-   */
+  /** Son dilim iki simülasyon adımıdır; uzun hitch dahil toplam iş tamponu aşamaz. */
+  prediction: { sliceSteps: 2, maxSlices: 2 },
+  /** Titreşim tamponu, `lead - 1` adım geç kalmayı boş simülasyon adımı üretmeden karşılar. */
   inputLead: 2,
-  /** Kopan oyuncunun aracının yeniden bağlanmayı bekleme süresi (sn). */
   reconnectSeconds: 15,
   /** İlk başarılı katılımdan itibaren geçici kopmayı yeniden dener; SDK'nın 5 sn eşiği kullanılmaz. */
   reconnectMinUptimeMs: 0,
-  /** Uzak araçların çizildiği geriye dönük süre (ms): iki yama arasını ara değerle doldurur. */
   interpolationDelayMs: 100,
-  /**
-   * Yavaş tüketici: soketin yazma kuyruğu `limitBytes` üstünde `graceMs` kesintisiz kalan istemci
-   * atılır; kuyruk `sweepMs` aralığıyla taranır. 24 oyunculu durum yaması birkaç KiB'dir, sınır
-   * onlarca yamayı karşılar.
-   */
+  /** Kuyruk sınırı graceMs boyunca kesintisiz aşılırsa yavaş tüketici atılır. */
   slowConsumer: { limitBytes: 256 * 1024, graceMs: 5000, sweepMs: 1000 },
   /** Eşik yoksa SDK sapmayı ölçmez (hep 0); kalıcı sapma bunu aşarsa uyarır. 1 m = 32 birim. */
   divergenceTolerance: 4,
+  metricsReportMs: 1000,
 } as const;

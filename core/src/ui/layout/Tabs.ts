@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { inlineSign } from '../direction';
 import { emitUiIntent } from '../feedback/uiIntent';
 export interface TabContent {
@@ -53,7 +54,7 @@ export class Tabs {
     this.tabs = tabs;
     this.onChange = options.onChange;
     this.orientation = options.orientation ?? 'horizontal';
-    this.activeId = tabs[0].id;
+    this.activeId = requiredAt(tabs, 0).id;
 
     this.element = document.createElement('div');
     this.element.className = `vol-tabs vol-tabs--${this.orientation}`;
@@ -190,7 +191,7 @@ export class Tabs {
     }
 
     event.preventDefault();
-    const nextTab = this.tabs[nextIndex];
+    const nextTab = requiredAt(this.tabs, nextIndex);
     this.select(nextTab.id, event);
     this.tabButtons.get(nextTab.id)?.focus();
   }

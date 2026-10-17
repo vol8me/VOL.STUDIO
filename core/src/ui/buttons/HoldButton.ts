@@ -35,6 +35,7 @@ export class HoldButton {
   private readonly onPressHandler?: () => void;
   private readonly onReleaseHandler?: () => void;
   private pressed = false;
+  private activePointerId: number | null = null;
   /**
    * Basımın hangi kaynaktan geldiği. Klavye ile basılı tutarken gelen bir
    * `pointerleave` (ör. fare imleci butonun üstünden geçip çıkarsa) basımı
@@ -43,7 +44,7 @@ export class HoldButton {
   private pressSource: 'pointer' | 'keyboard' | null = null;
   private boundPointerDown!: (event: PointerEvent) => void;
   private boundPointerUp!: (event: PointerEvent) => void;
-  private boundPointerLeave!: () => void;
+  private boundPointerLeave!: (event: PointerEvent) => void;
   private boundVisibility!: () => void;
   private unbindHoldInput: (() => void) | null = null;
 
@@ -67,14 +68,12 @@ export class HoldButton {
       // Zaten basılıyken ikinci işaretçi yok sayılır (tek basış, tek onPress).
       if (this.element.disabled || this.pressed) return;
       event.preventDefault();
-      this.setPressed(true, 'pointer');
+      this.activePointerId = event.pointerId;
       this.element.setPointerCapture(event.pointerId);
+      this.setPressed(true, 'pointer');
     };
     this.boundPointerUp = (event) => {
-      if (this.element.hasPointerCapture(event.pointerId)) {
-        this.element.releasePointerCapture(event.pointerId);
-      }
-      if (this.pressSource !== 'pointer') return;
+      if (this.pressSource !== 'pointer' || event.pointerId !== this.activePointerId) return;
       this.setPressed(false, 'pointer');
     };
     this.boundVisibility = () => {
@@ -83,9 +82,9 @@ export class HoldButton {
         this.setPressed(false, this.pressSource ?? 'pointer');
       }
     };
-    this.boundPointerLeave = () => {
+    this.boundPointerLeave = (event) => {
       // Klavyeyle basılı tutulurken imlecin butondan çıkması basımı bozmamalı.
-      if (this.pressSource !== 'pointer') return;
+      if (this.pressSource !== 'pointer' || event.pointerId !== this.activePointerId) return;
       this.setPressed(false, 'pointer');
     };
     this.element.addEventListener('pointerdown', this.boundPointerDown);
@@ -163,6 +162,11 @@ export class HoldButton {
     }
     this.pressed = pressed;
     this.pressSource = pressed ? source : null;
+    if (!pressed && this.activePointerId !== null) {
+      const pointerId = this.activePointerId;
+      this.activePointerId = null;
+      if (this.element.hasPointerCapture(pointerId)) this.element.releasePointerCapture(pointerId);
+    }
     this.element.classList.toggle('vol-hold-button--pressed', pressed);
     this.element.setAttribute('aria-pressed', String(pressed));
     if (pressed) {

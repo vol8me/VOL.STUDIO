@@ -28,6 +28,48 @@ afterEach(() => {
 });
 
 describe('HoldButton iptal yolları', () => {
+  it('ikinci parmağın bırakma, iptal ve yakalama kaybı ilk basışın sahipliğini alamaz', () => {
+    const onPress = vi.fn();
+    const onRelease = vi.fn();
+    const button = new HoldButton({ label: 'Ateş', onPress, onRelease });
+    document.body.append(button.element);
+    down(button.element, 1);
+    down(button.element, 2);
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture', 'pointerleave']) {
+      fire(button.element, type, 2);
+      expect(button.isPressed()).toBe(true);
+    }
+    expect(onRelease).not.toHaveBeenCalled();
+    expect(button.element.hasPointerCapture(1)).toBe(true);
+    fire(button.element, 'pointerup', 1);
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(onRelease).toHaveBeenCalledTimes(1);
+    expect(button.element.hasPointerCapture(1)).toBe(false);
+    button.destroy();
+  });
+
+  it('onPress içinde söküm yakalamayı sonradan yeniden kurmaz ve tek bırakış üretir', () => {
+    const onRelease = vi.fn();
+    const button = new HoldButton({ label: 'Ateş', onPress: () => button.destroy(), onRelease });
+    document.body.append(button.element);
+    down(button.element, 8);
+    expect(button.element.hasPointerCapture(8)).toBe(false);
+    expect(button.element.isConnected).toBe(false);
+    expect(onRelease).toHaveBeenCalledTimes(1);
+  });
+
+  it('disabled ve destroy aktif dokunmanın yakalamasını bırakır', () => {
+    const button = new HoldButton({ label: 'Ateş' });
+    document.body.append(button.element);
+    down(button.element, 1);
+    button.setDisabled(true);
+    expect(button.element.hasPointerCapture(1)).toBe(false);
+    button.setDisabled(false);
+    down(button.element, 2);
+    button.destroy();
+    expect(button.element.hasPointerCapture(2)).toBe(false);
+  });
+
   it('pointercancel ve yakalama kaybı basışı bırakır; ikinci işaretçi ikinci onPress üretmez', () => {
     const onPress = vi.fn();
     const onRelease = vi.fn();

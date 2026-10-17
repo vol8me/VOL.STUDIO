@@ -1,3 +1,5 @@
+import { requiredAt } from '../../collections/requiredAt';
+import { restoreFocusAfterAction } from '../focus/restoreFocusAfterAction';
 import { i18next } from '../../i18n/I18n';
 import { pushBackHandler } from '../../platform/backNavigation';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
@@ -51,7 +53,7 @@ interface KeyDef {
   primary?: boolean;
 }
 
-type LetterLayout = readonly (readonly string[])[];
+type LetterLayout = readonly [readonly string[], readonly string[], readonly string[]];
 
 const TR_LETTERS: LetterLayout = [
   ['q', 'w', 'e', 'r', 't', 'y', 'u', 'ı', 'o', 'p', 'ğ', 'ü'],
@@ -65,7 +67,7 @@ const EN_LETTERS: LetterLayout = [
   ['z', 'x', 'c', 'v', 'b', 'n', 'm'],
 ];
 
-const SYMBOL_ROWS: readonly (readonly string[])[] = [
+const SYMBOL_ROWS: LetterLayout = [
   ['@', '#', '₺', '€', '%', '&', '*', '(', ')', '+'],
   ['!', '?', ':', ';', '"', "'", '/', '\\', '_', '='],
   ['[', ']', '{', '}', '<', '>', '|', '~', '^', '$'],
@@ -200,8 +202,8 @@ export class OnScreenKeyboard {
     if (event.key !== 'Tab') return;
     const items = listFocusable(this.element);
     if (items.length === 0) return;
-    const first = items[0];
-    const last = items[items.length - 1];
+    const first = requiredAt(items, 0);
+    const last = requiredAt(items, items.length - 1);
     const active = document.activeElement;
     const inside = active !== null && this.element.contains(active);
     if (event.shiftKey && (!inside || active === first)) {
@@ -305,10 +307,10 @@ export class OnScreenKeyboard {
       ];
     }
 
-    const rows = this.letterRows();
-    const letters = rows.map((row) =>
-      row.map((ch): KeyDef => ({ label: this.shifted ? this.upper(ch) : ch, value: ch })),
-    );
+    const [first, second, third] = this.letterRows();
+    const mapRow = (row: readonly string[]): KeyDef[] =>
+      row.map((ch): KeyDef => ({ label: this.shifted ? this.upper(ch) : ch, value: ch }));
+    const letters = [mapRow(first), mapRow(second), mapRow(third)] as const;
     const shift: KeyDef = {
       label: '',
       action: 'shift',
@@ -339,7 +341,10 @@ export class OnScreenKeyboard {
       rows.length >= 2
     ) {
       // Vazgeç/Bitti ayrı bir satırda kalırsa 283 px'lik alana sığmaz ve görünmez olurdu: alt iki satır tek satır.
-      rows = [...rows.slice(0, -2), [...rows[rows.length - 2], ...rows[rows.length - 1]]];
+      rows = [
+        ...rows.slice(0, -2),
+        [...requiredAt(rows, rows.length - 2), ...requiredAt(rows, rows.length - 1)],
+      ];
     }
     for (const row of rows) {
       const rowEl = document.createElement('div');
@@ -582,7 +587,7 @@ export class OnScreenKeyboard {
         anchor.isContentEditable
       )
     ) {
-      anchor.focus({ preventScroll: true });
+      restoreFocusAfterAction(anchor);
     }
     // İptal, sözleşme gereği başlangıç değerini döndürür.
     this.resolve({ value: canceled ? this.original : this.value, canceled });

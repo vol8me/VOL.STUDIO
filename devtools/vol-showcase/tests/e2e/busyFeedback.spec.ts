@@ -145,16 +145,20 @@ test('meşgul durum, olaydan sonraki ilk karede görünür ve ortam tabanına en
 
   const busy = distribution(busySamples.map((sample) => sample.latencyMs));
   const floor = distribution(floorSamples.map((sample) => sample.latencyMs));
-  writeReport(`${info.project.name}-busy-feedback`, {
-    schema: 'BusyFeedbackV1',
-    engine: info.project.name,
-    basis:
-      'click timeStamp → sonraki karenin çizim sonrası mesaj turu; ekrana sunulan kare değildir',
-    budgetMs: BUSY_BUDGET_MS,
-    busy,
-    floor,
-    busyMinusFloorP95Ms: busy.p95 - floor.p95,
-  });
+  writeReport(
+    `${info.project.name}-busy-feedback`,
+    {
+      schema: 'BusyFeedbackV1',
+      engine: info.project.name,
+      basis:
+        'click timeStamp → sonraki karenin çizim sonrası mesaj turu; ekrana sunulan kare değildir',
+      budgetMs: BUSY_BUDGET_MS,
+      busy,
+      floor,
+      busyMinusFloorP95Ms: busy.p95 - floor.p95,
+    },
+    { retry: info.retry, testId: info.testId, repeatEachIndex: info.repeatEachIndex },
+  );
   info.annotations.push({
     type: 'ölçü',
     description: `meşgul p95=${busy.p95.toFixed(1)}ms, ortam tabanı p95=${floor.p95.toFixed(1)}ms, örnek=${SAMPLES}`,

@@ -1,3 +1,4 @@
+import { settleFrames } from './support/settle';
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { SHOWCASE_TABS, selectTab, type ShowcaseTab } from './support/determinism';
 import { scan, type Finding } from './support/textFit';
@@ -93,7 +94,7 @@ test.describe('yavaş yazı tipi', () => {
       `kök kurulurken yazı tipleri yüklü olmalı: ${JSON.stringify(atMount)}`,
     ).toBe(true);
     const before = await tabHeights(page);
-    await page.waitForTimeout(800);
+    await settleFrames(page);
     const after = await tabHeights(page);
     expect(after).toEqual(before);
     if (browserName === 'chromium') {
@@ -135,7 +136,7 @@ test.describe('yazı tipi yüklenemez', () => {
     });
     expect(findings).toEqual([]);
 
-    await page.waitForTimeout(500);
+    await settleFrames(page);
     expect(await tabHeights(page)).toEqual(fallbackHeights);
     console.log('yedek yazı tipi sekme yükseklikleri', JSON.stringify(fallbackHeights));
   });

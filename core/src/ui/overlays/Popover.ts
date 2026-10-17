@@ -1,4 +1,6 @@
 import { Popup, type PopupPlacement } from './Popup';
+import { restoreFocusAfterAction } from '../focus/restoreFocusAfterAction';
+import { previousFocusTarget } from '../primitives/buttonBehavior';
 
 let popoverId = 0;
 
@@ -56,7 +58,7 @@ export class Popover {
         // metin alanını) odaklamıştır; oradan odağı geri almak kullanıcıyı
         // yazmaya başladığı alandan atmak demektir.
         if (this.restoreFocus && this.target.isConnected && this.containsFocus()) {
-          this.target.focus();
+          restoreFocusAfterAction(this.target);
         }
         options.onClose?.();
       },
@@ -115,7 +117,7 @@ export class Popover {
 
   /** Odak popover içinde mi (ya da zaten tetikleyicide mi). */
   private containsFocus(): boolean {
-    const active = document.activeElement;
+    const active = previousFocusTarget();
     return active !== null && (this.element.contains(active) || this.target === active);
   }
 

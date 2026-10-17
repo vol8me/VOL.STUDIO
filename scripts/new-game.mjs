@@ -127,7 +127,7 @@ export function createGame(root, options) {
     quality.packages[result.packageName] = { ...quality.floor };
     bundles[result.path] = { app: 150, vendor: 360, css: 24 };
     scaling[result.path] = {
-      $measure: { script: 'scripts/scaling.ts', series: 'spatial', input: 'count', value: 'ms' },
+      $measure: { script: 'scripts/scaling.ts', series: 'spatial' },
       spatial512Over128: 6,
     };
     writeFileSync(lifecycleFile, serialize(lifecycle));

@@ -1,3 +1,4 @@
+import { settleFrames } from '../e2e/support/settle';
 import type { CDPSession, Locator, Page } from '@playwright/test';
 
 /**
@@ -18,7 +19,7 @@ export async function centerOf(target: Locator): Promise<Point> {
   await target.evaluate((element) =>
     element.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' }),
   );
-  await target.page().waitForTimeout(120);
+  await settleFrames(target.page());
   const box = await target.boundingBox();
   if (!box) throw new Error('dokunulacak öğenin kutusu yok');
   const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
@@ -58,6 +59,7 @@ export async function gesture(
       type: 'touchMove',
       touchPoints: at(step / steps),
     });
+    // Jest hızı fiziksel zamana bağlıdır; ham olayları aynı kareye yığmamak için 60 Hz örnekleme.
     await page.waitForTimeout(16);
   }
   if (!hold) {

@@ -36,6 +36,20 @@ const key = (target: Element, k: string): void => {
 };
 
 describe('seçilebilir tablo', () => {
+  it('altı haneli hücre değeri yeniden çizimde kısaltılmaz', () => {
+    const root = mount({
+      rows: [
+        { id: 'r0', name: '999999' },
+        { id: 'r1', name: '100000' },
+      ],
+    });
+    expect(root.textContent).toContain('999999');
+    expect(root.textContent).toContain('100000');
+    table!.setRows([{ id: 'r0', name: '100000' }]);
+    expect(bodyRows(root)[0].textContent).toContain('100000');
+    expect(root.textContent).not.toContain('999999');
+  });
+
   it('tek satır tabindex=0 alır; tüm satırlarda aria-selected bulunur', () => {
     const root = mount();
     const list = bodyRows(root);

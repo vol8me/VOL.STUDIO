@@ -11,9 +11,9 @@
     "core/src/ui/hud/skillTree.css": 7,
     "core/src/ui/layout/layout.css": 5,
     "core/src/ui/overlays/loading.css": 12,
-    "core/src/ui/overlays/overlays.css": 3,
+    "core/src/ui/overlays/overlays.css": 1,
     "core/src/ui/primitives/primitives.css": 1,
-    "core/src/ui/primitives/views.css": 11,
+    "core/src/ui/primitives/views.css": 10,
     "core/src/ui/touch/touch.css": 2
   }
 }

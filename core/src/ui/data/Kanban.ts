@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { inlineSign } from '../direction';
 import { UI_THRESHOLD } from '../../constants';
@@ -299,8 +300,13 @@ export class Kanban {
   private initials(name: string): string {
     const parts = name.trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return '';
-    if (parts.length === 1) return parts[0].slice(0, 2).toLocaleUpperCase(i18next.language ?? 'tr');
-    return (parts[0][0] + parts[parts.length - 1][0]).toLocaleUpperCase(i18next.language ?? 'tr');
+    if (parts.length === 1)
+      return requiredAt(parts, 0)
+        .slice(0, 2)
+        .toLocaleUpperCase(i18next.language ?? 'tr');
+    return (
+      requiredAt(parts, 0).charAt(0) + requiredAt(parts, parts.length - 1).charAt(0)
+    ).toLocaleUpperCase(i18next.language ?? 'tr');
   }
 
   private buildCard(card: KanbanCard, columnId: string): HTMLDivElement {
@@ -529,7 +535,7 @@ export class Kanban {
       } else if (localIndex >= cardEls.length) {
         viewport.appendChild(this.dropIndicator);
       } else {
-        viewport.insertBefore(this.dropIndicator, cardEls[localIndex]);
+        viewport.insertBefore(this.dropIndicator, requiredAt(cardEls, localIndex));
       }
       return;
     }
@@ -537,7 +543,7 @@ export class Kanban {
     if (visibleIndex >= cardEls.length) {
       viewport.appendChild(this.dropIndicator);
     } else {
-      viewport.insertBefore(this.dropIndicator, cardEls[visibleIndex]);
+      viewport.insertBefore(this.dropIndicator, requiredAt(cardEls, visibleIndex));
     }
   }
 
@@ -767,7 +773,7 @@ export class Kanban {
       body.querySelectorAll<HTMLDivElement>('.vol-kanban__card:not(.vol-kanban__card--ghost)'),
     );
     for (let i = 0; i < cardEls.length; i++) {
-      const rect = cardEls[i].getBoundingClientRect();
+      const rect = requiredAt(cardEls, i).getBoundingClientRect();
       if (clientY < rect.top + rect.height / 2) return i;
     }
     return cardEls.length;
@@ -816,7 +822,7 @@ export class Kanban {
 
     viewport.style.transform = `translateY(${start * cardHeight}px)`;
     for (let i = start; i < end; i++) {
-      const cardEl = this.buildCard(visible[i], columnId);
+      const cardEl = this.buildCard(requiredAt(visible, i), columnId);
       cardEl.style.height = `${cardHeight}px`;
       viewport.appendChild(cardEl);
     }

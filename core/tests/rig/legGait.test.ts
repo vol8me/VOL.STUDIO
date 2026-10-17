@@ -27,6 +27,26 @@ function driveForward(gait: LegGait, frames: number, speedPxPerSec = 200) {
 }
 
 describe('LegGait', () => {
+  it('geçersiz bacak indeksi tüm okumalarda RangeError verir ve yürüyüşü bozmaz', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    const read = [
+      (index: number) => gait.footX(index),
+      (index: number) => gait.footY(index),
+      (index: number) => gait.lift(index),
+      (index: number) => gait.isStepping(index),
+      (index: number) => gait.justPlanted(index),
+      (index: number) => gait.homeX(index),
+      (index: number) => gait.homeY(index),
+      (index: number) => gait.strain(index),
+    ];
+    for (const index of [-1, LEGS.length, 0.5, NaN, Infinity]) {
+      for (const getter of read) expect(() => getter(index)).toThrow(RangeError);
+    }
+    gait.update(0, 0, 0, 0, 0, DT);
+    expect(gait.footX(0)).toBe(LEGS[0].homeX);
+    expect(gait.footY(0)).toBe(LEGS[0].homeY);
+  });
+
   it('bacaksız kurulum reddedilir', () => {
     expect(() => new LegGait([], CONFIG)).toThrow(/en az bir bacak/);
   });

@@ -14,11 +14,17 @@ describe('clientTraffic', () => {
       sessionId: 'a',
       ref: { bufferedAmount: 42, _socket: { bytesWritten: 900, bytesRead: 80 } },
     };
-    expect(clientTraffic(client)).toEqual({ bufferedBytes: 42, sentBytes: 900, receivedBytes: 80 });
+    expect(clientTraffic(client)).toEqual({
+      measured: true,
+      bufferedBytes: 42,
+      sentBytes: 900,
+      receivedBytes: 80,
+    });
   });
 
   it('eksik ya da sayı olmayan alanda 0 döner, fırlatmaz', () => {
     expect(clientTraffic({ sessionId: 'a' })).toEqual({
+      measured: false,
       bufferedBytes: 0,
       sentBytes: 0,
       receivedBytes: 0,

@@ -385,6 +385,7 @@ export function sanitizeReport(text) {
     'v',
     't',
     'wall',
+    'stamp',
     'mono',
     'boot',
     'window',
@@ -491,7 +492,7 @@ export function sanitizeReport(text) {
     result: /^(ok|error|unavailable)$/,
     outcome: /^(success|failed|timedOut)$/,
     reason: /^(close|signal|suspend)$/,
-    runtime: /^(host|unknown|steamrt[34]_[A-Za-z0-9_.-]+)$/,
+    runtime: /^(host|unknown|steamrt[34](?:_[A-Za-z0-9_.-]+)?)$/,
     sessionKind: /^(gamescope|desktop|web|unknown)$/,
     phase:
       /^(oyun|\d+ sprite|boş|empty|gameplay|menu|pause|settings|cards|shop|boss|death|loading|unclassified|background)$/u,
@@ -515,7 +516,7 @@ export function sanitizeReport(text) {
         typeof value === 'string' &&
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
       )
-        result[key] = value;
+        result[key] = value.toLowerCase();
       else if (key === 'requestId')
         result.hasRequestId =
           typeof value === 'string' && /^(shutdown|suspend)-[1-9][0-9]{0,19}$/.test(value);
@@ -583,6 +584,12 @@ export function sanitizeReport(text) {
           /steamrt[34]_[A-Za-z0-9_.-]+/,
         );
         if (runtime) env.PRESSURE_VESSEL_RUNTIME = runtime[0];
+        if (Object.hasOwn(value, 'VOL_DIAGNOSTICS_RUNTIME'))
+          env.VOL_DIAGNOSTICS_RUNTIME =
+            typeof value.VOL_DIAGNOSTICS_RUNTIME === 'string' &&
+            /^(host|unknown|steamrt[34])$/.test(value.VOL_DIAGNOSTICS_RUNTIME)
+              ? value.VOL_DIAGNOSTICS_RUNTIME
+              : 'unknown';
         result.env = env;
       }
     }
@@ -590,9 +597,11 @@ export function sanitizeReport(text) {
       // Ortam dökümünde değişkenin açık yokluğu host kanıtıdır. Ayıklanmış
       // ya da tanınmayan bir değer aynı kanıtı taşımaz. Tekrar temizlenen
       // rapor kendi açık sınıfını korur.
-      result.runtime = Object.hasOwn(record.env, 'PRESSURE_VESSEL_RUNTIME')
-        ? (result.env.PRESSURE_VESSEL_RUNTIME ?? 'unknown')
-        : (result.runtime ?? 'host');
+      result.runtime = Object.hasOwn(record.env, 'VOL_DIAGNOSTICS_RUNTIME')
+        ? (result.env.VOL_DIAGNOSTICS_RUNTIME ?? 'unknown')
+        : Object.hasOwn(record.env, 'PRESSURE_VESSEL_RUNTIME')
+          ? (result.env.PRESSURE_VESSEL_RUNTIME ?? 'unknown')
+          : (result.runtime ?? 'host');
     }
     return result;
   };
@@ -600,11 +609,13 @@ export function sanitizeReport(text) {
     text
       .split('\n')
       .flatMap((line) => {
+        if (!line.trim()) return [];
+        const lost = JSON.stringify({ type: 'report-loss', lostReports: 1 });
         try {
           const record = safe(JSON.parse(line));
-          return record.type ? [JSON.stringify(record)] : [];
+          return record.type ? [JSON.stringify(record)] : [lost];
         } catch {
-          return [];
+          return [lost];
         }
       })
       .join('\n') + '\n'
@@ -658,11 +669,17 @@ export function hwmonWatts(uw) {
 }
 
 /** JSONL raporu özetler: faz satırları ve sondanın gördüğü ortam gerçekleri. */
-export function summarizeReport(lines) {
+export function summarizeReport(
+  lines,
+  expectedRecords = lines.filter((line) => line.trim()).length,
+) {
   const records = lines
     .map((line) => {
       try {
-        return JSON.parse(line);
+        const record = JSON.parse(line);
+        if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
+        if (typeof record.runId === 'string') record.runId = record.runId.toLowerCase();
+        return record;
       } catch {
         return null;
       }
@@ -680,26 +697,62 @@ export function summarizeReport(lines) {
   const info = [...records].reverse().find((r) => r.type === 'info');
   const signals = records.filter((r) => r.src === 'rust' && r.type === 'signal');
   const suspendGaps = records.filter((r) => r.src === 'rust' && r.type === 'suspend-gap');
+  const nativeExits = records
+    .filter((r) => r.src === 'rust' && r.type === 'exit-after-grace')
+    .map((record) => ({
+      outcome: ['success', 'failed', 'timedOut'].includes(record.outcome)
+        ? record.outcome
+        : 'unknown',
+      reason: ['close', 'signal', 'suspend'].includes(record.reason) ? record.reason : null,
+    }));
   const pads = records.filter((r) => r.type === 'pad-connected');
   const padInputs = records.filter((r) => r.type === 'pad-input');
   const steamworks = [...records].reverse().find((r) => r.type === 'steamworks');
   const windowsByRun = new Map();
+  const stampsByRun = new Map();
+  const sourceRecords = lines.filter((line) => line.trim()).length;
+  const expectedCountValid =
+    Number.isSafeInteger(expectedRecords) && expectedRecords >= sourceRecords;
+  const lossMarkers = records.filter((record) => record.type === 'report-loss');
+  // Hatalı dış sayı gözlenen kaybı çıkaramaz; işaretçinin varlığı zaten kayıp kanıtıdır.
+  const rejectedRecords = lossMarkers.reduce(
+    (sum, record) =>
+      Math.min(
+        Number.MAX_SAFE_INTEGER,
+        sum +
+          (Number.isSafeInteger(record.lostReports) && record.lostReports > 0
+            ? record.lostReports
+            : 1),
+      ),
+    (expectedCountValid ? expectedRecords : sourceRecords) - records.length,
+  );
   let complete =
     phases.length > 0 &&
+    expectedCountValid &&
+    lossMarkers.length === 0 &&
+    rejectedRecords === 0 &&
     phases.every((record) => record.lostReports === 0) &&
-    records.length === lines.filter((line) => line.trim()).length &&
+    records.length === sourceRecords &&
+    nativeExits.every((record) => record.outcome === 'success') &&
     !records.some((record) => record.lostReports > 0);
-  for (const record of byPhase.values()) {
+  for (const record of phases) {
     if (record.type !== 'perf') continue;
     if (
+      record.v !== 1 ||
       typeof record.runId !== 'string' ||
-      !record.runId ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(record.runId) ||
+      !Number.isSafeInteger(record.stamp) ||
+      record.stamp <= 0 ||
       record.lostReports !== 0 ||
       !Number.isSafeInteger(record.window) ||
       record.window < 1
     )
       complete = false;
+    const previousStamp = stampsByRun.get(record.runId);
+    if (previousStamp !== undefined && record.stamp < previousStamp) complete = false;
+    stampsByRun.set(record.runId, record.stamp);
     const windows = windowsByRun.get(record.runId) ?? [];
+    if (record.window !== windows.length + 1) complete = false;
     windows.push(record.window);
     windowsByRun.set(record.runId, windows);
   }
@@ -709,10 +762,13 @@ export function summarizeReport(lines) {
   }
   return {
     complete,
+    rejectedRecords,
     env: info?.env ?? null,
     runtime: info?.runtime ?? info?.env?.PRESSURE_VESSEL_RUNTIME ?? 'unknown',
     phases: [...byPhase.values()].map((p) => ({
       phase: p.phase,
+      v: p.v ?? null,
+      stamp: p.stamp ?? null,
       runId: p.runId ?? null,
       lostReports: p.lostReports ?? null,
       slowestFrame: p.slowestFrame ?? null,
@@ -736,6 +792,7 @@ export function summarizeReport(lines) {
     })),
     signals: signals.map((s) => s.signal),
     suspendGaps: suspendGaps.map((s) => s.seconds),
+    nativeExits,
     gamepads: pads.map((p) => ({ id: p.id, mapping: p.mapping })),
     // Oyun kaydı fiziksel ilk kol basımını `pad-input` olarak yazar; listede
     // olması "kol girdisi WebView'a ulaştı" demektir.

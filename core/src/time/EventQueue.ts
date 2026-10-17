@@ -1,3 +1,4 @@
+import { requiredAt, requiredNumberAt } from '../collections/requiredAt';
 /**
  * Zamana bağlı verileri sıralı biriktirir ve zamanı gelince bırakır. Eşit zamanlar ekleme
  * sırasını korur; saat dışarıdan verilir ve kuyruk kendi zamanlayıcısını kurmaz. Kuyruk sınırlıdır:
@@ -21,7 +22,7 @@ export class EventQueue<T> {
   push(timeMs: number, item: T): void {
     if (!Number.isFinite(timeMs)) throw new RangeError('Olay zamanı sonlu olmalı.');
     let at = this.items.length;
-    while (at > this.head && this.times[at - 1] > timeMs) at--;
+    while (at > this.head && requiredNumberAt(this.times, at - 1) > timeMs) at--;
     this.times.splice(at, 0, timeMs);
     this.items.splice(at, 0, item);
     if (this.size > this.capacity) this.head++;
@@ -30,8 +31,8 @@ export class EventQueue<T> {
 
   /** Zamanı `untilMs`e gelmiş öğeleri sırayla `out`a taşır. */
   release(untilMs: number, out: T[]): T[] {
-    while (this.head < this.items.length && this.times[this.head] <= untilMs) {
-      out.push(this.items[this.head]);
+    while (this.head < this.items.length && requiredNumberAt(this.times, this.head) <= untilMs) {
+      out.push(requiredAt(this.items, this.head));
       this.head++;
     }
     this.compact();

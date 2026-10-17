@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { emitUiIntent, emitUiSignal } from '../feedback/uiIntent';
@@ -227,16 +228,16 @@ export class CurveEditor {
   /** Eğriyi verilen girdide değerlendirir — önizleme ve test için. */
   sample(input: number): number {
     const points = this.points;
-    if (input <= points[0][0]) return points[0][1];
+    if (input <= requiredAt(points, 0)[0]) return requiredAt(points, 0)[1];
     const last = points.length - 1;
-    if (input >= points[last][0]) return points[last][1];
+    if (input >= requiredAt(points, last)[0]) return requiredAt(points, last)[1];
 
     let i = 0;
-    while (i < last && points[i + 1][0] < input) i++;
-    const span = points[i + 1][0] - points[i][0];
-    if (span <= 0) return points[i + 1][1];
-    const t = (input - points[i][0]) / span;
-    return points[i][1] + (points[i + 1][1] - points[i][1]) * t;
+    while (i < last && requiredAt(points, i + 1)[0] < input) i++;
+    const span = requiredAt(points, i + 1)[0] - requiredAt(points, i)[0];
+    if (span <= 0) return requiredAt(points, i + 1)[1];
+    const t = (input - requiredAt(points, i)[0]) / span;
+    return requiredAt(points, i)[1] + (requiredAt(points, i + 1)[1] - requiredAt(points, i)[1]) * t;
   }
 
   destroy(): void {
@@ -409,7 +410,7 @@ export class CurveEditor {
     emitUiIntent({
       kind: 'valuePreview',
       origin: 'CurveEditor',
-      target: this.handles[index],
+      target: requiredAt(this.handles, index),
       event,
       persistent: false,
     });
@@ -420,7 +421,7 @@ export class CurveEditor {
       emitUiSignal({
         kind: 'valueCommit',
         origin: 'CurveEditor',
-        target: this.handles[index],
+        target: requiredAt(this.handles, index),
         source: 'keyboard',
       });
       this.onCommitHandler?.(this.getPoints());
@@ -437,7 +438,7 @@ export class CurveEditor {
     this.cancelGesture();
     this.grabIndex = index;
     this.gestureStartPoints = this.getPoints();
-    const handle = this.handles[index];
+    const handle = requiredAt(this.handles, index);
     // Tutulu nokta oklarını FocusNav'dan alır (D-pad noktayı taşır); bırakınca gezinme geri gelir.
     handle.dataset.volArrows = 'both';
     handle.setAttribute('aria-pressed', 'true');
@@ -500,11 +501,11 @@ export class CurveEditor {
 
   /** Klavye taşıması: komşu noktalar arasında kalır, alan sınırında durur. Değişim olduysa true. */
   private movePointBy(index: number, stepsX: number, stepsY: number): boolean {
-    const point = this.points[index];
+    const point = requiredAt(this.points, index);
     const [x0, x1] = this.domainX;
     const [y0, y1] = this.domainY;
-    const lowX = index > 0 ? this.points[index - 1][0] : x0;
-    const highX = index < this.points.length - 1 ? this.points[index + 1][0] : x1;
+    const lowX = index > 0 ? requiredAt(this.points, index - 1)[0] : x0;
+    const highX = index < this.points.length - 1 ? requiredAt(this.points, index + 1)[0] : x1;
     const x = clamp(point[0] + stepsX * (x1 - x0) * KEY_STEP_FRACTION, lowX, highX);
     const y = clamp(point[1] + stepsY * (y1 - y0) * KEY_STEP_FRACTION, y0, y1);
     // Kayan nokta artığı etikette görünmesin.
@@ -527,13 +528,13 @@ export class CurveEditor {
     let at = 0;
     let widest = -1;
     for (let i = 0; i < this.points.length - 1; i++) {
-      const gap = this.points[i + 1][0] - this.points[i][0];
+      const gap = requiredAt(this.points, i + 1)[0] - requiredAt(this.points, i)[0];
       if (gap > widest) {
         widest = gap;
         at = i;
       }
     }
-    const x = roundTo((this.points[at][0] + this.points[at + 1][0]) / 2);
+    const x = roundTo((requiredAt(this.points, at)[0] + requiredAt(this.points, at + 1)[0]) / 2);
     const added: CurvePoint = [x, roundTo(this.sample(x))];
     this.points = sortPoints([...this.points, added]);
     const index = this.points.indexOf(added);
@@ -577,7 +578,7 @@ export class CurveEditor {
   /* ── erişilebilirlik ve çizim ────────────────────────────────────────── */
 
   private pointLabel(index: number): string {
-    const point = this.points[index];
+    const point = requiredAt(this.points, index);
     return i18next.t('core:curveEditor.point', {
       index: index + 1,
       count: this.points.length,
@@ -614,7 +615,7 @@ export class CurveEditor {
     const [x0, x1] = this.domainX;
     const [y0, y1] = this.domainY;
     this.points.forEach((point, index) => {
-      const handle = this.handles[index];
+      const handle = requiredAt(this.handles, index);
       handle.style.left = `${(((point[0] - x0) / (x1 - x0 || 1)) * 100).toFixed(3)}%`;
       handle.style.top = `${(100 - ((point[1] - y0) / (y1 - y0 || 1)) * 100).toFixed(3)}%`;
       handle.setAttribute('aria-label', this.pointLabel(index));
@@ -706,5 +707,7 @@ function sortPoints(points: readonly CurvePoint[]): CurvePoint[] {
 
 function samePoints(a: readonly CurvePoint[], b: readonly CurvePoint[]): boolean {
   if (a.length !== b.length) return false;
-  return a.every((point, index) => point[0] === b[index][0] && point[1] === b[index][1]);
+  return a.every(
+    (point, index) => point[0] === requiredAt(b, index)[0] && point[1] === requiredAt(b, index)[1],
+  );
 }

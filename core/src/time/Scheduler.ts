@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import { finiteOr, requireFinite } from '../math/numeric';
 
 /**
@@ -194,7 +195,7 @@ export class Scheduler {
 
   private purge(): void {
     for (let i = this.tasks.length - 1; i >= 0; i--) {
-      if (this.tasks[i].cancelled) this.tasks.splice(i, 1);
+      if (requiredAt(this.tasks, i).cancelled) this.tasks.splice(i, 1);
     }
   }
 }

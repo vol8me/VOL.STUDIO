@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_RATIO, UI_THRESHOLD, UI_TIMING, UI_CAPACITY } from '../../constants';
 import { i18next } from '../../i18n/I18n';
@@ -183,7 +184,7 @@ export class SwipeableCardStack {
     // Yalnızca üstteki 3 kart DOM'da tutulur — desteler büyük olsa bile gereksiz element birikmez.
     const visible = this.cards.slice(0, UI_CAPACITY.CARD_STACK_VISIBLE);
     for (let i = visible.length - 1; i >= 0; i--) {
-      const def = visible[i];
+      const def = requiredAt(visible, i);
       const cardEl = document.createElement('div');
       cardEl.className = 'vol-card-stack__card';
       cardEl.style.setProperty('--vol-card-stack-depth', String(i));
@@ -214,7 +215,10 @@ export class SwipeableCardStack {
     }
 
     if (this.cards.length > 0) {
-      this.attachDragHandlers(this.stackEl.lastElementChild as HTMLDivElement, this.cards[0].id);
+      this.attachDragHandlers(
+        this.stackEl.lastElementChild as HTMLDivElement,
+        requiredAt(this.cards, 0).id,
+      );
       // Yeni kart geldi — action button'ları tekrar tıklanabilir yap.
       for (const btn of this.actionButtons) {
         btn.disabled = false;

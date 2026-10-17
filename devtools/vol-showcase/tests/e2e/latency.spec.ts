@@ -45,7 +45,12 @@ async function armProbe(page: Page, type: 'pointerdown' | 'keydown'): Promise<vo
           requestAnimationFrame(() => {
             // rAF geri çağrısı kareden ÖNCE koşar; mesaj turu çizimden sonra döner.
             const channel = new MessageChannel();
-            channel.port1.onmessage = () => resolve(performance.now() - origin);
+            channel.port1.onmessage = () => {
+              const latency = performance.now() - origin;
+              channel.port1.close();
+              channel.port2.close();
+              resolve(latency);
+            };
             channel.port2.postMessage(0);
           });
         },
@@ -171,18 +176,22 @@ test.describe('girdi → ilk görünür geri bildirim (başsız yaklaşım)', ()
       },
     };
     const verdict = judge(report);
-    writeReport(`${info.project.name}-latency`, {
-      report,
-      verdict,
-      observations: {
-        eventTimingSupported: environment.eventTiming,
-        eventTimingNote: environment.eventTiming
-          ? 'destekleniyor: gerçek olay kayıtları ek gözlemdir, 8ms yuvarlama sınırı vardır'
-          : 'NOT-SUPPORTED: bu motorda Olay Zamanlaması türü yok; 0 değil, ölçülmedi',
-        basis:
-          'olay timeStamp → sonraki karenin çizim sonrası mesaj turu; ekrana sunulan kare değildir',
+    writeReport(
+      `${info.project.name}-latency`,
+      {
+        report,
+        verdict,
+        observations: {
+          eventTimingSupported: environment.eventTiming,
+          eventTimingNote: environment.eventTiming
+            ? 'destekleniyor: gerçek olay kayıtları ek gözlemdir, 8ms yuvarlama sınırı vardır'
+            : 'NOT-SUPPORTED: bu motorda Olay Zamanlaması türü yok; 0 değil, ölçülmedi',
+          basis:
+            'olay timeStamp → sonraki karenin çizim sonrası mesaj turu; ekrana sunulan kare değildir',
+        },
       },
-    });
+      { retry: info.retry, testId: info.testId, repeatEachIndex: info.repeatEachIndex },
+    );
 
     expect(p.scope.distribution!.samples).toBe(SAMPLES);
     // Her koşuda: sunulan kare ölçülmediği için PASS olamaz.

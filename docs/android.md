@@ -229,7 +229,7 @@ node scripts/android/device-tour.mjs --serial <no> --apk <app-universal-debug.ap
   karar yalnız olayın tipine bağlanamaz, `(pointer: coarse)` da bakılır.
 - **Sayı alanı:** `type=number` alanında `selectionStart` null döner; "kelime seçildi" hükmü NOT-RUN yazılır, seçimin
   varlığını çubuğun Kes/Kopyala düğümleri kanıtlar.
-- **Sınır:** dokunma hissi, ses dinleme ve gerçek AT insan kabulüdür. Bölünmüş ekran ve yüzen klavye turda sürülmez.
+- **Sınır:** dokunma hissi ve ses dinleme insan kabulüdür. Bölünmüş ekran ve yüzen klavye turda sürülmez.
 - **Son koşu (2026-10-17, temiz `922a83dd`, debug aarch64 APK):** Lenovo TB350FU
   (Android 14) **18/18 çevrimdışı + 16/16 native ağ kontrolü PASS**. Kurulu
   APK hash'i kurulumda ve ağ turunun öncesi/sonrasında yerel artifact ile

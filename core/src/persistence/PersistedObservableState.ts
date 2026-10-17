@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import { DisposableScope, type CancellableDisposable } from '../lifecycle/DisposableScope';
 import { LatestValueWriter } from './LatestValueWriter';
 
@@ -154,7 +155,7 @@ export class PersistedObservableState<T> {
     this.notifying = true;
     try {
       for (let index = 0; index < this.notifications.length && !this.disposed; index++) {
-        const { snapshot, listeners } = this.notifications[index];
+        const { snapshot, listeners } = requiredAt(this.notifications, index);
         for (const listener of listeners) {
           if (this.disposed) break;
           try {

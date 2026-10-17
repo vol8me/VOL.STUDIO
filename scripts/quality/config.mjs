@@ -141,11 +141,16 @@ export function validateQualityConfig(raw) {
         const measure = budget.$measure;
         if (
           !isPlainObject(measure) ||
-          ['script', 'series', 'input', 'value'].some(
+          ['script', 'series'].some(
             (key) => typeof measure[key] !== 'string' || !measure[key].trim(),
-          )
+          ) ||
+          Object.keys(measure).some((key) => !['script', 'series', 'args'].includes(key)) ||
+          (measure.args !== undefined &&
+            (!Array.isArray(measure.args) || measure.args.some((arg) => typeof arg !== 'string')))
         ) {
-          problems.push(`${where}.$measure: script/series/input/value dizgileri zorunlu`);
+          problems.push(
+            `${where}.$measure: yalnız script/series dizgileri ve isteğe bağlı args dizisi`,
+          );
         }
         const ratios = Object.entries(budget).filter(([key]) => !key.startsWith('$'));
         if (ratios.length === 0) problems.push(`${where}: ölçülecek oran bütçesi yok`);
@@ -502,7 +507,7 @@ export function loadQualityConfig(path) {
   try {
     raw = JSON.parse(readFileSync(path, 'utf8'));
   } catch (error) {
-    throw new Error(`quality.json okunamadı (${path}): ${error.message}`);
+    throw new Error(`quality.json okunamadı (${path}): ${error.message}`, { cause: error });
   }
 
   const problems = validateQualityConfig(raw);

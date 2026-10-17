@@ -98,7 +98,9 @@ export interface UiIntentSubscription {
 
 function sourceOf(event: Event): UiIntentSource {
   if (typeof PointerEvent !== 'undefined' && event instanceof PointerEvent) {
-    return event.pointerType === 'mouse' ? 'pointer' : 'touch';
+    if (event.pointerType === 'mouse') return 'pointer';
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') return 'touch';
+    // Klavye ve HTMLElement.click() da pointerType boş bir PointerEvent olabilir.
   }
   if (!event.isTrusted) return 'synthetic';
   // Fare tıklaması `detail >= 1`; klavye etkinleştirmesi `detail === 0`.

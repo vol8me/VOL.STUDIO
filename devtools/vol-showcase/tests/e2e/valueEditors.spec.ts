@@ -5,7 +5,7 @@ import { selectTab } from './support/determinism';
  * Değer editörleri (UI-05.1): saydam yerel `range` girdisi çubuğun üstünde işaretçiyi gerçekten alır,
  * görünen tutamak işaretçinin altında kalır (yatay LTR/RTL ve dikey), erişilebilirlik ağacı yön/ad/değer
  * metnini taşır, adım girdisi boş/yanlış metni değer saymaz. IME bileşimi ve Escape taslak ayrıntıları birim
- * testlerindedir (`editorContract.test.ts`); gerçek IME/AT insan-cihaz kabulüdür (UI-13.4).
+ * testlerindedir (`editorContract.test.ts`).
  */
 async function openForms(page: Page, query = '/'): Promise<void> {
   await page.goto(query);

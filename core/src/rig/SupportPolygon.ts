@@ -1,3 +1,4 @@
+import { requiredNumberAt } from '../collections/requiredAt';
 import { finiteOr } from '../math/numeric';
 
 /**
@@ -153,7 +154,11 @@ export function measureSupport(
 function convexHull(points: readonly number[]): number[] {
   const indices: number[] = [];
   for (let i = 0; i < points.length; i += 2) indices.push(i);
-  indices.sort((a, b) => points[a] - points[b] || points[a + 1] - points[b + 1]);
+  indices.sort(
+    (a, b) =>
+      requiredNumberAt(points, a) - requiredNumberAt(points, b) ||
+      requiredNumberAt(points, a + 1) - requiredNumberAt(points, b + 1),
+  );
 
   const build = (order: readonly number[]): number[] => {
     const chain: number[] = [];
@@ -161,12 +166,14 @@ function convexHull(points: readonly number[]): number[] {
       while (chain.length >= 4) {
         const n = chain.length;
         const cross =
-          (chain[n - 2] - chain[n - 4]) * (points[index + 1] - chain[n - 3]) -
-          (chain[n - 1] - chain[n - 3]) * (points[index] - chain[n - 4]);
+          (requiredNumberAt(chain, n - 2) - requiredNumberAt(chain, n - 4)) *
+            (requiredNumberAt(points, index + 1) - requiredNumberAt(chain, n - 3)) -
+          (requiredNumberAt(chain, n - 1) - requiredNumberAt(chain, n - 3)) *
+            (requiredNumberAt(points, index) - requiredNumberAt(chain, n - 4));
         if (cross > 0) break;
         chain.length = n - 2;
       }
-      chain.push(points[index], points[index + 1]);
+      chain.push(requiredNumberAt(points, index), requiredNumberAt(points, index + 1));
     }
     chain.length = Math.max(0, chain.length - 2);
     return chain;
@@ -182,7 +189,9 @@ function polygonArea(polygon: readonly number[]): number {
   let total = 0;
   for (let i = 0; i < count; i++) {
     const j = (i + 1) % count;
-    total += polygon[i * 2] * polygon[j * 2 + 1] - polygon[j * 2] * polygon[i * 2 + 1];
+    total +=
+      requiredNumberAt(polygon, i * 2) * requiredNumberAt(polygon, j * 2 + 1) -
+      requiredNumberAt(polygon, j * 2) * requiredNumberAt(polygon, i * 2 + 1);
   }
   return Math.abs(total) / 2;
 }
@@ -210,10 +219,10 @@ function signedEdgeDistance(polygon: readonly number[], x: number, y: number): n
 
   for (let i = 0; i < count; i++) {
     const j = (i + 1) % count;
-    const ax = polygon[i * 2];
-    const ay = polygon[i * 2 + 1];
-    const bx = polygon[j * 2];
-    const by = polygon[j * 2 + 1];
+    const ax = requiredNumberAt(polygon, i * 2);
+    const ay = requiredNumberAt(polygon, i * 2 + 1);
+    const bx = requiredNumberAt(polygon, j * 2);
+    const by = requiredNumberAt(polygon, j * 2 + 1);
 
     const cross = (bx - ax) * (y - ay) - (by - ay) * (x - ax);
     const side = Math.sign(cross);

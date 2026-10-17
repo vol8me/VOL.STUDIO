@@ -66,11 +66,11 @@ birlikte, ağır aşamalar tek tek, ucuzdan pahalıya; girdisi bayt bayt aynı k
 aşama (büyük aşamalarda paket, crate ya da takım birimi) makbuzdan atlanır
 (`signoff` her zaman taze). Neden koştuğu/atlandığı çıktıda yazar; `pnpm high --fresh`
 makbuzu yok sayar. Düşen birim, çıktıdaki `tekrar:` komutuyla yeniden koşulur (düz yol:
-`pnpm exec just <tarif>`); makine-okunur kanıt `pnpm high --json`dır. Taze süre (8 çekirdek):
-`quick` ~1,5 dk, `high` ~5 dk, `signoff` ~40 dk; `signoff` arka planda koşulur ve ilk düşende durur,
+`pnpm exec just <tarif>`); makine-okunur kanıt `pnpm high --json`dır. Son ölçüm (8 çekirdek):
+`high` ~11 dk (Rust makbuzlu), önceki kaynağın tam `signoff`u ~64 dk; `signoff` arka planda koşulur ve ilk düşende durur,
 koşulmayan aşama NOT-RUN'dır ([ölçüm](docs/gates.md)).
 
-**`pnpm signoff` kullanıcının onayı olmadan koşulmaz.** Makineyi ~40 dk tutar, e2e piksel temellerine
+**`pnpm signoff` kullanıcının onayı olmadan koşulmaz.** Makineyi yaklaşık bir saat tutar, e2e piksel temellerine
 dokunabilir ve düşen aşamayı "yeniden deneme" ya da "emin olma" için başlatılmaz. Önce gerekçeyle onaya
 sunulur: hangi değişiklik hangi aşamayı kanıtsız bırakıyor, `high` ne kadarını zaten kanıtladı, tahmini süre
 ve düşerse çalışma ağacının durumu. Kullanıcı açıkça serbest bıraktıysa (ör. "signoff'u koş", "signoff serbest")

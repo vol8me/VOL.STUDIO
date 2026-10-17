@@ -27,6 +27,17 @@ afterEach(() => {
 });
 
 describe('Panel', () => {
+  it('boş Panel görünürlük değişiminde çocuk veya odak tuzağı üretmez', () => {
+    const panel = track(new Panel());
+    const emptyChildren = 0;
+    panel.show();
+    expect(panel.element.childElementCount).toBe(emptyChildren);
+    expect(panel.element.inert).toBe(false);
+    panel.hide();
+    expect(panel.element.childElementCount).toBe(0);
+    expect(panel.element.inert).toBe(true);
+  });
+
   it('oluşturulur, gösterilir, gizlenir ve yok edilir', () => {
     const panel = track(new Panel());
     expect(panel.element.classList.contains('vol-panel')).toBe(true);
@@ -61,6 +72,20 @@ describe('Panel', () => {
 });
 
 describe('ScrollView', () => {
+  it('boş ScrollView temizliği odağa erişimi korur ve eski içeriği siler', () => {
+    const scroll = track(new ScrollView());
+    document.body.append(scroll.element);
+    const child = document.createElement('button');
+    scroll.add({ element: child });
+    scroll.clear();
+    const emptyContent = scroll.element.querySelector('.vol-scroll-view__content');
+    expect(emptyContent?.childElementCount).toBe(0);
+    expect(child.isConnected).toBe(false);
+    scroll.element.focus();
+    expect(document.activeElement).toBe(scroll.element);
+    scroll.element.remove();
+  });
+
   it('oluşturulur, yön sınıfını taşır, çocuk eklenir ve temizlenir', () => {
     const vertical = track(new ScrollView({ direction: 'vertical' }));
     expect(vertical.element.classList.contains('vol-scroll-view--vertical')).toBe(true);

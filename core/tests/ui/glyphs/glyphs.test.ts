@@ -157,6 +157,16 @@ describe('resolveGlyphFamily', () => {
 });
 
 describe('Glyph', () => {
+  it('eşlemesiz slotun uzun ve altı haneli yedek metni erişilebilir adla aynı kalır', () => {
+    const long30 = 'Uzun tuş açıklaması '.repeat(4) + '999999';
+    const glyph = new Glyph({ name: 'trackpadLeft', family: 'xbox', label: long30 });
+    host.append(glyph.element);
+    expect(glyph.element.querySelector('.vol-glyph__text')?.textContent).toBe(long30);
+    expect(glyph.element.getAttribute('aria-label')).toBe(long30);
+    expect(glyph.element.querySelector<HTMLImageElement>('img')?.hidden).toBe(true);
+    glyph.destroy();
+  });
+
   let host: HTMLDivElement;
 
   beforeEach(() => {

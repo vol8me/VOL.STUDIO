@@ -1,3 +1,4 @@
+import { settleTransitions } from './support/settle';
 import { expect, test, type Page } from '@playwright/test';
 import { selectTab, SHOWCASE_TABS } from './support/determinism';
 
@@ -61,8 +62,8 @@ test.describe('boşta maliyet: görünmeyen sonsuz animasyon yok', () => {
     test(tab, async ({ page }) => {
       await openLive(page);
       await selectTab(page, tab);
-      // Açılış geçişleri otursun; sonsuz animasyonlar zaten bitmez.
-      await page.waitForTimeout(400);
+      // Açılıştaki sonlu geçişler tamamlanır; sonsuz animasyonlar beklenmez.
+      await settleTransitions(page);
       expect(await invisibleInfiniteAnimations(page)).toEqual([]);
     });
   }

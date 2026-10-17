@@ -1,4 +1,6 @@
 import type { InputHandle, Predict, Room, SimReconciler } from '@volstudio/network/client';
+import { ReconciliationReporter } from '@volstudio/network/client';
+import { CLIENT_METRICS_MESSAGE } from '@volstudio/network/protocol';
 import { lerpAngle } from '@volstudio/core/math';
 import { COMBAT } from '@/config/combat';
 import { GAME } from '@/config/game';
@@ -68,9 +70,14 @@ export class PredictedPilot {
   readonly input: InputHandle<TankInputData>;
   readonly reconciler: SimReconciler<TankInputFields, PilotPose, PilotWorld>;
   private readonly scratch = createChassisState();
+  private readonly metrics: ReconciliationReporter;
 
   constructor(private readonly options: PilotOptions) {
     const { room, predict, self, space } = options;
+    this.metrics = new ReconciliationReporter(
+      (sample) => room.send(CLIENT_METRICS_MESSAGE, sample),
+      NETWORK.metricsReportMs,
+    );
     this.vehicle =
       options.vehicle ??
       new Vehicle(
@@ -92,6 +99,7 @@ export class PredictedPilot {
       snap: NETWORK.snapDistance,
       warnOnDivergence: options.divergenceTolerance,
       step: (ctx, world, command) => {
+        this.metrics.step(ctx.isReplay);
         stepPredictedVehicle(
           world.vehicle,
           toCommand(command),
@@ -102,6 +110,11 @@ export class PredictedPilot {
         );
       },
       adopt: (world) => this.adopt(world.vehicle),
+      onReconcile: () => {
+        const magnitude =
+          options.divergenceTolerance === undefined ? null : this.reconciler.lastCorrectionMag;
+        this.metrics.reconcile(magnitude, magnitude !== null && magnitude > NETWORK.snapDistance);
+      },
       pose: (world) => this.readPose(world.vehicle),
       interpolate: (a, b, t) => ({
         x: a.x + (b.x - a.x) * t,
@@ -163,7 +176,17 @@ export class PredictedPilot {
     return this.reconciler.drift;
   }
 
+  /** Sabit adımların ardından çağrılır; tanılama iletisi oyun komutundan ayrıdır. */
+  reportMetrics(nowMs: number): boolean {
+    return this.metrics.flush(nowMs);
+  }
+
+  get metricsSnapshot() {
+    return this.metrics.snapshot();
+  }
+
   dispose(): void {
+    this.metrics.dispose();
     (this.reconciler as unknown as { dispose?: () => void }).dispose?.();
   }
 }

@@ -12,8 +12,9 @@
   "devDependencies": {
     "@types/node": "^26.1.2",
     "@volstudio/core": "workspace:*",
+    "esbuild": "^0.27.7",
     "phaser": "^4.2.1",
     "typescript": "^6.0.3",
-    "vitest": "4.1.11"
+    "vitest": "5.0.5"
   }
 }

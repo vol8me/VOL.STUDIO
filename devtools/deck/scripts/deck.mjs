@@ -497,7 +497,10 @@ async function cmdMeasure(root, workspace, host, label, opts = {}) {
     gameid,
     measuredAt: new Date().toISOString(),
     kernel: optional('ssh', [...SSH_OPTS, `deck@${host}`, 'uname -r']),
-    ...summarizeReport(sharedLines.split('\n')),
+    ...summarizeReport(
+      sharedLines.split('\n'),
+      lines.split('\n').filter((line) => line.trim()).length,
+    ),
     power: { before: powerBefore, after: powerAfter },
   };
   privateFile(join(dir, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');

@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { i18next } from '../../i18n/I18n';
 
@@ -313,7 +314,7 @@ export class DataTable<T extends object> {
       this.focusKey,
       this.selectedKey,
       ...this.selectedKeys,
-      rows[0].dataset.key ?? null,
+      requiredAt(rows, 0).dataset.key ?? null,
     ];
     const preferred = candidates.find((key) => key !== null && keys.has(key));
     for (const tr of rows) tr.tabIndex = tr.dataset.key === preferred ? 0 : -1;
@@ -344,7 +345,7 @@ export class DataTable<T extends object> {
     const rows = this.sortedRows();
     if (rows.length === 0) return;
     const clamped = Math.min(Math.max(0, index), rows.length - 1);
-    const key = this.keyOf(rows[clamped]);
+    const key = this.keyOf(requiredAt(rows, clamped));
     this.focusKey = key;
     if (this.virtualize) {
       // Hedef pencerenin dışındaysa önce görünür kıl ve pencereyi hemen yeniden kur.
@@ -417,7 +418,7 @@ export class DataTable<T extends object> {
       this.tbody.appendChild(this.buildSpacerRow(start * rowHeight, colSpan));
     }
     for (let i = start; i < end; i++) {
-      const tr = this.buildRow(rows[i], i);
+      const tr = this.buildRow(requiredAt(rows, i), i);
       tr.style.height = `${rowHeight}px`;
       this.tbody.appendChild(tr);
     }

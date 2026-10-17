@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 
 /**
@@ -236,9 +237,47 @@ export function estimateHz(frameIntervalsMs: readonly number[]): number | null {
 export const REPORT_DIR = resolve(import.meta.dirname, '../../../records/ui-perf');
 
 /** Git dışı kayıt alanına yazar (cihaz adresi/seri/kullanıcı adı rapora girmez). */
-export function writeReport(name: string, document: unknown): string {
-  mkdirSync(REPORT_DIR, { recursive: true });
-  const path = resolve(REPORT_DIR, `${name}.json`);
+export function writeReport(
+  name: string,
+  document: unknown,
+  context: { retry?: number; testId?: string; repeatEachIndex?: number; directory?: string } = {},
+): string {
+  if (!/^[a-z0-9][a-z0-9-]{0,100}$/i.test(name))
+    throw new Error('rapor adı güvenli bir dosya adı olmalı');
+  const retry = context.retry ?? 0;
+  const repeatEachIndex = context.repeatEachIndex ?? 0;
+  if (
+    !Number.isSafeInteger(retry) ||
+    retry < 0 ||
+    !Number.isSafeInteger(repeatEachIndex) ||
+    repeatEachIndex < 0
+  )
+    throw new Error('rapor deneme indeksi negatif olmayan güvenli tam sayı olmalı');
+  const directory = context.directory ?? REPORT_DIR;
+  const attempts = resolve(directory, 'attempts', name);
+  mkdirSync(attempts, { recursive: true });
+  // Son görünüm geriye uyumludur; ham deneme hiçbir zaman yeniden yazılmaz. Retry PASS'i ilk düşeni silemez.
+  const id = randomUUID();
+  writeFileSync(
+    resolve(attempts, `${id}.json`),
+    `${JSON.stringify(
+      {
+        schema: 'UiMeasurementAttemptV1',
+        attempt: {
+          id,
+          retry,
+          repeatEachIndex,
+          testId: context.testId ?? null,
+          capturedAt: new Date().toISOString(),
+        },
+        document,
+      },
+      null,
+      2,
+    )}\n`,
+    { flag: 'wx' },
+  );
+  const path = resolve(directory, `${name}.json`);
   writeFileSync(path, `${JSON.stringify(document, null, 2)}\n`);
   return path;
 }

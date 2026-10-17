@@ -1,3 +1,4 @@
+import { requiredNumberAt } from '../collections/requiredAt';
 /**
  * Dokunsal geri bildirim (titreşim).
  *
@@ -117,7 +118,7 @@ export function planRumblePulses(pattern: HapticPattern, intensity = 1): readonl
     pulses.push({
       strong: motors.strong * scale,
       weak: motors.weak * scale,
-      durationMs: durations[i],
+      durationMs: requiredNumberAt(durations, i),
       gapAfterMs: durations[i + 1] ?? 0,
     });
   }

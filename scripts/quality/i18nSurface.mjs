@@ -4,8 +4,7 @@
  * Neden AST: metin araması anahtar adını yorumda bulup "kullanılıyor" sayar ve `Lv.${level}`
  * gibi görünen metni görmez. Yalnız gerçek dizge/şablon sabitleri kanıttır; test dosyaları
  * kanıt DEĞİLDİR (yalnız testte geçen anahtar üründe ölüdür).
- *
- * Kurallar (hepsi bir sorun metni üretir; boş liste temiz yüzeydir):
+ * Kurallar (boş sorun listesi temiz yüzeydir):
  * 1. TR/EN parite: iki dilin yaprak anahtar kümesi aynı olmalı.
  * 2. Adlandırma: anahtar parçaları camelCase (`dir_up` yerine `directions.up`).
  * 3. Ölü anahtar: hiçbir dizge sabiti (`anahtar` ya da `ad:anahtar`) ya da bildirilmiş dinamik
@@ -21,6 +20,7 @@
  * 7. Çoğul (UI-07.2): sayıya bağlı cümle `anahtar_one`/`anahtar_other` kullanır (kategoriler
  *    `Intl.PluralRules`tan). Grup tek anahtar sayılır, her dil kendi kategorilerini taşır,
  *    kullanılmayan kategori ölü sayılır, `xOne`/`xMany` gibi elle çoğul çifti reddedilir.
+ * 8. Yinelenen JSON anahtarı: parse öncesi her nesnede reddedilir; sessiz değer gölgeleme kabul edilmez.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -245,9 +245,39 @@ function flatten(value, path = [], out = new Set()) {
   return out;
 }
 
-function readCatalog(root, catalog, lang) {
+function duplicateCatalogKeys(file, text) {
+  const source = ts.parseJsonText(file, text);
+  const duplicate = [];
+  const walk = (node, path = []) => {
+    if (ts.isObjectLiteralExpression(node)) {
+      const seen = new Set();
+      for (const property of node.properties) {
+        if (!ts.isPropertyAssignment(property) || !ts.isStringLiteral(property.name)) continue;
+        const key = property.name.text;
+        const next = [...path, key];
+        if (seen.has(key)) duplicate.push(next.join('.'));
+        seen.add(key);
+        walk(property.initializer, next);
+      }
+    } else if (ts.isArrayLiteralExpression(node)) {
+      node.elements.forEach((element, index) => walk(element, [...path, String(index)]));
+    } else {
+      ts.forEachChild(node, (child) => walk(child, path));
+    }
+  };
+  walk(source);
+  return duplicate;
+}
+
+function readCatalog(root, catalog, lang, problems) {
   const file = join(root, catalog.dir, `${lang}.json`);
-  return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : null;
+  if (!existsSync(file)) return null;
+  const text = readFileSync(file, 'utf8');
+  for (const key of duplicateCatalogKeys(file, text))
+    problems.push(
+      `${catalog.dir}/${lang}.json: "${key}" yinelenen anahtar; JSON önceki değeri gölgeler.`,
+    );
+  return JSON.parse(text);
 }
 
 const isTestPath = (file) =>
@@ -414,8 +444,8 @@ export function validateI18nSurface(root, options = {}) {
 
   const known = new Map();
   for (const catalog of catalogs) {
-    const tr = readCatalog(root, catalog, 'tr');
-    const en = readCatalog(root, catalog, 'en');
+    const tr = readCatalog(root, catalog, 'tr', problems);
+    const en = readCatalog(root, catalog, 'en', problems);
     if (!tr || !en) continue;
     const trKeys = flatten(tr);
     const enKeys = flatten(en);

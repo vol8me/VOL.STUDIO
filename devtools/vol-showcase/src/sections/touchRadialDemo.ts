@@ -40,7 +40,12 @@ export function buildRadialMenuDemo(disposables: DisposableScope): HTMLElement {
     onPress: () => {
       // HoldButton.onPress koordinat vermez, butonun merkezi kullanılır.
       const rect = openButton.element.getBoundingClientRect();
-      menu.open(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      menu.open(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+        undefined,
+        openButton.element,
+      );
     },
   });
   disposables.addDestroyables(openButton);
@@ -51,7 +56,7 @@ export function buildRadialMenuDemo(disposables: DisposableScope): HTMLElement {
     size: 'sm',
     onClick: () => {
       const rect = keysButton.element.getBoundingClientRect();
-      menu.openFocused(rect.left + rect.width / 2, rect.top - 24);
+      menu.openFocused(rect.left + rect.width / 2, rect.top - 24, keysButton.element);
     },
   });
   disposables.addDestroyables(keysButton);

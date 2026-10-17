@@ -1,4 +1,5 @@
 import { i18next } from '../../i18n/I18n';
+import { restoreFocusAfterAction } from '../focus/restoreFocusAfterAction';
 import { Button } from '../primitives/Button';
 import { buildLoadingEmblem } from './loadingEmblems';
 
@@ -555,7 +556,7 @@ export class LoadingScreen {
     this.restoreFocusTo = null;
     const active = document.activeElement;
     const lost = !active || active === document.body || this.element.contains(active);
-    if (target?.isConnected && lost) target.focus({ preventScroll: true });
+    if (lost) restoreFocusAfterAction(target);
   }
 
   /** Aşama metnini günceller; okuyucuya duyulur (`role="status"` kökü). Boş metin aşamayı gizler. */

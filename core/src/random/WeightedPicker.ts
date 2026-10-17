@@ -1,3 +1,4 @@
+import { requiredAt, requiredNumberAt } from '../collections/requiredAt';
 import type { Random } from './random';
 
 export interface WeightedEntry<T> {
@@ -41,7 +42,7 @@ export class WeightedPicker<T> {
       for (const weight of this.weights) max = Math.max(max, weight);
       this.total = 0;
       for (let i = 0; i < this.weights.length; i++) {
-        const normalized = this.weights[i] / max;
+        const normalized = requiredNumberAt(this.weights, i) / max;
         this.weights[i] = normalized;
         this.total += normalized;
         this.cumulative[i] = this.total;
@@ -70,7 +71,7 @@ export class WeightedPicker<T> {
     let hi = this.cumulative.length - 1;
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
-      if (this.cumulative[mid] <= roll) lo = mid + 1;
+      if (requiredNumberAt(this.cumulative, mid) <= roll) lo = mid + 1;
       else hi = mid;
     }
     return this.values[lo];
@@ -85,7 +86,7 @@ export class WeightedPicker<T> {
   pickUnique(random: Random, count: number): T[] {
     const remaining = this.values.map((value, i) => ({
       value,
-      weight: this.weights[i],
+      weight: requiredNumberAt(this.weights, i),
     }));
 
     const result: T[] = [];
@@ -98,14 +99,14 @@ export class WeightedPicker<T> {
       let roll = random.next() * total;
       let index = remaining.length - 1;
       for (let i = 0; i < remaining.length; i++) {
-        roll -= remaining[i].weight;
+        roll -= requiredAt(remaining, i).weight;
         if (roll < 0) {
           index = i;
           break;
         }
       }
 
-      result.push(remaining[index].value);
+      result.push(requiredAt(remaining, index).value);
       remaining.splice(index, 1);
     }
 

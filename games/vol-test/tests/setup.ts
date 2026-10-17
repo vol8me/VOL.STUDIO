@@ -3,6 +3,17 @@ import { i18n, i18next } from '@volstudio/core/i18n';
 import en from '../src/i18n/en.json';
 import tr from '../src/i18n/tr.json';
 
+// jsdom 30'un undici soketi Node EventTarget'ını DOM Event sınıfıyla birleştirir.
+// Gerçek SDK sunucu testleri SDK'nın Node ws taşımasını tüketir; tarayıcı taşıması E2E'dedir.
+const browserSocket = globalThis.WebSocket;
+vi.stubGlobal('WebSocket', undefined);
+try {
+  await import('@colyseus/sdk');
+} finally {
+  // Colyseus sunucusu yeniden katılımda global WebSocket.OPEN sabitini okur.
+  vi.stubGlobal('WebSocket', browserSocket);
+}
+
 i18n.addResources('tr', 'voltest', tr);
 i18n.addResources('en', 'voltest', en);
 await i18n.init();

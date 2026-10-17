@@ -75,15 +75,17 @@ test('sonda generated importu yalnız kaynak, generator ve build çağrısı tam
     "import { summarizeFrameIntervals } from './vendor/frame-summary.js';",
   );
   write('core/src/time/frameSummary.ts', 'export const summarizeFrameIntervals = () => null;');
+  const entry = "export { summarizeFrameIntervals } from '@volstudio/core/time';";
+  write('devtools/deck/scripts/probe-metrics-entry.mjs', entry);
   const generator = `
-    import { readFileSync, writeFileSync } from 'node:fs';
     import { join } from 'node:path';
-    import ts from 'typescript';
+    import { buildSync } from 'esbuild';
     export function syncProbeMetrics(root, webDir) {
-      const source = readFileSync(join(root, 'core/src/time/frameSummary.ts'), 'utf8');
-      const result = ts.transpileModule(source, {});
-      const directory = join(webDir, 'vendor');
-      writeFileSync(join(directory, 'frame-summary.js'), result.outputText);
+      buildSync({
+        entryPoints: [join(root, 'devtools/deck/scripts/probe-metrics-entry.mjs')],
+        outfile: join(webDir, 'vendor/frame-summary.js'),
+        bundle: true,
+      });
     }
   `;
   const build = `
@@ -98,10 +100,13 @@ test('sonda generated importu yalnız kaynak, generator ve build çağrısı tam
   write('scripts/linux/build-steamrt4.mjs', build);
   write(
     'devtools/deck/scripts/probe-metrics.mjs',
-    generator.replace('ts.transpileModule', 'ts.unrelated'),
+    generator.replace('bundle: true', 'bundle: false'),
   );
   assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
   write('devtools/deck/scripts/probe-metrics.mjs', generator);
+  write('devtools/deck/scripts/probe-metrics-entry.mjs', entry.replace('/time', '/unknown'));
+  assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
+  write('devtools/deck/scripts/probe-metrics-entry.mjs', entry);
   rmSync(join(root, 'core/src/time/frameSummary.ts'));
   assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
   write('core/src/time/frameSummary.ts', 'export const summarizeFrameIntervals = () => null;');

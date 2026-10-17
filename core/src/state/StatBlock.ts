@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 /**
  * Stat/modifier motoru: taban değerlerin üzerine kaynak bazlı (kart, zorluk,
  * arketip) modifier'lar biner.
@@ -95,7 +96,7 @@ export class StatBlock<TStat extends string> {
   removeModifier(id: string): number {
     let removed = 0;
     for (let i = this.modifiers.length - 1; i >= 0; i--) {
-      if (this.modifiers[i].id !== id) continue;
+      if (requiredAt(this.modifiers, i).id !== id) continue;
       this.modifiers.splice(i, 1);
       removed++;
     }

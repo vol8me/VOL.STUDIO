@@ -102,7 +102,6 @@ test.describe('görsel sözleşme: katmanlar', () => {
         await openShowcase(page);
         await useSkin(page, skin);
         await openLayer(page, scenario);
-        await page.waitForTimeout(300);
         await expect(page).toHaveScreenshot(
           `layer-${skin}-${scenario.scope.replace('/', '-')}.png`,
           LAYER_SHOT,
@@ -119,7 +118,6 @@ test.describe('görsel sözleşme: katmanlar', () => {
       await expect
         .poll(async () => (await page.locator('.vol-dialogue__text').textContent())?.length ?? 0)
         .toBeGreaterThan(60);
-      await page.waitForTimeout(300);
       const box = await page.locator('.vol-dialogue').boundingBox();
       expect(box).not.toBeNull();
       const covered = await page.evaluate(
@@ -136,11 +134,9 @@ test.describe('görsel sözleşme: katmanlar', () => {
       await selectTab(page, 'panels');
       await pressButton(page, 'Show Info');
       await pressButton(page, 'Show Danger');
-      await page.waitForTimeout(300);
       await expect(page).toHaveScreenshot(`layer-${skin}-toast.png`, LAYER_SHOT);
       await selectTab(page, 'advanced');
       await pressButton(page, 'Command Palette');
-      await page.waitForTimeout(300);
       await expect(page).toHaveScreenshot(`layer-${skin}-palette.png`, LAYER_SHOT);
     });
 
@@ -156,7 +152,6 @@ test.describe('görsel sözleşme: katmanlar', () => {
         await selectTab(page, 'cards');
         await pressButton(page, button);
         await page.locator('.vol-showcase-card-layer:not([hidden])').waitFor();
-        await page.waitForTimeout(800);
         await expect(page).toHaveScreenshot(`layer-${skin}-cards-${name}.png`, LAYER_SHOT);
       });
     }

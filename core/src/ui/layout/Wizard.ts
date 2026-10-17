@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { i18next } from '../../i18n/I18n';
 
 export interface WizardStep {
@@ -106,7 +107,7 @@ export class Wizard {
     this.element.appendChild(footer);
 
     // İlk render'da geçiş animasyonu yok — kayacak önceki içerik yoktur.
-    this.contentSlot.replaceChildren(this.steps[this.currentIndex].content.element);
+    this.contentSlot.replaceChildren(requiredAt(this.steps, this.currentIndex).content.element);
     // notify:false — tüketici henüz Wizard referansına sahip değil; constructor'dan
     // onStepChange tetiklemek çağıranı hazir olmadığı bir callback'e sokar.
     this.updateChrome({ notify: false });
@@ -196,7 +197,7 @@ export class Wizard {
     this.nextButton.disabled = true;
 
     try {
-      const current = this.steps[this.currentIndex];
+      const current = requiredAt(this.steps, this.currentIndex);
       if (current.validate) {
         const valid = await current.validate();
         if (token !== this.validationToken || !valid) return;
@@ -238,7 +239,7 @@ export class Wizard {
    */
   private renderStep(direction: 'forward' | 'backward' = 'forward'): void {
     this.cancelTransition();
-    const step = this.steps[this.currentIndex];
+    const step = requiredAt(this.steps, this.currentIndex);
     const token = ++this.transitionToken;
 
     const outClass =
@@ -281,7 +282,7 @@ export class Wizard {
 
   /** Adım göstergelerini, geri/ileri buton etiketlerini günceller ve onStepChange tetikler — içerik animasyonundan bağımsız. */
   private updateChrome(options: { notify?: boolean } = {}): void {
-    const step = this.steps[this.currentIndex];
+    const step = requiredAt(this.steps, this.currentIndex);
 
     for (const [index, indicator] of this.stepIndicators.entries()) {
       indicator.classList.toggle('vol-wizard__indicator--active', index === this.currentIndex);

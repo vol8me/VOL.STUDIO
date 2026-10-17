@@ -132,6 +132,7 @@ export class OnlineWorld {
    * araçları ve sayaçları tazeler, yerel mermileri uçurur.
    */
   advance(deltaMs: number): void {
+    this.pilot.reportMetrics(performance.now());
     this.queue.release(this.session.displayTimeMs, this.due);
     for (const event of this.due) this.apply(event);
     this.due.length = 0;

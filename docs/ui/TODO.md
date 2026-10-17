@@ -11,7 +11,7 @@ tekrarlanmaz. Kapsamdan çıkarılan görevler kapalı gibi işaretlenmez.
 
 İki skin'in oyun arayüzü kimliği, kürate varlık/lisans, tek niyet/ses/girdi
 sahibi ve hareket azaltma sözleşmeleri korunur. Görsel/ses beğenisi isteğe
-bağlı feedback'tir; gerçek AT, fiziksel giriş ve ölçülmeyen cihaz kabulü
+bağlı feedback'tir; fiziksel giriş ve ölçülmeyen cihaz kabulü
 uydurulmaz. Doğrulama ilgili bileşen veya kısa native akışla sınırlandırılır;
 repo kapıları [kapı sözleşmesinin](../gates.md) konusudur.
 
@@ -19,8 +19,7 @@ repo kapıları [kapı sözleşmesinin](../gates.md) konusudur.
 
 ### UI-03 — Ürün tüketimi ve etkileşim
 
-- [ ] **UI-03.3 — Aktif oyun regresyonları.** **Kapanır:** VOL.TEST pause/ayar denetimlerinin Deck native hit-test'i, görünürlüğü ve geri/odak sahipliği doğrulanır; Slider adı gerçek AT ile okunur. Mevcut iki motor ve çift ses regresyonları korunur.
-- [ ] **UI-03.4 — Dikey dilimin yanıt ölçümü.** **Kapanır:** iki skin, %30 uzun etiket, altı hane ve fare/kol/dokunma örneklerinde ilk yanıt p95<100 ms hedefi kısa kalibre ölçümle sınanır; CPU/sunum ve ölçüm maliyeti ayrılır. WebKit'teki 105–115 ms bulgusu giderilir veya desteklenmeyen ölçüm açıkça ayrılır; isteğe bağlı görsel/ses feedback'i kaydedilir.
+- [ ] **UI-03.3 — Aktif oyun regresyonları.** **Kapanır:** VOL.TEST pause/ayar denetimlerinin Deck native hit-test'i, görünürlüğü ve geri/odak sahipliği doğrulanır. Mevcut iki motor ve çift ses regresyonları korunur.
 
 ### UI-06 — Kısa native vitrin kabulü
 
@@ -28,9 +27,7 @@ repo kapıları [kapı sözleşmesinin](../gates.md) konusudur.
 
 ### UI-09 — Katmanlar, bildirimler ve veri
 
-- [ ] **UI-09.1 — Katman ailesi sunumu.** Odak/LIFO/iptal/fatal taşma ve hareket azaltma regresyonları mevcut. **Kapanır:** ContextMenu/RadialMenu/Popover/FatalStartupError aynı görsel dile tamamlanır; giriş/çıkış hareketi ve ses kapsamı örneklerde doğrulanır, %200/IME odağı örtülmez.
-- [ ] **UI-09.2 — Tooltip ve bildirim kabulü.** Kuyruk/öncelik/odak/Escape mekanizmaları mevcut. **Kapanır:** dokunmatik tooltip alternatifi uygulanır; Deck/tablet HUD kontrollerini kapatmayan yerleşim ve gerçek AT duyurusu doğrulanır; isteğe bağlı ses feedback'i UI-13.4'te tutulur.
-- [ ] **UI-09.3 — Veri bileşenlerinin AT kabulü.** Klavye, pointercancel, boş durum ve %30/%200/RTL regresyonları mevcut. **Kapanır:** DataTable/Kanban/EventLog/KeyBindingList için gerçek AT ile sıra, seçim, canlı duyuru ve odak korunumu kısa senaryolarda doğrulanır.
+- [ ] **UI-09.2 — Tooltip ve bildirim kabulü.** Kuyruk/öncelik/odak/Escape mekanizmaları mevcut. **Kapanır:** dokunmatik tooltip alternatifi uygulanır; Deck/tablet HUD kontrollerini kapatmayan yerleşim doğrulanır; isteğe bağlı ses feedback'i UI-13.4'te tutulur.
 
 ### UI-11 — Metin girişi
 
@@ -44,9 +41,8 @@ repo kapıları [kapı sözleşmesinin](../gates.md) konusudur.
 
 ### UI-13 — Katalog, stres ve erişilebilirlik
 
-- [ ] **UI-13.1 — Tier-1/M3 ve katalog tutarlılığı.** **Kapanır:** uygulanabilir durumlar bileşen ailesi başına gerçek testlere bağlanır; N/A gerekçelidir, açık AA bulgusu yoktur. Registry/public yüzey/belge/i18n uyumludur; ölü bağımlılık/anahtar/varlık, döngü veya 1000 satır sınırı ihlali kalmaz.
-- [ ] **UI-13.2 — Sınırlı etkileşim stresleri.** Bekleyen istekte tema/dil ve RTL/katman temizliği regresyonları mevcut. **Kapanır:** modal→Select→OSK→gerçek IME, çoklu dokunma, kol↔dokunma/hotplug, tek askıya alma/devam ve ses erişimi senaryolarında kayıp odak, yinelenen değişiklik, eski sonuç veya kalan kaynak olmadığı ilgili iki motor/cihaz testinde doğrulanır.
-- [ ] **UI-13.4 — Gerçek erişim ve giriş profilleri.** **Kapanır:** yalnız klavye/kol, seçilen AT ile TalkBack/NVDA/Narrator, TR/EN/%200/gri ton, glif ve haptik kısa akışları kayıtlıdır; eksik cihaz profili NOT-RUN kalır. Görsel/ses/imleç beğenisi isteğe bağlıdır ve bekleme kapısı değildir.
+- [ ] **UI-13.2 — Native etkileşim streslerinin kalanı.** İki motorlu modal→Select→OSK, çoklu dokunma, sanal kol↔dokunma/hotplug ve bekleyen istekte tema/dil regresyonları geçti. **Kapanır:** kısa Windows native akışında giriş geçişi, tek askıya alma/devam ve ses erişimi doğrulanır; kayıp odak, yinelenen değişiklik, eski sonuç veya kalan kaynak yoktur. Sanal girdi gerçek donanım kabulü sayılmaz.
+- [ ] **UI-13.4 — Gerçek giriş profilleri.** **Kapanır:** yalnız klavye/kol, TR/EN/%200/gri ton, glif ve haptik kısa akışları kayıtlıdır; eksik cihaz profili NOT-RUN kalır. Görsel/ses/imleç beğenisi isteğe bağlıdır ve bekleme kapısı değildir.
 
 ## Kapatılanlar
 
@@ -54,6 +50,9 @@ repo kapıları [kapı sözleşmesinin](../gates.md) konusudur.
 kapsam sınırları [VERIFICATION](VERIFICATION.md) ile
 [monorepo denetimindedir](../monorepo-audit.md).
 
+- [x] UI-03.4 — İki motor/skin, %30 etiket, altı hane ve pointer/touch/sanal kol DOM yanıtının 12 profilinde p95 güven üst sınırı + A/A payı ≤40 ms; CPU/sunum ölçülmediği açıkça ayrıldı (§29).
+- [x] UI-09.1 — Katman ailesinin malzeme/hareket/tek ses ve odak dönüşü tamamlandı; kaynak ömrü regresyonları, %200 geometri ve güncel piksel temelleriyle iki motorlu tam UI geçti (§29).
+- [x] UI-13.1 — Uygulanabilir tier-1 durumlarda 0 açık hücre/278 test bağı; gerekçeli N/A, public/i18n paritesi, high ve 1.095 PASS/20 mevcut SKIP ile tam UI doğrulandı (§29).
 - [x] UI-00.1 — Public UI yüzeyi, registry, tüketici ve gerçek test bağlantıları AST tabanlı denetime bağlandı.
 - [x] UI-00.2 — Chromium/WebKit E2E kapsamı ve gerekçeli motor asimetrisi bekçisi kuruldu.
 - [x] UI-00.3 — Axe, geometri ve durum fixture'ları iki motorlu kanıt düzenine bağlandı.

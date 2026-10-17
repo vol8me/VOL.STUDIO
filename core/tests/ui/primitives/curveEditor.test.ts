@@ -11,7 +11,7 @@ function canvasOf(editor: CurveEditor): HTMLCanvasElement {
  * ölçek varsayar, dolayısıyla clientX/Y doğrudan tuval koordinatıdır.
  */
 function pointer(type: string, x: number, y: number, init: PointerEventInit = {}): PointerEvent {
-  return new PointerEvent(type, { clientX: x, clientY: y, pointerId: 1, ...init });
+  return new PointerEvent(type, { isPrimary: true, clientX: x, clientY: y, pointerId: 1, ...init });
 }
 
 describe('CurveEditor', () => {

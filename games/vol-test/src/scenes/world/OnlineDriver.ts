@@ -1,4 +1,6 @@
 import { GAME } from '@/config/game';
+import { PredictionStepper } from '@volstudio/network/client';
+import { NETWORK } from '@/config/network';
 import { ONLINE_VIEW } from '@/config/onlineView';
 import type { Hud } from '@/hud/Hud';
 import { OnlinePanel, teamColor } from '@/hud/OnlinePanel';
@@ -34,8 +36,8 @@ function isSimEvent(event: NetEvent): event is SimEvent {
 
 /**
  * Çevrimiçi dünya: sunucu yetkilidir, burada yalnız öngörülen kendi aracımız, ara değerli uzak
- * araçlar ve yerel uçan mermiler vardır. Kare başına `predict.tick` kaç sabit adım borçlu
- * olduğunu söyler; her adımın girdisi hem sunucuya gider hem yerelde öngörülür. Saatin ve
+ * araçlar ve yerel uçan mermiler vardır. `PredictionStepper` kare aralığını sınırlı SDK
+ * tick'lerine böler; her adımın girdisi hem sunucuya gider hem yerelde öngörülür. Saatin ve
  * olayların sahibi sunucudur, bu yüzden duraklatma dünyayı dondurmaz.
  */
 export class OnlineDriver implements WorldDriver {
@@ -50,6 +52,7 @@ export class OnlineDriver implements WorldDriver {
   private panelDueMs = 0;
   private leaving = false;
   private driftMax = 0;
+  private readonly prediction: PredictionStepper;
 
   constructor(
     private readonly context: DriverContext,
@@ -57,9 +60,15 @@ export class OnlineDriver implements WorldDriver {
   ) {
     const { scope } = context;
     this.world = new OnlineWorld(session, context.world);
+    this.prediction = new PredictionStepper(session.predict, {
+      maxSliceMs: GAME.simulationStepMs * NETWORK.prediction.sliceSteps,
+      maxSlices: NETWORK.prediction.maxSlices,
+      maxSteps: NETWORK.inputBuffer,
+    });
     this.frontFrame = createFront(context.world);
     // Sahne kapanırken önce dünya, sonra bağlantı sökülür (dünya oturumun dinleyicisini bırakır).
     scope.addSubscription(() => {
+      this.prediction.dispose();
       this.world.dispose();
       session.dispose();
     });
@@ -119,9 +128,9 @@ export class OnlineDriver implements WorldDriver {
   }
 
   advance(timeMs: number, deltaMs: number, paused: boolean): DriverFrame {
-    const due = this.session.predict.tick(timeMs);
-    for (let index = 0; index < due; index++)
-      this.world.step(paused ? IDLE : this.context.controls.step(GAME.simulationStepMs));
+    this.prediction.advance(timeMs, () =>
+      this.world.step(paused ? IDLE : this.context.controls.step(GAME.simulationStepMs)),
+    );
     this.world.advance(deltaMs);
     // Hava saati yerelde sunucuyla aynı belirli takvimde akar; anlık görüntü yalnız uyumlar.
     this.context.weather.step(deltaMs);

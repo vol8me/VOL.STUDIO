@@ -78,6 +78,7 @@ export class EventLog {
       const buttons = this.filterBar.querySelectorAll<HTMLButtonElement>('.vol-event-log__filter');
       buttons.forEach((btn, i) => {
         const tone = tones[i];
+        if (!tone) return;
         btn.textContent =
           tone === 'all' ? i18next.t('core:eventlog.filter.all') : i18next.t(TONE_I18N_KEYS[tone]);
       });

@@ -30,6 +30,7 @@ export const QUIET_SPECS = [
   'motionMeasure',
   'performance',
   'probe',
+  'responseSlice',
 ] as const;
 const quietPattern = new RegExp(String.raw`[\\/](${QUIET_SPECS.join('|')})\.spec\.ts$`);
 const lane = process.env.VOL_UI_E2E_LANE;

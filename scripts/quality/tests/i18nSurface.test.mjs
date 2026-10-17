@@ -53,6 +53,41 @@ const fixture = (tr, en, code, more = {}) => ({
 const MENU = { menu: { play: 'Oyna' } };
 const MENU_EN = { menu: { play: 'Play' } };
 
+test('aynı nesnedeki yinelenen katalog anahtarı parite eşit olsa da reddedilir', (t) => {
+  const root = repo(
+    t,
+    fixture(
+      '{"menu":{"play":"Oyna","play":"Başlat"}}',
+      MENU_EN,
+      "export const f = () => i18next.t('app:menu.play');",
+    ),
+  );
+  assert.match(run(root).join('\n'), /tr\.json.*menu\.play.*yinelenen anahtar/);
+});
+
+test('JSON kaçışıyla aynı adı alan ve dizi içindeki yinelenen anahtar da yakalanır', (t) => {
+  const root = repo(
+    t,
+    fixture(
+      String.raw`{"menu":{"play":"Oyna","pl\u0061y":"Başlat"},"items":[{"label":"a","label":"b"}]}`,
+      { ...MENU_EN, items: [{ label: 'a' }] },
+      "export const keys = ['app:menu.play', 'app:items'];",
+    ),
+  );
+  const text = run(root).join('\n');
+  assert.match(text, /menu\.play.*yinelenen anahtar/);
+  assert.match(text, /items\.0\.label.*yinelenen anahtar/);
+});
+
+test('farklı nesnelerdeki aynı yerel anahtar gölgelenme sayılmaz', (t) => {
+  const entries = { menu: { play: 'Oyna' }, footer: { play: 'Başlat' } };
+  const root = repo(
+    t,
+    fixture(entries, entries, "export const keys = ['app:menu.play', 'app:footer.play'];"),
+  );
+  assert.deepEqual(run(root), []);
+});
+
 test('kullanılan anahtar temiz geçer, kullanılmayan adıyla yakalanır', (t) => {
   const root = repo(
     t,

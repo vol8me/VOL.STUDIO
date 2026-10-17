@@ -45,7 +45,9 @@ const projectilesSeries = COUNTS.map((count) => {
     events.length = 0;
   }
   if (projectiles.count !== count) throw new Error(`mermi kaybı: ${projectiles.count}/${count}`);
-  return { count, ms: median(samples) };
+  return { input: count, value: median(samples) };
 });
 
-console.log(JSON.stringify({ projectiles: projectilesSeries }));
+console.log(
+  JSON.stringify({ schemaVersion: 1, unit: 'ms/step', series: { projectiles: projectilesSeries } }),
+);

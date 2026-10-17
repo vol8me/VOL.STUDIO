@@ -15,7 +15,11 @@ const VIEWPORTS = [
 
 async function openKeyboard(page: Page): Promise<void> {
   await selectTab(page, 'forms');
-  await page.getByRole('button', { name: 'Open keyboard', exact: true }).click();
+  await page
+    .getByRole('tabpanel')
+    .filter({ visible: true })
+    .getByRole('button', { name: 'Open keyboard', exact: true })
+    .click();
   await page.locator('.vol-osk').waitFor();
 }
 

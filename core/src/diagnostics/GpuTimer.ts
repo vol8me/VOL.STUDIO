@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import { DisposableScope } from '../lifecycle/DisposableScope';
 
 export type GpuTimerSampleStatus =
@@ -159,7 +160,7 @@ export class GpuTimer {
         return;
       }
       for (let index = 0; index < this.pending.length;) {
-        const measurement = this.pending[index];
+        const measurement = requiredAt(this.pending, index);
         if (!this.api.available(measurement.query)) {
           index++;
           continue;

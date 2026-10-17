@@ -127,7 +127,9 @@ describe('Diagnostics', () => {
     diag.destroy();
   });
 
-  it('markResume() duraklatma süresini frame istatistiğine yansıtmaz', async () => {
+  it('markResume() duraklatma süresini frame istatistiğine yansıtmaz', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
     const transport = recordingTransport();
     const diag = createDiagnostics({
       gameId: 'test',
@@ -137,21 +139,20 @@ describe('Diagnostics', () => {
     });
 
     diag.beginFrame();
-    await wait(5);
+    now += 5;
     diag.endFrame();
 
     // Uzun bir duraklatma simüle et
-    await wait(100);
+    now += 100;
     diag.markResume();
 
     diag.beginFrame();
-    await wait(5);
+    now += 5;
     diag.endFrame();
 
     const last = transport.sent[transport.sent.length - 1];
-    // 100ms'lik pause frame time'a yansımadıysa max 50ms'den küçük kalmalı
-    expect(last.frame.max).toBeLessThan(50);
-    expect(last.update.avg).toBeGreaterThan(0);
+    expect(last.frame.max).toBe(5);
+    expect(last.update.avg).toBe(5);
 
     diag.destroy();
   });

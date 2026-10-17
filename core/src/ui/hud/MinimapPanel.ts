@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { i18next } from '../../i18n/I18n';
 import type { Disposable } from '../../lifecycle/DisposableScope';
 import { Icon } from '../primitives/Icon';
@@ -805,7 +806,8 @@ export class MinimapPanel {
     const tick = (): void => {
       this.pingFrame = 0;
       const now = performance.now();
-      while (this.pings.length > 0 && now - this.pings[0].start >= PING_MS) this.pings.shift();
+      while (this.pings.length > 0 && now - requiredAt(this.pings, 0).start >= PING_MS)
+        this.pings.shift();
       this.dirty = true;
       this.flush();
       if (this.pings.length > 0 && !this.destroyed) this.pingFrame = requestAnimationFrame(tick);

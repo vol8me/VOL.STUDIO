@@ -15,6 +15,7 @@ import {
   uiSurface,
   validateRepoUiRegistry,
   validateUiRegistry,
+  validateStateCompleteness,
 } from '../uiRegistry.mjs';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
@@ -387,23 +388,21 @@ test('stateNa: uygulanabilir olmayan, bağlı ve gerekçesiz durum ihlaldir', ()
 });
 
 /**
- * Erken tier-1 fazlarında teste bağlı durum sayısının tabanı (UI-08.4). Yalnız yukarı çıkar: bağ sildiysen ya da
- * testi yeniden adlandırdıysan kapı zaten düşer; bu taban, bağların sessizce gevşetilmesini engeller. Yeni bağ
- * ekleyince tabanı yükselt; kalan açık durumlar `node scripts/quality/cli/ui-registry.mjs --states` çıktısındadır
- * ve UI-13.1 kapanışında sıfır olmalıdır.
+ * Tier-1 fazlarında doğrudan teste bağlı durum sayısı gerilemez. Completeness açık hücreyi, bu taban ise
+ * test bağının sessizce N/A'ya çevrilmesini yakalar. Yeni doğrudan bağ eklenince taban yükseltilir.
  */
 const BOUND_STATE_FLOOR = {
   'UI-01': 28,
   'UI-02': 4,
-  'UI-03': 15,
-  'UI-04': 11,
-  'UI-05': 21,
+  'UI-03': 31,
+  'UI-04': 51,
+  'UI-05': 68,
   'UI-07': 1,
-  'UI-08': 8,
-  'UI-09': 11,
-  'UI-10': 4,
+  'UI-08': 29,
+  'UI-09': 35,
+  'UI-10': 19,
   'UI-11': 5,
-  'UI-12': 2,
+  'UI-12': 7,
 };
 
 test('erken tier-1 fazlarında teste bağlı durum sayısı tabanın altına inmez', () => {
@@ -425,4 +424,29 @@ test('suggestEvidence gerçek doğrulama taşıyan testi bulur', () => {
 
 test('depo UI registry kuralını sağlar', () => {
   assert.deepEqual(validateRepoUiRegistry(ROOT), []);
+});
+
+test('tier-1 eksik durum ve yeni arketip ekseni kapıyı düşürür; tier-2 ayrı kapsamdır', () => {
+  const registry = {
+    archetypes: { control: { applicable: ['normal', 'hover'] } },
+    entries: [
+      entry({ states: { normal: [{ file: 'a.ts', title: 'normal' }] } }),
+      entry({ export: 'Secondary', tier: 2 }),
+    ],
+  };
+  assert.deepEqual(validateStateCompleteness(registry), [
+    'UI registry: Foo: tier-1 durum kanıtı eksik: hover.',
+  ]);
+  registry.entries[0].stateNa = {
+    hover: 'Hover durumu olmayan statik yüzey için kaynakta açıklanmış gerekçe.',
+  };
+  assert.deepEqual(validateStateCompleteness(registry), []);
+  registry.archetypes.control.applicable.push('touch');
+  assert.deepEqual(validateStateCompleteness(registry), [
+    'UI registry: Foo: tier-1 durum kanıtı eksik: touch.',
+  ]);
+  assert.deepEqual(
+    validateStateCompleteness(registry, { fixtures: [{ export: 'Foo', states: ['touch'] }] }),
+    [],
+  );
 });

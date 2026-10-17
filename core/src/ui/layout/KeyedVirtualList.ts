@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { requireFinite } from '../../math/numeric';
 
 export type VirtualListKey = string | number;
@@ -177,7 +178,7 @@ export class KeyedVirtualList<T> {
     const wanted = new Set<VirtualListKey>();
     const orderedRows: HTMLDivElement[] = [];
     for (let index = start; index < end; index++) {
-      const item = this.items[index];
+      const item = requiredAt(this.items, index);
       const key = this.getKeyFn(item);
       wanted.add(key);
       let rendered = this.rendered.get(key);

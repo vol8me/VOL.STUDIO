@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 /**
  * Kullanıcının algıladığı tek karakter (grafem kümesi) sınırları. İmleç hareketi ve geri silme KOD NOKTASINA değil
  * kümeye göre olmalıdır: "e" + birleştirici vurgu, bayrak, ZWJ'li aile emojisi ve ten tonu tek tuşla silinir ve imleç
@@ -20,7 +21,7 @@ export function splitGraphemesFallback(text: string): string[] {
   const clusters: string[] = [];
   let index = 0;
   while (index < points.length) {
-    let cluster = points[index++];
+    let cluster = requiredAt(points, index++);
     if (cluster === '\r' && points[index] === '\n') {
       clusters.push(cluster + points[index++]);
       continue;
@@ -28,12 +29,12 @@ export function splitGraphemesFallback(text: string): string[] {
     if (
       REGIONAL_INDICATOR.test(cluster) &&
       index < points.length &&
-      REGIONAL_INDICATOR.test(points[index])
+      REGIONAL_INDICATOR.test(requiredAt(points, index))
     ) {
-      cluster += points[index++];
+      cluster += requiredAt(points, index++);
     }
     while (index < points.length) {
-      const next = points[index];
+      const next = requiredAt(points, index);
       if (EXTEND.test(next)) {
         cluster += next;
         index += 1;
@@ -62,7 +63,7 @@ export const splitGraphemes: GraphemeSplitter = createSegmenterSplitter() ?? spl
 /** Metnin SON kümesinin UTF-16 uzunluğu (geri silme ve sola adım); boş metinde 0. */
 export function lastGraphemeLength(text: string): number {
   const clusters = splitGraphemes(text);
-  return clusters.length === 0 ? 0 : clusters[clusters.length - 1].length;
+  return clusters.length === 0 ? 0 : requiredAt(clusters, clusters.length - 1).length;
 }
 
 /** Metnin İLK kümesinin UTF-16 uzunluğu (sağa adım); boş metinde 0. */

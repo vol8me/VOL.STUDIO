@@ -1,3 +1,4 @@
+import { settleFrames } from './support/settle';
 import { expect, test, type Page } from '@playwright/test';
 import {
   attributeFrames,
@@ -61,7 +62,7 @@ async function openFixture(page: Page): Promise<void> {
 async function clickAndSettle(page: Page, selector: string): Promise<void> {
   await page.click(selector);
   // Girdiden sonraki kare ve çizim sonrası turu tamamlansın.
-  await page.waitForTimeout(80);
+  await settleFrames(page);
 }
 
 const median = (values: readonly number[]): number => distribution([...values]).p50;
@@ -233,11 +234,11 @@ test.describe('kalibrasyon fixture', () => {
     await openFixture(page);
     const trace = await startTrace(page);
     expect(trace).not.toBeNull();
-    await page.waitForTimeout(150);
+    await settleFrames(page);
     await markSync(page);
     for (let index = 0; index < 6; index += 1) await clickAndSettle(page, '#js');
     await clickAndSettle(page, '#layout');
-    await page.waitForTimeout(150);
+    await settleFrames(page);
     const events = await trace!.stop();
     const capture = await readCapture(page);
 
@@ -338,17 +339,21 @@ test.describe('kalibrasyon fixture', () => {
       traceOverheadMs = mean(traced) - mean([...a1, ...a2]);
     }
 
-    writeReport(`${info.project.name}-probe`, {
-      note: 'tarayıcı probu kalibrasyonu: gürültü ve maliyet ms, başsız ortam; sunum değil',
-      engine: info.project.name,
-      traceSupported: browserName === 'chromium',
-      workMs: { light: 5, heavy: 25 },
-      aaNoiseMs: noise,
-      traceOverheadMs,
-      separationMs: separation,
-      lightMedianMs: median([...a1, ...a2]),
-      heavyMedianMs: median(heavy),
-    });
+    writeReport(
+      `${info.project.name}-probe`,
+      {
+        note: 'tarayıcı probu kalibrasyonu: gürültü ve maliyet ms, başsız ortam; sunum değil',
+        engine: info.project.name,
+        traceSupported: browserName === 'chromium',
+        workMs: { light: 5, heavy: 25 },
+        aaNoiseMs: noise,
+        traceOverheadMs,
+        separationMs: separation,
+        lightMedianMs: median([...a1, ...a2]),
+        heavyMedianMs: median(heavy),
+      },
+      { retry: info.retry, testId: info.testId, repeatEachIndex: info.repeatEachIndex },
+    );
 
     expect(Number.isFinite(noise)).toBe(true);
     // 20 ms'lik iş farkı, kalibre gürültünün ve (varsa) iz maliyetinin üstünde okunur.

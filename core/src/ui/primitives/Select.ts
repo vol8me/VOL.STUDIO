@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { Icon } from './Icon';
 import { Popup } from '../overlays/Popup';
 import { i18next } from '../../i18n/I18n';
@@ -277,7 +278,7 @@ export class Select {
 
   private initialFocusIndex(): number {
     const selected = this.value ? this.options.findIndex((o) => o.value === this.value) : -1;
-    if (selected !== -1 && !this.options[selected].disabled) return selected;
+    if (selected !== -1 && !requiredAt(this.options, selected).disabled) return selected;
     const first = this.options.findIndex((o) => !o.disabled);
     return first === -1 ? 0 : first;
   }
@@ -287,7 +288,7 @@ export class Select {
     const count = this.options.length;
     for (let offset = 1; offset <= count; offset++) {
       const index = (((from + step * offset) % count) + count) % count;
-      if (!this.options[index].disabled) return index;
+      if (!requiredAt(this.options, index).disabled) return index;
     }
     return null;
   }
@@ -330,8 +331,8 @@ export class Select {
       nextIndex =
         start.find(
           (i) =>
-            !this.options[i].disabled &&
-            this.options[i].label.toLocaleLowerCase(locale).startsWith(typed),
+            !requiredAt(this.options, i).disabled &&
+            requiredAt(this.options, i).label.toLocaleLowerCase(locale).startsWith(typed),
         ) ?? null;
     }
 

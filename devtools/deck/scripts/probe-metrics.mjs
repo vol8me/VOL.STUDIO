@@ -1,17 +1,16 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import ts from 'typescript';
+import { buildSync } from 'esbuild';
 
 export function syncProbeMetrics(root, webDir) {
-  const source = readFileSync(join(root, 'core/src/time/frameSummary.ts'), 'utf8');
-  const result = ts.transpileModule(source, {
-    compilerOptions: {
-      target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.ESNext,
-      removeComments: true,
-    },
+  buildSync({
+    absWorkingDir: root,
+    entryPoints: [join(root, 'devtools/deck/scripts/probe-metrics-entry.mjs')],
+    outfile: join(webDir, 'vendor/frame-summary.js'),
+    bundle: true,
+    platform: 'browser',
+    format: 'esm',
+    target: 'es2022',
+    treeShaking: true,
+    legalComments: 'none',
   });
-  const directory = join(webDir, 'vendor');
-  mkdirSync(directory, { recursive: true });
-  writeFileSync(join(directory, 'frame-summary.js'), result.outputText);
 }

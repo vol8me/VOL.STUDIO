@@ -155,6 +155,7 @@ describe('RangeSlider - pointer sürükleme ve çarpışma', () => {
   function pointerDownOnHandle(handle: HTMLElement, clientX: number): void {
     handle.dispatchEvent(
       new PointerEvent('pointerdown', {
+        isPrimary: true,
         pointerId: 1,
         clientX,
         clientY: 8,
@@ -167,6 +168,7 @@ describe('RangeSlider - pointer sürükleme ve çarpışma', () => {
   function pointerMove(track: HTMLElement, clientX: number): void {
     track.dispatchEvent(
       new PointerEvent('pointermove', {
+        isPrimary: true,
         pointerId: 1,
         clientX,
         clientY: 8,

@@ -224,6 +224,7 @@ test.describe('juice maliyeti', () => {
       const trace = (await startTrace(page))!;
       for (let round = 0; round < 6; round++) {
         for (const name of names) await button(name).click();
+        // Gerçek iz örneği: her etkinleştirme bloğunun 120 ms hareket yükü ölçülür, yerleşim beklenmez.
         await page.waitForTimeout(120);
       }
       const frames = attributeFrames(await trace.stop()).filter(
@@ -251,13 +252,17 @@ test.describe('juice maliyeti', () => {
     const dB = distribution(b);
     const delta = { p50: dB.p50 - dA.p50, p95: dB.p95 - dA.p95 };
     const noise = Math.abs(distribution(a1).p95 - distribution(a2).p95);
-    writeReport('juice-cost-chromium', {
-      note: 'kare başına ana iş parçacığı CPU (ms), etkin kareler; A = etkisiz tıklama, B = 5 juice etkisi eşzamanlı. GPU/sunum başsızda yok.',
-      a: dA,
-      b: dB,
-      aaNoiseMs: noise,
-      deltaMs: delta,
-    });
+    writeReport(
+      'juice-cost-chromium',
+      {
+        note: 'kare başına ana iş parçacığı CPU (ms), etkin kareler; A = etkisiz tıklama, B = 5 juice etkisi eşzamanlı. GPU/sunum başsızda yok.',
+        a: dA,
+        b: dB,
+        aaNoiseMs: noise,
+        deltaMs: delta,
+      },
+      { retry: info.retry, testId: info.testId, repeatEachIndex: info.repeatEachIndex },
+    );
     info.annotations.push({
       type: 'ölçü',
       description: `A p50=${dA.p50.toFixed(2)} p95=${dA.p95.toFixed(2)} | B p50=${dB.p50.toFixed(2)} p95=${dB.p95.toFixed(2)} | A/A=${noise.toFixed(2)} ms`,

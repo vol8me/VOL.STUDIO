@@ -103,6 +103,7 @@ export async function worldMetrics(guard: StartedHost<Rooms>['guard']) {
       humans: room.playerCount,
       step: room.stepSummary(),
       traffic: room.trafficSummary(),
+      clients: room.clientMetrics(),
     });
   }
   return { rooms, guard: guard?.stats() ?? null };

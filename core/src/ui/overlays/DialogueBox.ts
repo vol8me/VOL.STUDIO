@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { Icon } from '../primitives/Icon';
 import { i18next } from '../../i18n/I18n';
 import { emitUiIntent } from '../feedback/uiIntent';
@@ -142,7 +143,7 @@ export class DialogueBox {
     clearInterval(this.typingTimer);
     this.isTyping = false;
     while (this.queue.length > 0) {
-      const line = this.queue[0];
+      const line = requiredAt(this.queue, 0);
       if (line.choices?.length) {
         // advance() normal hızda yazım başlatır; seçim butonları (onTypingDone'da
         // render edilen) yazım bitene kadar gizli kalmasın diye hemen tam-la.

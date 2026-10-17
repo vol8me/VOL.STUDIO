@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { Icon, type IconName } from './Icon';
 import { inlineSign } from '../direction';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
@@ -142,7 +143,7 @@ export class Toolbar {
       const index = this.buttons.findIndex((button) => button.id === id);
       if (index < 0) return;
       this.activeIndex = index;
-      this.applyUserSelection(this.buttons[index]);
+      this.applyUserSelection(requiredAt(this.buttons, index));
       this.updateTabStops();
     };
     this.scope.addListener(this.element, 'keydown', this.boundKeydown as EventListener);
@@ -247,7 +248,7 @@ export class Toolbar {
     if (this.buttons.length === 0) return null;
     for (let offset = 1; offset <= this.buttons.length; offset++) {
       const index = (from + direction * offset + this.buttons.length) % this.buttons.length;
-      if (!this.buttons[index].element.disabled) return index;
+      if (!requiredAt(this.buttons, index).element.disabled) return index;
     }
     return null;
   }

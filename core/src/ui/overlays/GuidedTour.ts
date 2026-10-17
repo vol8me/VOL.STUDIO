@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { i18next } from '../../i18n/I18n';
 import { Button } from '../primitives/Button';
 import { previousFocusTarget } from '../primitives/buttonBehavior';
@@ -69,7 +70,7 @@ export function startGuidedTour(options: GuidedTourOptions): GuidedTourHandle {
   /** `from`dan `direction` yönünde ilk gösterilebilir adım; yoksa -1. */
   const find = (from: number, direction: 1 | -1): number => {
     for (let i = from; i >= 0 && i < steps.length; i += direction) {
-      if (targetOf(steps[i])) return i;
+      if (targetOf(requiredAt(steps, i))) return i;
     }
     return -1;
   };
@@ -103,7 +104,7 @@ export function startGuidedTour(options: GuidedTourOptions): GuidedTourHandle {
   };
 
   const show = (stepIndex: number): void => {
-    const step = steps[stepIndex];
+    const step = requiredAt(steps, stepIndex);
     const target = targetOf(step);
     if (!target) {
       advance(stepIndex + 1);
@@ -133,7 +134,7 @@ export function startGuidedTour(options: GuidedTourOptions): GuidedTourHandle {
     popup.element.setAttribute('role', 'dialog');
     popup.element.setAttribute('aria-labelledby', titleId);
     popup.element.setAttribute('aria-describedby', bodyId);
-    popup.element.dataset.placement = (step.placement ?? 'bottom-start').split('-')[0];
+    popup.element.dataset.placement = requiredAt((step.placement ?? 'bottom-start').split('-'), 0);
 
     const counter = new Text(
       i18next.t('core:dialog.tour.step', { current: stepIndex + 1, total: steps.length }),

@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import type { GridPoint } from './Grid';
 
 /**
@@ -77,7 +78,7 @@ export function hasLineOfSight(
   const end = options.includeEndpoints ? line.length : line.length - 1;
 
   for (let i = start; i < end; i++) {
-    if (options.blocks(line[i])) return false;
+    if (options.blocks(requiredAt(line, i))) return false;
   }
   return true;
 }

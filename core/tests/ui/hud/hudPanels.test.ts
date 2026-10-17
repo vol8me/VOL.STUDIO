@@ -467,29 +467,57 @@ describe('SkillTree', () => {
     // Buton üzerine tıklandığında pan başlamaz
     const button = tree.element.querySelector<HTMLButtonElement>('.vol-skill-tree__node')!;
     button.dispatchEvent(
-      new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10, pointerId: 1 }),
+      new PointerEvent('pointerdown', {
+        isPrimary: true,
+        bubbles: true,
+        clientX: 10,
+        clientY: 10,
+        pointerId: 1,
+      }),
     );
     expect(viewport.classList.contains('vol-skill-tree__viewport--panning')).toBe(false);
 
     // Boş viewport alanında pan başlar
     viewport.dispatchEvent(
-      new PointerEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 100, pointerId: 1 }),
+      new PointerEvent('pointerdown', {
+        isPrimary: true,
+        bubbles: true,
+        clientX: 100,
+        clientY: 100,
+        pointerId: 1,
+      }),
     );
     expect(viewport.classList.contains('vol-skill-tree__viewport--panning')).toBe(true);
 
     viewport.dispatchEvent(
-      new PointerEvent('pointermove', { bubbles: true, clientX: 150, clientY: 180, pointerId: 1 }),
+      new PointerEvent('pointermove', {
+        isPrimary: true,
+        bubbles: true,
+        clientX: 150,
+        clientY: 180,
+        pointerId: 1,
+      }),
     );
     expect(canvas.style.transform).toContain('translate(50px, 80px)');
 
-    viewport.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
+    viewport.dispatchEvent(
+      new PointerEvent('pointerup', { isPrimary: true, bubbles: true, pointerId: 1 }),
+    );
     expect(viewport.classList.contains('vol-skill-tree__viewport--panning')).toBe(false);
 
     // pointercancel ile pan sonlanır
     viewport.dispatchEvent(
-      new PointerEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 100, pointerId: 1 }),
+      new PointerEvent('pointerdown', {
+        isPrimary: true,
+        bubbles: true,
+        clientX: 100,
+        clientY: 100,
+        pointerId: 1,
+      }),
     );
-    viewport.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId: 1 }));
+    viewport.dispatchEvent(
+      new PointerEvent('pointercancel', { isPrimary: true, bubbles: true, pointerId: 1 }),
+    );
     expect(viewport.classList.contains('vol-skill-tree__viewport--panning')).toBe(false);
   });
 
@@ -500,12 +528,26 @@ describe('SkillTree', () => {
     const canvas = tree.element.querySelector<HTMLDivElement>('.vol-skill-tree__canvas')!;
 
     viewport.dispatchEvent(
-      new PointerEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 100, pointerId: 1 }),
+      new PointerEvent('pointerdown', {
+        isPrimary: true,
+        bubbles: true,
+        clientX: 100,
+        clientY: 100,
+        pointerId: 1,
+      }),
     );
     viewport.dispatchEvent(
-      new PointerEvent('pointermove', { bubbles: true, clientX: 200, clientY: 250, pointerId: 1 }),
+      new PointerEvent('pointermove', {
+        isPrimary: true,
+        bubbles: true,
+        clientX: 200,
+        clientY: 250,
+        pointerId: 1,
+      }),
     );
-    viewport.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
+    viewport.dispatchEvent(
+      new PointerEvent('pointerup', { isPrimary: true, bubbles: true, pointerId: 1 }),
+    );
 
     tree.resetView();
     expect(canvas.classList.contains('vol-skill-tree__canvas--resetting')).toBe(true);

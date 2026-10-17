@@ -69,6 +69,17 @@ afterEach(() => {
 });
 
 describe('MinimapPanel — çizim sözleşmesi', () => {
+  it('altı haneli dünya ölçeğinin etiketi sayısal değerini korur', async () => {
+    const texts: string[] = [];
+    (fake.ctx as unknown as Record<string, unknown>).fillText = (text: string): void => {
+      texts.push(text);
+    };
+    const panel = make({ worldWidth: 999999, worldHeight: 999999, scaleBar: { unitsPerMetre: 1 } });
+    panel.flush();
+    await Promise.resolve();
+    expect(texts).toContain('200000 m');
+  });
+
   it('ilk kareden sonra mevcut scoped köke bağlanınca durağan harita temayı bulur', async () => {
     let frame!: FrameRequestCallback;
     vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => {
@@ -631,6 +642,32 @@ describe('MinimapPanel — okuyucu', () => {
 });
 
 describe('MinimapPanel — halka dalgası ve temizlik', () => {
+  it('reducedMotion ping yarıçapını sabit tutar; normal tercih halkayı büyütür', () => {
+    vi.useFakeTimers();
+    let reducedMotion = true;
+    vi.stubGlobal('matchMedia', () => ({ matches: reducedMotion }));
+    const radii: number[] = [];
+    (fake.ctx as unknown as Record<string, unknown>).arc = (
+      _x: number,
+      _y: number,
+      radius: number,
+    ): void => {
+      radii.push(radius);
+    };
+    const panel = make();
+    panel.ping(500, 500, '#f00');
+    panel.flush();
+    vi.advanceTimersByTime(200);
+    expect(radii.length).toBeGreaterThan(2);
+    expect(new Set(radii)).toEqual(new Set([12]));
+    radii.length = 0;
+    reducedMotion = false;
+    vi.advanceTimersByTime(200);
+    expect(radii.length).toBeGreaterThan(2);
+    expect(new Set(radii).size).toBeGreaterThan(1);
+    expect(radii.every((radius) => radius > 4 && radius < 20)).toBe(true);
+  });
+
   it('ping animasyon karesiyle çizer, süre dolunca durur; destroy kareyi iptal eder', () => {
     vi.useFakeTimers();
     const panel = make();

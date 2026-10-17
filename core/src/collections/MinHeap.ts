@@ -1,3 +1,4 @@
+import { requiredNumberAt } from './requiredAt';
 /**
  * Sayısal anahtarlı ikili yığın (min-heap) — en küçük anahtarlı değeri O(log n)
  * verir.
@@ -25,35 +26,56 @@ export class MinHeap {
     let i = this.values.length - 1;
     while (i > 0) {
       const parent = (i - 1) >> 1;
-      if (this.keys[parent] <= this.keys[i]) break;
-      this.swap(parent, i);
+      const parentKey = requiredNumberAt(this.keys, parent);
+      if (parentKey <= key) break;
+      // Sabit öğeyi her seviyede takas etmek yerine üst öğeyi boşluğa kaydır.
+      this.values[i] = requiredNumberAt(this.values, parent);
+      this.keys[i] = parentKey;
       i = parent;
     }
+    this.values[i] = value;
+    this.keys[i] = key;
   }
 
   /** En küçük anahtarlı değer; yığın boşsa `undefined`. */
   pop(): number | undefined {
     if (this.values.length === 0) return undefined;
 
-    const top = this.values[0];
-    const lastValue = this.values.pop()!;
-    const lastKey = this.keys.pop()!;
+    const top = requiredNumberAt(this.values, 0);
+    const lastIndex = this.values.length - 1;
+    const lastValue = requiredNumberAt(this.values, lastIndex);
+    const lastKey = requiredNumberAt(this.keys, lastIndex);
+    this.values.pop();
+    this.keys.pop();
 
     if (this.values.length > 0) {
-      this.values[0] = lastValue;
-      this.keys[0] = lastKey;
-
       let i = 0;
       for (;;) {
         const left = i * 2 + 1;
         const right = left + 1;
         let smallest = i;
-        if (left < this.keys.length && this.keys[left] < this.keys[smallest]) smallest = left;
-        if (right < this.keys.length && this.keys[right] < this.keys[smallest]) smallest = right;
+        let smallestKey = lastKey;
+        if (left < this.keys.length) {
+          const leftKey = requiredNumberAt(this.keys, left);
+          if (leftKey < smallestKey) {
+            smallest = left;
+            smallestKey = leftKey;
+          }
+        }
+        if (right < this.keys.length) {
+          const rightKey = requiredNumberAt(this.keys, right);
+          if (rightKey < smallestKey) {
+            smallest = right;
+            smallestKey = rightKey;
+          }
+        }
         if (smallest === i) break;
-        this.swap(i, smallest);
+        this.values[i] = requiredNumberAt(this.values, smallest);
+        this.keys[i] = smallestKey;
         i = smallest;
       }
+      this.values[i] = lastValue;
+      this.keys[i] = lastKey;
     }
 
     return top;
@@ -67,10 +89,5 @@ export class MinHeap {
   clear(): void {
     this.values.length = 0;
     this.keys.length = 0;
-  }
-
-  private swap(a: number, b: number): void {
-    [this.values[a], this.values[b]] = [this.values[b], this.values[a]];
-    [this.keys[a], this.keys[b]] = [this.keys[b], this.keys[a]];
   }
 }

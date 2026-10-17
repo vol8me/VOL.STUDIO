@@ -69,7 +69,7 @@ pencereyi, kalıcılığı ve sert kapanış sonrası geri yüklemeyi sürer, ku
 
 Android (Chrome, adb): `node devtools/vol-showcase/scripts/device-ui.mjs --orientation both --tag <ad>`
 yerel sunucuyu `adb reverse` ile cihaza bağlar, CDP ile `tests/device` belirtimlerini koşar (`tablet.spec.ts`: dokunma
-hedefi, yerleşim, ekran klavyesi, ses bağlamı, gecikme; `textEntry.spec.ts`: gerçek Gboard; `touchInput.spec.ts`: çubuk,
+hedefi, yerleşim, ekran klavyesi, ses bağlamı, gecikme; `touchInput.spec.ts`: çubuk,
 basılı-tut, kaydırma ve gerçek iki parmak sıkıştırma) ve köprüleri geri alır. `--spec <ad>` tek belirtimi seçer; `--game`
 VOL.TEST'i de derleyip ayrı yerel sunucuyla sunar (`volTest.spec.ts`: oyunun çubuğu ve hızlanma düğmesi). Çıktı paketin git dışı
 records alanına yazılır. Preview doğrudan Node çocuğudur; aracın kapanışı

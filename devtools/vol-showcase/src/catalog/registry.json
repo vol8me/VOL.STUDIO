@@ -339,6 +339,24 @@
             "file": "core/tests/ui/feedback/hudStates.test.ts",
             "title": "hata: sınıf ve okuyucu metni \"hata\"; son değer korunur"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/feedback/hudStates.test.ts",
+            "title": "Bar altı haneli dolu değeri ve boş sıfırı görsel/okuyucu olarak aynı anda taşır"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/feedback/hudStates.test.ts",
+            "title": "Bar altı haneli dolu değeri ve boş sıfırı görsel/okuyucu olarak aynı anda taşır"
+          }
         ]
       },
       "extraStates": ["loading", "error", "empty"]
@@ -438,6 +456,48 @@
             "file": "core/tests/ui/primitives/primitives.test.ts",
             "title": "handler hata fırlatınca hata durumu kurulur, sonraki başarılı tıklamada kalkar"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
         ]
       },
       "extraStates": ["loading", "error"]
@@ -511,6 +571,84 @@
             "file": "core/tests/ui/cards/cardPickerStates.test.ts",
             "title": "yükleniyor: nazik status bölgesi ve ızgarada aria-busy"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30) ${viewport.name}: açık katmanlarda metin kırpılmaz"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "normal sunum altı haneli başlık, açıklama ve fiyatı her ailede korur"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "FocusNavController gamepad aktivasyonu odaktaki her ailenin yalnız bir eylemini çalıştırır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "FocusNavController gamepad aktivasyonu odaktaki her ailenin yalnız bir eylemini çalıştırır"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "keyboard Enter varsayılan aktivasyonu ve touch bırakışı her ailede tek seçimdir"
+          }
+        ],
+        "touch": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "keyboard Enter varsayılan aktivasyonu ve touch bırakışı her ailede tek seçimdir"
+          }
+        ],
+        "normal": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "normal sunum altı haneli başlık, açıklama ve fiyatı her ailede korur"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "keyboard Enter varsayılan aktivasyonu ve touch bırakışı her ailede tek seçimdir"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "CardPicker disabled kart eylemini engeller, yeni sunum kilidi kaldırır"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "LevelUpPicker boş teklif yeni kart sunumuna ve hata bildiriminin temizlenmesine engel olmaz"
+          }
+        ],
+        "error": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "LevelUpPicker boş teklif yeni kart sunumuna ve hata bildiriminin temizlenmesine engel olmaz"
+          }
         ]
       },
       "extraStates": ["loading", "error"]
@@ -560,7 +698,58 @@
             "file": "core/tests/ui/cards/cardTile.test.ts",
             "title": "setDisabled butonu ve durum metnini günceller"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "normal sunum altı haneli başlık, açıklama ve fiyatı her ailede korur"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "FocusNavController gamepad aktivasyonu odaktaki her ailenin yalnız bir eylemini çalıştırır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "FocusNavController gamepad aktivasyonu odaktaki her ailenin yalnız bir eylemini çalıştırır"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "keyboard Enter varsayılan aktivasyonu ve touch bırakışı her ailede tek seçimdir"
+          }
+        ],
+        "touch": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "keyboard Enter varsayılan aktivasyonu ve touch bırakışı her ailede tek seçimdir"
+          }
         ]
+      },
+      "stateNa": {
+        "empty": "CardTile tek karttır ve başlık/açıklama veri sözleşmesidir; boş koleksiyon CardPicker üzerinde sınanır."
       }
     },
     {
@@ -641,6 +830,54 @@
           {
             "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
             "title": "ayrık kontroller kullanıcı değişiminde input/commit callbacklerini birer kez üretir"
+          }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız klavye: Tab ile bütün form denetimleri sırayla gezilir, her durak görünür ve odak göstergesi taşır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız kol: D-pad ile her denetime ulaşılır ve geri dönülür; halka daima görünür bir denetimdedir"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "parmakla: anahtar, bölümlü denetim, seçim, artır düğmesi ve kaydırıcı çalışır"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız klavye: Tab ile bütün form denetimleri sırayla gezilir, her durak görünür ve odak göstergesi taşır"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+            "title": "Checkbox disabled native etkinleşmeyi engeller; yeniden açılınca tek commit üretir"
           }
         ]
       }
@@ -850,9 +1087,57 @@
             "file": "core/tests/ui/edgeContracts.test.ts",
             "title": "boş/custom metin, sütun stilleri, string ve Node render yollarını uygular"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "core/tests/ui/data/dataTableKeyboard.test.ts",
+            "title": "ok tuşları, Home ve End odağı taşır"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/data/dataTableKeyboard.test.ts",
+            "title": "ok tuşları, Home ve End odağı taşır"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/languageChange.test.ts",
+            "title": "DataTable emptyText i18n default ise dil degisiminde guncellenir"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/data/dataTableKeyboard.test.ts",
+            "title": "altı haneli hücre değeri yeniden çizimde kısaltılmaz"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
         ]
       },
-      "extraStates": ["loading", "error", "digits6"]
+      "extraStates": ["digits6"]
     },
     {
       "export": "DialogueBox",
@@ -958,6 +1243,30 @@
           {
             "file": "core/tests/ui/dataAndText.test.ts",
             "title": "push yeni bir satır ekler, en yeni satır DOM sırasında en sonda olur"
+          }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/dataAndText.test.ts",
+            "title": "boş günlük altı haneli olayı ve zaman damgasını taşır; clear tekrar boşaltır"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/dataAndText.test.ts",
+            "title": "boş günlük altı haneli olayı ve zaman damgasını taşır; clear tekrar boşaltır"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
           }
         ]
       },
@@ -1185,7 +1494,22 @@
             "file": "core/tests/ui/hud/fpsMeter.test.ts",
             "title": "kare akışından FPS türetir ve metne yazar"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/hud/fpsMeter.test.ts",
+            "title": "altı haneli ölçüm biçimlendirmede kısaltılmaz"
+          }
         ]
+      },
+      "stateNa": {
+        "reducedMotion": "FpsMeter yalnız ölçülen FPS metnini günceller; geometrik animasyonu yoktur, örnekleme reduced-motion ile durdurulmaz."
       }
     },
     {
@@ -1234,7 +1558,22 @@
             "file": "core/tests/ui/glyphs/glyphs.test.ts",
             "title": "aile yoksa gizlenir, sonra canlı güncellenir"
           }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/glyphs/glyphs.test.ts",
+            "title": "eşlemesiz slotun uzun ve altı haneli yedek metni erişilebilir adla aynı kalır"
+          }
+        ],
+        "long30": [
+          {
+            "file": "core/tests/ui/glyphs/glyphs.test.ts",
+            "title": "eşlemesiz slotun uzun ve altı haneli yedek metni erişilebilir adla aynı kalır"
+          }
         ]
+      },
+      "stateNa": {
+        "reducedMotion": "Girdi glifi sabit SVG img veya metin çipidir; animasyon üreten GlyphText ayrı bileşen olarak sınanır."
       }
     },
     {
@@ -1324,7 +1663,28 @@
             "file": "core/tests/ui/holdButtons.test.ts",
             "title": "pointercancel ve yakalama kaybı basışı bırakır; ikinci işaretçi ikinci onPress üretmez"
           }
+        ],
+        "focusVisible": [
+          {
+            "file": "core/tests/ui/holdInput.test.ts",
+            "title": "A, odaktaki HoldButton için basış ve bırakış üretir (click değil)"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
         ]
+      },
+      "stateNa": {
+        "long30": "HoldButton label yalnız aria-label olarak sunulur; görünen içerik ikondur, etiket satırı veya kırpılacak metin kutusu yoktur."
       }
     },
     {
@@ -1377,6 +1737,11 @@
             "title": "ilk Icon kullanımı sprite yüklenmemişse yüklemeyi başlatır ve simge hazır olunca bağı yeniler"
           }
         ]
+      },
+      "stateNa": {
+        "long30": "Salt SVG sunumu görünür metin çizmez; çevrilmiş erişilebilir adı piksel genişliğini değiştirmez.",
+        "digits6": "SVG ikon sayısal değer çizmez; altı haneli değer ikonun değil onu taşıyan denetimin sözleşmesidir.",
+        "reducedMotion": "Icon sabit SVG/use sunar; hareket sahibi üst bileşendir, Icon kendi animasyonunu başlatmaz."
       }
     },
     {
@@ -1422,9 +1787,48 @@
             "file": "core/tests/ui/interactionContract.test.ts",
             "title": "IconButton da asenkron handler bekler ve aria-busy yazar"
           }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
         ]
       },
-      "extraStates": ["loading"]
+      "extraStates": ["loading"],
+      "stateNa": {
+        "long30": "IconButton label aria-label ve native title içindir; görünen yüzey sabit boyutlu ikondur, yerleşimde metin satırı bulunmaz."
+      }
     },
     {
       "export": "Input",
@@ -1436,6 +1840,7 @@
       "consumer": "direct",
       "showcase": [
         "sections/formsTab.ts",
+        "sections/nestedInputDemo.ts",
         "sections/touchGamepadDemo.ts",
         "sections/workbenchTab.ts"
       ],
@@ -1474,6 +1879,66 @@
           {
             "file": "core/tests/ui/primitives/editorContract.test.ts",
             "title": "readOnly, invalid ve ariaLabel yerel özniteliklere yansır; setterlar geri alınır"
+          }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız klavye: Tab ile bütün form denetimleri sırayla gezilir, her durak görünür ve odak göstergesi taşır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız kol: D-pad ile her denetime ulaşılır ve geri dönülür; halka daima görünür bir denetimdedir"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "parmakla: anahtar, bölümlü denetim, seçim, artır düğmesi ve kaydırıcı çalışır"
+          }
+        ],
+        "press": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/primitives/Input.test.ts",
+            "title": "disabled Input native odağı ve tıklamayı engeller; yeniden açılınca erişilir"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/primitives/Input.test.ts",
+            "title": "boş ve altı haneli sayı metni programatik ayarda olay üretmeden korunur"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/primitives/Input.test.ts",
+            "title": "boş ve altı haneli sayı metni programatik ayarda olay üretmeden korunur"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
           }
         ]
       },
@@ -1560,8 +2025,42 @@
             "file": "core/tests/ui/layoutAndControls.test.ts",
             "title": "pointer sürükleme normalize vektör çıktısı verir ve bırakınca sıfırlar"
           }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/layoutAndControls.test.ts",
+            "title": "pointer sürükleme normalize vektör çıktısı verir ve bırakınca sıfırlar"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "touch: Joystick gerçek birincil dokunuşu tek oturumda bırakır; ScrollView dokunarak odaklanır"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "core/tests/ui/holdInput.test.ts",
+            "title": "ok tuşları vektör üretir (çapraz birim uzunluk), son tuş bırakılınca onRelease çağrılır"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/holdInput.test.ts",
+            "title": "ok tuşları vektör üretir (çapraz birim uzunluk), son tuş bırakılınca onRelease çağrılır"
+          }
         ]
-      }
+      },
+      "stateNa": {
+        "disabled": "JoystickOptions ve Joystick public API devre dışı durum sunmaz; kapsayıcı görünürlüğü sahibin sorumluluğudur."
+      },
+      "extraStates": ["focusVisible", "keyboard"]
     },
     {
       "export": "Kanban",
@@ -1727,9 +2226,60 @@
             "file": "core/tests/ui/cardPickerIntent.test.ts",
             "title": "aynı kol aktivasyonu içinde callback yeni karta tekrar activate yapamaz"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30) ${viewport.name}: açık katmanlarda metin kırpılmaz"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "normal sunum altı haneli başlık, açıklama ve fiyatı her ailede korur"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "FocusNavController gamepad aktivasyonu odaktaki her ailenin yalnız bir eylemini çalıştırır"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "keyboard Enter varsayılan aktivasyonu ve touch bırakışı her ailede tek seçimdir"
+          }
+        ],
+        "touch": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "keyboard Enter varsayılan aktivasyonu ve touch bırakışı her ailede tek seçimdir"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "LevelUpPicker boş teklif yeni kart sunumuna ve hata bildiriminin temizlenmesine engel olmaz"
+          }
         ]
       },
-      "extraStates": ["loading"]
+      "extraStates": ["loading"],
+      "stateNa": {
+        "disabled": "LevelUpPicker ücretsiz zorunlu seçim sunar; present/CardTileData kapalı teklif seçeneği taşımaz. Kapalı teklif ShopPicker sözleşmesidir."
+      }
     },
     {
       "export": "LoadingScreen",
@@ -1756,6 +2306,54 @@
           {
             "file": "core/tests/ui/overlays/loadingScreen.test.ts",
             "title": "her indicator tipi için doğru class ekler"
+          }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30) ${viewport.name}: açık katmanlarda metin kırpılmaz"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "core/tests/ui/overlays/loadingScreen.test.ts",
+            "title": "görünürken arka sayfa inert olur, odak ekrana geçer; kapanınca ikisi de geri gelir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "core/tests/ui/overlays/loadingScreen.test.ts",
+            "title": "reduced-motion aktifken update() animasyonu atlar, değeri anında uygular"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "loading": [
+          {
+            "file": "core/tests/ui/overlays/loadingScreen.test.ts",
+            "title": "Tekrar dene hatayı temizler, ilerlemeyi sıfırlar ve onRetry çağırır; Vazgeç yalnız onCancel çağırır"
+          }
+        ],
+        "error": [
+          {
+            "file": "core/tests/ui/overlays/loadingScreen.test.ts",
+            "title": "fail(): alert, meşgul değil, odak Tekrar dene düğmesinde; bekleyen gizleme iptal olur"
           }
         ]
       }
@@ -1989,6 +2587,24 @@
             "file": "core/tests/ui/hud/hudPanels.test.ts",
             "title": "onClick verilmezse canvas role=\"img\" olarak render edilir (tıklanabilir değil)"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/hud/minimapPanel.test.ts",
+            "title": "altı haneli dünya ölçeğinin etiketi sayısal değerini korur"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "core/tests/ui/hud/minimapPanel.test.ts",
+            "title": "reducedMotion ping yarıçapını sabit tutar; normal tercih halkayı büyütür"
+          }
         ]
       }
     },
@@ -2011,7 +2627,7 @@
           "title": "açık modal destroy edilince kilit kalkar"
         }
       ],
-      "extraStates": ["disabled"],
+      "extraStates": [],
       "states": {
         "reducedMotion": [
           {
@@ -2027,6 +2643,30 @@
           {
             "file": "core/tests/ui/overlays/modalEntry.test.ts",
             "title": "tek parçalı içerik kabıyla birlikte girer"
+          }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30) ${viewport.name}: açık katmanlarda metin kırpılmaz"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
           }
         ]
       }
@@ -2120,7 +2760,7 @@
       "anchor": "A5",
       "archetype": "overlay",
       "consumer": "catalog",
-      "showcase": ["sections/formsTab.ts"],
+      "showcase": ["sections/formsTab.ts", "sections/nestedInputDemo.ts"],
       "tests": [
         {
           "file": "core/tests/ui/textEntry/textEntry.test.ts",
@@ -2153,9 +2793,33 @@
             "file": "core/tests/ui/layoutAndControls.test.ts",
             "title": "oluşturulur, gösterilir, gizlenir ve yok edilir"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/layoutAndControls.test.ts",
+            "title": "boş Panel görünürlük değişiminde çocuk veya odak tuzağı üretmez"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
         ]
       },
-      "extraStates": ["disabled"]
+      "extraStates": [],
+      "stateNa": {
+        "focusVisible": "Panel odaklanmayan sunum kapsayıcısıdır; kendi aktivasyon, girdi veya odak API sunumu yoktur. Eklenen denetimler kendi aile kabulüne tabidir.",
+        "keyboard": "Panel odaklanmayan sunum kapsayıcısıdır; kendi aktivasyon, girdi veya odak API sunumu yoktur. Eklenen denetimler kendi aile kabulüne tabidir.",
+        "gamepad": "Panel odaklanmayan sunum kapsayıcısıdır; kendi aktivasyon, girdi veya odak API sunumu yoktur. Eklenen denetimler kendi aile kabulüne tabidir.",
+        "touch": "Panel odaklanmayan sunum kapsayıcısıdır; kendi aktivasyon, girdi veya odak API sunumu yoktur. Eklenen denetimler kendi aile kabulüne tabidir."
+      }
     },
     {
       "export": "PauseResumeButton",
@@ -2575,6 +3239,30 @@
             "file": "core/tests/ui/layout/scrollSurfaces.test.ts",
             "title": "hareket azaltmada animasyonsuz (anında) kayar; tarayıcı smooth değerini kendiliğinden kısmaz"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "core/tests/ui/layout/arrowScroll.test.ts",
+            "title": "klavye: ScrollView odaktayken ok tuşu odağı atmaz, içeriği kaydırır"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/layoutAndControls.test.ts",
+            "title": "boş ScrollView temizliği odağa erişimi korur ve eski içeriği siler"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "touch: Joystick gerçek birincil dokunuşu tek oturumda bırakır; ScrollView dokunarak odaklanır"
+          }
         ]
       }
     },
@@ -2619,6 +3307,48 @@
             "file": "core/tests/ui/layout/inlineDirection.test.ts",
             "title": "SegmentedControl önceki davranışını korur (RTL’de sol ok sonraki)"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız klavye: Tab ile bütün form denetimleri sırayla gezilir, her durak görünür ve odak göstergesi taşır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız kol: D-pad ile her denetime ulaşılır ve geri dönülür; halka daima görünür bir denetimdedir"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "parmakla: anahtar, bölümlü denetim, seçim, artır düğmesi ve kaydırıcı çalışır"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/primitives/segmentedControl.test.ts",
+            "title": "setDisabled(false) grubu açar ama tek tek kapalı segmenti korur"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
         ]
       }
     },
@@ -2630,7 +3360,7 @@
       "anchor": "A5",
       "archetype": "control",
       "consumer": "direct",
-      "showcase": ["sections/formsTab.ts"],
+      "showcase": ["sections/formsTab.ts", "sections/nestedInputDemo.ts"],
       "tests": [
         {
           "file": "core/tests/ui/languageChange.test.ts",
@@ -2676,6 +3406,48 @@
           {
             "file": "core/tests/ui/primitives/selectionControls.test.ts",
             "title": "boş liste nedenini söyler (seçilemez tek satır), tetikleyici açılır ama değer üretmez"
+          }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız klavye: Tab ile bütün form denetimleri sırayla gezilir, her durak görünür ve odak göstergesi taşır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız kol: D-pad ile her denetime ulaşılır ve geri dönülür; halka daima görünür bir denetimdedir"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "parmakla: anahtar, bölümlü denetim, seçim, artır düğmesi ve kaydırıcı çalışır"
+          }
+        ],
+        "error": [
+          {
+            "file": "core/tests/ui/layout/settingsModel.test.ts",
+            "title": "geçersiz değer satırda role=alert hatası ve aria-invalid üretir; Uygula yazmaz ve nedenini söyler"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
           }
         ]
       },
@@ -2826,6 +3598,72 @@
             "file": "core/tests/ui/cards/shopPicker.test.ts",
             "title": "maliyet etiketini gösterir ve karşılanamıyorsa butonu kilitler"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30) ${viewport.name}: açık katmanlarda metin kırpılmaz"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/cards/shopPicker.test.ts",
+            "title": "boş bölümde bilgi metni gösterir"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "normal sunum altı haneli başlık, açıklama ve fiyatı her ailede korur"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "FocusNavController gamepad aktivasyonu odaktaki her ailenin yalnız bir eylemini çalıştırır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "FocusNavController gamepad aktivasyonu odaktaki her ailenin yalnız bir eylemini çalıştırır"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "keyboard Enter varsayılan aktivasyonu ve touch bırakışı her ailede tek seçimdir"
+          }
+        ],
+        "touch": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "keyboard Enter varsayılan aktivasyonu ve touch bırakışı her ailede tek seçimdir"
+          }
+        ],
+        "loading": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "ShopPicker loading durumundan error durumuna geçerken busy silinir ve yeni sunum hatayı temizler"
+          }
+        ],
+        "error": [
+          {
+            "file": "core/tests/ui/cards/cardCatalogStates.test.ts",
+            "title": "ShopPicker loading durumundan error durumuna geçerken busy silinir ve yeni sunum hatayı temizler"
+          }
         ]
       },
       "extraStates": ["loading", "error"]
@@ -2894,6 +3732,54 @@
           {
             "file": "core/tests/ui/primitives/editorContract.test.ts",
             "title": "sürükleme sürerken devre dışı kalırsa önizleme geri alınır, kalıcı değişiklik olmaz"
+          }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız klavye: Tab ile bütün form denetimleri sırayla gezilir, her durak görünür ve odak göstergesi taşır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "yalnız kol: D-pad ile her denetime ulaşılır ve geri dönülür; halka daima görünür bir denetimdedir"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/formAcceptance.spec.ts",
+            "title": "parmakla: anahtar, bölümlü denetim, seçim, artır düğmesi ve kaydırıcı çalışır"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/audio/uiSliderSound.test.ts",
+            "title": "dokunma da sürüklemedir; işaretçi bırakılınca sonraki adım tam seviyedir"
+          }
+        ],
+        "hover": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 hover gerçek yüzeyde boyayı değiştirir"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+            "title": "Slider altı haneli değer etiketini ve native üst sınırı aynı tutar"
           }
         ]
       },
@@ -3129,7 +4015,22 @@
             "file": "core/tests/ui/dataAndText.test.ts",
             "title": "farklı tag ile oluşturulabilir (ör. h2)"
           }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/dataAndText.test.ts",
+            "title": "altı haneli serbest metni sayıya çevirmeden ve kısaltmadan korur"
+          }
         ]
+      },
+      "stateNa": {
+        "reducedMotion": "Text yalnız textContent ve tipografi sınıfı yazar; animasyon, geçiş veya zamanlayıcı başlatmaz."
       }
     },
     {
@@ -3241,6 +4142,42 @@
           {
             "file": "core/tests/ui/overlays/overlays.test.ts",
             "title": "show mesaj ekler ve rAF ile görünür olur"
+          }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30) ${viewport.name}: açık katmanlarda metin kırpılmaz"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "touch": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "focusVisible": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
+          }
+        ],
+        "error": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/catalogInput.spec.ts",
+            "title": "${mode}: Button, IconButton, Modal, ToastManager, LoadingScreen ve DataTable gerçek eylemi çalıştırır"
           }
         ]
       }
@@ -3654,6 +4591,24 @@
           {
             "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
             "title": "boş XP barı kritik/kırmızı duruma düşmez — dolan bir değerdir"
+          }
+        ],
+        "long30": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts",
+            "title": "sahte dil (+%30, ${dir}) ${viewport.name}: hiçbir sekmede metin kırpılmaz"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/feedback/hudStates.test.ts",
+            "title": "XPBar altı haneli seviye ve ilerlemeyi kırpmadan aktarır"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/tier1States.spec.ts",
+            "title": "${skin}/${group}: tier-1 reducedMotion kayma, ölçek ve genişlik geçişini durdurur"
           }
         ]
       },

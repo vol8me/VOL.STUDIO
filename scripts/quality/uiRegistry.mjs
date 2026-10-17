@@ -352,6 +352,13 @@ export function stateCoverage(registry, { phases, tier, fixtures } = {}) {
   return rows;
 }
 
+/** Tier-1 ailesi büyüyünce yeni uygulanabilir hücre kanıtsız kalamaz. Yapısal kanıt geçerliliği ayrıca doğrulanır. */
+export function validateStateCompleteness(registry, fixtures) {
+  return stateCoverage(registry, { tier: 1, fixtures })
+    .filter((row) => row.open.length > 0)
+    .map((row) => `UI registry: ${row.export}: tier-1 durum kanıtı eksik: ${row.open.join(', ')}.`);
+}
+
 /** `name` için gerçek doğrulama taşıyan testler: yeni export kaydederken aday listesi. */
 export function suggestEvidence(root, name, limit = 3) {
   const found = [];
@@ -574,7 +581,7 @@ export function validateRepoUiRegistry(root) {
   const showcaseText = sourceFiles(resolve(root, 'devtools/vol-showcase/src'), /\.tsx?$/)
     .map((file) => readFileSync(file, 'utf8'))
     .join('\n');
-  return validateUiRegistry({
+  const problems = validateUiRegistry({
     registry,
     surface,
     usage: volTestImports(root, names),
@@ -584,4 +591,7 @@ export function validateRepoUiRegistry(root) {
       return existsSync(full) ? readFileSync(full, 'utf8') : null;
     },
   });
+  const fixturePath = resolve(root, 'devtools/vol-showcase/tests/e2e/support/stateFixtures.json');
+  const fixtures = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, 'utf8')) : null;
+  return [...problems, ...validateStateCompleteness(registry, fixtures)];
 }

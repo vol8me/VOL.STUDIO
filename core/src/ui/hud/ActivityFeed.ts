@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { i18next } from '../../i18n/I18n';
 
 export type ActivityFeedTone = 'default' | 'success' | 'warning' | 'danger' | 'info';
@@ -90,7 +91,7 @@ export class ActivityFeed {
   tick(nowMs: number): void {
     if (this.destroyed || this.lines.length === 0) return;
     for (let index = this.lines.length - 1; index >= 0; index--) {
-      const line = this.lines[index];
+      const line = requiredAt(this.lines, index);
       const age = nowMs - line.bornMs;
       if (age >= this.lifetimeMs + this.fadeMs) {
         line.element.remove();

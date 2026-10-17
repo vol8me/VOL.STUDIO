@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import { clamp01, lerp } from '../math/interpolation';
 import { requireFinite } from '../math/numeric';
 import {
@@ -100,7 +101,7 @@ export class GhostTrail {
     if (this.destroyed) return;
     if (this.sinceCaptureMs < this.options.captureIntervalMs) return;
 
-    const ghost = this.ghosts[this.next];
+    const ghost = requiredAt(this.ghosts, this.next);
     samplePose(root, ghost.samples, this.scratch);
     if (ghost.samples.length === 0) {
       // Boş poz hayalet üretmez ve SAYACI DA TÜKETMEZ: aksi halde bir kare

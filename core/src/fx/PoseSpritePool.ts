@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import type { PoseSample } from './poseSample';
 
 /** `Phaser.GameObjects.Image`ın bu modülün çağırdığı yüzeyi. */
@@ -52,7 +53,7 @@ export class PoseSpriteSet {
    */
   render(samples: readonly PoseSample[], alphaScale: number, offsetX = 0, offsetY = 0): void {
     for (let i = 0; i < samples.length; i++) {
-      const sample = samples[i];
+      const sample = requiredAt(samples, i);
       const sprite = this.sprites[i] ?? this.createSprite(sample.textureKey);
       sprite.setTexture(sample.textureKey, sample.frameName);
       sprite.setPosition(sample.x + offsetX, sample.y + offsetY);
@@ -63,13 +64,13 @@ export class PoseSpriteSet {
       sprite.setVisible(true);
     }
     for (let i = samples.length; i < this.activeCount; i++) {
-      this.sprites[i].setVisible(false);
+      requiredAt(this.sprites, i).setVisible(false);
     }
     this.activeCount = samples.length;
   }
 
   hide(): void {
-    for (let i = 0; i < this.activeCount; i++) this.sprites[i].setVisible(false);
+    for (let i = 0; i < this.activeCount; i++) requiredAt(this.sprites, i).setVisible(false);
     this.activeCount = 0;
   }
 

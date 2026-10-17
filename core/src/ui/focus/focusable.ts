@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 /**
  * Odaklanabilir eleman sözleşmesi.
  *
@@ -37,6 +38,6 @@ export function listFocusable(root: ParentNode = document): HTMLElement[] {
   const dialogs = Array.from(scopeRoot.querySelectorAll<HTMLElement>(DIALOG_SELECTOR)).filter(
     (dialog) => !dialog.closest('[inert]') && dialog.getBoundingClientRect().width > 0,
   );
-  const scope: ParentNode = dialogs.length > 0 ? dialogs[dialogs.length - 1] : root;
+  const scope: ParentNode = dialogs.length > 0 ? requiredAt(dialogs, dialogs.length - 1) : root;
   return Array.from(scope.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(isNavigable);
 }

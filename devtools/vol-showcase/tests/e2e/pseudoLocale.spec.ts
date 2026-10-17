@@ -1,3 +1,4 @@
+import { settleTransitions } from './support/settle';
 import { expect, test } from '@playwright/test';
 import { pseudoize } from '../../src/pseudoize';
 import { SHOWCASE_TABS, selectTab } from './support/determinism';
@@ -32,13 +33,41 @@ for (const [viewport, dir] of VIEWPORTS.flatMap((vp) => [
     await page.waitForSelector('[role="tablist"]');
     await expect(page.locator('html')).toHaveAttribute('lang', 'qps');
     if (dir === 'rtl') await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    const findings: Finding[] = [];
+    const surfaces: Partial<Record<(typeof SHOWCASE_TABS)[number], Record<string, string>>> = {
+      buttons: { Button: '.vol-button', IconButton: '.vol-icon-button', Icon: '.vol-icon' },
+      text: { Text: '.vol-text' },
+      panels: { Panel: '.vol-panel' },
+      scroll: { ScrollView: '.vol-scroll-view' },
+      hud: {
+        Bar: '.vol-bar',
+        XPBar: '.vol-xp-bar',
+        FpsMeter: '.vol-fps-meter',
+        MinimapPanel: '.vol-minimap',
+      },
+      cards: { CardTile: '.vol-card' },
+      forms: {
+        Checkbox: '.vol-checkbox',
+        Input: 'input.vol-input',
+        SegmentedControl: '.vol-segmented',
+        Select: '.vol-select',
+        Slider: '.vol-slider',
+      },
+      advanced: { DataTable: '.vol-datatable', EventLog: '.vol-event-log' },
+      touch: { HoldButton: '.vol-hold-button', Glyph: '.vol-glyph' },
+    };
+    const long30Findings: Finding[] = [];
     for (const tab of SHOWCASE_TABS) {
       await selectTab(page, tab);
-      findings.push(...(await scan(page, tab, viewport.name)));
+      for (const [name, selector] of Object.entries(surfaces[tab] ?? {})) {
+        expect(
+          await page.getByRole('tabpanel').filter({ visible: true }).locator(selector).count(),
+          name + ' gerçek vitrin tüketimi',
+        ).toBeGreaterThan(0);
+      }
+      long30Findings.push(...(await scan(page, tab, viewport.name)));
     }
-    console.log(JSON.stringify(findings, null, 1));
-    expect(findings).toEqual([]);
+    console.log(JSON.stringify(long30Findings, null, 1));
+    expect(long30Findings).toEqual([]);
   });
 }
 
@@ -67,6 +96,8 @@ const OVERLAYS: ReadonlyArray<{
     root: '.vol-showcase-card-layer:not([hidden])',
   },
   { id: 'shop', tab: 'cards', open: 'OPEN SHOP', root: '.vol-showcase-card-layer:not([hidden])' },
+  { id: 'loading', tab: 'loading', open: 'Preview full flow', root: '.vol-loading' },
+  { id: 'toast', tab: 'panels', open: 'Show Danger', root: '.vol-toast--visible' },
   { id: 'dialogue', tab: 'advanced', open: 'Start Dialogue', root: '.vol-dialogue' },
   {
     id: 'command-palette',
@@ -82,17 +113,48 @@ for (const viewport of VIEWPORTS.filter((vp) => vp.name !== '320x568')) {
     await page.goto('/?lang=pseudo');
     await page.evaluate(() => document.fonts.ready);
     await page.waitForSelector('[role="tablist"]');
-    const findings: Finding[] = [];
+    const layerSurfaces = {
+      Modal: '.vol-modal--visible',
+      CardPicker: '.vol-card-picker',
+      LevelUpPicker: '.vol-card-picker--levelup',
+      ShopPicker: '.vol-card-picker--shop',
+      LoadingScreen: '.vol-loading',
+      ToastManager: '.vol-toast--visible',
+    };
+    const long30Findings: Finding[] = [];
     for (const overlay of OVERLAYS) {
       await selectTab(page, overlay.tab);
-      await page.getByRole('button', { name: pseudoize(overlay.open), exact: true }).click();
+      await page
+        .getByRole('tabpanel')
+        .filter({ visible: true })
+        .getByRole('button', { name: pseudoize(overlay.open), exact: true })
+        .click();
       await page.locator(overlay.root).first().waitFor();
-      await page.waitForTimeout(500);
-      findings.push(...(await scan(page, overlay.id, viewport.name, overlay.root)));
+      await settleTransitions(page);
+      const expected =
+        {
+          modal: ['Modal'],
+          sheet: ['Modal'],
+          confirm: ['Modal'],
+          'level-up': ['CardPicker', 'LevelUpPicker'],
+          shop: ['CardPicker', 'ShopPicker'],
+          loading: ['LoadingScreen'],
+          toast: ['ToastManager'],
+        }[overlay.id] ?? [];
+      for (const name of expected) {
+        await expect(
+          page
+            .locator(layerSurfaces[name as keyof typeof layerSurfaces])
+            .filter({ visible: true })
+            .first(),
+          name + ' açık katmanda bulunur',
+        ).toBeVisible();
+      }
+      long30Findings.push(...(await scan(page, overlay.id, viewport.name, overlay.root)));
       // Her katman temiz bir sayfada denenir (zorunlu seçimli katmanlar Escape ile kapanmaz).
       await page.goto('/?lang=pseudo');
       await page.waitForSelector('[role="tablist"]');
     }
-    expect(findings).toEqual([]);
+    expect(long30Findings).toEqual([]);
   });
 }

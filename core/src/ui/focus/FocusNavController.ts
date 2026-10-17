@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { triggerBack } from '../../platform/backNavigation';
 import { GAMEPAD_BUTTON, readStick, type PadLike } from '../../input/GamepadState';
@@ -218,7 +219,7 @@ export class FocusNavController {
             direction,
           )
         : candidates[0];
-    this.focusElement(next ?? current ?? candidates[0]);
+    this.focusElement(next ?? current ?? requiredAt(candidates, 0));
   }
 
   /** Yönü odaktaki bileşik denetime klavye olayı olarak verir; denetim tüketirse true. */

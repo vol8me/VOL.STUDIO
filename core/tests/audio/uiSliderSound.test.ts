@@ -63,7 +63,9 @@ describe('Slider sesi: sürükleme kısık, klavye tam seviye', () => {
   it('basılı işaretçiyle adım adım tick üretir; kazanç kısıktır, perde değere bağlıdır', async () => {
     const { context, seen, release } = await mounted();
     const { input, step } = slider();
-    input.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'mouse', bubbles: true }));
+    input.dispatchEvent(
+      new PointerEvent('pointerdown', { isPrimary: true, pointerType: 'mouse', bubbles: true }),
+    );
     step(2);
     clock += 100;
     step(9);
@@ -84,12 +86,16 @@ describe('Slider sesi: sürükleme kısık, klavye tam seviye', () => {
   it('dokunma da sürüklemedir; işaretçi bırakılınca sonraki adım tam seviyedir', async () => {
     const { context, seen, release } = await mounted();
     const { input, step } = slider();
-    input.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true }));
+    input.dispatchEvent(
+      new PointerEvent('pointerdown', { isPrimary: true, pointerType: 'touch', bubbles: true }),
+    );
     step(1);
     expect(seen[0]?.source).toBe('touch');
     expect(lastVoiceGain(context)).toBeCloseTo(UI_SLIDER_DRAG_GAIN);
 
-    input.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
+    input.dispatchEvent(
+      new PointerEvent('pointerup', { isPrimary: true, pointerType: 'touch', bubbles: true }),
+    );
     clock += 100;
     step(2);
     expect(seen[1]?.source).not.toBe('touch');
@@ -145,6 +151,7 @@ describe('RangeSlider sesi', () => {
     const pointer = (type: string, clientX: number): void => {
       track.dispatchEvent(
         new PointerEvent(type, {
+          isPrimary: true,
           pointerId: 1,
           clientX,
           bubbles: true,
@@ -204,10 +211,18 @@ describe('RangeSlider sesi', () => {
     const { seen, release } = await mounted();
     const { control, track } = range();
     track.dispatchEvent(
-      new PointerEvent('pointerdown', { pointerId: 1, clientX: 30, bubbles: true, button: 0 }),
+      new PointerEvent('pointerdown', {
+        isPrimary: true,
+        pointerId: 1,
+        clientX: 30,
+        bubbles: true,
+        button: 0,
+      }),
     );
     seen.length = 0;
-    track.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 1, bubbles: true }));
+    track.dispatchEvent(
+      new PointerEvent('pointercancel', { isPrimary: true, pointerId: 1, bubbles: true }),
+    );
     control.setValue({ min: 10, max: 90 });
     control.setValueAndNotify({ min: 30, max: 70 });
     expect(seen).toEqual([]);

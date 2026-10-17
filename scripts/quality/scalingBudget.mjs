@@ -6,10 +6,10 @@
  * makinede sürekli yanlış alarm verir. Repo bu yüzden cihaz performansını
  * bilinçli olarak kapı dışında tutuyor.
  *
- * Ama iki ölçüm arasındaki ORAN makineden BAĞIMSIZDIR. Parça sayısı dört
- * katına çıktığında süre kaç katına çıkıyor? Doğrusal bir algoritmada ~4,
- * kareselde ~16. Bu oran, donanım ne olursa olsun aynı kalır — yakalanan şey
- * hız değil, KARMAŞIKLIKTIR.
+ * Girdi boyları arasındaki oran mutlak süreden daha taşınabilirdir; ancak
+ * JIT, zamanlayıcı ve önbellek gürültüsünden bağımsız değildir. Isınmış çoklu
+ * örneğin medyanı kullanılır. Dört kat girdide doğrusal iş ~4, karesel iş ~16
+ * bekletir; tek koşu asimptotik karmaşıklığın matematiksel kanıtı değildir.
  *
  * Ayırma (bayt/kare) neden kapı değil: `--expose-gc` ile bile koşudan koşuya
  * kat kat salınır; benchmark da o alanı "gürültülü" diye etiketler. Kapılanamayacak bir sayıyı kapılamak, kapıya
@@ -46,7 +46,7 @@ export function validateScaling(root, budgets, runner = measureScaling, log = (_
     for (const [key, ceiling] of Object.entries(budget)) {
       if (key.startsWith('$')) continue;
       const actual = measured[key];
-      if (typeof actual !== 'number' || !Number.isFinite(actual)) {
+      if (typeof actual !== 'number' || !Number.isFinite(actual) || actual <= 0) {
         problems.push(`${packageDir}: "${key}" ölçülemedi — bütçe doğrulanamaz.`);
         continue;
       }
@@ -54,7 +54,7 @@ export function validateScaling(root, budgets, runner = measureScaling, log = (_
       if (actual > ceiling) {
         problems.push(
           `${packageDir}: ${key} = ${actual.toFixed(3)}, tavan ${ceiling}. ` +
-            'Süre değil KARMAŞIKLIK arttı: dört kat girdi dört kattan fazla iş yaptırıyor.',
+            'Ölçülen süre oranı bütçeyi aştı; iş yükü ve ölçüm gürültüsü incelenmeli.',
         );
       }
     }
@@ -85,25 +85,49 @@ export function measureScaling(root, packageDir, measure, keys) {
     encoding: 'utf8',
     maxBuffer: 32 * 1024 * 1024,
   });
-  const report = JSON.parse(raw.slice(raw.indexOf('{')));
-  const series = report[measure.series];
-  if (!Array.isArray(series)) {
-    throw new Error(`raporda "${measure.series}" dizisi yok`);
-  }
+  const report = JSON.parse(raw.trim());
+  return scalingRatios(report, measure.series, keys);
+}
 
-  const byInput = new Map(series.map((entry) => [entry[measure.input], entry[measure.value]]));
+/** Her üretici aynı sürümlü ms/adım serisini verir; belirsiz tekrarlar kabul edilmez. */
+export function scalingRatios(report, name, keys) {
+  if (
+    report?.schemaVersion !== 1 ||
+    report.unit !== 'ms/step' ||
+    !report.series ||
+    typeof report.series !== 'object' ||
+    Array.isArray(report.series) ||
+    !Object.hasOwn(report.series, name) ||
+    !Array.isArray(report.series[name]) ||
+    report.series[name].length < 2
+  )
+    throw new Error(`ölçekleme raporu şeması geçersiz: ${name}`);
+  const byInput = new Map();
+  for (const entry of report.series[name]) {
+    if (
+      !Number.isSafeInteger(entry?.input) ||
+      entry.input <= 0 ||
+      !Number.isFinite(entry.value) ||
+      entry.value <= 0 ||
+      byInput.has(entry.input)
+    )
+      throw new Error(`ölçekleme örneği geçersiz veya tekrarlı: ${name}`);
+    byInput.set(entry.input, entry.value);
+  }
   const measured = {};
   for (const key of keys) {
     const match = /(\d+)Over(\d+)$/.exec(key);
-    if (!match) continue;
+    if (!match || Number(match[1]) <= Number(match[2]))
+      throw new Error(`ölçekleme oran anahtarı geçersiz: ${key}`);
     const high = byInput.get(Number(match[1]));
     const low = byInput.get(Number(match[2]));
     if (!(high > 0) || !(low > 0)) {
-      throw new Error(
-        `"${measure.series}" ölçümü ${match[2]} ve ${match[1]} girdilerini taşımıyor`,
-      );
+      throw new Error(`"${name}" ölçümü ${match[2]} ve ${match[1]} girdilerini taşımıyor`);
     }
-    measured[key] = high / low;
+    const ratio = high / low;
+    if (!Number.isFinite(ratio) || ratio <= 0)
+      throw new Error(`ölçekleme oranı sonlu ve pozitif değil: ${key}`);
+    measured[key] = ratio;
   }
   return measured;
 }

@@ -21,7 +21,9 @@ describe('PullToRefresh iptal sözleşmesi', () => {
     document.body.appendChild(panel.element);
     const area = panel.element.querySelector<HTMLElement>('.vol-pull-refresh__scroll-area')!;
     const send = (type: string, clientY = 150) =>
-      area.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientY, bubbles: true }));
+      area.dispatchEvent(
+        new PointerEvent(type, { isPrimary: true, pointerId: 1, clientY, bubbles: true }),
+      );
     send('pointerdown', 0);
     send('pointermove');
     expect(panel.element.classList.contains('vol-pull-refresh--ready')).toBe(true);

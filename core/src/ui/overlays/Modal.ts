@@ -1,3 +1,5 @@
+import { requiredAt } from '../../collections/requiredAt';
+import { restoreFocusAfterAction } from '../focus/restoreFocusAfterAction';
 import { playJuice, playJuiceSequence } from '../motion/juice';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { pushBackHandler } from '../../platform/backNavigation';
@@ -159,7 +161,7 @@ export class Modal {
     this.sessionScope = null;
     syncBodyLock();
     if (!this.destroying) this.signal('close');
-    this.previouslyFocused?.focus();
+    restoreFocusAfterAction(this.previouslyFocused);
     this.onClose?.();
   }
 
@@ -194,8 +196,8 @@ export class Modal {
       return;
     }
 
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
+    const first = requiredAt(focusable, 0);
+    const last = requiredAt(focusable, focusable.length - 1);
 
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();

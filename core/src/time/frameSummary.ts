@@ -1,3 +1,4 @@
+import { requiredNumberAt } from '../collections/requiredAt';
 export interface FrameIntervalSummary {
   frames: number;
   fps: number;
@@ -15,7 +16,9 @@ export function summarizeFrameIntervals(values: readonly number[]): FrameInterva
   const sorted = [...deltas].sort((a, b) => a - b);
   const round = (value: number) => Math.round(value * 100) / 100;
   const pick = (quantile: number) =>
-    round(sorted[Math.min(sorted.length - 1, Math.floor(quantile * sorted.length))]);
+    round(
+      requiredNumberAt(sorted, Math.min(sorted.length - 1, Math.floor(quantile * sorted.length))),
+    );
   const mean = deltas.reduce((sum, value) => sum + value, 0) / deltas.length;
   return {
     frames: deltas.length,

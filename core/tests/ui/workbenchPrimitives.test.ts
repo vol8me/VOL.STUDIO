@@ -192,10 +192,14 @@ describe('SplitPane', () => {
     Object.defineProperty(split.element, 'clientWidth', { configurable: true, value: 600 });
     split.setSize(200);
     split.separator.dispatchEvent(
-      new PointerEvent('pointerdown', { pointerId: 8, clientX: 200, button: 0 }),
+      new PointerEvent('pointerdown', { isPrimary: true, pointerId: 8, clientX: 200, button: 0 }),
     );
-    split.separator.dispatchEvent(new PointerEvent('pointermove', { pointerId: 8, clientX: 350 }));
-    split.separator.dispatchEvent(new PointerEvent('pointerup', { pointerId: 8, clientX: 350 }));
+    split.separator.dispatchEvent(
+      new PointerEvent('pointermove', { isPrimary: true, pointerId: 8, clientX: 350 }),
+    );
+    split.separator.dispatchEvent(
+      new PointerEvent('pointerup', { isPrimary: true, pointerId: 8, clientX: 350 }),
+    );
     expect(split.getSize()).toBe(350);
     expect(onResize).toHaveBeenLastCalledWith(350);
     expect(onCommit).toHaveBeenCalledWith(350);
@@ -230,18 +234,23 @@ describe('SplitPane', () => {
     Object.defineProperty(split.element, 'clientHeight', { configurable: true, value: 400 });
     split.setSize(100);
     const rightMouse = new PointerEvent('pointerdown', {
+      isPrimary: true,
       pointerId: 1,
       clientY: 100,
       button: 2,
     });
     Object.defineProperty(rightMouse, 'pointerType', { value: 'mouse' });
     split.separator.dispatchEvent(rightMouse);
-    split.separator.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientY: 180 }));
+    split.separator.dispatchEvent(
+      new PointerEvent('pointermove', { isPrimary: true, pointerId: 1, clientY: 180 }),
+    );
     expect(onResize).not.toHaveBeenCalled();
     split.separator.dispatchEvent(
-      new PointerEvent('pointerdown', { pointerId: 2, clientY: 100, button: 0 }),
+      new PointerEvent('pointerdown', { isPrimary: true, pointerId: 2, clientY: 100, button: 0 }),
     );
-    split.separator.dispatchEvent(new PointerEvent('pointermove', { pointerId: 2, clientY: 180 }));
+    split.separator.dispatchEvent(
+      new PointerEvent('pointermove', { isPrimary: true, pointerId: 2, clientY: 180 }),
+    );
     expect(split.getSize()).toBe(180);
     split.destroy();
   });

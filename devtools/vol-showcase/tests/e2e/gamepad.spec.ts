@@ -198,6 +198,7 @@ test('kol kipinde metin alanı odaklanınca ekran klavyesi açılır; yazılan d
   await page.goto('/');
   await page.waitForSelector('[role="tablist"]');
   await selectTab(page, 'touch');
+  // Kip hakeminin 250 ms PC etkinlik penceresi gerçek saatle kapanır; donmuş saat veya DOM hazır olma koşulu değildir.
   await page.waitForTimeout(300);
 
   // Kol kenarı → hakem 'gamepad' kipine geçer (basılı tutma gerekmez; son

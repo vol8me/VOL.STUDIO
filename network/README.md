@@ -37,6 +37,19 @@ isteğe ekler ve her hatayı `JoinError.reason` kümesine indirger (`not-found`,
 [bağlantı kapısı reddi], `failed` eklenir). Girdi şeması, oda durumu ve öngörü **oyunundur**: oyun `defineInput` şemasını tanımlar,
 uzlaştırmayı Colyseus SDK'nın `Predict`i yapar ([VOL.TEST tasarımı](../games/vol-test/DESIGN.md)).
 
+`PredictionStepper` aynı SDK saatine sınırlı ara zaman damgaları verir; her `tick` bütçesi
+hemen tüketilir, çizim pozu son dilimden sonra okunur. İkinci sabit adım biriktiricisi kurmaz.
+Uzun render karesinde SDK'nın tek çağrılık yakalama sınırına erken düşülmesini önler; çok uzun
+kesintinin eski bölümü SDK'nın mevcut hitch politikasına kalır. Dilim sayısı ve toplam girdi
+sınırı sonludur, oyunun sunucu tamponuyla uyumlu seçilir. Geçersiz/geri saat yok sayılır;
+callback hatası veya `dispose` sonrasında yeni girdi üretilmez. Bu, sınırsız kesintiyi kayıpsız
+oynatma ya da düşük FPS altında ağ bütçesi garantisi değildir.
+
+İsteğe bağlı `ReconciliationReporter`, gerçek SDK callbacklerinin sayaçlarını bildirir;
+`ClientMetricsRegistry` doğrulanmış beyanı gerçek soket baytlarından ayrı tutar. Kabul ve ölçüm
+sınırları [sunucu sözleşmesinde](docs/server.md#i%CC%87stemci-uzlaştırma-beyanı), betikli bot akışları
+[sürücü sözleşmesindedir](docs/drive.md#betikli-senaryolar).
+
 ## Çalıştırma
 
 ```sh

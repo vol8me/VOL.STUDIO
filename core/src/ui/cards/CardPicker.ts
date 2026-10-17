@@ -236,7 +236,8 @@ export abstract class CardPicker {
         return;
       }
       const first = candidates[0];
-      const last = candidates[candidates.length - 1];
+      if (!first) return;
+      const last = candidates[candidates.length - 1] ?? first;
       const current = document.activeElement;
       if (
         !this.element.contains(current) ||

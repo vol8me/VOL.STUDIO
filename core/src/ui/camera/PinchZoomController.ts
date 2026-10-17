@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { i18next } from '../../i18n/I18n';
 import { PINCH_ZOOM, UI_SIZE, UI_TIMING } from '../../constants';
@@ -223,7 +224,7 @@ export class PinchZoomController {
         this.lastPinchCenter = null;
       }
       if (this.activePointers.size === 1) {
-        const remaining = [...this.activePointers.values()][0];
+        const remaining = requiredAt([...this.activePointers.values()], 0);
         this.lastPanPoint = { x: remaining.x, y: remaining.y };
       } else if (this.activePointers.size === 0) {
         this.lastPanPoint = null;
@@ -248,15 +249,18 @@ export class PinchZoomController {
   private getPinchDistance(): number {
     const points = [...this.activePointers.values()];
     if (points.length < 2) return 0;
-    return Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+    return Math.hypot(
+      requiredAt(points, 1).x - requiredAt(points, 0).x,
+      requiredAt(points, 1).y - requiredAt(points, 0).y,
+    );
   }
 
   private getPinchCenter(): { x: number; y: number } | null {
     const points = [...this.activePointers.values()];
     if (points.length < 2) return null;
     return {
-      x: (points[0].x + points[1].x) / 2,
-      y: (points[0].y + points[1].y) / 2,
+      x: (requiredAt(points, 0).x + requiredAt(points, 1).x) / 2,
+      y: (requiredAt(points, 0).y + requiredAt(points, 1).y) / 2,
     };
   }
 

@@ -6,7 +6,7 @@ import { openShowcase, selectTab } from './support/determinism';
  * Form kabul matrisi (UI-05.5): her form denetimi yalnız klavye, yalnız kol, dokunma ve altı haneli değerle
  * gerçek tarayıcıda sınanır. %30 uzun metin `pseudoLocale.spec.ts` (forms sekmesi dahil), durum matrisi ve
  * katman örtüşmesi `stateMatrix.spec.ts`/`focusVisible.spec.ts`, axe `accessibility.spec.ts` kapsamındadır.
- * Gerçek Steam Deck kolu ve ekran okuyucu insan/cihaz kabulüdür (F08/UI-13.4).
+ * Gerçek Steam Deck kolu cihaz kabulüdür (F08/UI-13.4).
  */
 const FORMS = '[role="tabpanel"][id$="-panel-forms"]';
 const RING = '.vol-focusnav-current';
@@ -90,6 +90,16 @@ test('yalnız klavye: Tab ile bütün form denetimleri sırayla gezilir, her dur
   // Odağı formlar panelinin hemen önüne al: seçili sekme düğmesinden sonraki ilk Tab panel içeriğine girer.
   await page.locator('.vol-tabs__tab[aria-selected="true"]').focus();
 
+  const families = {
+    Checkbox: '.vol-checkbox__input',
+    Input: 'input.vol-input:not([readonly]):not([disabled])',
+    SegmentedControl: '.vol-segmented [role="radio"]',
+    Select: '.vol-select',
+    Slider: '.vol-slider input[type="range"]',
+  };
+  for (const selector of Object.values(families)) {
+    await expect(page.locator(FORMS).locator(selector).first()).toBeAttached();
+  }
   const stops: { id: string; problem: string | null }[] = [];
   for (let step = 0; step < 140; step += 1) {
     await page.keyboard.press('Tab');
@@ -170,6 +180,16 @@ test('yalnız kol: D-pad ile her denetime ulaşılır ve geri dönülür; halka 
   await page.setViewportSize({ width: 1280, height: 800 });
   await openForms(page);
 
+  const families = {
+    Checkbox: '.vol-checkbox__input',
+    Input: 'input.vol-input:not([readonly]):not([disabled])',
+    SegmentedControl: '.vol-segmented [role="radio"]',
+    Select: '.vol-select',
+    Slider: '.vol-slider input[type="range"]',
+  };
+  for (const selector of Object.values(families)) {
+    await expect(page.locator(FORMS).locator(selector).first()).toBeAttached();
+  }
   // Formlar panelindeki her etkin, görünür denetime numara verilir.
   const count = await page.evaluate((panelSelector) => {
     const panel = document.querySelector(panelSelector)!;
@@ -333,17 +353,19 @@ test('yalnız kol: A anahtarı ve bölümlü denetimi etkinleştirir, seçim aç
     throw new Error(`kol ${selector} denetimine ulaşamadı; halka: ${trail}`);
   }
 
+  const Checkbox = '.vol-showcase-checkbox-group .vol-checkbox:nth-child(3)';
+  const Select = '.vol-select';
   // Anahtar (onay kutusu) A ile değişir.
   const checkbox = page
     .locator(`${FORMS} .vol-showcase-checkbox-group .vol-checkbox__input`)
     .nth(2);
   const before = await checkbox.isChecked();
-  await padTo('.vol-showcase-checkbox-group .vol-checkbox:nth-child(3)');
+  await padTo(Checkbox);
   await pressButton(page, PAD.primary);
   expect(await checkbox.isChecked()).toBe(!before);
 
   // Select A ile açılır, B ile kapanır ve odak yerinde kalır.
-  await padTo('.vol-select');
+  await padTo(Select);
   await pressButton(page, PAD.primary);
   await expect(page.locator('.vol-select__listbox.vol-popup--visible')).toHaveCount(1);
   await pressButton(page, PAD.secondary);
@@ -368,16 +390,24 @@ test.describe('dokunma', () => {
       );
     };
 
+    const Checkbox = '.vol-showcase-checkbox-group .vol-checkbox:nth-child(3)';
+    const SegmentedControl = '.vol-segmented';
+    const Select = '.vol-select';
+    const Slider = '.vol-slider--horizontal';
+    const Input = 'input.vol-input:not([readonly]):not([disabled])';
+    const textInput = page.locator(FORMS).locator(Input).first();
+    await textInput.tap();
+    await expect(textInput).toBeFocused();
     // Anahtar
     const checkbox = page
       .locator(`${FORMS} .vol-showcase-checkbox-group .vol-checkbox__input`)
       .nth(2);
     const before = await checkbox.isChecked();
-    await tap(`${FORMS} .vol-showcase-checkbox-group .vol-checkbox:nth-child(3)`);
+    await tap(`${FORMS} ${Checkbox}`);
     expect(await checkbox.isChecked()).toBe(!before);
 
     // Bölümlü denetim: "Yüksek" seçeneğine dokun
-    const high = page.locator(`${FORMS} .vol-segmented`).first().getByRole('radio').last();
+    const high = page.locator(`${FORMS} ${SegmentedControl}`).first().getByRole('radio').last();
     await high.scrollIntoViewIfNeeded();
     const highBox = (await high.boundingBox())!;
     await page.touchscreen.tap(highBox.x + highBox.width / 2, highBox.y + highBox.height / 2);
@@ -394,7 +424,7 @@ test.describe('dokunma', () => {
     expect(Number(await input.inputValue())).toBe(start + 1);
 
     // Kaydırıcı: izin %80'ine dokun → değer yükselir
-    const slider = page.locator(`${FORMS} .vol-slider--horizontal`).first();
+    const slider = page.locator(`${FORMS} ${Slider}`).first();
     await slider.scrollIntoViewIfNeeded();
     const range = slider.locator('input[type="range"]');
     const track = (await slider.locator('.vol-slider__track').boundingBox())!;
@@ -404,7 +434,7 @@ test.describe('dokunma', () => {
     expect(Number(await range.inputValue())).toBeGreaterThan(low);
 
     // Seçim: dokunarak açılır, seçenek dokunarak seçilir
-    await tap(`${FORMS} .vol-select`);
+    await tap(`${FORMS} ${Select}`);
     const listbox = page.locator('.vol-select__listbox.vol-popup--visible');
     await expect(listbox).toHaveCount(1);
     const option = listbox.getByRole('option').last();

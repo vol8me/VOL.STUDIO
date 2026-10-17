@@ -358,6 +358,16 @@
   transform: translate(-50%, 50%);
 }
 
+.vol-slider:where(:has(.vol-slider__input:not(:disabled)):hover) .vol-slider__track {
+  border-color: var(--vol-ui-border-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-slider__handle {
+    transition: none;
+  }
+}
+
 /*
  * Görünmez `<input type=range>` — dokunma hedefi BURADA büyür.
  *

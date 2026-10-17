@@ -96,7 +96,10 @@ test.describe('Toolbar', () => {
 
 test.describe('PropertyField', () => {
   const fieldOf = (page: Page) =>
-    page.locator('.vol-property-field', { has: page.getByText(f.playerName, { exact: true }) });
+    page
+      .getByRole('tabpanel')
+      .filter({ visible: true })
+      .locator('.vol-property-field', { has: page.getByText(f.playerName, { exact: true }) });
 
   test('etiket denetimin adı, açıklama denetimin açıklamasıdır', async ({ page }) => {
     await openForms(page);

@@ -519,7 +519,6 @@
     "landscape": "Landscape",
     "settingsModel": "Settings with Apply / Undo",
     "audioSettings": "Audio settings (live)",
-    "playerName": "Player name",
     "nameRequired": "Name can’t be empty",
     "sixDigits": "Six-digit values",
     "gold": "Gold",

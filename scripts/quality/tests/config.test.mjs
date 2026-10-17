@@ -163,6 +163,27 @@ describe('quality.json şema doğrulaması', () => {
     assert.ok(problems.some((problem) => problem.includes('snapshot40Over10')));
   });
 
+  it('ortak ölçekleme şemasında eski alan eşlemesi ve bozuk argv reddedilir', () => {
+    for (const extra of [{ input: 'count' }, { value: 'ms' }, { args: 'x' }, { args: [1] }]) {
+      const config = validConfig();
+      config.scaling = {
+        core: {
+          $measure: { script: 'scripts/scaling.ts', series: 'spatial', ...extra },
+          spatial512Over128: 6,
+        },
+      };
+      assert.ok(validateQualityConfig(config).some((problem) => problem.includes('$measure')));
+    }
+    const config = validConfig();
+    config.scaling = {
+      core: {
+        $measure: { script: 'scripts/scaling.ts', series: 'spatial', args: ['--json'] },
+        spatial512Over128: 6,
+      },
+    };
+    assert.deepEqual(validateQualityConfig(config), []);
+  });
+
   it('bozuk ağ profili ve bütçesi geçerli olmalı', () => {
     const config = validConfig();
     const good = {

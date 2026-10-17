@@ -13,7 +13,7 @@ const spatial = INPUTS.map((entities) => {
   );
   const result = runBenchmarkSuite(workloads, { iterations: 200, warmupIterations: 50 });
   const ms = result.workloads.reduce((sum, workload) => sum + workload.medianMsPerIteration, 0);
-  return { entities, ms };
+  return { input: entities, value: ms };
 });
 
-console.log(JSON.stringify({ spatial }));
+console.log(JSON.stringify({ schemaVersion: 1, unit: 'ms/step', series: { spatial } }));

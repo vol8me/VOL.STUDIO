@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import { i18next } from '../../i18n/I18n';
 
 /** Karşılaşmanın bir tarafı: sunum verisi; puan kuralı çağırana aittir. */
@@ -195,7 +196,7 @@ export class VersusBar {
     const format =
       this.options.formatValue ?? ((value: number): string => String(Math.floor(value)));
     this.current.forEach((side, index) => {
-      const view = this.sides[index];
+      const view = requiredAt(this.sides, index);
       view.swatch.style.background = side.color;
       view.fill.style.background = side.color;
       view.fill.style.width = `${(clamp01(side.value / this.target) * 50).toFixed(2)}%`;

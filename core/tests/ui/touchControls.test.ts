@@ -26,7 +26,7 @@ function pointerEvent(
   type: string,
   init: Partial<PointerEventInit> & { pointerId: number; clientX: number; clientY: number },
 ): PointerEvent {
-  return new PointerEvent(type, { bubbles: true, cancelable: true, ...init });
+  return new PointerEvent(type, { isPrimary: true, bubbles: true, cancelable: true, ...init });
 }
 
 describe('DirectionButton', () => {
@@ -743,12 +743,45 @@ describe('RadialMenu', () => {
   });
 
   it('destroy document pointer listenerlarını temizler', () => {
-    const menu = new RadialMenu({ items: [{ id: 'a', label: 'A' }], onSelect: vi.fn() });
-    const removeListener = vi.spyOn(document, 'removeEventListener');
+    const addDocument = vi.spyOn(document, 'addEventListener');
+    const removeDocument = vi.spyOn(document, 'removeEventListener');
+    const addWindow = vi.spyOn(window, 'addEventListener');
+    const removeWindow = vi.spyOn(window, 'removeEventListener');
+    const onSelect = vi.fn();
+    const menu = track(new RadialMenu({ items: [{ id: 'a', label: 'A' }], onSelect }));
+    document.body.appendChild(menu.element);
+    mockCenterRect(menu, 100, 100);
+    const pointerTypes = ['pointermove', 'pointerup', 'pointercancel'];
+    for (const type of pointerTypes)
+      expect(addDocument).not.toHaveBeenCalledWith(type, expect.any(Function));
+    expect(addWindow).not.toHaveBeenCalledWith('resize', expect.any(Function));
+
+    menu.open(100, 100, 1);
+    document.dispatchEvent(
+      pointerEvent('pointermove', { pointerId: 1, clientX: 100, clientY: 50 }),
+    );
+    expect(menu.element.querySelector('.vol-radial-menu__item--hovered')).not.toBeNull();
+    document.dispatchEvent(
+      pointerEvent('pointermove', { pointerId: 1, clientX: 100, clientY: 100 }),
+    );
+    expect(menu.element.querySelector('.vol-radial-menu__item--hovered')).toBeNull();
     menu.destroy();
-    expect(removeListener).toHaveBeenCalledWith('pointermove', expect.any(Function));
-    expect(removeListener).toHaveBeenCalledWith('pointerup', expect.any(Function));
-    expect(removeListener).toHaveBeenCalledWith('pointercancel', expect.any(Function));
+
+    for (const type of pointerTypes) {
+      expect(addDocument).toHaveBeenCalledWith(type, expect.any(Function));
+      const listener = addDocument.mock.calls.find(([kind]) => kind === type)?.[1];
+      expect(removeDocument).toHaveBeenCalledWith(type, listener);
+      document.dispatchEvent(pointerEvent(type, { pointerId: 1, clientX: 100, clientY: 50 }));
+    }
+    const resizeListener = addWindow.mock.calls.find(([kind]) => kind === 'resize')?.[1];
+    expect(addWindow).toHaveBeenCalledWith('resize', expect.any(Function));
+    expect(removeWindow).toHaveBeenCalledWith('resize', resizeListener);
+    menu.element.style.left = '13px';
+    window.dispatchEvent(new Event('resize'));
+    expect(menu.element.style.left).toBe('13px');
+    expect(menu.element.isConnected).toBe(false);
+    expect(menu.element.querySelector('.vol-radial-menu__item--hovered')).toBeNull();
+    expect(onSelect).not.toHaveBeenCalled();
   });
 });
 

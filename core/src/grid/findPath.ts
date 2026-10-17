@@ -1,3 +1,4 @@
+import { requiredNumberAt } from '../collections/requiredAt';
 import { MinHeap } from '../collections/MinHeap';
 import { ORTHOGONAL_NEIGHBOURS, type GridPoint } from './Grid';
 
@@ -166,7 +167,7 @@ function search(
   // Damga tekniği: diziyi sıfırlamak yerine bu aramanın damgasını taşımayan
   // hücreler "ziyaret edilmemiş" sayılır. Böylece hazırlık O(1) olur.
   // Kapalı (closed) durumu damganın NEGATİFİYLE işaretlenir.
-  const isSeen = (i: number): boolean => Math.abs(stamp[i]) === generation;
+  const isSeen = (i: number): boolean => Math.abs(requiredNumberAt(stamp, i)) === generation;
   const isClosed = (i: number): boolean => stamp[i] === -generation;
 
   gScore[startIndex] = 0;
@@ -183,7 +184,7 @@ function search(
 
     if (currentIndex === goalIndex) {
       const path: GridPoint[] = [];
-      for (let at = goalIndex; at !== -1; at = cameFrom[at]) {
+      for (let at = goalIndex; at !== -1; at = requiredNumberAt(cameFrom, at)) {
         path.push({ col: at % cols, row: Math.floor(at / cols) });
       }
       return path.reverse();
@@ -206,9 +207,9 @@ function search(
 
       // Çapraz adım daha uzundur; 1 saymak yolu çaprazlara doğru çarpıtırdı.
       const diagonal = offset.col !== 0 && offset.row !== 0;
-      const tentative = gScore[currentIndex] + step * (diagonal ? Math.SQRT2 : 1);
+      const tentative = requiredNumberAt(gScore, currentIndex) + step * (diagonal ? Math.SQRT2 : 1);
 
-      if (!isSeen(nextIndex) || tentative < gScore[nextIndex]) {
+      if (!isSeen(nextIndex) || tentative < requiredNumberAt(gScore, nextIndex)) {
         gScore[nextIndex] = tentative;
         cameFrom[nextIndex] = currentIndex;
         stamp[nextIndex] = generation;

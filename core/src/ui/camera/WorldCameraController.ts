@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import type { Rect } from '../../math/geometry';
 import { UI_SIZE } from '../../constants';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
@@ -408,15 +409,15 @@ export class WorldCameraController {
     const current = samples.at(-1);
     if (!current) return;
     const cutoff = current.timeMs - POINTER_VELOCITY_WINDOW_MS;
-    while (history.length > 2 && history[1].timeMs < cutoff) history.shift();
+    while (history.length > 2 && requiredAt(history, 1).timeMs < cutoff) history.shift();
     this.pointerHistory.set(pointerId, history);
   }
 
   private updatePanVelocity(pointerId: number): void {
     const history = this.pointerHistory.get(pointerId);
     if (!history || history.length < 2) return;
-    const first = history[0];
-    const last = history[history.length - 1];
+    const first = requiredAt(history, 0);
+    const last = requiredAt(history, history.length - 1);
     const measuredDeltaMs = last.timeMs - first.timeMs;
     const deltaMs =
       measuredDeltaMs >= MIN_VALID_POINTER_DELTA_MS

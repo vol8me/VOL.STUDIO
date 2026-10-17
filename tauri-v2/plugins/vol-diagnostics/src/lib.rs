@@ -199,6 +199,13 @@ fn report_in(dir: &std::path::Path, line: &str) -> Result<(), String> {
         .map_err(|_| "Ölçüm kaydı tek JSON nesnesi olmalı.".to_owned())?;
     // Kaynak native sınırın kararıdır; IPC göndereni Rust gözlemi üretemez.
     record.insert("src".into(), "js".into());
+    // Şema ve teslim damgası native sınırdan gelir; JS geçmiş kabulü üretemez.
+    record.insert("v".into(), RECORD_VERSION.into());
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|_| "Ölçüm teslim saati Unix başlangıcından önce.".to_owned())?
+        .as_millis();
+    record.insert("stamp".into(), (stamp as u64).into());
     let normalized =
         serde_json::to_string(&record).map_err(|_| "Ölçüm kaydı serileştirilemedi.".to_owned())?;
     if normalized.len() > MAX_REPORT_BYTES {
@@ -216,8 +223,61 @@ fn env_info() -> serde_json::Value {
             map.insert(key, value.into());
         }
     }
+    // Başlatıcının ortamı konteynerin gerçekten girildiğini kanıtlamaz.
+    #[cfg(target_os = "linux")]
+    let runtime = runtime_class(std::fs::read_to_string("/etc/os-release").ok().as_deref());
+    #[cfg(not(target_os = "linux"))]
+    let runtime = "host";
+    map.insert("VOL_DIAGNOSTICS_RUNTIME".into(), runtime.into());
     map.insert("pid".into(), std::process::id().into());
     serde_json::Value::Object(map)
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn runtime_class(os_release: Option<&str>) -> &'static str {
+    let Some(text) = os_release else {
+        return "unknown";
+    };
+    let field = |name: &str| {
+        let mut values = text.lines().filter_map(|line| {
+            let (key, value) = line.trim().split_once('=')?;
+            (key == name).then_some(value)
+        });
+        let value = values.next()?;
+        if values.next().is_some() {
+            return None;
+        }
+        if let Some(inner) = value.strip_prefix('"') {
+            return inner.strip_suffix('"');
+        }
+        if let Some(inner) = value.strip_prefix('\'') {
+            return inner.strip_suffix('\'');
+        }
+        Some(value)
+    };
+    match field("ID") {
+        Some("steamrt") => match field("VERSION_ID")
+            .filter(|value| {
+                value
+                    .split('.')
+                    .all(|part| !part.is_empty() && part.bytes().all(|c| c.is_ascii_digit()))
+            })
+            .and_then(|value| value.split('.').next())
+        {
+            Some("3") => "steamrt3",
+            Some("4") => "steamrt4",
+            _ => "unknown",
+        },
+        Some(id)
+            if !id.is_empty()
+                && id.bytes().all(|c| {
+                    c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'_' || c == b'-'
+                }) =>
+        {
+            "host"
+        }
+        _ => "unknown",
+    }
 }
 
 /// Kayıt dizini bir kez çözülür ve state olarak saklanır.
@@ -326,7 +386,7 @@ mod delivery_tests {
         let dir = temp_dir();
         report_in(
             &dir,
-            r#"{"src":"rust","type":"perf","window":1,"note":"iki\nsatır"}"#,
+            r#"{"src":"rust","v":99,"stamp":1,"type":"perf","window":1,"note":"iki\nsatır"}"#,
         )
         .unwrap();
         let written = std::fs::read_to_string(dir.join("diagnostics.jsonl")).unwrap();
@@ -334,6 +394,8 @@ mod delivery_tests {
         assert_eq!(written.lines().count(), 1);
         let record: serde_json::Value = serde_json::from_str(written.trim()).unwrap();
         assert_eq!(record["src"], "js");
+        assert_eq!(record["v"], RECORD_VERSION);
+        assert!(record["stamp"].as_u64().unwrap() > 1_700_000_000_000);
         assert_eq!(record["window"], 1);
         assert_eq!(record["note"], "iki\nsatır");
     }
@@ -440,6 +502,56 @@ mod privacy_tests {
         ] {
             assert!(allowed_env_name(key));
         }
+    }
+}
+
+#[cfg(test)]
+mod runtime_tests {
+    use super::*;
+
+    #[test]
+    fn runtime_class_uses_process_namespace_not_launcher_path() {
+        for version in ["3", "3.0.20261001"] {
+            assert_eq!(
+                runtime_class(Some(&format!("ID=steamrt\nVERSION_ID=\"{version}\"\n"))),
+                "steamrt3"
+            );
+        }
+        assert_eq!(
+            runtime_class(Some(
+                "ID=\"steamrt\"\nVERSION_ID='4'\nBUILD_ID=4.0.20260928.262390\n"
+            )),
+            "steamrt4"
+        );
+        assert_eq!(runtime_class(Some("ID=steamos\nVERSION_ID=3.7\n")), "host");
+        assert_eq!(runtime_class(Some("ID=debian\nVERSION_ID=13\n")), "host");
+    }
+
+    #[test]
+    fn missing_or_ambiguous_runtime_is_never_host() {
+        for value in [
+            None,
+            Some(""),
+            Some("ID=steamrt"),
+            Some("ID=steamrt\nVERSION_ID=2"),
+            Some("ID=steamrt\nVERSION_ID=4.secret"),
+            Some("ID=steamrt\nVERSION_ID=4..0"),
+            Some("ID=steamrt\nVERSION_ID=4\nVERSION_ID=3"),
+            Some("ID=steamos\nID=steamrt"),
+            Some("ID=\"steamos"),
+            Some("ID=private/device"),
+        ] {
+            assert_eq!(runtime_class(value), "unknown", "{value:?}");
+        }
+    }
+
+    #[test]
+    fn native_environment_has_explicit_runtime_class() {
+        let environment = env_info();
+        assert!(["host", "unknown", "steamrt3", "steamrt4"]
+            .contains(&environment["VOL_DIAGNOSTICS_RUNTIME"].as_str().unwrap()));
+        #[cfg(not(target_os = "linux"))]
+        assert_eq!(environment["VOL_DIAGNOSTICS_RUNTIME"], "host");
     }
 }
 

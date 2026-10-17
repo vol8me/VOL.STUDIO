@@ -173,7 +173,7 @@ describe.each(SIGNALS)('Input ve TextArea — $name', ({ init }) => {
 /**
  * Ekran klavyesinin eylem tuşu (`enterkeyhint`): ipucu yoksa Android'de Gboard tek alanda "Sonraki" gösterir ve Chrome
  * bunu odak gezintisi sayar, sayfaya HİÇ Enter göndermez (Lenovo TB350FU'da ölçüldü). Enter ile çalışan alanlar
- * `go`/`done`/`search` ister; gerçek cihaz kanıtı `devtools/vol-showcase/tests/device/textEntry.spec.ts`.
+ * `go`/`done`/`search` ipucu DOM özniteliği olarak korunur.
  */
 describe('enterkeyhint', () => {
   const hint = (element: Element): string | null => element.getAttribute('enterkeyhint');

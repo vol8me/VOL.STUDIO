@@ -11,7 +11,7 @@
 }
 
 .vol-checkbox__input {
-  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
   width: 1px;
   height: 1px;
   position: absolute;
@@ -75,6 +75,10 @@
   background: var(--vol-ui-disabled-text);
 }
 
+.vol-checkbox:has(.vol-checkbox__input:not(:disabled)):hover .vol-checkbox__track {
+  border-color: var(--vol-ui-border-strong);
+}
+
 .vol-checkbox__label {
   color: var(--vol-ui-text);
   font-size: var(--vol-text-body);
@@ -101,7 +105,7 @@
 }
 
 .vol-radio__input {
-  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
   width: 1px;
   height: 1px;
   position: absolute;
@@ -456,5 +460,15 @@
 @media (width <= 480px) {
   .vol-segmented__item {
     overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-checkbox__thumb {
+    transition: background-color var(--vol-transition-fast);
+  }
+
+  .vol-segmented__thumb {
+    transition: opacity var(--vol-transition-fast);
   }
 }

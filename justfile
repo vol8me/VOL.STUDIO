@@ -66,7 +66,7 @@ build:
 bundle:
     node scripts/quality/cli/bundle-report.mjs
 
-# Girdi dört katına çıkınca sürenin kaç katına çıktığı; süre değil karmaşıklık.
+# Girdi dört katına çıkınca ölçülen süre oranı; tek koşu karmaşıklık kanıtı değildir.
 scaling:
     node scripts/quality/cli/scaling-report.mjs
 

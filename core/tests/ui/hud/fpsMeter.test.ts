@@ -31,6 +31,14 @@ afterEach(() => {
 });
 
 describe('FpsMeter', () => {
+  it('altı haneli ölçüm biçimlendirmede kısaltılmaz', () => {
+    const meter = new FpsMeter({ refreshMs: 0 });
+    driveFrames(3, 1000 / 999999);
+    expect(meter.getFps()).toBeCloseTo(999999, 1);
+    expect(meter.element.textContent).toContain('999999');
+    meter.destroy();
+  });
+
   it('varsayılan köşe sağ üsttür ve konum data attribute ile gelir', () => {
     const meter = new FpsMeter();
     expect(meter.element.dataset.position).toBe('top-right');

@@ -39,6 +39,31 @@ afterEach(() => {
 const fillOf = (bar: Bar): HTMLElement => bar.element.querySelector<HTMLElement>('.vol-bar__fill')!;
 
 describe('Bar okuyucu değer metni', () => {
+  it('Bar altı haneli dolu değeri ve boş sıfırı görsel/okuyucu olarak aynı anda taşır', () => {
+    const bar = track(
+      new Bar({ max: 999999, value: 999999, label: (value) => String(value), animateMs: 0 }),
+    );
+    expect(bar.element.textContent).toBe('999999');
+    expect(bar.element.getAttribute('aria-valuenow')).toBe('999999');
+    expect(fillOf(bar).style.width).toBe('100%');
+    const emptyValue = 0;
+    bar.setValue(emptyValue);
+    expect(bar.element.textContent).toBe('0');
+    expect(bar.element.getAttribute('aria-valuenow')).toBe('0');
+    expect(fillOf(bar).style.width).toBe('0%');
+  });
+
+  it('XPBar altı haneli seviye ve ilerlemeyi kırpmadan aktarır', () => {
+    const bar = track(
+      new XPBar({ level: 999999, xp: 100000, xpForLevel: () => 999999, animateMs: 0 }),
+    );
+    expect(bar.getLevel()).toBe(999999);
+    expect(bar.getXP()).toBe(100000);
+    expect(bar.element.textContent).toContain('999999');
+    expect(bar.element.textContent).toContain('100000');
+    expect(bar.element.getAttribute('aria-valuenow')).toBe('100000');
+  });
+
   it('etiketsiz ya da sabit etiketli çubuk "değer / üst sınır" okunur; adı değeri taşıyan formatter etikette tekrar yazılmaz', () => {
     const plain = track(new Bar({ max: 250, value: 100 }));
     expect(plain.element.getAttribute('aria-valuetext')).toBe('100 / 250');

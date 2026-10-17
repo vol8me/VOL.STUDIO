@@ -364,6 +364,33 @@ describe('koleksiyon sınır sözleşmeleri', () => {
 });
 
 describe('MinHeap', () => {
+  it('ekleme ve çekme iç içeyken değer/anahtar eşleşmesi ve eşit öncelikler korunur', () => {
+    const heap = new MinHeap();
+    const random = createRandom(81);
+    const remaining = new Map<number, number>();
+    let nextId = 0;
+    const pop = (): void => {
+      const expected = Math.min(...remaining.values());
+      expect(heap.peekKey()).toBe(expected);
+      const id = heap.pop();
+      expect(id).toBeDefined();
+      expect(remaining.get(id!)).toBe(expected);
+      remaining.delete(id!);
+      expect(heap.size).toBe(remaining.size);
+    };
+    for (let step = 0; step < 1000; step++) {
+      if (remaining.size > 0 && random.next() < 0.4) {
+        pop();
+      } else {
+        const key = Math.floor(random.next() * 11) - 5;
+        remaining.set(nextId, key);
+        heap.push(nextId++, key);
+      }
+    }
+    while (remaining.size > 0) pop();
+    expect(heap.pop()).toBeUndefined();
+  });
+
   it('en küçük anahtarlı değeri sırayla verir', () => {
     const heap = new MinHeap();
     [5, 1, 4, 2, 3].forEach((n) => heap.push(n * 10, n));

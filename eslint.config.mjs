@@ -21,6 +21,9 @@ export default tseslint.config(
       // Git dışı yerel dizinler: Claude Code çalışma alanı ve graphify çıktısı.
       '.claude/**',
       'graphify-out/**',
+      'devtools/deck/records/**',
+      'devtools/vol-showcase/records/**',
+      'games/vol-test/records/**',
       // Betikle kopyalanan üçüncü parti derlemesi (git dışı).
       'devtools/deck/web/vendor/**',
       '**/dist/**',

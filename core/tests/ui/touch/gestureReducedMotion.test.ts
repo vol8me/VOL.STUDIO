@@ -17,7 +17,13 @@ const REDUCE = '(prefers-reduced-motion: reduce)';
 
 const press = (element: Element, type: string, init: PointerEventInit = {}): void => {
   element.dispatchEvent(
-    new PointerEvent(type, { pointerId: 1, bubbles: true, cancelable: true, ...init }),
+    new PointerEvent(type, {
+      isPrimary: true,
+      pointerId: 1,
+      bubbles: true,
+      cancelable: true,
+      ...init,
+    }),
   );
 };
 

@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import type { KanbanCard, KanbanColumn } from './Kanban';
 
 /**
@@ -75,7 +76,7 @@ export function modelIndexFromVisibleIndex(
   if (!query) return visibleIndex;
   const visible = visibleCards(column, query, locale);
   if (visibleIndex >= visible.length) return column.cards.length;
-  return column.cards.indexOf(visible[visibleIndex]);
+  return column.cards.indexOf(requiredAt(visible, visibleIndex));
 }
 
 /**
@@ -117,7 +118,8 @@ export function moveCard(
   const cardIndex = fromColumn.cards.findIndex((card) => card.id === cardId);
   if (cardIndex === -1) return { moved: false, reason: 'missing-card' };
 
-  const [card] = fromColumn.cards.splice(cardIndex, 1);
+  const card = requiredAt(fromColumn.cards, cardIndex);
+  fromColumn.cards.splice(cardIndex, 1);
   const clampedIndex = Math.max(0, Math.min(targetIndex, toColumn.cards.length));
   toColumn.cards.splice(clampedIndex, 0, card);
 

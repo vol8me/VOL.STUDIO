@@ -1,7 +1,9 @@
 import { Room, ServerError, type Client } from '@colyseus/core';
 import { RollingWindow } from '@volstudio/core/collections';
+import { CLIENT_METRICS_MESSAGE } from '@volstudio/network/protocol';
 import {
   SlowConsumerWatch,
+  ClientMetricsRegistry,
   authenticateJoin,
   clientTraffic,
   errorData,
@@ -63,6 +65,7 @@ export interface WorldRoomOptions {
 }
 
 interface Slot {
+  readonly metricId: number;
   readonly sessionId: string;
   readonly combatant: Combatant;
   readonly state: PlayerSnapshot;
@@ -154,6 +157,8 @@ export class WorldRoom extends Room {
   private readonly climateSentAt = new Map<string, number>();
   private war!: War;
   private readonly players = new Map<string, Slot>();
+  private readonly clientMetricsRegistry = new ClientMetricsRegistry();
+  private nextMetricId = 1;
   private readonly byVehicle = new Map<EntityId, Slot>();
   /** Botların oyuncu kaydı; anahtar `bot:<araç>`. */
   private readonly botStates = new Map<EntityId, PlayerSnapshot>();
@@ -207,6 +212,9 @@ export class WorldRoom extends Room {
     this.clock.setInterval(() => this.saveClimate(), CLIMATE_NET.saveMs);
     // Katılan istemci dinleyicisini kurunca iklimi ister: yeşillik, kar ve saat sunucuyla aynı olur.
     this.onMessage(CLIMATE_REQUEST, (client) => this.sendClimate(client));
+    this.onMessage(CLIENT_METRICS_MESSAGE, (client, sample: unknown) => {
+      this.clientMetricsRegistry.accept(client.sessionId, sample, performance.now());
+    });
     this.log?.log('info', 'room.create', {
       room: this.roomName,
       primary: options.primary === true,
@@ -231,9 +239,16 @@ export class WorldRoom extends Room {
     state.name = name;
     state.team = combatant.faction;
     state.connected = true;
-    const slot: Slot = { sessionId: client.sessionId, combatant, state, pacer: this.newPacer() };
+    const slot: Slot = {
+      sessionId: client.sessionId,
+      metricId: this.nextMetricId++,
+      combatant,
+      state,
+      pacer: this.newPacer(),
+    };
     this.syncPlayer(state, combatant);
     this.players.set(client.sessionId, slot);
+    this.clientMetricsRegistry.open(client.sessionId);
     this.byVehicle.set(vehicle.id, slot);
     this.state.players.set(client.sessionId, state);
     this.pending.push({ kind: 'joined', vehicleId: vehicle.id, name });
@@ -271,6 +286,7 @@ export class WorldRoom extends Room {
   }
 
   override onLeave(client: Client, code?: number): void {
+    this.clientMetricsRegistry.forget(client.sessionId);
     this.slow.forget(client.sessionId);
     this.climateSentAt.delete(client.sessionId);
     const slot = this.players.get(client.sessionId);
@@ -292,6 +308,7 @@ export class WorldRoom extends Room {
   }
 
   override onDispose(): void {
+    this.clientMetricsRegistry.clear();
     this.saveClimate();
     this.log?.log('info', 'room.dispose', { room: this.roomName, tick: this.state.tick });
   }
@@ -471,6 +488,7 @@ export class WorldRoom extends Room {
   /** İstemcilerin toplam trafiği ve atılan yavaş tüketici sayısı; `/metrics` bunu okur. */
   trafficSummary(): {
     clients: number;
+    measuredClients: number;
     bufferedBytes: number;
     bufferedMaxBytes: number;
     sentBytes: number;
@@ -481,8 +499,10 @@ export class WorldRoom extends Room {
     let bufferedMaxBytes = 0;
     let sentBytes = 0;
     let receivedBytes = 0;
+    let measuredClients = 0;
     for (const client of this.clients) {
       const traffic = clientTraffic(client);
+      if (traffic.measured) measuredClients++;
       bufferedBytes += traffic.bufferedBytes;
       bufferedMaxBytes = Math.max(bufferedMaxBytes, traffic.bufferedBytes);
       sentBytes += traffic.sentBytes;
@@ -490,12 +510,31 @@ export class WorldRoom extends Room {
     }
     return {
       clients: this.clients.length,
+      measuredClients,
       bufferedBytes,
       bufferedMaxBytes,
       sentBytes,
       receivedBytes,
       evictions: this.evictions,
     };
+  }
+
+  /** Oda içi sıra numarası kimlik değildir; soket baytları ve istemci beyanı ayrı sunulur. */
+  clientMetrics() {
+    const now = performance.now();
+    return this.clients.flatMap((client) => {
+      const slot = this.players.get(client.sessionId);
+      return slot
+        ? [
+            {
+              client: slot.metricId,
+              vehicle: slot.combatant.vehicle.id,
+              traffic: clientTraffic(client),
+              reconciliation: this.clientMetricsRegistry.read(client.sessionId, now),
+            },
+          ]
+        : [];
+    });
   }
 
   /** Adım süresi özeti (ms); `/metrics` bunu okur. */

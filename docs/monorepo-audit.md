@@ -1,9 +1,9 @@
 # VOL.STUDIO — güncel monorepo denetimi
 
-**Kaynak denetimi:** 2026-10-09. **Kapı derin turu:** 2026-10-11 (§22);
-aynı gün sonraki başarısız `signoff` koşusu §23'te, hedefli düzeltme
-kanıtları §24'te; aynı değişiklik öncesi ağaçta üç ardışık tam yeşil
-`signoff` sonucu §25'tedir.
+**Güncel kaynak turu:** 2026-10-17, sıkı indeksler, ölçüm zinciri, gerçek botlar
+ve UI durum kapsamı §29'dadır. Önceki tam kaynak/cihaz turu §28'de;
+2026-10-11 kapı incelemesi §22'de, başarısız koşular ve düzeltmeleri
+§23–§25'tedir. Her kapı ve cihaz sonucu yalnız kendi kaynak ağacını kanıtlar.
 **İlk temel:** `251c3db4`, `feature/core-hardening`;
 B21–B30 uygulaması kaynak ve regresyonlarla doğrulandı.
 F04 teslimi `cab83d7e` sonrasında 81 commit incelendi. Bu rapor kaynak kodu,
@@ -25,7 +25,8 @@ tüketici ve dosya/süreç sınırları birlikte sınandı (§4). Bağımsız in
 yakaladığı geç mini harita montajı ve sayaçsız eski Deck kaydı da çözüme alındı.
 
 Belge yolu kusuru giderildi; bundle farkı özellik maliyetiyle ayrıştırıldı.
-Birleşik kapının 2026-10-11 taze kanıtı §22'dedir; önceki turlar §6/§17'dedir. JS güvenlik advisory'leri ve
+Güncel araç zinciri ve bundle kararı §29'dadır; geçmiş kapı turları §6/§17/§22/§28'de
+kendi kaynağıyla ayrılır. Güvenlik istisnalarının sahibi [kapı sözleşmesidir](gates.md);
 fiziksel/native ürün kabulleri açık kalır. Teknik kapanış bir insan
 beğenisi bekleme durumu üretmez; yapılmayan cihaz kabulü de PASS sayılmaz.
 
@@ -953,26 +954,25 @@ regresyonla onaylandı. **Bu, tarayıcısız alt süreç entegrasyon
 kanıtıdır; gerçek Playwright/Vite ile tam `signoff` başarısızlığı
 değildir.** Arşiv git dışı/yereldir, değişmez veya merkezi kayıt
 değildir; `last-failure.log` ayrı/geçicidir.
-**Açık tek F11.2 entegrasyon ölçütü:** güncel kodla gerçek tam
-`signoff` hata yolunda Playwright trace/raporunun kapı JSON
-`notRun`/hata sınıflandırmasına kadar bağlandığının uçtan uca
-gösterilmesi. Ayrıca bu yeni arşiv ve performans değişikliklerinden
+**O tarihte kanıtlanmayan entegrasyon:** gerçek tam `signoff` hata yolunda
+Playwright trace/raporunun kapı JSON `notRun`/hata sınıflandırmasına kadar
+bağlandığı bu fixture'larla gösterilmedi. Ayrıca bu yeni arşiv ve performans değişikliklerinden
 **sonra taze tam `signoff`** henüz yoktur. Önceki
 48,4 / 47,0 / 48,1 dk'lık üç yeşil tam koşu bu değişikliklerden
 **öncedir**; onlara sonradan kapsam atfedilemez.
 
-**F10.13 AÇIK — performans kabul edilmedi.** Başarılı tam kapıların
+**2026-10-11 performans ölçümünün sınırı.** Başarılı tam kapıların
 **48,4 / 47,0 / 48,1 dk** sürmesi ve vitrin E2E'nin yaklaşık
 **24–26 dk** sürmeye devam etmesi, belgelenen **10 dk E2E tetik
 eşiğinin** çok üzerindedir. Önceki 343 sn bütçe güncel değildir.
 `e2e`yi `high` pre-push'tan `signoff`a almak push gecikmesini
 azalttı; **E2E yürütme maliyetini azaltmadı**. Kritik spec/motor
-profiline dayalı optimizasyon ve karşılaştırılabilir önce/sonra
-ölçümü gereklidir. Bu üç PASS **performans değişikliği öncesi**
+profiline dayalı karşılaştırılabilir önce/sonra ölçümü bu kayıtta yoktur.
+Bu üç PASS **performans değişikliği öncesi**
 ağaca aittir; daha sonra yapılacak optimizasyon için yeni tam
 `signoff` çalıştırılmış veya onaylanmış sayılmaz.
 
-**F10.13 — ilk hedefli optimizasyon ölçümü (2026-10-11; tam kapı sonucu değil):**
+**İlk hedefli optimizasyon ölçümü (2026-10-11; tam kapı sonucu değil):**
 `devtools/vol-showcase/tests/e2e/themeMatrix.spec.ts` içindeki
 **Chromium axe skin × yoğunluk matrisi** aynı beş profilde iki yöntemle
 karşılaştırıldı:
@@ -992,8 +992,8 @@ erişilebilirlik sonuçlarını sessizce daraltmama amacındadır.
 Ölçüm yalnız Chromium'daki ilgili beş test içindir; başka motorlara,
 diğer spec'lere ve tam kapı süresine genellenmez. Yukarıdaki üç
 **48,4 / 47,0 / 48,1 dk PASS** performans değişikliği **öncesindedir**.
-Optimizasyondan sonra tam `signoff` çalıştırılmadı; F10.13
-**AÇIK** kalır ve sonraki tam kapı/önce-sonra süre ölçümünü bekler.
+Optimizasyondan sonraki tam `signoff` bu hedefli ölçümde koşulmadı;
+bütün E2E için bir hızlanma kabulü çıkarılmaz.
 
 **F09.2 AÇIK (KISMİ):** §24'teki yeni APK kurulumları ve Lenovo Android 14
 görünür panel kanıtı geçerlidir; Samsung Android 16'da kilit ekranının
@@ -1026,8 +1026,7 @@ E2E toplamı **1058 geçti / 21 atlandı / 0 düştü / 0 kararsız**; atlamalar
 `skipBudget` ile aynı koşuda denetlendi (vitrin chromium ana 513/1, webkit ana
 449/16, sessiz şeritler 27/1 ve 26/2; VOL.TEST chromium 22/0, webkit 21/1).
 
-**Sınırlar:** Bu **tek** koşudur; F10.13'ün "üç ardışık yeşil" ve vitrin E2E
-**10 dk** ölçütü karşılanmadı (20,5 dk). Önceki seriye (24–26 dk, 47–48 dk
+**Sınırlar:** Bu **tek** koşudur; vitrin E2E 20,5 dk sürdü. Önceki seriye (24–26 dk, 47–48 dk
 toplam) göre düşüş gözlendi, ancak profillenmediği ve yük/commit farkı
 ayrıştırılmadığı için hiçbir değişikliğe atfedilmez. F11.1 (kök neden, gerçek
 işaretçi regresyonu) ve F11.2 (gerçek tam kapı hata yolu entegrasyonu) bu koşuyla
@@ -1107,7 +1106,7 @@ istemcisi, Cloud aktarımı veya kol kabulü değildir.
 Yerel kancalar ve makbuzlar imzasızdır; kancayı bilerek atlayan kullanıcıya
 karşı uzak bir kapı sağlamaz. Linux/Deck gerçek paket, Windows installer,
 Android düzeltme sonrası tüm cihazlar, uzun oturum ve insan kabulü bu turda
-koşulmadı. F07–F09, F10.13 ve F11.1/F11.2 açık kabul ölçütleri korunur.
+koşulmadı. Güncel kalan kabullerin tek sahibi TODO listeleridir.
 Yeşil kaynak kapısı tek başına ürünün bütün platformlarda yayın kabulü değildir.
 
 İncelenen fakat bu turda kusur diye kanıtlanmayan sınırlar: Linux logind
@@ -1121,7 +1120,7 @@ Kaynak sonrası iki taze `high` koşusu `bundle`da durdu (2,3 dk): vitrin app 22
 
 **Taze high PASS:** 13/13 aşama, 8,3 dk; ön yük %34. Contract 662 geçti / 2 atlandı; static, build, bundle, scaling, audio-test, sekiz Rust birimi, coverage ve coverage-shape geçti. Rust 59,5 sn, değişiklik seçiminin genişlettiği audio-test 148,6 sn, coverage 140,8 sn; toplam sürenin tamamı native derlemeye atfedilemez. Ayrı tüm özellikli native test: **76 geçti / 1 fiziksel Steam testi ignored**, fmt PASS. Genel timeout değiştirilmeden yükle eşzamanlı tam audio koşusu 2.259 PASS / 6 timeout verdi; düşen üç dosya yalnız başına aynı timeout ile 26/26 geçti. Bu tekrar ilk tam koşunun düşüşünü silmez.
 
-**Nihai taze signoff PASS:** değişmeyen kaynak ağacında 18/18 aşama, 41,8 dk; ön yük %23. Contract 662 geçti / 2 atlandı. E2E 1.078 geçti / 21 atlandı / 0 düştü: vitrin Chromium ana 523/1, WebKit ana 459/16, Chromium sessiz 27/1, WebKit sessiz 26/2; VOL.TEST Chromium 22/0 ve WebKit 21/1. E2E 1.383,0 sn (vitrin 1.288,7 sn), tam audio kapsamı 541,7 sn ve audio verify 106,2 sn sürdü; iki güvenlik aşaması da geçti. Genel timeout, atlama/kapsam eşiği veya piksel temeli gevşetilmedi. Bu tek koşu F10.13'ün üç ardışık tur ve 10 dk vitrin E2E kapanışını karşılamaz; F11.1/F11.2 hata yolu ve gerçek işaretçi kök nedenini de üretmez.
+**Nihai taze signoff PASS:** değişmeyen kaynak ağacında 18/18 aşama, 41,8 dk; ön yük %23. Contract 662 geçti / 2 atlandı. E2E 1.078 geçti / 21 atlandı / 0 düştü: vitrin Chromium ana 523/1, WebKit ana 459/16, Chromium sessiz 27/1, WebKit sessiz 26/2; VOL.TEST Chromium 22/0 ve WebKit 21/1. E2E 1.383,0 sn (vitrin 1.288,7 sn), tam audio kapsamı 541,7 sn ve audio verify 106,2 sn sürdü; iki güvenlik aşaması da geçti. Genel timeout, atlama/kapsam eşiği veya piksel temeli gevşetilmedi. Tek yeşil koşu üç ardışık tur veya 10 dk vitrin E2E kabulü değildir; hata yolu ve gerçek işaretçi kök nedenini de üretmez.
 
 Fallow audit varsayılan kurallarla **FAIL** döndü: sıfır yeni dead-code ve sıfır kopya grubu, miras alınmış 12 unused adayı ve değişen 24 dosyada 45 karmaşıklık/CRAP adayı. Kapsam kaynağı `estimated` olduğundan gerçek regresyonları olan yeni indeks karşılaştırıcısını bile kapsamsız sayar; bu puan test kapsamı kanıtı değildir. Node CLI/test girişlerini eksik tanıdığı için çalıştırılan organize betiği ve contract testleri unused görünür; bu uyarılar silme kanıtı değildir. Yeni doğrulayıcı ve dalga/makbuz/uygulama-izin kontrolleri özel yardımcılarla ayrıldı. Fallow boundary/policy yapılandırması yoktur; sıfır değerleri ölçüm sayılmaz. Mimari kanıt repo contract/layer bekçilerindendir. Bu genel uyarılar tam kalite kapısının PASS sonucu diye sunulmaz.
 
@@ -1667,3 +1666,181 @@ daha fazla düğüm ziyaret edebilir. Mevcut scaling kapısı uzamsal dizin ve
 mermileri ölçer; özel maliyetli A* için cihaz performans kabulü yapılmadı.
 İnsan beğenisi, fiziksel kol/haptik hissi ve yapılmamış platform kabulleri
 F07–F09/F13 sahiplerinde açık kalır.
+
+## 29. Sıkı indeksler, ölçüm zinciri ve gerçek bot senaryoları
+
+CORE kaynak ve betikleri `noUncheckedIndexedAccess` ile denetlenir; test fixture'ları
+ayrı TypeScript projesinde önceki strict profiliyle denetlenmeye devam eder.
+Koleksiyon invariantı seyrek hücreyi dolu `undefined` değerinden ayırır;
+sayısal sıcak tampon yolu her erişimde property sorgusu yapmaz. MinHeap boşluk
+kaydırarak, FlowField geçerli maliyeti tek okuyarak çalışır. İlk naif sınır
+kontrollerinin A*/FlowField maliyetini katladığı ölçüldü ve o uygulama bırakılmadı.
+A/B kontrolünde değişmemiş ObjectPool da hız değiştirdiğinden buradan genel bir
+hızlanma sonucu çıkarılmaz. Sıkı tür denetimi ölçümün yerine geçmez.
+
+Ölçekleme üreticileri tek sürümlü `ms/step` serisi verir. Tekrarlı/geçersiz girdi,
+eksik seri, yanlış sürüm/birim, sonlu olmayan değer ve taşan oran kabul edilmez.
+Oran mutlak süreden daha taşınabilirdir; JIT/önbellek/zamanlayıcı gürültüsünden
+bağımsız veya asimptotik karmaşıklığın matematiksel kanıtı değildir. Tarayıcı
+performans raporları her denemeyi UUID adlı ayrı dosyada saklar; retry önceki
+başarısız örneği silemez. Desteklenmeyen GPU/sunum izi ve ölçülmeyen CPU sıfır
+veya PASS diye yazılmaz.
+
+Paylaşılabilir Deck tanılamasında native teslim sürümü ve Unix-ms damgası
+çağırandan alınmaz. Pencere sırası, UUID yazım normalizasyonu ve monoton damga
+zinciri doğrulanır; bozuk satır kişisel içeriğini taşımayan kayıp işaretine
+çevrilir. Dışarıdan verilen eksik kayıt sayısı bu kaybı örtemez. Native son flush'ın
+`failed`, `timedOut` veya bilinmeyen sonucu ölçümün `complete` kabulünü düşürür;
+sonradan gelen success bunu örtemez. Boş kapanış listesi ölçülmedi demektir,
+başarılı kapanış kanıtı değildir. Runtime sınıfı
+Linux sürecinin kendi `os-release` bilgisinden gelir; launcher'a runtime yolu
+vermek konteynere girildiğinin kanıtı değildir. Geçersiz native sınıf tekrar
+ayıklamada da `unknown` kalır. Probe, CORE public export'unu gerçek ESM bundle
+olarak tüketir; yalnız bir TS dosyasını çevirmek transitif yardımcıları kaybetmez.
+
+Network, oyun kuralından bağımsız uzlaştırma raporlayıcısı ve sahipliği/hızı/
+monoton sayaçları doğrulayan sunucu kaydı sunar. İstemci beyanı oyun otoritesi
+olmaz. Soketin gerçek okunan/yazılan baytları uygulama JSON boyutundan ayrı,
+ölçüm yokluğu açık bayrakla verilir. VOL.TEST botları gerçek SDK ve oyunun aynı
+PredictedPilot tüketicisiyle idle/maneuver/fire senaryolarını yürütür; girdi
+göndermek tek başına başarı sayılmaz. Hareket/fren/dönüş, yetkili durum ve ateş
+olayı gerçekten sınanır. Profilsiz koşu performans kabulü üretmez. İki sürücü
+kipi ortak MetricsPoller kullanır: tek istek, timeout/abort, sınırlı bellek,
+uçuşta istek bittikten sonra JSONL kapanışı. Hata/iptal sonrası kaynak yaşamı
+gerçek HTTP ve geçici dosya testleriyle doğrulanır.
+
+Son oyun E2E'si düşük FPS'de öngörü adımı kaybını açığa çıkardı. SDK'nın
+tek `tick` için beş adımlık sınırı uzun render aralığının kalanını atıyordu;
+gerçek SDK regresyonunda 100 ms için gereken altı girdinin yalnız beşi
+üretiliyordu. Network `PredictionStepper` aynı SDK saatine en çok iki ara
+damga verir; toplam girdi sekizle sınırlıdır ve her dilim sonraki tick'ten
+önce tüketilir. Oyun ve gerçek botlar aynı adaptörü kullanır; ikinci bir
+simülasyon saati veya sınırsız yakalama döngüsü eklenmez. Saat geri gidişi,
+yeniden giriş, hata sonrası kısmi işin yinelenmesi ve callback içinde
+kapanış regresyonlarla korunur.
+
+Yerel WAN benzetiminde raporlama açık/kapalı A/B kontrolü, metrics trafiğinin
+hata için gerekli olmadığını gösterdi: dört kat CPU kısıtında metrics kapalı
+eski sürümde sapma 24,484 ile değişmeyen 20 sınırını aştı. Bu yapay yük gerçek
+cihaz veya internet WAN kabulü değildir; ilk başarısız koşunun tek nedeninin
+bu mekanizma olduğu iddia edilmez. Düzeltmenin kabulü gerçek SDK regresyonu
+ve aynı bütçeleri koruyan son oyun koşusuyla ayrılır.
+Düzeltme sonrası aynı metrics açık/kapalı/kapalı/açık sıralamasındaki dört
+deneme geçti: en büyük sapmalar 0,160 / 11,464 / 3,821 / 0,000; ping tepeleri
+342 / 383 / 469 / 315 ms oldu. Kare süreleri denemeler arasında farklıdır;
+bu sayılardan genel hızlanma yüzdesi veya tüm düşük FPS koşullarında kayıpsızlık
+çıkarılmaz. Çok uzun boşlukta SDK'nın sınırlı hitch politikası korunur.
+Bu turdaki SDK adım rekonstrüksiyonu uyuşmazlığı sıfırdı; düzeltmeden sonra
+uzun duraklamalarda 0 / 15 / 3 / 0 tam adım yine atıldı. Sunucu ack artışı
+ile gerçek tüketim farkı 1 / 4 / 0 / 1 oldu: kare başına sekiz sınırı,
+ağda birleşme ve önceki tampon doluluğunda sıfır taşma garantisi vermez.
+Bu sınırlar kayıtsız bırakılmadı ve tampon büyütülerek örtülmedi.
+
+UI katmanları ortak malzeme/hareket/ses sözleşmesine bağlandı. RadialMenu
+seçimi tek niyet üretir ve destroy sonrası tekrar açılamaz. Async düğme henüz
+devre dışıyken kapanan OSK/katman odağı kontrollü tek karede geri verir; yeni
+odak, inert hedef veya sökülmüş öğe ezilmez. Azaltılmış hareket kuralı sıfır
+süreli visibility geçişini geciktirmez. HoldButton ikinci işaretçinin ilk
+basışı bırakmasına izin vermez. Registry uygulanabilir her durumun gerçek
+assertion bağını veya kaynak gerekçeli N/A'sını zorunlu tutar; eksik hücreyi
+kabul eden kayıt artık contract'tan geçmez. Katalogda bir adın görünmesi durum
+kanıtı değildir.
+
+Sabit bekleme bütçesi 56 çağrıdan 13'e indirildi: 39 çağrı olay/koşul
+beklemeye çevrildi, dördü kapsamdan çıkarılan platform laboratuvarıyla silindi.
+Kalan yedi dosyanın beklemeleri gerçek zaman/girdi penceresi gerekçelidir;
+genel timeout artırılmadı. İptal edilen kabul kampanyaları açık iş veya
+tamamlanmış iş olarak geri eklenmez; bugünkü kapsam TODO listelerindedir.
+
+Araç zinciri geçişinin sürüm ve destek sınırları [kapı sözleşmesindedir](gates.md).
+jsdom 30'un gerçek Node SDK taşımasında oluşturduğu EventTarget/Event realm
+uyumsuzluğu test başlangıcında SDK'nın Node ws yoluyla yüklenmesiyle çözülür;
+yükleme sonrası tarayıcı WebSocket globali geri konur. Bu test ortamı seçimi,
+ürünün tarayıcı taşıması veya gerçek cihaz kabulü yerine gösterilmez.
+
+Son iki uygulama build'inde gzip level 9 ile vitrin uygulaması 239587 B,
+CSS'i 32876 B; VOL.TEST uygulaması 310529 B, vendor 353881 B, CSS 30767 B
+ölçüldü. Önceki kayıtlı app boyutlarına göre ek kod bedeli sırasıyla 1065 B
+ve 1211 B'dır; oyun artışının son 427 B'ı sınırlı öngörü adaptörü ve
+tüketicisidir. Vitrin malzeme/hover/hareket CSS'i 32,1 KiB'a çıktı. Bütçeler
+ölçülen 234/303,3 KiB app ve 32,1 KiB vitrin CSS değerleridir; ek yüzde payı
+yoktur. Kod vendor'a taşınmadı; kapsam ve performans eşikleri düşürülmedi.
+
+### Bu kaynağın kapı ve ölçüm kanıtı
+
+`high` **13/13 kabul, 645,3 sn**: contract 696 PASS / 2 mevcut SKIP,
+build/bundle/scaling, ses testleri, kapsam ve kapsam şekli geçti. Değişmeyen
+Rust girdileri önceki başarılı birimlerin içerik makbuzuyla doğrulandı; bu
+aşama yeniden koşulmuş diye sunulmaz. Kapsam aşaması 323,3 sn sürdü.
+`high` E2E içermez. Bu turda tam `signoff` **NOT-RUN**; §28'deki önceki
+signoff bu değişikliklere taşınmaz.
+
+Ayrı `ui-check` yüzey/build ve Chromium/WebKit E2E'si **1.095 PASS,
+20 mevcut SKIP, 0 FAIL/flaky** verdi; tarayıcı bölümü 1.624,7 sn sürdü.
+Ana şerit Chromium 550/1, WebKit 486/16; sessiz şerit 30/1 ve 29/2
+PASS/SKIP'tir. Koşu öncesi/sonrası ilgili kaynak dosyalarının bayt karmaları
+aynıdır. Sekmeye ait seçiciler gizli modal örneklerini seçmez. Kısa ömürlü
+FloatingText'in iki ayrı IPC okuması arasındaki söküm yarışı giderildi:
+ölçeğin iki sınırı aynı örnekte sınanır, eşikler ve 900 ms ürün ömrü değişmez.
+Hedefli iki motorda üçer tekrar ve sonraki tam UI turu geçti; ilk başarısız
+koşuların kayıtları korunur.
+
+Ayrı VOL.TEST üretim build'i E2E'si **131 PASS / 1 mevcut SKIP,
+0 FAIL/flaky** verdi; 17,1 dk sürdü. Chromium 66/0, WebKit 65/1 PASS/SKIP;
+iki motorun control/WAN/lossy senaryoları değişmeyen sapma, ping, sıçrama
+ve duruşta yetkiyle yakınsama sınırlarını geçti. UI kabulünden sonraki
+çalıştırılabilir değişiklikler network/oyun adımlamasıyla sınırlıdır;
+CORE ve vitrin UI kaynakları aynı kaldı. Son `high` ve oyun E2E bu yeni
+adımlamayı ayrıca doğrular. Tarayıcı kabulü native WebView2/DPI kabulü değildir.
+
+%30 uzun etiket ve altı haneli sayaç yanında her girdi için 30 örnek, üç
+ısınma örneği ve ayrı saat okuma maliyeti alındı. Olay/sanal kol durumu →
+DOM commit p95 (ms):
+
+| Motor    | Skin    | İşaretçi | Dokunma | Sanal kol |
+| -------- | ------- | -------- | ------- | --------- |
+| Chromium | default | 3,8      | 38,1    | 15,7      |
+| Chromium | aurum   | 4,3      | 38,8    | 16,5      |
+| WebKit   | default | 17       | 15      | 31        |
+| WebKit   | aurum   | 16       | 16      | 27        |
+
+On iki profilin p95 %95 güven üst sınırı + A/A farkı en çok **40 ms**;
+100 ms hedefi bu DOM yanıtı kapsamındadır. Dispatch → commit ve sonraki
+rAF ayrı tutulur. CPU **NOT-RUN**, fiziksel kare sunumu **unsupported**;
+sanal kol fiziksel donanım gecikmesini ölçmez. Genel UI CPU/sunum kabulü
+bu sonuçtan türetilemez.
+
+Vitest/coverage-v8 5 ile bu `high` koşusunun taze LCOV pay/payda değerleri:
+
+| Paket        | Satır       | İşlev     | Dal        |
+| ------------ | ----------- | --------- | ---------- |
+| CORE         | 18792/19408 | 3312/3453 | 9960/11265 |
+| network      | 1014/1040   | 241/255   | 764/800    |
+| tauri-v2     | 550/554     | 177/177   | 380/407    |
+| pen.dev      | 81/81       | 19/19     | 44/45      |
+| vol-showcase | 4020/4215   | 739/832   | 538/734    |
+| VOL.TEST     | 10519/10672 | 1782/1843 | 4321/4639  |
+| audio-synth  | 12581/12993 | 2696/2758 | 7347/8257  |
+
+Araç zinciri geçişi için ayrı tam `coverage-audio` **132 dosya / 2.265 test
+PASS** verdi; kapsam ve şekil kapısı geçti, 614,4 sn sürdü. Ses üretimi veya
+gönderilen varlıklar değiştirilmedi; bu test, yeni kapsam motoruyla teknik
+hattın doğrulamasıdır. Bu sonuç tam signoff veya yeni bir audio yayın kabulü
+olarak sunulmaz.
+
+Eski disk LCOV kopyalarının kaynak commit bağı doğrulanmadığından bunlar
+kesin bir geçiş öncesi temel veya kapsam artışı/hızlanma iddiası değildir.
+Güncel eşikler ve dosya şekli korunur. Native Windows açılış/DPI/girdi,
+CPU probu ve işletim sistemi askıya alma/ses kabulleri yapılmış sayılmaz;
+kalan ölçütler F09.1, UI-12.4 ve UI-13.2'nin kendi TODO maddelerindedir.
+Son koddan VOL.TEST ve VOL.UI Windows release/NSIS paketleri üretildi;
+EXE/yükleyici ve sunucu bundle karmaları yerel kanıtta saklanır. Paket üretimi,
+bu açık native kullanım kabullerini kapatmaz.
+
+Yerel kanıtlar VOL.TEST'in git dışı records alanında
+`task13-high-accepted.json`, `task13-ui-check-accepted.log`,
+`task13-ui-counts.json`, `task13-ui-source-before.json`,
+`task13-ui-source-after.json`, `task13-response-slice-summary.json` ve
+`task13-coverage-accepted.json`, `task13-audio-coverage.log` ve
+`task13-game-accepted.log` dosyalarındadır. Performans raporlarının ham
+UUID denemeleri vitrinin git dışı records alanındaki ui-perf/attempts dizinindedir.

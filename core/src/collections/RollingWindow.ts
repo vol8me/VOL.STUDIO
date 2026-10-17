@@ -1,3 +1,4 @@
+import { requiredNumberAt } from './requiredAt';
 /**
  * Son N sonlu sayının istatistiği. Ekleme sabit tamponu kullanır; uçlar yalnız
  * eski uç düştükten sonra okununca, yüzdelikler de istendiğinde hesaplanır.
@@ -23,7 +24,7 @@ export class RollingWindow {
   push(value: number): void {
     if (!Number.isFinite(value)) return;
     if (this.filled === this.values.length) {
-      const removed = this.values[this.next];
+      const removed = requiredNumberAt(this.values, this.next);
       this.addToTotal(-removed);
       if (removed === this.minValue || removed === this.maxValue) this.extremesDirty = true;
     } else {
@@ -63,7 +64,7 @@ export class RollingWindow {
     // Örnekler sonlu olsa da toplam taşabilir; ağırlıklı ortalama aynı sınırı aşmaz.
     let mean = 0;
     for (let index = 0; index < this.filled; index++)
-      mean = mean * (index / (index + 1)) + this.values[index] / (index + 1);
+      mean = mean * (index / (index + 1)) + requiredNumberAt(this.values, index) / (index + 1);
     return mean;
   }
 
@@ -83,7 +84,10 @@ export class RollingWindow {
       throw new RangeError('Yüzdelik oranı sonlu ve 0–1 aralığında olmalı');
     if (this.filled === 0) return 0;
     this.sorted ??= this.values.slice(0, this.filled).sort();
-    return this.sorted[Math.min(this.filled - 1, Math.floor(this.filled * fraction))];
+    return requiredNumberAt(
+      this.sorted,
+      Math.min(this.filled - 1, Math.floor(this.filled * fraction)),
+    );
   }
 
   private addToTotal(value: number): void {
@@ -98,7 +102,8 @@ export class RollingWindow {
 
   private rebuildTotal(): void {
     this.total = this.correction = 0;
-    for (let index = 0; index < this.filled; index++) this.addToTotal(this.values[index]);
+    for (let index = 0; index < this.filled; index++)
+      this.addToTotal(requiredNumberAt(this.values, index));
   }
 
   private refreshExtremes(): void {
@@ -106,8 +111,8 @@ export class RollingWindow {
     let min = Infinity;
     let max = -Infinity;
     for (let index = 0; index < this.filled; index++) {
-      min = Math.min(min, this.values[index]);
-      max = Math.max(max, this.values[index]);
+      min = Math.min(min, requiredNumberAt(this.values, index));
+      max = Math.max(max, requiredNumberAt(this.values, index));
     }
     this.minValue = min;
     this.maxValue = max;

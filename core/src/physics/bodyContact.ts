@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import { clamp } from '../math/interpolation';
 import type { RigidBody } from './RigidBody';
 import type { Contact, ContactShape } from './wallContact';
@@ -15,7 +16,7 @@ function corners(body: RigidBody, shape: ContactShape, out: Corner[]): Corner[] 
   let index = 0;
   for (const along of [1, -1]) {
     for (const across of [1, -1]) {
-      const corner = out[index++];
+      const corner = requiredAt(out, index++);
       corner.x = body.x + fx * shape.halfLength * along - fy * shape.halfWidth * across;
       corner.y = body.y + fy * shape.halfLength * along + fx * shape.halfWidth * across;
     }

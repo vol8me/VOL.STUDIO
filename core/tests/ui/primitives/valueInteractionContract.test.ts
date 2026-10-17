@@ -11,6 +11,34 @@ import { Select } from '../../../src/ui/primitives/Select';
 import { ColorPicker } from '../../../src/ui/primitives/ColorPicker';
 
 describe('Değer kontrolleri — input/commit sözleşmesi', () => {
+  it('Checkbox disabled native etkinleşmeyi engeller; yeniden açılınca tek commit üretir', () => {
+    const onCommit = vi.fn();
+    const checkbox = new Checkbox({ label: 'Ses', disabled: true, onCommit });
+    const input = checkbox.element.querySelector('input')!;
+    document.body.append(checkbox.element);
+    input.click();
+    expect(input.disabled).toBe(true);
+    expect(checkbox.isChecked()).toBe(false);
+    expect(onCommit).not.toHaveBeenCalled();
+    checkbox.setDisabled(false);
+    input.click();
+    expect(checkbox.isChecked()).toBe(true);
+    expect(onCommit).toHaveBeenCalledExactlyOnceWith(true);
+    checkbox.destroy();
+  });
+
+  it('Slider altı haneli değer etiketini ve native üst sınırı aynı tutar', () => {
+    const slider = new Slider({ max: 999999, value: 100000, label: 'Değer' });
+    const input = slider.element.querySelector('input')!;
+    expect(slider.element.textContent).toContain('100000');
+    expect(input.max).toBe('999999');
+    slider.setValue(999999);
+    expect(slider.element.textContent).toContain('999999');
+    expect(input.value).toBe('999999');
+    expect(slider.getValue()).toBe(999999);
+    slider.destroy();
+  });
+
   it('Input canlı input ve tek commit üretir; setter sessiz baseline kurar', () => {
     const onInput = vi.fn();
     const onCommit = vi.fn();
@@ -116,25 +144,49 @@ describe('Değer kontrolleri — input/commit sözleşmesi', () => {
       toJSON: () => ({}),
     });
     minHandle.dispatchEvent(
-      new PointerEvent('pointerdown', { pointerId: 4, clientX: 0, button: 0, bubbles: true }),
+      new PointerEvent('pointerdown', {
+        isPrimary: true,
+        pointerId: 4,
+        clientX: 0,
+        button: 0,
+        bubbles: true,
+      }),
     );
     track.dispatchEvent(
-      new PointerEvent('pointermove', { pointerId: 4, clientX: 30, bubbles: true }),
+      new PointerEvent('pointermove', {
+        isPrimary: true,
+        pointerId: 4,
+        clientX: 30,
+        bubbles: true,
+      }),
     );
     track.dispatchEvent(
-      new PointerEvent('pointerup', { pointerId: 4, clientX: 30, bubbles: true }),
+      new PointerEvent('pointerup', { isPrimary: true, pointerId: 4, clientX: 30, bubbles: true }),
     );
     expect(onInput).toHaveBeenCalled();
     expect(onCommit).toHaveBeenCalledTimes(1);
     expect(control.getValue().min).toBe(30);
 
     minHandle.dispatchEvent(
-      new PointerEvent('pointerdown', { pointerId: 5, clientX: 30, button: 0, bubbles: true }),
+      new PointerEvent('pointerdown', {
+        isPrimary: true,
+        pointerId: 5,
+        clientX: 30,
+        button: 0,
+        bubbles: true,
+      }),
     );
     track.dispatchEvent(
-      new PointerEvent('pointermove', { pointerId: 5, clientX: 60, bubbles: true }),
+      new PointerEvent('pointermove', {
+        isPrimary: true,
+        pointerId: 5,
+        clientX: 60,
+        bubbles: true,
+      }),
     );
-    track.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 5, bubbles: true }));
+    track.dispatchEvent(
+      new PointerEvent('pointercancel', { isPrimary: true, pointerId: 5, bubbles: true }),
+    );
     expect(control.getValue().min).toBe(30);
     expect(onInput).toHaveBeenLastCalledWith({ min: 30, max: 100 });
     expect(onCommit).toHaveBeenCalledTimes(1);

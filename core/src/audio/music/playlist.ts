@@ -1,3 +1,4 @@
+import { requiredAt } from '../../collections/requiredAt';
 import type { MusicEngine } from './engine';
 
 /**
@@ -118,16 +119,16 @@ export class MusicPlaylist {
     if (this.shuffle) {
       for (let i = next.length - 1; i > 0; i--) {
         const j = Math.floor(this.clampRandom() * (i + 1));
-        const a = next[i];
-        const b = next[j];
+        const a = requiredAt(next, i);
+        const b = requiredAt(next, j);
         next[i] = b;
         next[j] = a;
       }
       // Yeni turun ilk parçası önceki turun sonuncusuyla aynı olmasın —
       // aksi halde aynı parça arka arkaya iki kez çalar.
       if (next.length > 1 && this.lastPlayed !== null && next[0] === this.lastPlayed) {
-        const a = next[0];
-        const b = next[1];
+        const a = requiredAt(next, 0);
+        const b = requiredAt(next, 1);
         next[0] = b;
         next[1] = a;
       }

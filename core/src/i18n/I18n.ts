@@ -1,3 +1,4 @@
+import { requiredAt } from '../collections/requiredAt';
 import i18next from 'i18next';
 import coreTr from './tr.json';
 import coreEn from './en.json';
@@ -228,7 +229,7 @@ export class I18n {
       candidates.push(navigator.language);
     }
     for (const candidate of candidates) {
-      const base = candidate.split('-')[0];
+      const base = requiredAt(candidate.split('-'), 0);
       if (this.locales.has(base)) return base;
     }
     return this.fallbackLocale;

@@ -89,7 +89,7 @@ const bump = (record: Record<string, number>, key: string): void => {
  * Çok istemcili başsız yük sürücüsü: `clients` kadar gerçek SDK istemcisi `roomName` odasına katılır,
  * `act` ile girdi yollar ve `durationMs` boyunca ölçülür. Katılım süresi, yama aralığı, ping, kopma
  * ve hatalar `report`a JSONL olarak yazılır ve özet döner. İstemciler tarayıcı değil Node'dadır;
- * görüntüleme, öngörü ve uzlaştırma ölçülmez, yalnız ağ ve sunucu yükü ölçülür.
+ * görüntüleme ölçülmez. Oyun `act` içinde kendi SDK öngörüsünü kurabilir; sürücü oyun fiziği taşımaz.
  */
 export async function runFleet<S = unknown>(options: FleetOptions<S>): Promise<FleetSummary> {
   const {

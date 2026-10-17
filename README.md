@@ -55,11 +55,11 @@ pnpm exec just --list      # tekil kapılar
 Düşen tek kapı bağımsız yeniden çalıştırılır. Koşulmayan kapı geçmiş sayılmaz;
 cihaz ölçümü ve insan dinlemesi otomatik kapıların yerine geçmez.
 
-**Son kaynak kapısı (2026-10-17, `922a83dd`):** taze `signoff` **18/18 PASS**,
-63,6 dk; E2E 1.170 PASS / 21 mevcut SKIP / 0 FAIL/flaky. Bu kayıt kendi kaynak
-ağacını doğrular; native cihaz kabulleri ayrı raporlanır. E2E `high` içinde
-değildir; UI değişikliğinde ayrıca `pnpm exec just ui-check` gerekir
-([kapı sonuçları](docs/gates.md), [denetim §28](docs/monorepo-audit.md)).
+E2E `high` içinde değildir; `signoff` kapsamındadır. UI değişikliğinde ayrıca
+`pnpm exec just ui-check` gerekir. Güncel kaynak, koşulan kapılar ve ölçülmeyen
+kabuller [denetim §29](docs/monorepo-audit.md)'dadır; önceki tam kaynak/cihaz
+turunun sahibi §28'dir. Her kayıt yalnız kendi kaynak ağacını doğrular
+([kapı sözleşmesi](docs/gates.md)).
 
 ## Belgeler
 

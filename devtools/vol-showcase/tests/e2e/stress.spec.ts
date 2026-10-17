@@ -22,7 +22,11 @@ function trackErrors(page: Page): string[] {
 
 async function openOsk(page: Page): Promise<void> {
   await selectTab(page, 'forms');
-  await page.getByRole('button', { name: 'Open keyboard', exact: true }).click();
+  await page
+    .getByRole('tabpanel')
+    .filter({ visible: true })
+    .getByRole('button', { name: 'Open keyboard', exact: true })
+    .click();
   await page.locator('.vol-osk').waitFor();
 }
 
@@ -41,6 +45,7 @@ const brandToken = (page: Page): Promise<string> =>
  * süreleri işlemezdi), bu yüzden bu testlerde sayfa doğrudan açılır.
  */
 async function openLive(page: Page): Promise<void> {
+  await page.clock.install();
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
   await page.waitForSelector('[role="tablist"]');
@@ -77,7 +82,7 @@ test('ekran klavyesi açıkken dil değişimi: yetim klavye ya da kilit kalmaz, 
   await openShowcase(page);
   await openOsk(page);
   await page.locator(LANG_BUTTON).click();
-  await page.waitForTimeout(600);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'tr');
   const state = await page.evaluate(() => ({
     keyboards: document.querySelectorAll('.vol-osk').length,
     locked: document.body.classList.length,
@@ -98,7 +103,7 @@ test('ekran klavyesi açıkken tema değişimi klavyeyi bozmaz', async ({ page }
   await openShowcase(page);
   await openOsk(page);
   await page.locator(SKIN_BUTTON).click();
-  await page.waitForTimeout(400);
+  await expect(page.locator(SKIN_BUTTON)).toHaveAttribute('data-skin', 'aurum');
   await expect(page.locator('.vol-osk')).toHaveCount(1);
   await page.getByRole('button', { name: /Cancel|Vazgeç/ }).click();
   await expect(page.locator('.vol-osk')).toHaveCount(0);
@@ -139,7 +144,7 @@ for (const [label, opener] of [
     await expect(page.locator('.vol-modal--visible')).toHaveCount(1);
     // Sistem dil değişimi: kapsam arkasındaki düğme programatik tetiklenir.
     await pressChrome(page, LANG_BUTTON);
-    await page.waitForTimeout(800);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'tr');
     const state = await page.evaluate(() => ({
       visible: document.querySelectorAll('.vol-modal--visible').length,
       bodyClasses: [...document.body.classList],
@@ -152,7 +157,7 @@ for (const [label, opener] of [
     expect(state.inertBody).toBe(false);
     // Kullanıcı hâlâ sayfayı kullanabilmeli: Escape ile kapanır, sekme tıklanır.
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(400);
+    await expect(page.locator('.vol-modal--visible')).toHaveCount(0);
     await selectTab(page, 'buttons');
     expect(errors).toEqual([]);
   });
@@ -184,7 +189,7 @@ test.describe('istek beklerken (yükleme ekranı)', () => {
     // Dil değişimi sekmeyi yeniden kurar; bekleyen yükleme ekranı onunla birlikte yok edilir.
     await expect(page.locator(LOADING)).toHaveCount(0, { timeout: 5_000 });
     // Eski zamanlayıcılar sonradan çalışıp hata/ekran üretmemeli: yük süresinin ötesinde bekle.
-    await page.waitForTimeout(7_000);
+    await page.clock.fastForward(7_000);
     expect(await leftovers(page)).toEqual({ locks: [], inert: false, loading: 0 });
     await selectTab(page, 'buttons');
     // Yeni dilde yükleme yeniden başlatılabilir ve tamamlanır (eski sonuç yeni ekrana karışmaz).
@@ -206,7 +211,7 @@ test.describe('istek beklerken (yükleme ekranı)', () => {
     await expect(page.locator(LOADING), 'sekme gezinmesi isteği iptal etmez').toHaveCount(1);
     await expect(page.locator(LOADING)).toHaveCount(0, { timeout: 20_000 });
     // Eski zamanlayıcı ya da gecikmeli sonuç ekranı geri getirmemeli.
-    await page.waitForTimeout(1_500);
+    await page.clock.fastForward(1_500);
     expect(await leftovers(page)).toEqual({ locks: [], inert: false, loading: 0 });
     expect(errors).toEqual([]);
   });
@@ -291,7 +296,7 @@ for (const context of CONTEXTS) {
       await openShowcase(page, 20260101, context.path);
       await openOsk(page);
       await pressChrome(page, SKIN_BUTTON);
-      await page.waitForTimeout(400);
+      await expect(page.locator(SKIN_BUTTON)).toHaveAttribute('data-skin', 'aurum');
       await expect(page.locator('.vol-osk')).toHaveCount(1);
       const fit = await page.evaluate(() => {
         const rect = document.querySelector('.vol-osk')!.getBoundingClientRect();
@@ -336,9 +341,9 @@ for (const context of CONTEXTS) {
       await open.click();
       await expect(page.locator('.vol-modal--visible')).toHaveCount(1);
       await pressChrome(page, LANG_BUTTON);
-      await page.waitForTimeout(800);
+      await expect(page.locator('html')).toHaveAttribute('lang', 'tr');
       await page.keyboard.press('Escape');
-      await page.waitForTimeout(400);
+      await expect(page.locator('.vol-modal--visible')).toHaveCount(0);
       expect(await leftovers(page)).toEqual({ locks: [], inert: false, loading: 0 });
       await selectTab(page, 'buttons');
       expect(errors).toEqual([]);
