@@ -124,3 +124,5 @@ cihaz ya da ağ kabulü değildir): 8 bot, 20 sn: katılım p99 77 ms, yama aral
 p99 7 ms, bot başına ~49 KB/sn gönderim, oda adımı ortalama 1,1 / p95 1,6 ms, olay döngüsü gecikmesi
 p99 ~7 ms. 16 bot: adım p95 1,8 ms, bot başına ~45 KB/sn. Bu sayılar bir kapasite iddiası değildir;
 saatlik ve 24 saatlik koşu ile Windows ve Steam Deck ölçümü ayrı iştir ve yapılmamıştır.
+
+Framework ve ölçüm sınırı [network tasarımında](../DESIGN.md), sunucu işletimi [sunucu sözleşmesindedir](server.md).

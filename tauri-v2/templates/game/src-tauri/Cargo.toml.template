@@ -1,6 +1,6 @@
 [package]
 name = "{{NAME}}-tauri"
-version = "0.1.0"
+version.workspace = true
 description = "{{TITLE}} native kabuğu"
 authors = ["VOL.STUDIO"]
 edition = "2021"

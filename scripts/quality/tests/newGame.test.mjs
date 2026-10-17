@@ -18,7 +18,7 @@ import { scalingRatios } from '../scalingBudget.mjs';
 
 function fixture(run) {
   const root = mkdtempSync(join(tmpdir(), 'vol-new-game-'));
-  for (const file of ['workspace-lifecycle.json', 'quality.json']) {
+  for (const file of ['package.json', 'workspace-lifecycle.json', 'quality.json']) {
     writeFileSync(join(root, file), readFileSync(new URL(`../../../${file}`, import.meta.url)));
   }
   const options = {
@@ -42,6 +42,11 @@ test('yeni oyun gerçek dosya ağacını ve bütün kalite kayıtlarını üreti
     assert.equal(result.packageName, '@volstudio/new-demo');
     const config = JSON.parse(readFileSync(join(root, 'games/new-demo/src-tauri/tauri.conf.json')));
     assert.equal(config.identifier, options.id);
+    assert.equal(config.version, '../../../package.json');
+    assert.equal(
+      JSON.parse(readFileSync(join(root, result.path, 'package.json'))).version,
+      JSON.parse(readFileSync(join(root, 'package.json'))).version,
+    );
     assert.equal(config.productName, options.title);
     assert.equal(config.mainBinaryName, options.title);
     assert.equal(config.app.windows[0].title, options.title);

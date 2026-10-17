@@ -4,8 +4,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, posix, resolve } from 'node:path';
 import { CONTRACT_SUITES, suiteEnvironment } from '../contractSuites.mjs';
 import { STAGE_PLAN } from '../gatePlan.mjs';
-import { readWorkspaceGraph } from '../gateScope.mjs';
-import { crateDirectories, unitsFor } from '../gateUnits.mjs';
+import { readWorkspaceGraph, scopeInclude } from '../gateScope.mjs';
+import { crateInputPaths, unitsFor } from '../gateUnits.mjs';
 import { rustManifests } from '../rust.mjs';
 import { buildActiveScriptCommand } from '../runActive.mjs';
 import { listWorkspacePackages, loadWorkspaceLifecycle } from '../workspaceLifecycle.mjs';
@@ -129,7 +129,7 @@ test('rust: her aktif Cargo manifesti bir birimdir ve crate kapsamı yoldaşlar�
   );
   for (const unit of units) {
     assert.deepEqual(unit.args, ['scripts/quality/rust.mjs', '--manifest', unit.unit]);
-    assert.ok(unit.scope.dirs.includes(dirname(unit.unit)), `${unit.unit}: kendi dizini`);
+    assert.ok(unit.scope.paths.includes(dirname(unit.unit)), `${unit.unit}: kendi dizini`);
   }
   const game = units.find((unit) => unit.unit === 'games/vol-test/src-tauri/Cargo.toml');
   for (const dependency of [
@@ -137,13 +137,13 @@ test('rust: her aktif Cargo manifesti bir birimdir ve crate kapsamı yoldaşlar�
     'tauri-v2/plugins/vol-steamworks',
     'tauri-v2/plugins/vol-haptics',
   ]) {
-    assert.ok(game.scope.dirs.includes(dependency), `vol-test → ${dependency} path bağımlılığı`);
+    assert.ok(game.scope.paths.includes(dependency), `vol-test → ${dependency} path bağımlılığı`);
   }
   const plugin = units.find((unit) => unit.unit === 'tauri-v2/plugins/vol-haptics/Cargo.toml');
-  assert.ok(!plugin.scope.dirs.includes('games/vol-test/src-tauri'), 'bağımlılık tek yönlüdür');
+  assert.ok(!plugin.scope.paths.includes('games/vol-test/src-tauri'), 'bağımlılık tek yönlüdür');
 });
 
-test('crateDirectories: geçişli path bağımlılığı, kök path bağımlılığı, yerel ön yüz dizini', () => {
+test('crateInputPaths: geçişli path bağımlılığı, kök path bağımlılığı, yerel ön yüz dizini', () => {
   const files = {
     'Cargo.toml': '[workspace.dependencies]\nortak = { path = "ortak" }\n',
     'app/src-tauri/Cargo.toml': '[dependencies]\na = { path = "../../libs/a" }\nserde = "1"\n',
@@ -155,7 +155,7 @@ test('crateDirectories: geçişli path bağımlılığı, kök path bağımlıl�
     if (!(path in files)) throw new Error('yok');
     return files[path];
   };
-  assert.deepEqual(crateDirectories('app/src-tauri/Cargo.toml', reader), [
+  assert.deepEqual(crateInputPaths('app/src-tauri/Cargo.toml', reader), [
     'app/src-tauri',
     'app/web',
     'libs/a',
@@ -165,7 +165,28 @@ test('crateDirectories: geçişli path bağımlılığı, kök path bağımlıl�
   files['app/src-tauri/tauri.conf.json'] = JSON.stringify({
     build: { frontendDist: 'https://example.test' },
   });
-  assert.ok(!crateDirectories('app/src-tauri/Cargo.toml', reader).includes('app/src-tauri/https:'));
+  assert.ok(!crateInputPaths('app/src-tauri/Cargo.toml', reader).includes('app/src-tauri/https:'));
+});
+
+test('Tauri sürüm JSON girdisi Rust makbuzunda vardır; bütün repo kapsama alınmaz', () => {
+  const files = {
+    'Cargo.toml': '',
+    'app/src-tauri/Cargo.toml': '[package]\n',
+    'app/src-tauri/tauri.conf.json': JSON.stringify({
+      version: '../../package.json',
+      build: { frontendDist: '../dist' },
+    }),
+  };
+  const paths = crateInputPaths('app/src-tauri/Cargo.toml', (path) => files[path]);
+  const include = scopeInclude(graph, { kind: 'crate', paths: paths });
+  assert.equal(
+    include('package.json'),
+    true,
+    'sürüm kaynağı değişince Rust makbuzu geçersizleşmeli',
+  );
+  assert.equal(include('docs/gates.md'), false);
+  assert.equal(include('unrelated/package.json'), false);
+  assert.ok(paths.includes('app/dist'));
 });
 
 test('crate kapsamı dışına uzanan derleme okuması yoktur (gizli bağımlılık bekçisi)', () => {
@@ -186,7 +207,7 @@ test('crate kapsamı dışına uzanan derleme okuması yoktur (gizli bağımlıl
   for (const unit of unitsFor(ctx, 'rust')) {
     const crateDir = dirname(unit.unit);
     const inScope = (path) =>
-      unit.scope.dirs.some((dir) => path === dir || path.startsWith(`${dir}/`));
+      unit.scope.paths.some((dir) => path === dir || path.startsWith(`${dir}/`));
     for (const file of walk(crateDir)) {
       const text = read(file);
       if (file.endsWith('.rs')) {
@@ -200,8 +221,11 @@ test('crate kapsamı dışına uzanan derleme okuması yoktur (gizli bağımlıl
         assert.ok(inScope(target), `${file}: include → ${target} crate kapsamı dışında`);
       }
       if (file.endsWith('tauri.conf.json') && file === `${crateDir}/tauri.conf.json`) {
-        const bundle = JSON.parse(text).bundle ?? {};
+        const configuration = JSON.parse(text);
+        const bundle = configuration.bundle ?? {};
         const paths = [...(bundle.resources ?? []), ...(bundle.icon ?? [])];
+        if (typeof configuration.version === 'string' && configuration.version.endsWith('.json'))
+          paths.push(configuration.version);
         for (const entry of paths.filter((value) => typeof value === 'string')) {
           const target = posix.normalize(posix.join(crateDir, entry));
           assert.ok(inScope(target), `${file}: ${entry} → ${target} crate kapsamı dışında`);

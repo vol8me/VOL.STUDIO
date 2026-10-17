@@ -105,27 +105,31 @@ function pathDependencies(manifestText, fromDirectory) {
   );
 }
 
-/** Tauri'nin derleme sırasında gömdüğü ön yüz dizini (URL değil, yola benzeyen değer). */
-function frontendDirectory(read, directory) {
+/** Derlemede okunan Tauri ön yüz dizini ve dosyadan gelen uygulama sürümü. */
+function tauriInputPaths(read, directory) {
   try {
     const configuration = JSON.parse(read(posix.join(directory, 'tauri.conf.json')));
     const dist = configuration?.build?.frontendDist;
-    return typeof dist === 'string' && !/^[a-z]+:/i.test(dist)
-      ? [posix.normalize(posix.join(directory, dist))]
-      : [];
+    const paths =
+      typeof dist === 'string' && !/^[a-z]+:/i.test(dist)
+        ? [posix.normalize(posix.join(directory, dist))]
+        : [];
+    if (typeof configuration.version === 'string' && configuration.version.endsWith('.json'))
+      paths.push(posix.normalize(posix.join(directory, configuration.version)));
+    return paths;
   } catch {
     return [];
   }
 }
 
 /**
- * Bir crate'in sonucunu etkileyen dizinler: kendisi, path bağımlılıkları (geçişli),
- * kök `Cargo.toml`un path bağımlılıkları ve Tauri ön yüz dizini. Cargo kök dosyaları
+ * Bir crate'in sonucunu etkileyen yollar: kendisi, path bağımlılıkları (geçişli),
+ * kök `Cargo.toml`un path bağımlılıkları ve Tauri build/sürüm girdileri. Cargo kök dosyaları
  * (`Cargo.lock`, araç zinciri) kapsam türünün işidir.
  *
  * @param {(path: string) => string} read depo köküne göre dosya okur
  */
-export function crateDirectories(manifest, read) {
+export function crateInputPaths(manifest, read) {
   // Okunamayan manifest bağımlılık eklemez; dizini yine de kapsamdadır.
   const manifestText = (path) => {
     try {
@@ -134,18 +138,18 @@ export function crateDirectories(manifest, read) {
       return '';
     }
   };
-  const dirs = new Set(pathDependencies(manifestText('Cargo.toml'), '.'));
+  const paths = new Set(pathDependencies(manifestText('Cargo.toml'), '.'));
   /** @type {string[]} */
   const queue = [dirname(manifest)];
   const visited = new Set();
   for (let directory = queue.pop(); directory !== undefined; directory = queue.pop()) {
     if (visited.has(directory)) continue;
     visited.add(directory);
-    dirs.add(directory);
-    for (const dist of frontendDirectory(read, directory)) dirs.add(dist);
+    paths.add(directory);
+    for (const input of tauriInputPaths(read, directory)) paths.add(input);
     queue.push(...pathDependencies(manifestText(posix.join(directory, 'Cargo.toml')), directory));
   }
-  return [...dirs].sort();
+  return [...paths].sort();
 }
 
 /** Git'in gördüğü her aktif Cargo manifesti bir birimdir; cargo hedef dizinini paylaşırlar. */
@@ -158,7 +162,7 @@ function rustUnits(ctx) {
     label: dirname(manifest),
     command: 'node',
     args: ['scripts/quality/rust.mjs', '--manifest', manifest],
-    scope: /** @type {Scope} */ ({ kind: 'crate', dirs: crateDirectories(manifest, read) }),
+    scope: /** @type {Scope} */ ({ kind: 'crate', paths: crateInputPaths(manifest, read) }),
   }));
 }
 

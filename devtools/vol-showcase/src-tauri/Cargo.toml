@@ -1,6 +1,6 @@
 [package]
 name = "vol-showcase-tauri"
-version = "0.1.0"
+version.workspace = true
 description = "VOL.UI vitrininin native kabuğu (masaüstü ve mobil)"
 authors = ["VOL.STUDIO"]
 edition = "2021"

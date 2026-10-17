@@ -10,6 +10,9 @@ members = [
   "games/*/src-tauri",
 ]
 
+[workspace.package]
+version = "0.2.0"
+
 # Üye crate'lerdeki profil bölümleri workspace'te yok sayılır; tek yer burası.
 [profile.release]
 codegen-units = 1

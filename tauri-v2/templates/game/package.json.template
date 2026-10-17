@@ -1,6 +1,6 @@
 {
   "name": "@volstudio/{{NAME}}",
-  "version": "0.1.0",
+  "version": "{{VERSION}}",
   "private": true,
   "type": "module",
   "scripts": {

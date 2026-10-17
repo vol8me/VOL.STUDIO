@@ -1,6 +1,6 @@
 {
   "productName": "vol-deck-probe",
-  "version": "0.1.0",
+  "version": "../../../package.json",
   "identifier": "studio.vol.deckprobe",
   "build": {
     "frontendDist": "../web"

@@ -55,7 +55,7 @@ no-op/canlılık PASS, gerçek native kip döngüsü NOT-RUN'dır.
 İlk `07ae25a9` paketin kısa HTTP/WS ağ turu geçti; yeni paketin son ağ turu
 başlarken erişim yeniden kayboldu ve bu kabul henüz tamamlanmadı.
 Fiziksel düğmeler, uyku/uyanma, WSS/WAN ve uzun oturum bu koşuda NOT-RUN;
-[rapor §28](monorepo-audit.md) kapsamı ayırır.
+[monorepo denetimi](monorepo-audit.md) kapsamı ayırır.
 
 ### Host derlemesiyle vitrin (SLR4 kabı yokken)
 

@@ -1,6 +1,6 @@
 [package]
 name = "volstudio-tauri"
-version = "0.1.0"
+version.workspace = true
 description = "VOL.STUDIO shared Tauri runtime — consumed by each game's own app crate"
 authors = ["VOL.STUDIO"]
 edition = "2021"

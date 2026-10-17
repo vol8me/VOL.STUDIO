@@ -15,7 +15,7 @@ Claude'un araç izni kullanıcı kapsamını genişletmez; mevcut açık yetki t
 
 ## Model ve alt ajan düzeni
 
-Ana model Sonnet, danışman Opus. Ölçümler, gerekçe ve sınırlar: [Claude çalışma düzeni](docs/claude-workflow.md).
+Model seçiminin kaynağı `.claude/settings.json`, keşif ajanının kaynağı `.claude/agents/explore.md` dosyasıdır. Eski tek makine maliyet deneyleri genel fiyat/hız garantisi değildir; tarihçeleri Git'tedir.
 
 - Varsayılan doğrudan çalışmaktır: arama, dosya okuma ve olgu sorusu Grep, Read ve WebFetch ile ana oturumda yapılır. Bu işlerde alt ajan ölçümde daha pahalı ve daha yavaştı, doğruluk eşitti; küçük işe dağıtım yapılmaz.
 - `Explore` yalnız çok adımlı, açık uçlu, salt okunur keşif içindir.

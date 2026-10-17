@@ -23,6 +23,10 @@ paketin `typecheck` komutu iki projeyi de denetler.
 Listener, timer ve abonelikler kapanışta kaldırılır. Birden çok bağımsız
 kaynak `DisposableScope` altında toplanır. Simülasyon saati ile RNG durumu
 alınabilir; deterministik çıktı yerel ayara bağlı sıralama kullanmaz.
+SimulationClock, GazeDriver, LegGait, GhostTrail ve DisposableScope seçenekleri
+alanlarıyla bir kez snapshot alınır; prototipten gelen değerler kaybolmaz,
+getter yeniden okunmaz. Rig geometrisi
+ve isteğe bağlı rig/efekt kontrolleri sonlu sayı sınırından geçer.
 Depolama `IStorageAdapter` arkasındadır. `AutosaveCoordinator` ile
 `PersistedObservableState` yazma sırası ve hata durumunu koordine eder;
 ilerleme `synced`, cihaz tercihi `device` kapsamındadır.

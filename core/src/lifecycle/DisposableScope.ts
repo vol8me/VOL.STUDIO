@@ -73,7 +73,16 @@ export class DisposableScope implements Disposable {
       target.addEventListener(type, listener);
       this.add({ dispose: () => target.removeEventListener(type, listener) });
     } else {
-      const registeredOptions = typeof options === 'boolean' ? options : { ...options };
+      let registeredOptions: boolean | AddEventListenerOptions = options;
+      if (typeof options !== 'boolean') {
+        const { capture, once, passive, signal } = options;
+        registeredOptions = {
+          ...(capture === undefined ? {} : { capture }),
+          ...(once === undefined ? {} : { once }),
+          ...(passive === undefined ? {} : { passive }),
+          ...(signal === undefined ? {} : { signal }),
+        };
+      }
       target.addEventListener(type, listener, registeredOptions);
       this.add({ dispose: () => target.removeEventListener(type, listener, registeredOptions) });
     }

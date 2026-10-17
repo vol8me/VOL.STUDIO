@@ -2,6 +2,28 @@ import { describe, it, expect, vi } from 'vitest';
 import { DisposableScope } from '../../src/lifecycle/DisposableScope';
 
 describe('DisposableScope', () => {
+  it('prototip seçenekleri native listener gibi capture, once ve signal davranışını korur', () => {
+    const scope = new DisposableScope();
+    const parent = document.createElement('div');
+    const child = parent.appendChild(document.createElement('button'));
+    const controller = new AbortController();
+    const listener = vi.fn();
+    const options = Object.create({
+      capture: true,
+      once: true,
+      signal: controller.signal,
+    }) as AddEventListenerOptions;
+    scope.addListener(parent, 'ping', listener, options);
+    child.dispatchEvent(new Event('ping'));
+    child.dispatchEvent(new Event('ping'));
+    expect(listener).toHaveBeenCalledTimes(1);
+    const aborted = vi.fn();
+    scope.addListener(parent, 'pong', aborted, options);
+    controller.abort();
+    child.dispatchEvent(new Event('pong'));
+    expect(aborted).not.toHaveBeenCalled();
+    scope.dispose();
+  });
   it('temizlik sırasında kardeş timer iptali kaynağı ikinci kez kapatmaz', () => {
     const scope = new DisposableScope();
     const timer = scope.addTimeout(() => undefined, 1000);

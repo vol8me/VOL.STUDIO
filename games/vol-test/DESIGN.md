@@ -1,1274 +1,197 @@
 # VOL.TEST tasarımı
 
-## Amaç ve sınır
-
-VOL.TEST, CORE mekanizmaları ve native kabuğun gerçek oyun tüketicisidir.
-Açık sürüş alanı tank fiziğini, nişanı, çevreyi ve platform servislerini
-birlikte sınar. Dünya göller ve kayalar içerir; seçilen senaryo araç veya hedef
-ekler; senaryo kadrosu yuvaya göre araç kataloğunu döndürür, böylece her araç görünüm, atış ve ses yoluyla sınanır. Oyun ana menüyle açılır; menü, garaj, ayarlar ve geliştirici ekranları ile HUD ve duraklatma katmanı vardır.
-
-## Model ve sunum
-
-Simülasyon `src/sim/` altında model/sunum ayrımıyla düzenlenir.
-Saf headless import kabulü ayrı Node testinde doğrulanır. CORE `SimulationClock`
-60 Hz sabit adımla ilerler; tank kuvvetleri iki alt adımda çözülür. Poz,
-taret ve süspansiyon önceki ve güncel durum arasında ara değerle çizilir.
-Çizim hızı fizik saatini değiştirmez; duraklatma simülasyon adımı üretmez.
-
-| Katman                                 | Sorumluluk                                              |
-| -------------------------------------- | ------------------------------------------------------- |
-| `src/app/`                             | Platform ömrü, kayıt, tercihler ve ölçüm kaynakları     |
-| `src/sim/chassis/`                     | Şasi tabanı: poz, durum, süspansiyon, taret ve hızlanma |
-| `src/sim/tank/`                        | Paletli şasi: sürücü ve palet–zemin kuvvetleri          |
-| `src/sim/combat/`                      | Mermi uçuşu, isabet ve nişan önizlemesi                 |
-| `src/sim/scenarios/`                   | Tohumlu araç düzenleri ve komutları                     |
-| `src/sim/seasons/`, `src/sim/weather/` | Mevsim, hava ve kalıcı yüzey durumu                     |
-| `src/view/`                            | Dünya ve tank sunumu, sınırlı efekt havuzları           |
-| `src/hud/`                             | CORE bileşenleriyle metin, harita ve paneller           |
-| `src/menu/`                            | Ana menü, garaj, ayarlar ve geliştirici ekranları       |
-| `src/sim/backdrop/`                    | Menü arka planı: yürüyüş alayı                          |
-| `src/scenes/world/`                    | Girdi, kamera, çevre ve olayların bağlanması            |
-| `src/config/`                          | Bütün oynanış ve sunum ölçülerinin tek kaynağı          |
-
-Simülasyon olay kuyruğunu sahne her karede bir kez boşaltır. Görünüm model
-kurallarını üretmez ve modele geri yazmaz. Listener, timer, ses ve native
-abonelikler sahibinin kapanışında sökülür.
-
-`GameServices` ürün ömründe tek CORE `FocusNavController` sahiplenir. Menü,
-garaj, ayarlar ve duraklatma katmanında yön/A gezinmesi ve B/Escape geri
-sahipliği açıktır; World oynanışında bu sahiplik kapanır. Oynarken B fren,
-Escape/Start duraklatma girdisi olarak `PlayerControls`ta kalır. Menü ve
-oyun geçişi aynı durumu native Steam Input action set'ine de taşır. İç
-ayar/geliştirici ekranından geri önce duraklatma ana ekranına döner; üst
-modal kapanınca aynı olay alttaki katmanı kapatmaz. Gezinme, odak ve geri
-yığını oyunda yeniden uygulanmaz.
-
-Sıfır süreli adım modelde yan etki üretmez: komut okunmaz, ateş ve temas çözümü
-çalışmaz. Geçersiz süre ve doğuş konumu durum değişmeden reddedilir. Olay kuyruğu
-adım dışındaki hasar/iyileştirme çağrılarında da sınırlıdır. Senaryo hedeflemesi
-CORE `SpatialIndex` etkinlik filtresini kullanır; ölü araçlar seçilmez, üyelik
-revizyonu değişince kaldırılmış araç referansları bırakılır. Araç değişimi yeni
-oyuncuyu aynı adımdaki hedeflemeye taşır; sınırdaki doğuş her şasinin kendi ayak
-izine göre kelepçelenir. Nişan çizgisinin açılıp sönmesi CORE `PresenceEnvelope`
-tarafından sürülür.
-
-## Dünya ve sanat
-
-Dünya 12288 × 12288 birimdir (384 m); bir metre 32 birime karşılık gelir.
-İnce ızgara 128 birimde, ana çizgi her sekiz hücrededir. Dört duvar fiziksel
-sınırdır; çarpılan kenar şiddete göre kısa süre parlar.
-
-Oyun paleti `src/config/palette.ts`, mevsim sunumu `src/config/weatherView.ts`
-içindedir. HUD yalnız CORE renk tokenlarını kullanır; oyun paleti UI temasını
-değiştirmez. Metin bölgeleri okunurluk için UI yüzeyi üzerinde durur.
-
-Her tank `src/assets/vehicles/` altında kendi klasöründeki SVG parçalarından
-kurulur (gövde, taret, duyarga); palet pabucu, palet ucu, çekirdek ve namlu
-parlaması `shared` klasöründe ortaktır. Parça ölçüleri, duyarga bağlantısı,
-çekirdek ve parlama ölçeği ile geri tepme yayı `src/config/tankView.ts`
-içindeki `TANK_ART` tablosundadır; palet geometrisi `treadView` ile aracın
-fizik ayak izinden türer. Sahne araç türünü bilmez: `src/view/VehicleView.ts`
-sözleşmesini `VehicleViews` kaydı tanımına uygun görünümle karşılar. Üç tank
-aynı aileden çıkar (koyu mavi-gri plakalar, bordo kabuk, turkuaz damar, altıgen
-taret kubbesi) ve siluetiyle ayrışır: Striker dengeli, Bulwark geniş ve ağır
-(amber şevronlu), Dart dar ve uzun. CORE `PoseShadow` aynı parçaları
-karartarak gölgeyi üretir. Palet bandı gerçek yüzey yolunu
-izler; patinajda bant döner fakat tank ilerlemez. Palet izi temas yolunu,
-kayma çizgisi ise kaymanın şiddetini izler. Kar sıkışması görsel izden ayrı,
-modeldeki palet temasıyla hesaplanır.
-
-Zemin izleri havuzludur ve kalabalık savaşta arkadan kuyruk gibi silinmez: palet bandı düz yolda TEK çıkartma olarak uzar (`FX.marks.runMax` 36 birime dek; çıkartma uzunluğu kadar pabuç adımı gösteren doku çerçevesi, `treadFrame`) ve yalnız dönüşte (`FX.marks.bend`) yeni parçaya geçer, yani aynı yol eski düzenin üçte biri kadar çıkartma tüketir. Havuz 5000 çıkartmadır (düşük kalitede yarısı), iz bir dakika yerde kalır (ilk 36 sn tam görünür, sonra söner; ayak ve kayma izleri de uzatıldı), sönüş yalnız yaşı tutuş süresini aşanlara ve alfa basamağı değişince uygulanır (`DecalPool`, karede binlerce `setAlpha` yoktur). Ölçü: on araç tam hızda (240 birim/s) 30 sn sürünce havuz dolmaz, yani hiçbir iz tutuş süresi dolmadan geri alınmaz (`TreadMarks.test.ts`); ışınlanan araç (yeniden doğuş) `FX.marks.maxJump`tan uzağa atlarsa iz kesilir, eski noktadan yeniye köprü çizilmez; ekran dışındaki araç (görüş dikdörtgeni + `FX.cullMargin`) iz bırakmaz ve izi unutulur, böylece havuz görünmeyen tanklara harcanmaz. Örümcek yere her bastığında sivri pençe ucunun açtığı küçük, yuvarlak bir delik basar (`FootMarks`: koyu çekirdek ve ezilmiş toprağın ince halkası, yönsüz, bacak ucundan büyük görünmez; kısa ömürlü ve seyrek, boyuna ölçekli); alıcıyı `VehicleViews` yürüyücü görünümüne verir, vitrinde iz basılmaz.
-
-Palet bandı `TreadTexture` ile aynı SVG'den araç başına bir kez üretilen
-32 karelik dokuyu kullanır (bant boyu araca göre değişir); faz aralığı 0,25 dünya birimidir. Her araç kendi pozunu
-seçer, her karede canvas veya GPU dokusu üretmez. Çekirdek gövde içinde
-taretin arkasında normal alfa ile çizilir. Namlu parlamaları `VehicleViews`
-tarafından sahiplenilen tek additive katmandadır; gövde ve taretin dünya
-pozunu izler. Boşalmış ve üretimi durmuş parçacık yayıcıları çizime girmez;
-yaşayan son parçacıklar yaşam süresi bitene kadar kalır.
-
-## Mevsim, hava ve yüzey
-
-`src/config/seasons.ts` mevsim sırasının, sürelerin ve geçiş oranının tek
-kaynağıdır. İlkbahar, yaz, sonbahar ve kış 15'er dakika sürer; döngü bir
-saattir. Yeni oturum ilkbaharda başlar ve ilk 10 dakika aynı mevsimde kalır.
-Son üç dakikada sıcaklık, gün ışığı ve zemin tonu sonraki mevsime geçer.
-
-`SeasonCycle` mevsim takvimidir. Ayrı `WeatherSchedule`, mevsim ağırlıklarına
-göre tohumlu hava olaylarını seçer; açık hava, toz, yağmur ve kar aynı şeyin
-dört mevsimi değildir. Olaylar altı saniyede karışır. `WeatherSystem` yalnız
-simülasyon saatiyle ilerler; duraklatma takvimi ve birikimi dondurur.
-
-`SurfaceGrid` suyu, karın su kütlesini ve kar sıkışmasını sınırlı hücrelerde
-tutar. Yağmur birikir, drenaj ve sıcaklıkla azalır. Kar soğukta birikir;
-sıcakta eriyerek suya dönüşür. Mevsim değişimi birikimi sıfırlamaz. Palet
-kuvvetleri yerel tutuş ve yuvarlanma direncini tüketir. Rüzgâr dünya birimi/s,
-birikim derinliği metre cinsindedir.
-
-`EnvironmentController` çevre modelini sahneye bağlar. Görünüm gerçek yüzey
-değerlerini okur; komşu örnekler ve dünya koordinatına bağlı konturlar su
-ve mevsim lekelerinin hücre biçiminde tekrarlanmasını önler. Kamera yalnız
-görünen alanı keser, dünya desenini yeniden konumlandırmaz. Kar tonu gerçek
-sıkışmayı, yansıma tankın gerçek gövde, taret ve palet dokularını kullanır.
-
-Süzülen araç yere basmadığından karı sıkıştırmaz ve yeşilliği ezmez. Sert iklim
-yüklemesi önceki yumuşak hücre uyumunu ve yerel hava zorlamasını bırakır; bozuk
-mevsim veya tutarsız yüzey/rüzgâr saati hiçbir hücreye yazılmadan reddedilir.
-Yumuşak uyum yağışla aynı anda çalışırken de su ve kar kapasitesini aşamaz.
-
-Yağış, toz, dalga ve araç yansıması havuzlarının kapasitesi sabittir.
-Düşük kalite sunum yoğunluğunu azaltır; birikim veya fizik değişmez.
-Tam ekran filtre veya shader kullanılmaz. HUD mevsim ve hava yazısı taşımaz (hava dünyada görünür);
-kök `data-season`/`data-weather` özniteliği testlere ve ölçüme kalır. Görünüm önizlemesi README'deki mevsim/hava sorgularıyla seçilir;
-normal oturumun takvimi bu önizlemeden bağımsızdır.
-
-### Göller
-
-Dünyanın değişmez coğrafyası sekiz göldür (`src/config/lakes.ts`): dört yazılı göl ve dünyanın merkezine
-göre nokta simetrik dört ikizi. Her göl dönük bir elips ile birkaç harmonikle dalgalanan kıyıdan oluşur.
-Konumlar dünya oranıdır; hiçbir göl bir üsse, bölge çemberine ya da dünya kenarına değmez ve karşıt üsler
-aynı coğrafyayı görür (testle kilitli: `tests/sim/world/LakeField.test.ts`).
-
-Derinlik tek bir saf işlevdir: `LakeField.depthAt(x, y)`, kıyıda 0, merkezde 1. Simülasyon yavaşlamayı,
-hasarı ve boğulmayı, bot kaçınmayı ve görünüm derinlik bantlarını aynı işlevden okur; çizilen kıyı ile
-fizik kıyısı ayrışamaz. Göl verisi ağdan geçmez: sunucu odası ve istemci sahnesi dünyayı aynı yerden
-(`createBattleWorld`) kurar, `World.lakes` her şasinin `step`inde okunur. Bu yüzden istemci öngörüsü
-sunucuyla göl kıyısında da bit bit aynıdır (`tests/sim/wading.test.ts`).
-
-Araçlar suya şöyle tepki verir (`WADING`):
-
-- Tank ve yürüyücü yüzemez: derinlikle hız tavanı sürekli düşer (`wadingSpeed`, tabanda ~%22), diz boyu
-  suyun (`hurtDepth`) ötesinde can kaybeder (`drowningRate`, derinlikle kareli büyür) ve can bitince
-  boğulur. Hasar kaynaksız `drown` nedenidir; küçük parçalar birikir ve `hurtChunk` oranında tek olayla
-  uygulanır (olay seli yoktur). Kıyıdan dönen araç sağ çıkar; derine inen ise zor çıkar. Merkez dibe
-  (`bottomDepth`, 0,9) varınca araç canına ve doğma korumasına bakılmadan çöker: derin suyun sonu kesin
-  ölümdür, yavaşlama onu yalnız geciktirir.
-- Süzülen araç yüzer: yavaşlamaz, hasar almaz; derinliği yalnız sunum için (dalga, iz) not edilir.
-- Bot yüzemeyen araçta gölün önündeki mesafeleri tarar, suya bakan bileşeni sıyırır ve kıyı teğetine
-  kayar; suyun içindeyse kıyıya çıkış yönüne gider (`BotBrain.lakePush`).
-
-Sunum (`src/view/water/LakeView.ts`, `src/config/waterView.ts`) salt görsel katmandır; fiziği etkileyen hiçbir
-sayı burada yoktur. Kıyı şeridi ve dokuz derinlik bandı, `LakeField`in derinlik eğrisinden göl başına
-küçük bir canvas dokusuna bir kez basılır (her karede ekranı kaplayan çoklu üst üste çizim yerine tek
-görüntü); renk (mevsim, gün ışığı) ya da donma değişince en sık 500 ms aralıkla yeniden basılır. Hareketli
-katman yalnız çizgidir: dalga çizgileri, kıyıda yanıp sönen köpük ve kıyı çizgisi (yarım çözünürlüklü
-kıyı çokgeniyle, parça başına tek yol). Yağmurda su yüzünde halkalar genişler (kalite çarpanıyla azalır).
-Kışın göl kıyıdan merkeze doğru donar: buz kalınlığı sıcaklıktan türer (`iceThickness`, kar yağarken
-biraz öne geçer), halka dokuya basılır, çatlaklar kıyıdan merkeze uzanır ve cephede ışıklı bir çizgi
-titreşir. Buz salt sunumdur: tank ve yürüyücü buzu kırar ama yüzemez, yani donma kimin boğulacağını
-değiştirmez ve sunucuya mevsim saati taşımak gerekmez.
-
-Yüzey canlılığı: rüzgâr yönünde kayan parıltı sırtları (`glints`, göl içinde, gün ışığıyla), kıyıya vuran ve
-kırık bir hat bırakan dalga takımları (`swash`) ve donma cephesinde kırağı tüyleri salt sunumdur; buzdaki kırıklar
-yan dallar taşır. Suda ilerleyen her araç arkasında sürekli bir yarık bırakır (`WaterTrails` şeridi): açılan ve
-kapanan koyu su şeridi, mesafeyle açılan köpüklü kollar, çapraz dalga sırtları, kıçta köpük ve önde pruva
-dalgası. Buzu kıran araç deliğin çevresinde yıldız çatlak ve savrulan buz parçaları bırakır; çatlak delik
-kapandıktan sonra uzun süre seçilir.
-
-Suda bırakılan izler (`src/view/water/WaterTrails.ts`) kısa ömürlü ve havuzludur, tek bir Graphics çizer:
-yürüyen araç yol aralığıyla halka bırakır; buz örtülü kıyı şeridinde (`iceFront`) kırık bir delik
-açar (koyu su, açık kenar) ve delik yavaş kapanır; süzülen araç açık suda V şeklinde dalga çeker, buzda
-yalnız ince bir yarık bırakır (dalga hissi yoktur). Suya basan araç zemine palet ve ayak izi basmaz ve
-iz sudan çıkınca eski noktadan köprü kurmadan kopar. Derin suda (`WATER_VIEW.sink.minDepth`) ölen araç
-patlamaz: `WreckDirector` gövdeyi `VehicleView.sink` ile batırır (önce havanın kabarttığı bir soluk,
-sonra yan yatış, titreme, suyun rengine kararma, küçülme ve solma; yüzeyde halkalar, kabarcık sütunu ve
-gövde kapanırken son bir kabarma halkası), süre bitince sahneden kaldırır; yeniden doğunca gövde ve
-görünürlük geri gelir. Sağ araç da dibe yaklaşırken (`VehicleView.submerge`, `WATER_VIEW.submerge`)
-derinlikle suyun rengine çekilir ve solar: oyuncu merkezin dibe vardığını ölmeden önce görür.
-Geç katılımda derinde ölü görülen araç hiç çizilmez. Boğulma akışta `drowned` satırıdır
-(`feedLine`, `cause: 'drown'`). Göller harita dokusuna da basılır (`src/hud/lakeMap.ts`): CORE
-`MinimapPanel`in `backgroundImage` zemini olarak kıyı şeridi, su ve derin su, `LakeField.outline`
-çokgenleriyle, yani harita kıyısı fizik kıyısıdır. Batış sesi henüz yoktur: yeni bir ses varlığı gerekir.
-
-### Kayalar
-
-Dünyanın ikinci değişmez coğrafyası kaya öbekleridir (`src/config/rocks.ts`): sekiz yazılı öbek ve dünyanın
-merkezine göre nokta simetrik ikizleri. Öbek birkaç dairesel lobdan oluşur (`RockField`); lob yarıçapı,
-yüksekliği ve yeri öbek tohumundan türer. Göl gibi veri ağdan geçmez: sunucu, çevrimdışı alıştırma ve istemci
-öngörüsü `createBattleWorld` ile aynı lobları kurar, yani çarpışma bit bit aynıdır. Kaya dünya kenarından
-`edgeMargin` içeride, üs ve bölgeden uzaktadır (`tests/sim/rocks.test.ts`).
-
-Araçlar kayaya türüne göre tepki verir (`ROCKS`):
-
-- Tank, süzülen araç, mech ve yerdeki sıçrayıcı kayadan geçemez: lob, `resolveWallContacts` ile aynı duvar çözücüsüne teğet
-  duvarlar olarak girer (şasi `wallsFor`), çarpma hasar ve ses olayı üretir ve kaymadan sıyrılır.
-- Örümcek (`kind: 'walker'`) tırmanır: kaya içinde hız `speedFloor` oranına kadar düşer (`Chassis.traverse`),
-  `climb` değeri lob yüksekliğiyle [0, 1] artar. Duvar değil, ağırlaşmadır: alçak lob zor fark edilir, yüksek
-  lob belirgin yavaşlatır.
-- Sıçrayıcı havadayken (`boosting`) kayanın üstünden geçer: duvar listesi atlanır (`Chassis.climbs`). Kaya
-  içine inen sıçrayıcı normal duvar çözümüyle dışarı itilir.
-- Düz mermi `coverHeight × lob yüksekliği` altında kayaya çarpar ve söner; yüksek yaylı mermi üstünden aşar.
-  Kaya üstündeki örümceğin mermisi kendi yüksekliğinden doğar (`Simulation.elevationOf` = `climb × coverHeight`;
-  namlu yüksekliğine eklenir): kayanın içinden başlayan mermi yalnız hâlâ kayanın tavanı altındaysa gömülür,
-  üstündeyse kayayı bırakır ve kaya modeli düz üst silindirdir (yükseklik soyutlaması, yamaç yok).
-- Bot yüzemeyen araçta kayanın önündeki mesafeleri tarar ve teğete sıyrılır (`BotBrain.rockPush`); örümcek
-  botu kayayı engel saymaz.
-- Bot enkazı da engel sayar: ölü araç hedef ve müttefik değildir ama katıdır (`Simulation.collideWreck`), bu yüzden
-  bot algıda enkazları listeler (`BotBrain.noteWreck`) ve yönünü kayayla aynı biçimde teğete sıyırır
-  (`BotBrain.wreckPush`); örümcek botu da enkazı aşamaz, çünkü enkaz kaya değil gövdedir.
-
-Sunum `src/view/terrain/RockView.ts`, `src/config/rockView.ts`: lob çokgeni düzensizdir, kubbe basamakları
-ışığa (`LIGHT`) doğru kayar, gölge lob yüksekliğiyle uzar; ıslaklıkla koyulaşır, kar derinliği başlık olarak
-birikir, dibinde yosun tutamları vardır. Örümcek tırmanırken ayakları kayanın üstüne basar (taban
-yüksekliği `stepUp`), kalça aynı payla kalkar, adımlar basamak çıkar gibi `swingGain` kat yükseğe kalkar,
-gövde geriye yaslanır ve ayaklar daha ağır basıp toz kaldırır (`SpiderView.climbRock`,
-`SpiderLegs.setClimb`, `ROCK_VIEW.spiderClimb`). Yükselme bir yaydır: çıkışta hafifçe aşar ve oturur;
-ağdan gelmez, her istemci kendi öngörüsünden türetir. Kayalar harita dokusuna da basılır (`src/hud/lakeMap.ts`).
-
-### Yeşillik ve kalıcı iklim
-
-Yağmur yalnız su biriktirmez, ekilebilir yamalarda yeşillik büyütür. `SurfaceGrid` her hücrede `growth`
-[0, `fertility`] tutar: ıslaklık ve ılık hava büyütür, kuru zemin yavaşça (kışın daha da yavaş) çeker, don
-ve kar örtüsü örtüyü solar ama dayanıklı çim tabanının (`hardyFloor`, taşıma gücünün %30'u) altına
-indirmez, palet ezer (`WEATHER.growth`). Verimli yamalar tohumdan türeyen sabit
-coğrafyadır (`fertility.ts`): göl ve kaya çıplaktır, göl kıyı şeridi yarı verimlidir. Kar yağınca yeşillik
-yok olmaz: altta kalır, üstüne kar katmanı (yeşillik −92, kar yüzeyi −89) binerek örter; hafif karda kısa,
-karlı uçlar kar üstüne çıkar (`tipDepth` −88,5) ve derinleşen karda solar, kar çekilince yeşil yeniden açılır.
-
-Sunum `VegetationLayer`: örtü büyüdükçe önce tutam sayısı, sonra boyu artar; konum hücre ve sıra
-numarasından türer (karede titremez). Çayır her karede yeniden çizilmez, dünyaya hizalı döşemelere
-(`vegetation.tile.size` birim) pişirilir: her döşeme iki `RenderTexture` tutar. `body` taban, çekirdek ve
-tutamları, `tips` kar üstüne çıkan uçları taşır; taban ve çekirdek kalemleri kendi saydamlığını (`base.alpha`,
-`core.alpha`) taşır ve alfa karışımı birleşimli olduğundan tek dokuya basılmaları ayrı katmanlarla aynı
-görüntüyü verir. Ekranı kaplayan doku sayısı bu yüzden ikidir (dolgu maliyeti: yazılım GL'de her tam ekran
-katman karede ~30 ms tutar, dört katman ölçümde en uzak yakınlaştırmada kare hızını yarıya indiriyordu).
-Kamera yalnız görünür döşemeleri sahneye koyar. Yeniden pişirme tek kaynaktan,
-döşemenin imzasından (kademeli büyüme, kar, kalite) karar verir; gün ışığı dokuya basılmaz, boya olarak
-uygulanır. Doku piksel yoğunluğu ekran yoğunluğundan seçilir (`tile.texel` kademeleri) ve kademe değişince
-yeniden kurulur; pişirmeler kare başına zaman bütçelidir (`bakeBudgetMs`) ve görünürden uzak döşemeler
-`retain` ile sınırlı tutulur, taşan en eski olan atılır. Bitişik bölge dolguları arasındaki ince çatlak,
-dolguyla aynı yoldan çizilen iki dokulu çerçeveyle kapatılır (`TerrainContours` `outline`). Phaser ayağı
-`PhaserVegetationHost`tur; katman `VegetationHost` arayüzü üzerinden sürülür, bu yüzden pişirme mantığı
-WebGL'siz sınanır. Ölçüm (en uzak yakınlaştırma, çok araçlı dünya): kare süresi ~18,7 ms'den ~6 ms'ye indi.
-
-Gölgelendirici ısınması (`src/view/shaderWarmup.ts`): Phaser toplu çizimdeki doku sayısına göre ayrı program
-derler ve her birini ilk gereken karede eşzamanlı bekleyerek (15–45 ms) derler. `BootScene` yükleme
-ekranının arkasında 1'den en çok 16 dokuya kadar her kademeyi bir karede çizdirir; böylece derleme
-oynanıştan önceye taşınır ve dünyanın ilk saniyesinde art arda takılma kalmaz. WebGL olmayan ya da sahte
-bağlamlı oturum (ölçüm, test) ısınmayı atlar.
-Maliyet ölçüldü: ısınma açılışa Chromium'da (GPU) ~1 sn, yazılım GL'li Playwright WebKit'te ~3,3 sn ekler
-(`?start=world` → HUD 1,65 → 5,0 sn); bu süre yükleme ekranının arkasındadır, E2E açılış beklemeleri buna göre
-uzundur. Araç görünümlerinin kendi parçacıkları (örümcek, süzülen, sıçrayıcı ve mech tozu) sahnenin saatiyle
-aktığı için görünüm süresi 0 iken `timeScale` 0'lanır; yoksa duraklatılmış dünyada toz sönmeye devam ederdi.
-
-Sunucu dünyası hep açıktır, bu yüzden iklim sunucuda yaşar ve kalıcıdır. `WorldRoom` iklimi sunucu saatiyle
-ilerletir ve `ClimateStore` (`server/ClimateStore.ts`; dosya `VOLTEST_CLIMATE_FILE` ile verilir, yoksa çalışma dizinindeki `.state` klasörüne yazılır)
-arkasında `NETWORK.climateSaveMs` aralığıyla ve oda kapanırken atomik (geçici dosya + yeniden adlandırma)
-yazar; yeniden başlayınca saat ve yeşillik kaldığı yerden sürer. Başka tohumun, bozuk ya da ölçüsü tutmayan
-kayıt yok sayılır ve temiz iklimle açılır. İstemci dinleyicisini kurunca `CLIMATE_REQUEST` yollar,
-sunucu `CLIMATE_MESSAGE` ile anlık görüntüyü (`ClimateSnapshot`, hücre alanları bayt dizisi) verir ve
-sonrakini düzenli aralıkla yollar; istek sıklığı istemci başına sınırlıdır (`climateRequestGapMs`).
-Yerel hava saati aynı belirli takvimde akar, anlık görüntü yalnız uyumlar. Sonraki anlık görüntüler hücreleri
-tek adımda değiştirmez: `SurfaceGrid.blendToward` ıslaklık, su, kar ve yeşilliği `CLIMATE.blendMs` boyunca
-hedefe yaklaştırır (saat farkı `clockToleranceMs` içindeyse; aksi hâlde ya da ilk kayıtta sert yükleme), bu
-yüzden her 15 sn'lik eşitlemede su birikintisi ya da yeşil yama ekranda sıçramaz. `VegetationLayer`
-tutamların boyu, gölgesi ve ucunu hücrenin eşik marjından yumuşak basamakla (`WEATHER_VIEW.sprout`) büyütür;
-çiçek yalnız olgun tutamda açar. Çevrimiçi oyunda yüzey
-etkileri (tutuş, hava direnci) bilerek yoktur (`Simulation.weatherEffects`): hava yalnız sunumdur, bu yüzden
-öngörü sunucuyla ayrışmaz.
-
-## Araçlar
-
-Oynanabilir her araç bir `VehicleSpec`tir (`src/config/vehicles.ts`): kimlik, can,
-şasi sayıları, süspansiyon ve silahlanma. Kayıt sırası (`VEHICLE_IDS`) ağdaki `model`
-indeksidir; araç eklenirse sona eklenir, yeniden sıralanmaz. `Vehicle` tanımdan şasi,
-silah beklemesi ve can kurar; simülasyon, öngörü, ses ve görünüm araca değil tanıma bakar.
-
-| Araç       | Rol                       | Can | Hız | Dönüş | Atış                                         |
-| ---------- | ------------------------- | --- | --- | ----- | -------------------------------------------- |
-| Striker    | Dengeli ana tank          | 130 | 230 | 3,0   | 36 hasar, 650 ms, kabuk                      |
-| Bulwark    | Ağır kuşatma tankı        | 175 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi                |
-| Dart       | Hafif, hızlı keşif tankı  | 90  | 330 | 4,4   | 22 hasar, 380 ms, uzun menzilli ray          |
-| Arachnid   | Bacaklı savaş canavarı    | 108 | 162 | 2,7   | 21 hasar, 470 ms, iki plazma topu            |
-| Widow      | Bacaklı keskin nişancı    | 92  | 160 | 3,4   | 8 hasar, 230 ms, iki iğne atıcı              |
-| Goliath    | Devasa kuşatma yürüyücüsü | 360 | 86  | 1,5   | 38 hasar, 760 ms, iki ağır havan             |
-| Manta      | Süzülen avcı              | 120 | 240 | 5,2   | 9 hasar, 150 ms, mor yay tekrarlayıcı        |
-| Barracuda  | Süzülen akıncı            | 120 | 305 | 6,4   | 3×11 hasar, 540 ms, üç namlulu parçacık topu |
-| Leviathan  | Süzülen savaş gemisi      | 170 | 150 | 2,4   | 26 hasar, 540 ms, iki yan mızrak topu        |
-| Warhound   | Mech keşif                | 100 | 225 | 3,6   | 8 hasar, 170 ms, iki kol otomatik topu       |
-| Templar    | Mech hat                  | 190 | 152 | 2,1   | 6 hasar, 105 ms, döner çok namlulu           |
-| Juggernaut | Ağır mech                 | 245 | 96  | 1,3   | 62 hasar, 1050 ms, iki kol havanı            |
-| Jackal     | Hafif sıçrayıcı avcı      | 100 | 250 | 5,0   | 2×14 hasar, 560 ms, iki saçma topu           |
-| Panther    | Sıçrayıcı nişancı         | 100 | 190 | 3,8   | 24 hasar, 1150 ms, raylı top                 |
-| Rhino      | Ağır sıçrayıcı            | 200 | 128 | 2,4   | 30 hasar, 640 ms, iki kütle topu (sırayla)   |
-
-Tablo `src/config/vehicles.ts` değerlerinin özetidir; karakter farkı hızlanmadan, dönüşten,
-frenden ve geri tepmeden gelir (`tests/sim/vehicleHandling.test.ts` bu sıralamaları kilitler).
-Aracı oyuncu katılırken `model` seçeneğiyle seçer; sunucu tanımsız indeksi protokol ihlali sayıp
-reddeder.
-
-**Denge** anma sayılarla değil düellolarla ölçülür: her araç çifti açık alanda, usta (`skill 0,75`)
-iki botla iki yönde birçok tohumla dövüşür (`tests/sim/balance.test.ts`, bot yapay zekâsı tankın
-da örümceğin de menzilini ve hızını kullanır). Anma hasarı/s Widow'da düşüktür (isabet, menzil ve
-hızla öder), Goliath'ta canla ve ağır mermiyle, Manta'da kısa menzille ve ince canla öder; bu yüzden anma
-hasarı yalnız üç katla sınırlıdır (en düşüğü Panther'in menzilli raylı atışıdır, menzil ve sıçrayarak kaçma onu öder).
-Testin dört tohumuyla ölçülen on beş aracın kataloğa karşı galibiyet payı Striker 53, Bulwark 59, Dart 41,
-Arachnid 44, Widow 43, Goliath 34, Manta 60, Barracuda 50, Leviathan 55, Warhound 51, Templar 55, Juggernaut 54,
-Jackal 42, Panther 50, Rhino 58'dir; test bu payı %30-70 bandında tutar. Karşıtlıklar bilinçlidir ve hiçbiri mutlak değildir: Widow menzilden Arachnid'i ve Goliath'ı yener,
-Bulwark'ın ağır mermisine ve Dart'ın hızına yenilir; Goliath Striker'ı ve Bulwark'ı ezer, Dart ve Widow
-onu çevikliğiyle oyalar; Bulwark Widow'u ve Dart'ı yener, Arachnid ona baskındır; Striker Dart'ı ezer. Manta çevikliği ve tempoyla
-Dart'ı, Widow'u ve Arachnid'i yer ama Bulwark'ın ağır mermisine ve Goliath'ın gövdesine yenilir (can ve
-menzil onun sınırıdır).
-Bu ölçüm botlarla yapılır: insan beğenisi ve el becerisi yerine geçmez, ve sayıların insan
-oyunuyla doğrulanması ayrı iştir.
-
-Araçlar tek bakışta ve kulakla ayrışır; kimlik üç yerden gelir ve tek tabloda tanımlıdır.
-Renk: her tankın gövde ve taret SVG'si kendi paletini taşır (Striker çelik mavisi ve bordo kabuk,
-Bulwark koyu adaçayı zırh ve pas kabuğu, sarı uyarı şeritli, turuncu enerji; Dart buz mavisi hafif
-gövde ve çivit kabuk, camgöbeği enerji; Arachnid sıcak bronz zırh ve kızıl kabuk, Widow obsidyen gövde ve zehir yeşili) ve `TANK_ART` çekirdek ışığını ile palet tonunu araca
-bağlar; `tests/config/vehicleIdentity.test.ts` paletlerin çakışmamasını kilitler. Mermi: her
-silah stilinin kendi iz rengi ve kalınlığı vardır (`SHOT_LOOK`: kehribar kabuk, turuncu ağır
-mermi, ince ve uzun buz mavisi ray, kızıl plazma, zehir yeşili iğne, mor yay). Ses: motor perdesi ve gücü araca
-(`AUDIO.vehicleVoice`), top sesinin perdesi ve gücü silah stiline (`AUDIO.weaponVoice`) göre
-işlenir; her silah stilinin atışı ayrı sentezdir (`AUDIO.shotAsset`). Araca özgü gerçek motor ve top
-kayıtları ayrı iştir.
-
-Silahlanma (`Armament`) bir silahın sayılarını, namlu yuvalarını ve atış gruplarını
-(`salvo`) taşır. `pivot` yoksa 0. yuva nişan taretidir; öteki yuvalar nişan noktasına (0. yuvadan
-`toeInRange` ileride) bakar. `pivot` verilirse nişan başlangıcı odur ve bütün yuvalar nişan
-noktasına bakar (örümceklerin simetrik omuz topları). Her yuvanın yönü yalnız poza bağlıdır ve ağda
-namlu açısı taşınmaz. Her tetik çekişi sıradaki grubu ateşler; sıra `Vehicle.salvo` ile döner ve
-sunucu durumunda (`PlayerState.salvo`) öngörüyle uzlaştırılır. Mermi, ateşleyen silahın
-profilini (`Projectiles.addProfile`: ömür, uçuş, stil) taşır; isabet hasarı ve itkisi
-aynı silahın tanımından okunur.
-
-### Kaos kadranı
-
-Geliştirici ekranındaki "Kaos tempo" kaydırıcısı (×0,5–×3, adım 0,25; `src/config/chaos.ts`, tercih `chaos`)
-alıştırma dünyasının ana temposudur. Tek değer araçların hareketini (sürüş, dönüş, atılım, taret) ve
-atış sıklığını aynı oranda yükseltir: `Simulation.pace` şasi adımını çarpan kadar zamanla ilerletir
-(çarpan 1'in üstündeyse adım eşit alt adımlara bölünür, her alt adım en çok bir adım uzunluğundadır;
-adımın en sert duvar teması korunur) ve silah beklemesini aynı çarpanla kısaltır. Mermi hızı, hasar ve
-can değişmez, bu yüzden araçlar arası denge korunur. Yalnız çevrimdışı dünyadadır; sunucu dünyası
-1'de kalır.
-
-### Süzülen araç: Manta
-
-Manta ne paletli ne bacaklıdır (`HoverSpec`, `src/sim/hover/Hover.ts`, sayılar `src/config/hover.ts`): iki yan
-itici fanıyla zeminin üstünde kayar. Komut hedef hız vektörüdür (dünya ekseninde) ve araç ona dönmez:
-gövde NİŞANA bakar (nişan yoksa harekete, o da yoksa olduğu gibi kalır), yani yana ve geriye ileri kadar
-hızlı süzülür ve arkasına bakmadan kaçarken ateş eder. Yanal sürtünme yoktur; hızlanması dikkatlidir
-(470 birim/s²) ama frenlemesi bilerek yumuşaktır (300 birim/s²): araç momentum taşır, köşede yana kayar,
-bırakılınca ~0,8 sn süzülerek durur. Hız tavanı bilerek Striker'a yakındır (240): üstünlüğü hızı değil
-yön özgürlüğü ve atılımdır; gövde nişana ağırlıklı döner (`maxTurnRate` 5,2, `turnAcceleration` 30). Zemin tutuşuna neredeyse duyarsızdır (`gripSensitivity` 0,2). Space
-BASILI TUTULDUĞU sürece iticilere yüklenir (kilitli değildir, yürüyücünün av atılışından farkı budur):
-tavan ×1,55 ve ivme 1500'e çıkar, depo ~0,47 sn'de boşalır ve bırakılınca dolar; hareketsizken atılım
-gövdenin baktığı yöne fırlar. Yan yüzey alanları (`track*`, `tread*`, `ground*`, `surface*`) iki itici
-kanalın yüzey hızıdır; kayma ve patinaj yoktur, bu yüzden palet izi ve kayma çizgisi bırakmaz (`tracked`
-yanlıştır) ve palet gümbürtüsü yerine pervane uğultusu çalar.
-
-Silahı kısa menzilli hızlı yaydır (`arc`): 150 ms'de bir 9 hasar, 520 birim menzil, 1100 birim/s mermi;
-her atış zayıftır, tempo yüksektir. Can 120'dir. İki yan itici ince zırhın dışındadır ve parça sayılır
-(`PARTS.hover`): yandan gelen kenar isabeti iticiyi koparır (tankın palet bitleriyle aynı iki bit,
-`TRACK_LEFT`/`TRACK_RIGHT`). Kopan itici kapasiteyi (`podLoss`, `floor` taban) keser ve araç kırık yana
-savrulur (`drift`), iki itici de kopunca yalnız taban itki kalır; taret ve ateş sürer.
-
-Sanat elle çizilmiş SVG'dir ve ailenin dilini taşır (koyu kenar, sol-üstten aydınlanan degrade, sedef
-levhalar, mor enerji): `src/assets/vehicles/manta/` altında gövde (kanat), yan itici, kaldırma pervanesi
-ve taret (kupola ve çift bobin raylı) vardır. `HoverView` iticileri yerde, gövdeyi onların üstünde çizer;
-gövde süzülürken nefes alır ve süspansiyonla kayar, iticiler bundan daha az kayar. Dönerken gövde dönüşün
-tersine yatar (`HOVER_VIEW.bank`, yaylı ve sınırlı); taret yatıştan arındırılır, yani nişan görseli kaymaz.
-İticilerin arkasında toz savrulur ve yerinde sönen mor enerji kıvılcımları bir iz çizer (hızla yoğunlaşır,
-atılımda tavana varır; kırık itici izsizdir). Reaktör penceresinde Striker'ınkiyle aynı hesapla atan bir
-çekirdek (`CorePulse`) ve kanat uçlarında yaylı, uçları ışıklı iki duyarga (`Feelers`) vardır; ikisi de
-gövdeyle yatar ve nefes alır, duyargalar dönüşte geride sürüklenir. Gölge tanktan çok
-daha yüksekten (26 birim) düşer ve gövdeden belirgin ayrılır, araç yerde yüzer görünür. Pervane hızla ve
-atılımla hızlanır; kopan itici kısa koyu bir kütüğe döner, pervanesi durur. Ağız parlaması `sim/muzzle`
-ucundadır. Bot, atılım ve sıçrama yetenekli araçlarla uzak hedefe atılımla kapanır; öteki yetenekleri durumuna göre açar (aşağıda).
-
-### İki yeni süzülen: Barracuda ve Leviathan
-
-İkisi de Manta'nın şasisini (`Hover`) paylaşır, yalnız sayıları ve silahlanması farklıdır. Barracuda
-gövdeyi tek bir namlu kümesine indirmiş keskin hızlı akıncıdır: `flak` stilinde üç namlu aynı anda
-ateşler (`salvo: [[0, 1, 2]]`, `HoverView` her yuva için ayrı ağız parlaması yakar), menzil kısa,
-mermi dağınıktır; tavan hızı 305'tir ama can 120'dir. Leviathan iki yan top taşıyan ağır süzülen savaş
-gemisidir: toplar (`HoverArt.gun`) kendi yuvalarında `sim/muzzle` açısıyla döner, her biri 1080 ms'de bir
-`lance` atar, birleşik tempo 540 ms'dir; kütlesi büyük, dönüşü yavaştır (`maxTurnRate` 2,4).
-
-Süzülenlerin Space yeteneği araçtan araca farklıdır (`skill`, `src/config/skills.ts`; hepsi aynı hız deposundan
-beslenir, ağa ek alan girmez, çarpanları tek hasar kapısı uygular): Manta AŞIRI YÜK açar (`overdrive`:
-iticilere yük biner, silah ×1,45 sık ateşler, hız tavanı artar); Barracuda ÇARPMA ATAĞI açar (`ram`:
-hızla çarptığı rakibe ×2,4 çarpışma hasarı verir ve kendi çarpışma hasarını %30'a indirir, yani
-akıncı hedefe kafa atar); Leviathan KUŞATMA duruşuna geçer (`siege`: gemi yavaşlar, gelen hasar ×0,9,
-verilen ×1,05, mermi itmesi ×0,6, yürüyüşe zorlanmaz). Görünümleri `HoverView`de `HOVER_VIEW.skills`
-ile ayrışır: aşırı yükte pervane ve itici izleri yoğunlaşır, çarpma atağında gövdenin pruvasında
-kıvılcımlar çıkar, kuşatmada gövde yere oturur ve açılış/kapanışta bir toz halkası yayılır. Kuşatma ve
-kalkan sessizdir (yeni ses sentezlenmedi); aşırı yük ve çarpma atağı süzülen atılım sesini çalar.
-
-### Mech: iki bacaklı robotlar (Warhound, Templar, Juggernaut)
-
-Dördüncü şasi ailesidir (`MechSpec`, `src/sim/mech/Mech.ts`, sayılar `src/config/mech.ts`). Sürüş
-mantığı yürüyücüyle aynıdır (komut hedef hız vektörüdür, gövde harekete döner, nişan yalnız kolları
-sürer) ama iki şey ayırır: robot iki bacaklıdır, adım çukuru (`strideDip`) her ayak basışında hızı
-düşürüp toparlar (faz iki bacağın katettiği yoldan türer, rastgelelik yoktur); tek bacak kopunca
-(`TRACK_LEFT`/`TRACK_RIGHT` biti) tavan ve ivme düşer, robot kopan yana sürüklenir ve o bacağın her
-adımında gövdesi çöker (`PARTS.mech`). Palet izi bırakmaz, her ayak basışı ağırlığına göre toz ve bot
-izi (`FX.feet.boot*`) bırakır. Silah kolları yuvalarında döner ve geri teper; üç robot üç ayrı
-silah stili taşır: Warhound ince `autocannon`, Templar `gatling`, Juggernaut `howitzer`.
-`MechView` bacakları gövdeye göre adım fazından çizer (uyluk ve baldır şeritleri, eklem diskleri,
-ayak); ayak basıldığı yerde kalır, yerinde dönen robot bacaklarını zıt yönde atar.
-
-Sanat `src/assets/vehicles/<araç>/` altında gövde, uyluk, baldır, eklem, ayak ve kol SVG'leridir;
-her robot tek bir enerji rengi taşır (Warhound sarı, Templar pembe, Juggernaut turuncu).
-Üç robotu "gerçek bacaklı yürüyen" sanat olarak üstten bakışta okutmak için bacaklar gövdenin
-dışına çıkar (`trackOffset`); bu bir seçimdir, boyut ve oranın insan beğenisi doğrulaması ayrı iştir.
-
-### Sıçrayıcılar: dört ayaklı zıplayanlar (Jackal, Panther, Rhino)
-
-Beşinci şasi ailesidir (`LeaperSpec`, `src/sim/leaper/Leaper.ts`, sayılar `src/config/leaper.ts`).
-`Walker`dan türer: komut hedef hız vektörüdür, gövde harekete döner, nişan yalnız silahı sürer. İki
-şey ayırır. Yerde yürüyüş sekmedir: her sekme hızı çukura indirir ve toparlar (`strideDip`, faz zemin
-yolundan türer). Dönüş yük taşır: hızlandıkça dönüş tavanı `carve` oranında düşer (koşuda geniş yay,
-yavaşken yerinde dönüş; Jackal 0,3, Panther 0,42, Rhino 0,5) ve sert dönüşte pençeler basıp koşu tavanını
-`turnDip` kadar keser; ikisi de hız ve açısal hızdan türer, ağ durumu değişmez. Space sıçramadır: `boosting` rezervi `boostDrain` ile boşalırken gövde havalanır; ilk
-adımda yön komuttur, sonra mermi gibi gider ve hız vektörü komuta doğru yalnız `leapTurnRate` (rad/s)
-hızıyla döner (Jackal 1,4, Panther 1, Rhino 0,55): sıçrayan taahhüt eder, ağır olan daha az döner.
-Havadayken kaya duvarları atlanır, derin su boğmaz ve tırmanış yavaşlatması yoktur; yere iner inmez
-bunlar geri gelir. Havadaki durum ağda zaten taşınan `reserve.active`tir, yeni ağ alanı yoktur.
-
-İniş bir çömelmedir (v2). Yere inen sıçrayıcı duvara çarpmış gibi kesilmez: koşu tavanının üstündeki hız
-`landBraking` ivmesiyle kayarak erir (Jackal 1000, Panther 800, Rhino 600; yürüyüş freni 1400–2200) ve depo
-`landRecovery` (0,3) oranında dolana dek koşu tavanı `landFloor`dan (0,75 / 0,7 / 0,6) tavana toparlanır.
-İkisi de ağdaki depo ve hızdan türer, ek durum yoktur; sunucu ile öngörü aynı kaymayı yürür. Sekme çukuru
-(`strideDip`) 0,22'den 0,09–0,14'e indi: koşuda hız dalgası kamerayı titretmez, sekme sunumdadır.
-
-Her yanda iki bacak vardır (`LEAPER_LEGS_PER_SIDE`, bit sırası yürüyücüyle aynı: sol 0-1, sağ 4-5;
-istasyonlar `PARTS.leaper.stations`). Bacak kopunca tavan ve ivme düşer, sıçrayıcı o yana sürüklenir
-ve her sekmede gövdesi çöker; Jackal'ın zırhı kâğıt gibi olduğundan en çabuk topallar.
-
-Sanat (v2) `src/assets/vehicles/{jackal,panther,rhino}/` altında hayvandır: gövde (`hull`), boyun ekseninde
-dönen kafa (`head`), kuyruk (`tail`), uyluk, baldır, eklem, ayak ve silah (`arm`) SVG'leridir; hepsi
-`LEAPER_ART` ölçüleriyle yerleşir. Jackal çakal (ince gövde, sivri kafa, geriye süpürülmüş kulak bıçakları,
-iki omuz topu), Panther pars (alçak, uzun; sol omuzda raylı top, sağ omuzda duyarga kubbesi, dümen kuyruk),
-Rhino gergedandır (plaka plaka gövde, çekiç kafa ve boynuz, topuzlu kuyruk, iki omuz kütle topu). Bacaklar
-dijitigrattır: kısa kalın uyluk, uzun ince baldır (Jackal/Panther pençeli, Rhino toynaklı). `LeaperView`
-bacakları sekmeye göre (ön çift, kısa aradan sonra arka çift) yürütür, sıçramada ön ayağı öne arka ayağı
-arkaya uzatır, arka iticilerden alev çıkarır ve inişte gövdeyi çökertip toz kaldırır. Kafa nişana bakar
-(`head.follow` oranında, en çok `head.yaw`; yay), sıçramada öne uzanır ve ağırlıkla birlikte çöker; kuyruk
-dönüşün dışına savrulur, koşuda sekmeyle kıvrılır, havada düz uzanır ve inişte kırbaç atar
-(`LEAPER_VIEW.head`, `LEAPER_VIEW.tail`). Omuz silahlı Jackal ve Rhino'da kafa silahların üstünde çizilir
-(kulak ve boynuz görünür), sırt raylı Panther'de silah kafanın üstünden geçer (`head.over`). Koşuda gövde
-sekmeyle ileri-geri savrulur ve her basışta hafifçe yükselir; dönüşte gövde dönüşün dışına kayar, yönü
-hizadan geri kalır ve yay dönüş bitince sallanıp yatışır, iç bacaklar daha yüksek kalkar, dış pençe toz
-savurur, ayaklar gövdenin kaydığı yöne açılıp toplanır ve kafa gövdeden önce dönüşe bakar. Havadaki ayak
-belirgin kalkar (diz dışa katlanır, pençe büyür) ve gövde her sekmede boyuna uzayıp toplanır
-(`LEAPER_VIEW.turn`, `LEAPER_VIEW.stride`, `LEAPER_ART.gait`). Çarpışan ayak izi sanatla birlikte güncellendi
-(Jackal 26×13, Panther 32×16, Rhino 42×26 yarım ölçü); kafa burun ucunda biter, kuyruk ve kulaklar çarpışmaya
-girmez.
-Enerji tonları: Jackal limon, Panther kızıl, Rhino camgöbeği. Oran ve renk beğenisinin insan doğrulaması
-ayrı iştir (TODO).
-
-### Bacaklı yürüyücüler: Arachnid, Widow ve Goliath
-
-Üçü de paletli değil bacaklıdır (`WalkerSpec`, `src/sim/walker/Walker.ts`): her yöne (yan, geri)
-aynı çevikliğiyle yürür; gövdesi WASD yönüne döner (nişan yalnız silah yuvalarını sürer, tank gibi
-nişana bakmaz) ve yürüyüş tavanı gövdenin hedefe dönüklüğüyle ölçeklenir (`turnSpeedFloor`: ters
-dönükken yarıya iner), bu yüzden önce döner sonra açılır. Shift hızlanması yoktur. Space her yürüyücüde
-yeteneği (`src/config/skills.ts`) açar; depo (`boost`/`boosting`, ağ durumuna ek alan girmez) yeteneğin süresi
-ve beklemesidir, HUD çubuğu yeteneğin adını taşır ("Atılım", "Kalkan"). Arachnid ve Widow SIÇRAR
-(`skill: 'leap'`, sim zinciri `LeapingWalker`: sıçrayıcılarla aynı kalkış, uçuş ve iniş; ~0,5 sn, geri
-alınamaz, hareketsizken gövdenin baktığı yöne atar, kayanın ve suyun üstünden geçer). Goliath sıçramaz,
-KALKAN açar (aşağıda). Sıçrayışın görünümü sıçrayıcılarla aynı dildedir ve üç parçadır. `LeapTracker`
-uçuş evresini `frame.boosting` ve depo süresinden türetir (kalkış, uçuş yayı, iniş; ağ alanı yoktur);
-`SpiderMotion` kalkışta kısa bir çömelme (`SpiderLeap.coilMs`), uçuşta yaya göre yükselen kalça
-(`rise`), gövdede geri-ileri yaslanma ve karında gerilme, inişte yaylı bir çökme (`landKick`) verir;
-`SpiderLegs` uçuşta yürüyüş döngüsünü dondurur ve bacakları üç evrede çizer: kalkışta arka bacaklar
-iter, zirvede toplanır (`tuckReach`), inişe doğru ön bacaklar uzanır (`landReach`); ayaklar havada
-yere basmaz, iniş anında yürüyüş yeniden başlar. Kalkışta ve inişte ayakların altından toz, iniş
-halkası ve ayak izleri çıkar, gölge uçuşta solar. Oyuncunun sıçrayışında kamera hareketin tersine bir
-kez itilir (`FEEL.dash.cameraKick`; yalnız fırlayan yetenekte, `skillLunges`: kalkan ve kuşatma
-duran yetenektir, kameraya dokunmaz). Atılış hızında ayak kemik erişimini bir-iki kare aşabilir;
-çizimde `solveLeg` onu erişime kelepçeler. Zemin tutuşundan palet kadar etkilenmez. Arachnid ağır
-kavgacıdır (162 birim/s, 108 can, zırhlı tarantula); Widow hafif keskin nişancıdır (160 birim/s,
-92 can, ince ve uzun bacaklı kara dul); Goliath devasa ve yavaştır (86 birim/s, 360 can,
-Arachnid'in ~1,9 katı boyda): adımları ağır basar, gövdesi geç yaslanır, kalkanı 2,3 sn sürer
-(tükenince depo ~5,4 sn'de yeniden açılır) ve bacakları ancak uzun ya da sürekli ateşle kopar. Hız tavanları
-bilerek düşüktür: bacak yürüyüşü tavan hızda ayakları kemik erişiminde tutar ve bunu
-`tests/view/spider/SpiderLegs.test.ts` ile `tests/config/spiders.test.ts` kilitler. Yürüyüş döngüsü
-sunumdur (ayaklar yüzeye basıldığı yerde kalır); yalnız KIRIK bacaklar fizikte ve ağ durumundadır
-(`ChassisState.parts`, bkz. "Parça hasarı"). Çarpışan gövde çizilen kabuğun içindedir, bacak açıklığı
-değildir.
-
-Goliath'ın kalkanı (`skill: 'shield'`, `SKILLS.shield`) süreli bir enerji kubbesidir: açıkken savaş
-hasarı (mermi, duvar, çarpışma) sıfırlanır (`taken` 0; boğulma kalkanı aşar), mermi itmesi %15'e iner ve
-Goliath yürüyüşe zorlanmaz (`dashPull` 0, yani Space hız kazandırmaz, yalnız kubbeyi açar). Sunucu ve
-öngörü kalkanı aynı depodan türetir, yeniden doğma korumasıyla aynı hasar kapısından geçer
-(`Simulation.applyDamage`). Görünümü `ShieldView`dir (`src/view/spider/`): çalışma anında çizilen üç
-doku (`shieldTextures.ts`: kenara doğru parlayan kubbe gövdesi, altıgen enerji örgüsü, çentikli ve
-düğümlü kenar halkası) toplamsal harmanla katmanlanır; örgü iki katman olarak ters yönlere yavaş döner,
-kenarda kuyruklu yaylar dolanır, açılışta kubbe yaylı bir aşımla büyür ve genişleyen bir halka yayılır,
-yerde kehribar bir ışık kalır. Kalkan açıkken gelen mermi gövdeye değil kubbeye çarpar: isabet noktasının
-kubbe merkezine göre açısında bir parlama ve kenar boyunca yayılan bir dalga çıkar (`absorb`; olay
-yönlendirici bu durumda normal isabet kıvılcımını ve zırh kırıntısını çizmez, aynı anda en çok dört
-dalga). Süre bitmeden `warnMs` önce kenar titreşir, bitince kubbe söner. Duraklatma kubbeyi dondurur.
-Kalkanın sesi yoktur (yeni ses sentezlenmedi, bkz. TODO).
-
-Sanat tamamen elle çizilmiş SVG'dir ve tanklarla aynı aileden gelir: parçalar tank parçalarıyla aynı
-ölçekte (dünya birimi) çizilir, yani kenar kalınlığı, perçin ve mercek boyu ekranda tankla eşittir; aynı
-koyu kenar, sol-üstten aydınlanan üç duraklı degrade, kabuk panelleri, mercek, ucu ışıklı duyargalar
-(palpler) ve halkalı namlu ile oluklu ağız freni kullanılır. Silüet ve renk ise ayrıdır. Arachnid:
-geniş zırhlı kabuk, kısa kalın dikenli bacaklar, sıcak bronz gövde ve kızıl kabuk, tek mercek, kabuğun
-ön omuzlarında iki plazma topu. Widow: dar kabuk, iri yumurta karın ve kum saati, uzun ve yüksek
-bacaklar, obsidyen gövde ve zehir yeşili, dört göz, ön omuzlarda iki iğne atıcı. Goliath: Arachnid'in
-kabuk dilini büyütür (kurşun gri levha, kehribar damar ve mercek, omuzlarda ek zırh levhaları, iki ağır
-plazma havanı). Parçalar Arachnid çiziminden `scale` grubuyla ölçeklenip yeniden boyanmıştır;
-boyut ve eklem merkezleri `GOLIATH_LOOK` ile birebir aynıdır. Parçalar
-`src/assets/vehicles/arachnid/`, `src/assets/vehicles/widow/` ve `src/assets/vehicles/goliath/` altındadır (femur, tibia, pençe, diz, temas karartısı,
-göğüs, karın, iki gölge, top yuvası, namlu demeti); pen export kullanılmaz. Ölçüler ve eklem
-merkezleri `SPIDER_LOOKS` (`src/config/spiders/`) içindedir ve `tests/assets/spiders.test.ts` SVG
-kutularıyla birebir eşitliğini kilitler.
-
-**Bacaklar gövdenin altındadır.** Çizim sırası sabittir: zemin gölgeleri, bacaklar, karın, göğüs,
-toplar (`SpiderView`); hiçbir bacak parçası, ne kadar yüksekte olursa olsun, kabuğun üstüne çıkmaz
-(`tests/view/SpiderView.test.ts`). Kalçalar kabuk hattının içindedir: femur kabuğun altından çıkar,
-diz ve ayak dışarıdadır. Bacak yukarıdan düz bir şerit değil, kalça yüksekliğinden yere inen iki
-kemiktir (`solveLeg`): havadaki ayak kalkarken diz yükselir ve büyür, basılı ayakta tibia dik iner.
-Yükseklik üç şeye dönüşür: parçanın perspektifle büyümesi, konumun gövde merkezinden dışarı itilmesi
-ve yere düşen gölgenin yükseklikle orantılı kayması. Bacak gölgesi bir çizgi değil kemik kalınlığında tek
-kapalı çokgendir (`limbOutline`: kalça, diz ve ayak, uca doğru incelir, dirsekte köşe birleşir); eklemler
-ZEMİN konumundan kendi yükseklikleriyle kayar, çünkü paralaks yalnız çizimi iter, gölgeyi itmez (aksi hâlde
-gölge göğüs gölgesinden dışarı kayardı).
-
-Görünüm (`src/view/SpiderView.ts`) üç araç için aynı sınıftır; fark `SpiderLook`tadır (kalça
-yerleşimi, kemik boyu, yürüyüş, hareket, top, `sensors`). Göğüs lensinde Striker'la aynı hesapla atan bir
-çekirdek ışığı (`CorePulse`) ve göğse bağlı, öne bakan iki yaylı duyarga (`Feelers`) durur; ikisi de göğüsle
-birlikte yaslanır, döner ve perspektifle büyür, çekirdek hızla ve atılımla sıklaşıp parlar. Ayaklar dünyada sabitlenir ve gövde ilerledikçe
-dönüşümlü dört-ayaklı adım atar (`LegGait`: bir yanın 1. ve 3., ötekinin 2. ve 4. bacağı birlikte
-kalkar). Yerinde yavaş dönüşte grup üyelerinin eşik anları adım süresinden sık dizilir ve sıra el
-değiştirmezdi; `turnWindow` sırayı kısıtlar ve karşı grup aç kalmaz. Kabuk hızdan ve ivmeden türeyen
-ikincil harekete uyar (`SpiderMotion`: yaslanma, çömelme, atılım gerilmesi, adım sarsıntısı; karın
-dönüşü geriden izler ve ivmeyle sıkışıp uzar). İvme, hızın değiştiği simülasyon adımları arasından
-okunur (`LocomotionReader`). Her ayak basışı bir toz tutamı ve kısa bir gövde çökmesi bırakır.
-
-Silahlar iki parçadır: yuva (gövde) ve namlu demeti. Demet yuvanın altından çıkar ve atışta geri
-kayar, yuva sarsılır, ısınma ışığı yanıp söner ve ağız parlaması geri teperken kısalan namlunun
-ucunda açılır (`SpiderCannon`). Plazma topu kalın ve halkalıdır, kızıl hortumlu, oluklu ağız frenli;
-iğne atıcı ince ve uzun, zehir bobinli ve iğne uçludur. İki top gövde eksenindeki odağa bakar ve
-sırayla ateşler: Arachnid'in her topu 940 ms'de bir atar (birleşik tempo 470 ms), Widow'un her atıcısı
-460 ms'de bir (birleşik 230 ms), Goliath'ın her havanı 1520 ms'de bir (birleşik 760 ms). Yuvanın `reach` değeri çizimdeki ağız mesafesidir
-(`SpiderLook.cannon.muzzleX`); mermi, geri tepme ve ağız parlaması oyunun efekt katmanındandır.
-
-Bütün örümcek ve süzülen araç parçaları açılışta TEK doku atlasına çizilir (`vehicle-atlas`): bir karede
-14'ten fazla ayrı doku GL toplu çiziminde parçaları kesiyordu (Manta'nın pervaneleri ayrı dokuyken yarım
-ya da kara çiziliyordu) ve büyük SVG'ler GL'ye doğrudan yüklenince parça parça rasterleniyordu; tek atlas
-ikisini de önler ve araçlar aynı dokuyu paylaşır.
-
-Atlas efekt dokularını (iz, kıvılcım, patlama, kalkan, enkaz kıymığı) ve tank parçalarını da taşır;
-kare adı eski doku anahtarıdır (`TEXTURE.spark` → `vehicle-atlas` karesi `fx-spark`) ve iz yaması çizilirken
-paletin adım sayısına göre alt kareler (`treadFrame`) seçilir. Ölçüm (Lenovo TB350FU, Mali-G57, WebGL1,
-`multitank`, 7 araç): bir karedeki çizim çağrısı ~480'den ~55'e indi, ama kare hızı yükselmedi; asıl maliyet
-çizim çağrısı değil **toplu çizim boşaltmasıdır** (`bufferSubData`, bu GPU'da tanesi ~1,2 ms) ve onu en çok
-**harmanlama kipi değişimi** (ADD↔NORMAL) tetikler.
-
-Bu yüzden ışık görüntüleri (itici parlaması, duyarga uçları, top ısınma ışığı) araç kapsayıcısında değil ortak
-ADD katmanında (`VehicleViews.lighting`) çizilir: kapsayıcıdaki tek bir ADD çocuğu her araçta iki boşaltma
-demekti (20 araç kapsayıcısı → 40 boşaltma, 22 FPS; çocuklar gizlenince 73 FPS). Görünüm kodu ışığı yine
-kapsayıcının yerel uzayında sürer (`addGlowPose` sahneye çizilmeyen bir poz tutucusu verir); `GlowMirror` her
-çizimden önce (`PRE_RENDER`) tutucuyu ata kapsayıcının dünya dönüşümüyle ortak katmandaki gerçek görüntüye
-taşır. Atalardan biri gizliyse, soluksa (batma) ya da yanmışsa (`isCharred`) ışık da gizlenir. Yeni bir ADD
-görüntüsü araç kapsayıcısına doğrudan konmaz; tek bir kalkan gibi tek örnekli, kendi kapsayıcısında toplu
-katmanlar bunun dışındadır.
-
-## Sürüş ve süspansiyon
-
-### Parça hasarı
-
-Mermi isabeti canın yanında bir PARÇAYI da aşındırır: tankta iki yan palet, süzülende iki yan itici,
-yürüyücüde sekiz bacak.
-`PartWear` (`src/sim/combat/PartWear.ts`) merminin TEMAS NOKTASINI gövde çerçevesine çevirir (mermi
-temas noktasına çekilmiştir, adım sonuna değil) ve hasarı o bölgenin parçasına yazar: tankta gövde
-yarı genişliğinin `sideStart` oranından dışa düşen darbe `(sol|sağ)` paleti, yürüyücüde en yakın bacağı
-(istasyonlar `SpiderLook.hips` x'idir, iki bacak arasına düşen darbe ikisini de aşındırır; ön/arka yüz
-daha az, yan tam) aşındırır; gövde kenarındaki isabet kritiktir (`criticalGain`). Parça dayanımı aracın
-canının oranıdır (`PARTS`, `src/config/parts.ts`), bu yüzden zayıf araç parçasını çabuk, ağır zırhlı geç
-kaybeder; `tests/sim/combat/PartWear.test.ts` kaç isabette kırıldığını araç araç kilitler ve parçanın
-ölümden ÖNCE kırıldığını doğrular. Rastgelelik yoktur: aynı atış dizisi aynı parçayı kırar. Aşınma bir
-süre dinlenen parçada söner; kırık parça, aracın hasar almadığı `repair.quietMs` boyunca sessizlik
-sürerse birer birer yerine oturur (can yenilenmesiyle aynı sessizlik fikri) ve doğuş/sıfırlama hepsini
-onarır. Sessizlik süresi onarım süresine sayılmaz; sönme yalnız eşiğin ötesindeki
-süreyi tüketir. Bir onarımdan kalan süre sonraki parçaya aktarılır, büyük ve
-bölünmüş adımlar aynı onarım maskesini üretir.
-
-Kırık parçanın sürüşe etkisi şasidedir ve `Chassis.parts` (bit maskesi) ile ağ durumuna girer: tamsayıdır,
-`CHASSIS_STATE_SNAPPED` listesindedir ve uzak araçta ara değer ALMAZ (`RemoteTanks`); aşınmanın kendisi
-ağa gitmez, yalnız sonuç. Kırık palet itki vermez, zeminle serbest döner (kayma üretmez) ve yerde
-sürünerek yuvarlanma direncini `dragGain` katına çıkarır: tek palet kırıkken tank kırık yana sürüklenir ve
-dönüşü bozulur, iki palet de kırıksa sürülemez ve yerde kalır (taret ve ateş sürer). Kırık itici
-süzülenin tavanını ve ivmesini keser, kırık yana savurur (bkz. "Süzülen araç"). Kırık bacak
-yürüyücünün tavan hızını ve ivmesini kaybedilen bacak başına `legLoss` kadar keser (`floor` taban),
-bir yanın bacakları eksikse yürüyüşü o yana sürükler (`drift`) ve eksik yan, kendi yürüyüş döngüsünde
-(katettiği yoldan türer, rastgele değil) çöker: hız kesilir ve gövde o yana savrulur (tökezleme,
-`stumble`). Tek bacak kaybı bile hissedilir: ortalama hız ~%25 düşer ve her adımda ~%25'lik bir hız
-çukuru açılır (`tests/sim/partsDrive.test.ts`); görünüm aynı fazdan (`limpCollapse`) kalçayı indirip
-gövdeyi çöken yana yatırır ve göğsü büker (`SpiderView.stumble`, yalnız yürürken; duran yürüyücü
-tökezlemez), yani "bir bacağım yok" topallaması hem hızda hem silüette okunur. Parça koptuğu anda gövde ayrıca `Chassis.jolt` ile kırılan yana sarsılır ve `broke` olayı
-yayılır. Bot kırık araçla da çalışır: iki paleti kırık bot yerinde kalıp nişan almaya ve ateşe devam eder
-(`tests/sim/ai/BotBrain.test.ts`).
-
-Araç gövdesi bir katı cisimdir (`Chassis`: poz, durum, taret, hızlanma deposu, süspansiyon
-ve duvar teması; tank `Chassis`'e palet kuvvetlerini ekler). Striker'ın kütlesi ve ayak izi
-`src/config/tank.ts` içindedir, öteki araçlar aynı tablonun değerlerini değiştirir.
-Hız doğrudan atanmaz: iki paletin kuvveti gövdeyi taşır, kuvvet farkı döndürür.
-Palet yüzey hızıyla zemin hızı farkı çekiş üretir. Stribeck geçişi statik ve
-kinetik sürtünmeyi birleştirir; boylamsal ve yanal kuvvet aynı sürtünme
-bütçesini paylaşır. Kayan veya kilitli palet yanal tutuşunu yitirir.
-
-Direksiyon farkı ortak itkiye göre önceliklidir; motorun güç sınırı iki
-palet arasında paylaşılır. Fren paletleri kilitler ve kayarak durdurur.
-Yuvarlanma ve dönme direnci, yerel yüzey koşulları ve duvar temas itkileri
-aynı kuvvet çözümüne girer. Yerinde dönüş de palet temas yolu üretir.
-
-Sürücü ekrana göre istenen yönü palet hızlarına çevirir. Önce döner, yön
-hatası azaldıkça gaz açar. Dönüş tavanı hızla düşer; yüksek hızda viraj genişler.
-Geri vites eşikleri histerezislidir. Bu yön kontrolü klavye, kol ve dokunmatik
-kaynaklarında aynı komutu üretir.
-
-Süspansiyonun yunuslama ve yalpası ayrı yay-sönüm sistemleridir. Kalkış,
-fren, viraj, atış ve çarpma gövdeyi kuvvet yönüne göre iter. Deterministik yol
-titreşimi palet yolundan türer. Paletler yerde kalır; üst parçalar gövdeyle
-hareket eder. Görünüm ara değerle çizilir.
-
-Duvar sert sınırdır: araç teması bir gövdeyi duvara geri itebildiği için
-araç çifti çözümünden sonra duvarlar yeniden çözülür. Döngü sınırlı (4 geçiş)
-ve daima duvar geçişiyle biter; sıkışık kümede araçlar tam ayrılamasa da
-adım sonunda hiçbir gövde köşesi dünya dışında kalmaz. Ölçülen en kötü kalan
-araç örtüşmesi ≈0,05 birimdir (4 tohum, 48 000 araç çifti ve köşe yığını).
-
-## Nişan ve ateş
-
-Taret gövdeden bağımsız dünya yönünü korur; gövde dönünce veya nişan çubuğu
-bırakılınca otomatik olarak gövdeye dönmez. Dönüş hızı ve hizalanma eşiği
-silah yapılandırmasındadır. Taret hedefe oturmadığında ateş isteği bekler,
-dolum tüketilmez. Atış aralığı silaha göredir (Striker 650 ms).
-
-Mermi namlu ekseni boyunca çıkar ve aracın hızından yalnız eksen bileşenini
-devralır: yan kayarken ateş eden aracın mermisi namlunun gösterdiği doğrultudan
-sapmaz. Atış araca ters yönde itki uygular; çok namlulu araçta her namlunun geri
-tepmesi, bütün mermiler doğduktan sonra ayrı ayrı uygulanır. Düşey uçuş, yatay hava direnci, rüzgâr, yer teması ve menzil sonu aynı
-balistik çözümle hesaplanır. Yer ve menzil bitişi adımın içindeki kesin
-zamanda çözülür. Nişan önizlemesi aynı uçuş hesabını, araçları ve dünya
-sınırını kullanır; gelecekteki hava olayını tahmin etmez.
-
-Namlu, lazer ve fare nişanı tek geometriden türer (`src/sim/muzzle.ts`): yuva mili
-gövde merkezi artı yuvanın gövde eksenindeki konumu artı süspansiyon kaymasıdır, namlu
-ucu milden yuva yönünde `MountSpec.reach` uzaklıktadır. Sim atışı, ağız parlaması ve nişan çizgisi
-aynı işlevi okur; çizgi ekranda görünen ara değerli kareden (`tankFrame`)
-türetilir ve mermi yolunu (rüzgâr ve direnç eğrisi dahil) namlu ucundan çizer.
-Fare nişanı da son çizilen karedeki taret milinden hesaplanır; simülasyonun
-bir sonraki adımdaki konumundan değil.
-
-Nişan çizgisi (lazer) yalnız nişan alırken yanar ve `AimPresence` ile açılıp söner:
-dokunmatikte nişan çubuğu tutulurken, kolda sağ çubuk sapmışken; farede imleç
-hareket ederken, sol düğme basılıyken ve durduktan sonra `CONTROLS.aimHoldMs`
-boyunca. Fare konumu her zaman bir yön verdiği için yön bakılsaydı lazer fareyle
-sürekli yanardı. Açılış çabuk (90 ms), sönüş yavaştır (320 ms); çizgi namludan
-uzanır ve sönerken namluya geri çekilir.
-
-İsabet, adımın süpürdüğü doğru parçasının gövdenin yönlü ayak iziyle ilk
-kesişimidir; uç noktaları örnekleyen test dönmüş gövdenin köşesini ve dar
-kirişi kaçırırdı. Aynı adımda birden çok araç kesişirse en erken temas
-kazanır, sahibi dışlanır. Olay, itki ve önizleme adımın bittiği yeri değil
-temas noktasını görür; araç adımın sonundaki pozunda sabit sayılır.
-
-Dünya duvarı aynı süpürülmüş segmenti ilk çıkış parametresinde keser;
-çapraz atışta x/y ayrı ayrı kırpılmaz. Duvar arkasındaki araç isabet almaz.
-Dışarıda doğan namlu ucu başlangıç sınırında sonlanır; önizleme ve runtime
-aynı geometrik kuralı kullanır. Bu, eğri uçuşun tam sürekli çözümü değildir.
-
-Atış gövde ve namluyu yaylandırır; parlama, kısa gaz jetleri, kıvılcım,
-duman ve toz üretir. Kamera atışta sarsılmaz, küçük yaylı itme yapar.
-Patlama ve çarpma sarsıntısı uzaklıkla azalır. Mermi izi yeni atışta tankın
-içine uzanmaz. Efektler ayrı yaşam süreli sınırlı havuzlardır.
-
-## Can, hasar ve yeniden doğma
-
-Her `Vehicle` bir `Vitality` taşır; can, ölüm, doğal onarım, yeniden doğma
-sayacı ve geçici hasar korumasının tek sahibi saf simülasyondur. Phaser saati,
-tarayıcı zamanlayıcısı veya rastgele sayı kullanılmaz. Varsayılan savaş değerleri
-`src/config/combat.ts` içindedir: 100 can, 34 mermi hasarı, son hasardan 6 sn
-sonra saniyede 4 can onarım, ölümden 4 sn sonra yeniden doğma ve 1,2 sn koruma.
-Duvar ve araç çarpışması eşik üstündeki normal temas hızına göre hasar verir.
-Araç çiftinde dört temas çözümü geçse de bir simülasyon adımında aynı çiftten
-bir kez hasar alınır.
-
-`Simulation.applyDamage`, `healVehicle` ve `respawnVehicle`, yetkili
-savaş komutlarının ve dünya sistemlerinin kullanacağı tek kapıdır. Hasar ve
-iyileşme gerçek değişen miktarı döndürür; miktarlar sonlu, negatif olmayan
-sayıdır. Ölüm canı sıfıra indirir; cansız araç hareket etmez, ateş etmez,
-canlı araç gibi hareket etmez ve mermi hedefi olmaz; sabit enkaz olarak temasa
-katılır. Ölüyü yalnız yeniden doğma
-canlandırır; araç kimliği değişmez. Doğumda ilk yerleştirme konumu kullanılır;
-yetkili çağıran bu konumu açıkça geçebilir. Gövde fiziği ve atış beklemesi
-sıfırlanır. Savaşın `War` katmanı doğmadan önce üssündeki en boş adayı seçer.
-Yeniden doğuşun konum sıçraması kalıcı sürüş mesafesine eklenmez.
-
-İsteğe bağlı takım kimliği `Simulation.spawn` ile verilir. Her iki araç
-aynı takımdaysa ve `friendlyFire` kapalıysa dost mermileri hedefi geçer;
-nişan önizlemesi de aynı kuralı kullanır. Takımsız araçlar herkese
-karşı hedef sayılır. Mermi atış anındaki takım ve hasar çarpanını taşır; atıcı
-ayrılınca dost ateşi açılmaz ve kuşatma bonusu kaybolmaz. Mermi profilleri ve
-doğuşları havuz değiştirilmeden doğrulanır; nişan önizlemesi en çok
-`PROJECTILE_PREVIEW_MAX_STEPS` adım ayırır. Aynı paketteki hasar sayıları kendi
-atıcı/isabet noktalarıyla eşleşir. `damaged`, `healed`, `died` ve `respawned`
-olayları araç kimliği ve varsa kaynak kimliğiyle sunuma aktarılır. HUD,
-CORE can çubuğuyla güncel canı ve ölüm/koruma süresini i18n anahtarıyla
-gösterir. Sunucu tarafı savaş yetkilendirmesi, kalıcı ölüm politikası ve spawn
-alanı seçimi bu simülasyon mekanizmasının üzerindeki oyun kurallarıdır.
-
-### Ölüm ve enkaz
-
-Ölen araç soluklaşıp hayalet olarak kalmaz: `WreckDirector` (`src/scenes/world/WreckDirector.ts`) her kare
-canlılığı bir önceki kareyle karşılaştırır ve canlıdan ölüye geçişte tek bir patlama oynatır; araç görünümü
-`VehicleView.setWrecked(true)` ile olduğu yerde kalır: gövde isli renge çekilir (`src/view/charring.ts`; ışık ve
-ağız parlaması söner, kalkan kubbesi ve sıçrama pozu silinir), poz donar ve gölgesi yerinde durur, yani araç birden yok
-olmaz; yeniden doğunca `setWrecked(false)` her rengi eski hâline getirir. Enkaz katıdır: canlı araç ölünün
-gövdesinden geçemez, `Simulation.collideWreck` ölüyü sabit bir kütle olarak (`WRECK_MASS`) aynı çarpışma
-çözücüsünden geçirir; ölü yerinden oynamaz, çarpan hasar almaz (yalnız `collision` olayı ve geri tepme). Karşılaştırma simülasyon olayına değil canlılık durumuna
-dayandığı için çevrimdışı sandbox ve çevrimiçi istemci aynı yoldan geçer; ilk görülen ölü araç (geç katılım)
-patlamadan gizlenir. Patlama `EffectsView.wreck`tir: parlama, şok halkası, yanık, kor/kıvılcım/toz parçacıkları
-ve `src/config/debris.ts` ayarlarıyla 6-8 enkaz parçası. İlk iki parça aracın gerçek çizimidir (tankta taret ve
-duyarga, örümcekte femur, tibia ve ayak), kalanı levha kıymığıdır (`debrisArt.ts`); büyük parçalar sırayla
-seçilir, böylece aynı parça (örn. taret) iki kez savrulmaz. Parçalar `Debris`
-havuzunda gerçek fizikle ilerler: yerde (x, y) ve havada yükseklik (z), yerçekimi, hava sürtünmesi, sekme
-(hız kaybıyla), dünya duvarından sekme, durunca yuvarlanma sönümü; perspektifle büyür, gölgesi ışığın tersine
-yükseklikle kayar, ilk anda kor gibi parlayıp soğur, 3,6-5,6 sn sonra söner ve havuza döner. Havuz tavanı
-vardır (28, kalite profiliyle ölçeklenir) ve dolu havuzda en eski parça yeniden kullanılır; yani kalabalık
-savaşta bile ekran dolmaz ve görüntü nesnesi yaratılmaz. Enkaz sunum zamanıyla ilerler (duraklatmada donar)
-ve tohumlu rastgele kullanır (`FX.debrisSeed`): aynı olay aynı düzeni verir. Mermi isabetinde ara sıra
-(`DEBRIS.hit.chance`) gövdeden küçük bir kıymık kopar; şans isabet noktası ve hedef kimliğinden türeyen bir
-karmayla (`hash01`) belirlenir, `Math.random` yoktur.
-
-Parça kopması aynı yönetmendedir: `WreckDirector` canlılığın yanında `Chassis.parts` maskesini de
-karşılaştırır. Yeni açılan her bit bir parça koptu demektir: `EffectsView.shed` parçayı bağlantı
-noktasından (`partAnchor`: tankta yan paletin ortası, yürüyücüde bacağın kalçası) gövdenin kırılan
-yanına doğru savurur (tankta palet çarkı ve levha kıymıkları, örümcekte bacağın tibiası ve pençesi), kıvılcım ve
-kısa bir parlama verir; görünüm `VehicleView.setParts` ile kırık hâle geçer: kırık palet kararır,
-yerinden oynar ve arka çarkını düşürür (`TreadRig.setBroken`), kırık bacak femurun kısa bir kütüğü
-kalır, tibia, pençe ve temas karartısı kalkar, ayak yere basmaz ve gövde kırık yana çöker
-(`SpiderLegs.setBroken`, `SpiderView` çökmesi). Maske sunucudan olduğu gibi geldiği için aynı yol
-çevrimiçi uzak araçlarda da çalışır; onarım (bit kapanması) efektsiz görünüme işlenir.
-
-## Bot yapay zekâsı
-
-`src/sim/ai/BotBrain.ts` bir aracın komutunu üreten saf benzetim kodudur: Phaser, ağ ve gerçek saat
-bilmez, oyuncuyla aynı `TankCommand` sözleşmesiyle sürer (hile yok, ışınlanma yok) ve kendi tohumlu
-rastgeleliğini kullanır; aynı tohum, beceri ve dünya bit bit aynı yolu izler. Dört paletli ve bacaklı
-araç ailesini de sürer, çünkü yalnız `Vehicle` yüzeyini (poz, hız, silah menzili, depo) okur.
-
-Karar iki katmandır. Algı `thinkIntervalMs` aralığıyla tazelenir: en yakın düşman (takımsız araç
-herkese düşmandır; histerezis ve "belirgin yakın" kuralı hedef titreşimini önler), diğer araçlardan
-ayrışma vektörü, nişan sapması ve yörünge yönü. Her adımda bu kararlar hareket, nişan ve tetiğe çevrilir:
-
-| Kip       | Ne zaman                                                | Hareket                                                   |
-| --------- | ------------------------------------------------------- | --------------------------------------------------------- |
-| `engage`  | hedef menzilin 1,25 katında ya da görev bağı içinde     | standoff mesafesini tutar, hedefin çevresinde şerit atar  |
-| `advance` | görev noktasına varılmamış                              | göreve yürür, uzaksa atılım kullanır                      |
-| `hold`    | görev noktasına varıldı ya da görev yok                 | bölgede yavaş dolaşır, namlu çevreyi tarar                |
-| `retreat` | can kişiliğin eşiğinin altında                          | geri çekilme noktasına koşar, iyileşince döner            |
-| `regroup` | düşman, çevredeki müttefikten (kendisi dahil) iki fazla | müttefik kümesine ya da üsse çekilir, namlu hedefte kalır |
-| `unstick` | komut verildiği hâlde ilerlenemiyor                     | kısa süre geri ve yana kaçar                              |
-
-Nişan hedefin hızını önden gider (`interceptTime`: sabit hızlı mermi ve sabit hızlı hedef için kapalı
-çözüm, çözüm yoksa düz uçuşa düşer); ateş yalnız tepki süresi geçince, menzilin %92'sinde ve namlu
-`aimTolerance`ın iki katı içinde açılır. Beceri (0 acemi, 1 usta) tepki süresini, nişan sapmasını, önden
-gitme doğruluğunu ve geri çekilme eşiğini bir aralıkta kaydırır; tüm sayılar `src/config/bot.ts`'dedir.
-
-**Taktik katman.** Beceri `BOT.tactics.minSkill` ve üstündeyse bot dört şey daha yapar; hepsi tohumlu ve
-saftır. (1) Hedef mesafeden değil puandan seçilir: canı azalmış düşman beceriyle orantılı daha yakın
-sayılır (usta bitirir), doğma korumalı düşman vurulamayacağı için üç kat uzak sayılır; tek düşman
-korumalıysa yine de ona dönülür. (2) İki silahın menzili kıyaslanır: kendi menzili belirgin uzunsa düşman
-menzilinin hemen dışında durup vurulur, belirgin kısaysa düşmanın içine girilir (Dart, Bulwark'a menzil
-dışından; Bulwark, Dart'a içeriden oynar). (3) `packRadius` içindeki düşman, müttefikten (kendisi dahil)
-iki fazlaysa `regroup`: bot yakındaki müttefik kümesinin ağırlık merkezine (yoksa üsse) çekilir, yan sapma
-ve atılımla koşar, namlu hedefte kalır ve ateşi sürer; fark sıfıra inince bırakılır (giriş ve çıkış
-eşikleri farklıdır). (4) Beceriyle ölçeklenen kaçınma: algı adımında düşman mermilerinin en yakın geçişi
-kısa sürede ve araç yarıçapı içinde kalıyorsa mermi yolunun dikine, geçeceği yerin ters yanına sapılır.
-Acemi bot bunların hiçbirini yapmaz; yalnız en yakına ateş eder.
-
-Yetenek seçimi araca göredir (`BotBrain.wantsSkill`, `BOT.skills`; yalnız `engage` kipinde ve hedef varken,
-sıkışma kurtarması sırasında hiç): atılım ve sıçrama yukarıdaki yaklaşma kurallarıyla açılır; kalkan
-yalnız yoluna mermi geldiğinde (`threatened`, kaçınma kişiliği sıfır olsa da mermi taranır), aşırı
-yük hedef ateş menzilindeyken, çarpma atağı `ramMin`–`ramRange` aralığında (bu durumda bot yörünge
-yerine hedefe düz yüklenir), kuşatma da ateş menzilinin içinde ve `siegeMin` uzaklıktan yakındayken.
-Görev ve geri çekilme noktasını dışarıdaki yönetici verir (sunucuda savaş dünyası; bkz. Çok oyunculu).
-
-## Savaş katmanı
-
-`src/sim/war/` kalıcı savaşın saf kuralıdır; Phaser ve ağ bilmez, sunucu odası ve çevrimdışı alıştırma
-aynı `War` nesnesini sürer. Sayıların tek sahibi `src/config/war.ts`'tir; konumlar dünya ölçüsünün
-oranıdır, dünya büyüyünce düzen korunur.
-
-| Parça            | Sorumluluk                                                                                |
-| ---------------- | ----------------------------------------------------------------------------------------- |
-| `Zones.ts`       | Yedi bölge: çemberdeki canlı araç farkı ilerletir, sahiplik tarafsızlaşarak el değiştirir |
-| `Deployment.ts`  | Üs çevresindeki doğma adayları; tehditten en uzak olanı seçer, ardışık doğanları dağıtır  |
-| `BotDirector.ts` | Cephe başına hedef nüfus, takma adlar, bölge görevlendirmesi (yakınlık, kalabalık, durum) |
-| `War.ts`         | Katılım ve cephe dengesi, ölüm skoru, üsde yeniden doğma, hâkimiyet puanı ve zafer        |
-
-Maç yoktur. İki cephe karşıt köşelerdeki üslerden doğar; bir bölgeyi tek araç `soloSeconds` içinde, üç
-araç ve üstü üç kat hızlı alır, iki cepheden de araç varsa bölge tartışmalıdır ve ilerleme sayı farkıyla
-gider. Sahip bölgeyi tutarken saniyede puan kazandırır, düşman aracı etkisiz kılmak da puan verir. Bir
-cephe `dominance` puanına ulaşınca savaşı kazanır: puanlar ve bölgeler sıfırlanır, kazanma sayısı
-artar ve savaş aynı dünyada sürer.
-
-İnsan oyuncu `War.join` ile girer: istediği cephe insan dengesini bozmayacaksa verilir, yoksa insanı
-az olana (eşitse puanı düşük olana) gidilir. Nüfus cephe başına `perFaction` araca tamamlanır; insan
-girince bir bot çıkar (önce ölü, sonra oyunculardan en uzaktaki), insan gidince yenisi gelir. Botlar
-her `reassignMs` içinde bölgeleri yeniden değerlendirir: tartışmalı bölge en çekici, sakin ve kendi
-elindeki bölge en az çekicidir; yakınlık çekiciliği artırır, aynı bölgedeki kalabalık azaltır ve eski
-görevden ancak belirgin biçimde daha iyi bir bölge için vazgeçilir. Bu kararların hepsi tohumludur:
-aynı tohum aynı savaşı üretir (`tests/sim/war/War.test.ts`).
-
-**Sunum.** Cephe hattının çizimi kural bilmez: `src/view/front.ts` bölge ve üs geometrisini sunucunun
-kullandığı `ZoneField`/`baseCenter` hesabından türetir, sürücü (`WorldDriver.front`) durum alanlarını
-yerinde günceller. `src/view/ZonesView.ts` bölge çemberlerini (sahibin renginde halka, ilerleme yayı,
-tartışmada nabız) ve üsleri kameraya yakınsa çizer; `MapPanel` aynı kareyi alanlı işaret olarak
-(CORE `MinimapMarker.worldRadius`) gösterir ve araç işaretlerini cephe rengine boyar. Her bölgenin yanına
-yerelleştirilmiş kısa adı (`voltest:war.zoneShort.*`, bir-iki harf) CORE `MinimapMarker.label` ile yazılır;
-hangi çemberin hangi bölge olduğu renge bakmadan okunur ve dil değişince etiketler yeni dille yazılır. Ölçek
-çubuğunun birimi de çeviri anahtarıdır (`voltest:hud.metre`). Renk ve ölçüler
-`src/config/frontView.ts` içindedir. Çevrimdışı sandbox'ta cephe hattı yoktur.
-
-**Bot rozeti.** Haritada ve dünyada hangi aracın insan, hangisinin bot olduğu aynı küçük sarı nokta
-ile söylenir (`ONLINE_VIEW.colors.bot`). Harita araç işaretinin ortasına CORE `MinimapMarker.badge`
-ile nokta düşer; dünyada `NameTags` adın soluna aynı noktayı çizer. Kaynak sürücüdür
-(`WorldDriver.isBot`): çevrimiçi sunucu kaydındaki `bot` bayrağı, çevrimdışı sandbox'ta oyuncudan başka
-her araç. Çevrimdışı botların adı yoktur; yalnız sağlık çubuğu ve rozet çizilir. Kendi aracınız hiçbir
-koşulda bot sayılmaz.
-
-**İsabet geri bildirimi.** Çok oyunculu ateşte kimin kime ne kadar vurduğu üç şeyle okunur. Her `damaged`
-olayı isabetin noktasında hasar sayısı (`src/view/effects/DamageNumbers.ts`) doğurur: verilen hasar sarı,
-alınan kırmızı ve büyük, başkalarının isabeti soluk ve küçüktür (`FX.damageNumbers`). Yön
-`src/scenes/world/SimEventRouter.ts` içinde oyuncunun kimliğine göre seçilir; boğulma sayı üretmez, çünkü
-canı sürekli eritir. Sayılar sabit bir yazı havuzundan gelir; yoğun ateşte nesne üretilmez. `NameTags` can
-çubuğu isabette kısa süre beyaza parlar ve kaybedilen can soluk bir iz olarak kalıp erir
-(`ONLINE_VIEW.tag.trail*`); iyileşme ve yeniden doğuş izi sıfırlar. Hasarın kendisi sunucuda uygulanır; bu
-katman yalnız görünürlüktür.
-
-Harita 384 m'lik dünyada tüm dünyayı gösterseydi araç kare başına piksel altı yürür ve harita
-durmuş gibi görünürdü; bu yüzden açılış yakınlaştırması `WORLD.mapZoom` (4, çevredeki ~96 m) ve
-tavanı `WORLD.mapMaxZoom`dur, zoom 1 bütün cephe hattını gösterir
-(`tests/hud/MapPanel.test.ts` yavaş aracın her karede çizildiğini kilitler).
-
-## Ekranlar
-
-Açılış sırası Boot → Backdrop + Menu → (Garage | Settings | Dev | World). `BootScene` dokuları yükler ve
-`firstScene` ile ilk ekranı seçer: oyuncu ana menüyü görür; ölçüm koşusu (Deck sondası) ve
-`?start=world` geliştirme bağlantısı menüyü atlayıp alıştırma dünyasını açar.
-
-| Ekran      | İçerik                                                                                                                  |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `Backdrop` | Menülerin altında yürüyen araç alayı (savaşsız, sessiz); dünya açılınca durur                                           |
-| `Menu`     | Savaşa katıl (garaj), alıştırma, ayarlar; çıkış yalnız native masaüstü ve Deck'te, onaylı                               |
-| `Garage`   | Araç kartları (ad, görev, üç ölçü, yetenek adı ve sayılarla açıklaması), ad, cephe; savaşa katıl, alıştırmaya çık, geri |
-| `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi, çözünürlük                                    |
-| `Dev`      | Mevsim, hava, araç, arka plan yoğunluğu; senaryo, tohum ve kaos kadranı                                                 |
-| `World`    | Oyun; duraklatma menüsünde "Ana menü" (çevrimiçide "Savaştan ayrıl" da menüye döner)                                    |
-
-Bütün ekranlar aynı taksonomiden gelir: `ScreenFrame` başlık şeridi (geri `IconButton`, başlık, alt başlık),
-kayan gövde (`ScrollView`) ve eylem şeridini kurar; ekranlar yalnız içeriklerini gövdeye, düğmelerini şeride
-koyar. Tek düzen vardır: sağ şerit (`sheet`, 440 px; ≤719 px'te alt levha). Ana menü, garaj, ayarlar,
-geliştirici ve duraklatma aynı şeridi paylaşır, ekranlar arası geçiş şeridin kenara kayıp yeniden girmesidir
-(`MENU.fadeMs`, `slidePx`; CSS `--vt-slide`/`--vt-slide-ms` aynı sayıyı taşır, `prefers-reduced-motion`da
-anında). Duraklatma (`PauseOverlay`) aynı `ScreenFrame`i CORE `Modal` içinde taşır: modal yalnız odak tuzağı,
-Escape ve Android geri sözleşmesini verir. Katman ayar satırı taşımaz: yalnız düğmeler vardır (Devam et,
-Ayarlar, Geliştirici, sürücü eylemleri). "Ayarlar" `SettingsScreen`i (dil, kalite, ses, titreşim, ekran kipi, çözünürlük),
-"Geliştirici" `DevScreen`i şeridin içinde açar; geri düğmesi menüye döner. Oyuncu ayarı ile
-geliştirici ayarı böylece tek yerde ve ayrı durur. Geniş denetimli satırlar `stackOnNarrow` ile dar ekranda
-etiketin altına iner.
-
-**Geliştirici ekranı.** Dünya bölümü (`DevWorldPanel`) mevsim, hava, araç ve arka plan yoğunluğunu verir;
-seçim `GameSettings`e yazılır ve anında uygulanır: menü arka planı ve açık alıştırma dünyası mevsimi ve
-havayı `WeatherSystem.setSeason`/`setOverride` ile hemen değiştirir (öncelik: bağlantı parametresi, ölçüm
-geçersiz kılması, ayar; `climateChoice`), araç seçimi vitrine geçer ve oynanan çevrimdışı dünyada oyuncuyu yerinde yeni araçla değiştirir (`Simulation.replacePlayer`). Alıştırma bölümü
-senaryo, tohum ve kaos kadranıdır.
-
-**Telefonda garaj.** Dikeyde şerit alt levhadır; araç kartları tek satırlık yatay `scroll-snap` şeridinde
-kayar (ölçü çubukları ve seçim düğmesi kalır), katılım formu altta durur; hepsi gövdeye kaymadan sığar.
-Alçak yatayda şerit 540 px'tir ve kartlar iki sütundur. İkisi de `tests/e2e/menu.spec.ts` ile 390×844 ve
-844×390'da kilitlidir. Görünen her parça CORE bileşenidir: araç seçimi `CardTile` (`selected` + `addDetail`
-ile ölçü çubukları), ölçüler `Bar`, form `SettingsForm`/`SettingsRow`, denetimler `Input`,
-`SegmentedControl`, `Select`, `Slider`, `Checkbox`; `menu.css` yalnız yerleşim verir.
-
-**Arka plan.** `BackdropScene` menü sahnelerinin altında (sahne sırası: oluşturma sırası) bir yürüyüş alayı
-oynatır; menü kamerası saydamdır, bu yüzden alay görünür. Gerçek savaş yoktur: karmaşa yerine araçlar
-sergilenir. `BackdropParade` aynı `Simulation`ı sürer (hareket, çarpışma ve görünüm oyundakiyle aynı), ama
-komutlar bot değil düz yol takibidir: her şerit dünya merkezindeki sahnenin `parade.radius` uzağındaki bir
-noktadan (şeritler çevrenin ayrı dilimlerinden) girer, karşı yöne yakın bir noktaya `parade.skew` kadar
-sapmış yürür (çaprazdan ve bir yandan geçerler), ekran dışına varınca söner ve sıradaki model olarak yeniden
-başlar. Model sırası tohumdan karışır ve her model bir kez gelir, yani menü bütün araçları sergiler. Araçlar
-yakındakilerden yana kayarak yol verir, aralıklı olarak atılım/sıçrama gösterir (`boostGapMs`), hasar almaz
-(doğuşta sonsuz koruma) ve atış yapmaz; yerinde 5 sn kalan araç sıkışmış sayılıp yeniden başlatılır. İlk kare
-dolu açılır (her araç yolunun rastgele bir yerinden başlar), ön ısınma ve ileri sarım yoktur. Dünya göl ve
-kayasız düz karadır: yürüyüş hiçbir yerde takılmaz. Kamera sabittir (`BACKDROP.camera.zoom`); sahnenin
-merkezi, menü şeridi alayı örtmesin diye menü sahnesinin oyun kayıt defterine yazdığı boş alana
-(`MENU_AREA_KEY`, `freeArea`) oturur. Arka plan sessizdir, hasar ve titreşim geri bildirimi yoktur, üstüne
-`dim` karartması konur; vitrinli ekranda (garaj, geliştirici) araç öne çıksın diye koyulaşır
-(`BACKDROP.dim.showcase`, `MENU_DIM_KEY`, `easeMs`de süzülür). Alay standarttır: kapatma ayarı yoktur ve her menü ekranında çalışır. Tek ayar
-`backdropDensity`dir (aynı anda 2–10 araç, varsayılan 6) ve yalnız geliştirici ekranındadır; düşük kalitede
-sayı çalışma anında `BACKDROP.density.low` (3) ile sınırlanır (`paradeUnits`: kayıtlı eski değerler de hafif
-kalır, alay kapanmaz seyrelir); yoğunluk değişince alay baştan kurulur, mevsim/hava/kalite yalnız ilgili parçayı yeniler.
-Dünya sahnesi açılırken önce arka plan durdurulur (doku anahtarları çakışmasın). Ana menü ve ayarlar
-yalnız alayı gösterir. Araç seçilen ekranlarda (garaj, geliştirici) alayın üstünde oyunun gerçek araç
-görünümleri (`TankView`, `SpiderView`) saydam zeminde dönen tablada durur (`Showroom`: araca yalnız bir
-gölge ve halka verilir; bacaklı yürüyücü dönmez, çünkü ayaklar dünya uzayında basılır ve dönen gövde onları
-dolaşık bir poza sürükler, taretleri salınır); kamera şeridin bıraktığı boş alana kurulur ve sığmazsa
-yakınlaştırma küçülür (`src/config/menu.ts`). Vitrinsiz ekranda boş alanı `ScreenScene` aynı hesapla
-(`freeArea`) panelden çıkarır.
-Android geri tuşu garajdan ve ayarlardan menüye döner, menüde çıkış onayını açar ya da kapatır.
-
-Garajdaki seçim (araç, cephe, ad) ve ayarlardaki dil `GameSettings`e yazılır ve oturumlar arasında
-kalır; alıştırma ve savaş aynı araç tercihini kullanır. Savaşa katılma çevrimiçi parçayı ilk kullanımda
-tembel yükler (`connectWar`); bağlanırken geri dönülür ya da ekran kapanırsa geç gelen oturum bırakılır,
-odada hayalet kalmaz. Menü, garaj, ayarlar ve geliştirici çevrimiçi ağ kodunu yüklemez. Ekranlarda oyun içiyle aynı CORE UI sesleri
-çalar (`ScreenScene.attachAudio`: düğme, seçim, kaydırıcı, odak; ses düzeyi ayardan, kaydırıcıyla canlı); yalnız UI
-kiti yüklenir, oyun SFX'i yüklenmez. Müzik yoktur.
-
-## Girdi, kamera ve HUD
-
-Tuş ve kol eşlemesi `src/scenes/world/PlayerControls.ts`, hareket yumuşatma
-ve dokunmatik ateş eşikleri `src/config/controls.ts` içindedir.
-`ControlIntent` ham komutu işler; hareket 100 ms içinde hedefin yüzde 90'ına
-yaklaşır, nişan yönü geciktirilmez. Sağ dokunmatik çubuğun iç bölgesi nişan,
-dış bölgesi ateş üretir; giriş ve çıkış eşikleri titremeyi önler. Eşik kararını CORE `TouchStickState.aimStickGate` taşır; `PlayerControls`
-kare girdisini `InputStepBuffer`'a verir. Kısa basış kenarı ve nişan yönü
-ilk tüketilen tick'e korunarak gider; mekanizma sözleşmesi
-[primitifler](../../core/docs/primitives.md#sabit-ticke-girdi-taşıma) içindedir. Zoom, ızgara ve duraklatma kenar tetiklidir. Izgara
-`GameSettings.grid` ile kalıcıdır (Ayarlar'daki onay kutusu ya da `G`; dokunmatik ve Android'de tek yol ayardır).
-İmleçler CORE'dandır: `GameServices.cursors` uygulama geneli arayüz imleçlerini (`--vol-cursor-*`) kurar, `WorldCursor`
-dünya tuvalinde yalnız fare/klavye girdisinde, canlıyken ve duraklatılmamışken CORE nişangâhını (`ringDot`) çizer;
-atışta büyür, isabette ton değiştirir. Kol ve dokunmada nişangâh yoktur, ince işaretçisiz aygıtta denetleyici
-etkisizdir. Odak halkası `startFocusModality` ile girdi aygıtına bağlıdır: fareyle açılan menüde ilk düğme halka
-çizmez, ilk klavye/kol girdisiyle açılır (Deck ve kol bağlıyken baştan açıktır). Titreşim satırı yalnız
-`getHapticsCapability().supported` iken görünür.
-Dokunmatik düğmeler CORE `VirtualActionSource` üzerinden tek karelik dokunuşu
-da korur.
-
-CORE `InputManager` son anlamlı kaynağın kipini seçer; HUD aynı kararı
-`InputPresentationController` ile okur. Steam Input'un standart sanal kolu
-W3C kol eşlemesini tüketir. İkinci bir HUD kol yoklaması kurulmaz.
-
-CORE `FollowCamera` ara değerli gövdeyi takip eder; kare hızından bağımsız
-üstel takip, kademesiz zoom ve dünya sınırı `src/config/camera.ts` içindedir.
-Geri tepme ve sarsıntı ayrı ötelemelerdir. Olay → kamera/titreşim eşlemesi
-`src/config/feel.ts` içinde tutulur.
-
-HUD görünür bileşenleri CORE'dan alır; oyun CSS'i yerleşim ve yüzeyi kurar. Yalnız oyuncunun
-karar verdirdiği bilgi vardır: can, hızlanma deposu ve atış dolumu tek bir CORE `Panel` içinde üç
-yatay `Bar`dır; çubuklar yazı taşımaz (dolum çubuğun kendisidir, değer yalnız erişilebilir ad ve değer metnindedir) (masaüstünde sol altta, dokunmatikte sol üstte);
-yeniden doğma ve koruma bildirimi üst ortada, harita sağ üstte, kontrol ipuçları masaüstünde alt
-ortadadır. Sürüş hızı, yön ve vites HUD'da yoktur (teşhise aittir, harita yön ve konumu verir);
-oyun adı rozeti de yoktur. Dokunmatikte haritanın 44 px'lik yakınlaştırma düğmeleri haritayı
-örteceğinden gizlenir (kamera zoom düğmeleri vardır); masaüstünde tekerlek ve düğmeler çalışır.
-Harita (CORE `MinimapPanel`) çizilen her karede, ekrandaki ara değerli pozdan güncellenir:
-adım konumu ya da seyreltilmiş güncelleme işareti sıçratır. İşaretler yerinde güncellenir
-(çerçeve başına nesne üretilmez), pikselin 1/8'inden küçük değişim çizim istemez, özet yalnız
-tür sayıları değişince yazılır. Düşük kalite profili haritayı 33 ms aralıkla seyreltir
-(`EffectProfile.mapIntervalMs`).
-Kontrol ipuçları dünyaya her girişte `HUD.hintsShowMs` (10 sn) görünür, sonra solar ve geri gelmez;
-sayaç HUD'un ilk güncellemesinde başlar (sahne saati sahneyle başlamaz), dokunmatikte hiç görünmez.
-Çevrimiçi dünya sunucuda aktığı için duraklatılamaz: sürücü `live` bildirir, Esc ve düğme "Menü" açar
-(başlık "Menü", not "Dünya sunucuda akmaya devam eder", ana eylem "Savaşa dön", ipucu ve dokunmatik düğme
-"Menü"). Sahne çizimi, kamera ve ses sürer, araca yalnız boş girdi gider. Çevrimdışı sandbox gerçekten durur.
-Duraklatma Esc, Menu, düğme veya Android geri hareketiyle kapanır; arka plana
-dokunmak kapatmaz. Uygulama arka plana geçince ve sistem uyuyunca duraklar.
-Uyanış kendiliğinden devam etmez. Tarayıcı tam ekranı CORE kontrolüyle,
-native pencere kipi platform servisiyle yönetilir.
-
-Native uyanış `GameServices.onResume` aboneliğinden Phaser'ın ortak ses
-bağlamına gider. `GameAudio` CORE `resumeAudioAfterWake` yordamını kullanır;
-aynı anda gelen çağrılar tek toparlanmayı paylaşır. Sökülmüş sahnenin sıradaki
-çağrısı yürütülmez; kapanmış bağlama yeniden kaynak kurulmaz.
-
-## Kalite, kayıt ve platform ömrü
-
-`src/config/quality.ts` yüksek ve düşük efekt profillerini tanımlar.
-Düşük profil parçacık ve iz havuzlarını azaltır, mermi halesini kapatır.
-Başlangıç profili platform ve ölçülmüş cihaz kuralından gelir; kayıtlı
-tercih bunun önüne geçer. Kalite seçimi kalıcıdır ve uygun görünüm kaynaklarına
-uygulanır. Hale yerel yarı saydam geometriyle çizilir.
-
-Çizim çözünürlüğü CORE `ViewportManager`ın iki sınırıyla kısılır: `maxDpr` (2) yoğunluğu, `maxPixels` (`GAME.maxPixels`,
-3,5 milyon) backing store alanını sınırlar. Tavan olmadan 2560×1440 tam ekran DPR 2'de 14,7 milyon piksel çizilir; tavanla 1440p neredeyse tam, 4K 2494×1403
-çözünürlükte çizilir (dünya ve ekran boyutu değişmez, tam ekrana geçişte yeniden okunur). Tavan korumadır: 1080p
-DPR 1 ekranı (~2 milyon piksel) değiştirmez, kare hızı kazancı cihazda ölçülür. Renderer ayrık GPU ister (`powerPreference`).
-Gerçek GPU kare süresi bu makinede ölçülmedi; kabul cihazdadır.
-Uyarlanır çözünürlük (`AdaptiveResolution`) 90 karelik pencerede ortalama kare süresi 22 ms'yi aşarsa çizim
-ölçeğini kısar (alt sınır 0,5) ve canvas'ı yeniden kurar. Duraklatılmışken ölçmez: dünya donmuştur, kare süresi
-oynanışı temsil etmez ve yeniden kurulum donmuş görüntüyü değiştirirdi; pause e2e'si bu sözleşmeye dayanır.
-
-**Çözünürlük ayarı** (`src/config/resolution.ts`, Ayarlar ve duraklatma şeridi) iki ayrı kavramdır. _Çizim çözünürlüğü_
-her platformda (PC, Android, Deck, web) sunulur: Otomatik (varsayılan; yukarıdaki uyarlanır ölçek) ya da sabit %100,
-%85, %70, %50; sabit seçim uyarlanır kısmayı durdurur ve canvas'ı anında yeniden kurar (oyuncu seçimi ilk canvas'tan
-önce uygulanır, ölçüm oturumlarında uygulanmaz). Dünya ve ekran boyutu değişmez, yalnız netlik ve GPU yükü
-değişir. Basamaklar bilinçli seçilmiştir: 1'in üstü (süper-örnekleme) CORE'da kapalıdır ve %50'nin altı kenarları belirgin
-kalınlaştırır; `maxDpr` ve `maxPixels` tavanları seçimin de üstünde sert sınırdır, yani %100 "tavanın izin verdiği en net"
-demektir. _Pencere boyutu_ yalnız native masaüstü penceresinde ve pencereli kipte görünür (Android, tarayıcı ve Deck'in
-tam ekran oturumunda yoktur): ekrana sığan ön ayarlar (1280×720'den 2560×1440'a) listelenir, seçim `DisplayModeController`
-ile uygulanır ve aynı boyut tekrar uygulanmaz (başka bir ayarın değişimi pencereyi yeniden ortalamaz).
-Çizim çözünürlüğü yeni davranış olarak birim testlerle ve Chromium e2e'siyle (canvas piksel genişliği) doğrulandı;
-gerçek WebView2, Android ve Deck pencere/çözünürlük davranışı bu turda cihazda ölçülmedi.
-
-Gönderilen app/vendor/css bütçeleri kök quality.json sahibindedir;
-ölçü güncel üretim build'iyle bundle kapısından alınır.
-
-Saf simülasyon (`Simulation`, `ScenarioRunner`) CORE'a yalnız `random`,
-`spatial`, `math`, `time` ve `physics` alt yüzeyleriyle bağlanır; Node'da DOM ve CSS
-yükleyicisi olmadan seedli koşar. `pnpm --filter @volstudio/vol-test load`
-araç, mermi ve hava yüküyle tek `Simulation.step` süresini başlangıç ve uzun
-oturum pencereleri için ölçer. Yalnız CPU simülasyonudur; çizim ve cihaz
-kare süresini kapsamaz. Ana makine saati bir koşu sırasında ani seviye
-değiştirebildiğinden her pencere sabit bir referans işe oranlanır.
-
-`RuntimeOverrides` yalnız `VOL_DECK_MEASURE=1` oturumunda senaryo, tohum,
-hava, mevsim ve kalite seçimini uygular. Geçersiz değerler reddedilir;
-ölçüm seçimleri kalıcı cihaz tercihine yazılmaz.
-
-`GameMeasurements` kare aralıklarını gerçek kalite, senaryo, tohum, hava ve
-mevsim bağlamıyla pencereler. Bağlam değişince eski pencere kapanır; geçiş
-aralığı yeni koşulun karesi sayılmaz. Girdi, simülasyon, olay/ses, araç,
-efekt, nişan, çevre/kamera ve HUD/tanı süreleri ayrı CPU ölçüleridir.
-`updateMs` yalnız sahne güncellemesini ölçer; GPU çizimi veya panel sunumu
-değildir. `RenderMeasurements` CORE `GpuTimer`'ı Phaser `prerender`/`postrender`
-arasına sokar ve `renderSubmitMs` (CPU) ile `gpuTimeMs` (GPU) ayrı örneklerle
-tutar; `presentTimeMs` yalnız gerçek bir sunum ölçümü varsa dolar, aksi hâlde
-`null` kalır. Yavaş kare, `frameId` ile o kareden gelen CPU maliyeti
-çiftidir. Rapor penceresi `runId` + `window` ile ayrılır; kayıp raporlar
-`lostReports` ile sayılır ve `flush()` hataları gizlemez. Deck özeti aynı
-bağlamı ve izin listeli aşama ölçülerini korur.
-
-`GameServices` platform, oturum, ekran kipi, Steam glifi, metin girişi,
-titreşim ve tanı kaynaklarının ömür sahibidir. `GameSettings`,
-`PersistedObservableState` üzerinden cihaz tercihini korur; `GameProgress`
-ilerlemeyi `AutosaveCoordinator` ile yazar. `ScopedSaveManager` cihaz ve
-ilerleme kapsamlarını ayrı depolar. Uyku ve kapanış kayıt kuyruklarını
-boşaltır; kaynaklar sahne kapanışında sökülür.
-
-Native Steam durumu ve glif bağlamı kol takma/çıkarma, pencereye odak dönüşü,
-sayfa dönüşü, sistem uyanışı ve duraklatma geçişinde yenilenir. Yenilemeler
-tek kuyrukta ilerler; yeni istek eski cevabı geçersiz kılar ve kapanmış
-servise geç sonuç uygulanmaz. Yeniden bağlanan istemci ve yeni kol güncel
-oyun/menü aksiyon setini alır. HUD karede yalnız bu güncel bağlamı okur;
-kare başına native sorgu yapılmaz.
-
-Açılış iki scope adapter'ını bir kez kurar ve eski kayıt göçünü state
-yüklemeden bekler. `voltest.preferences` cihaz, `voltest.progress` ilerleme
-uyumluluk eşlemesidir; geçmişte kapsamsız sürüm yayımlandığı iddiası değildir.
-Geç ilerleme yüklemesi kapatılmış serviste autosave kurmaz. Flush bütün
-kalıcılık sonuçlarını bekler; ölçüm hatası kayıt başarısı yerine geçirilmez.
-Kapanış snapshot'ından önce oyun duraklatılır. Bir duraklatma dinleyicisinin
-hatası tanıya gider; diğer dinleyicileri ve son kayıt boşaltmasını kesmez.
-
-Android native geri hareketi CORE geri yığınına gider. gamescope ve Android
-pencere kipi seçeneği sunmaz. Steamworks isteğe bağlıdır; varsayılan stub
-Steam istemci kabulünün kanıtı değildir. Native ve Android kaynakları,
-Linux paketleme ve Windows NSIS yapılandırması vardır. Gerçek cihaz,
-dağıtım ve Steam Cloud kabulü ayrı doğrulama işleridir.
-
-## Ses
-
-51 teslim kanonik yayın kapısıyla üretilir: 49 oyun sesi (33 tekil teslim, 16 aile varyantı) ve iki UI sesi.
-Oyun sesleri sıfırdan yazılmış gerçekçi programlardır: ağır dizel ateşleme serisi, gövdeli basınç dalgası
-atışları, alçak ve dolgun spektrum (çoğu teslimde 85. yüzdelik rolloff ~230-1200 Hz); ince, tiz ya da
-oyuncak tınılı katman yoktur. Seviyeler katman başına ölçülerek kurulur; dinleme onayı değil teknik ölçümdür.
-`audio-manifests` yeniden üretim kimliğini, `audio-banks` aile seçimini taşır.
-Oyun yalnız bank JSON'unu ve `public/assets/audio` teslimlerini okur;
-audio-synth çalışma zamanı bağımlılığı değildir. Pakete kanonik kayıt değil,
-`scripts/vite/audioBankRuntime.mjs` ile indirgenmiş çalışma zamanı görünümü
-girer (anahtar, rol, etiket, süre, varlık yolu): hash, manifest, ölçüm ve kalite
-kaydı yalnız kanonik dosyada kalır ve `verifyFamily` onu okur.
-
-On bir döngü motorun üç devri, palet, bacak adımı, mech ayak basışı, sıçrayıcı sekmesi, pervane, kayma, servo
-ve hızlanmadır. Yürüyücü palet yerine `legs` (hidrolik bacak basışları ve servo), mech `steps` (ağır ayak
-basışı ve gövde gümbürtüsü), sıçrayıcı `bounds` (ön ve arka çift basış, piston tıslaması), süzülen araç `fans`
-(kanat geçişi ve aşağı itki) çalar; tempo ve güç araca göre (`AUDIO.vehicleVoice.tracks`). Tek atımlık araç
-sesleri `dash` (atılım, aşırı yük ve çarpma atağı başlarken), `leap` (sıçrayıcının, Arachnid'in ve Widow'un sıçrayışı: hidrolik bırakma,
-itici ateşlemesi), `land` (sıçrayışın bitişinde yere inen gövde: çöküş, pençe gömülmesi, toz), `snap`
-(`broke` olayında parça kopması) ve `sink`tir (derin suda boğulan aracın batışı: `died`
-olayı `drown` nedenliyse aracın son şasisinde çalar; `AUDIO.eventAsset`).
-Kabuk ve ağır mermi dışındaki her silah stilinin kendi atış teslimi (`shot-rail/plasma/needle/arc/autocannon/
-gatling/flak/lance/howitzer`, `AUDIO.shotAsset`) vardır; kabuk ve ağır mermi top ailesini perdeyle çalar. Top,
-patlama, isabet, çarpma ve fren aileleri olaydan seçilir; patlamanın yakın,
-orta ve uzak teslimleri vardır. İki UI sesi duraklatma geçişini bildirir.
-Kazanç, mesafe, perde ve ses bütçeleri `src/config/audio.ts` içindedir.
-
-Konum oyuncuya göredir; stereo pan yatay farktan, seviye yakın yarıçap
-sonrasında 1/r'den gelir. En yakın dört aracın döngüleri çalar. Phaser'ın
-mevcut Web Audio bağlamı kullanılır; mobil kilit açmayı Phaser yönetir.
-Duraklatma döngüleri keser, kaldırılan araç ve kapanan sahne sesleri söker.
-Araç hareketsiz ve nişan sabitken canlı döngü kaynağı yoktur. Müzik, ambiyans
-ve hava sesi yüklenmez. Yük ve kayma, palet yüzeyi ile **zemin hızı**
-arasındaki farktan ölçülür (`Tank.surfaceLeft/surfaceRight`); paletlerin
-katettiği yol (`groundLeft/groundRight`) mutlak temas mesafesidir; geri sürüşte
-de artar ve hız değildir. Ses yayın kabulü kaynak/PCM/manifest ve codec sonrası teknik QA ile
-verilir; dinleme yapıldığı iddiası teknik sonuçtan türetilmez.
+VOL.TEST, CORE, network ve native kabuğun gerçek oyun tüketicisidir. Amaç
+paylaşılan mekanizmaları oyun akışında sınamak ve eksik genel yeteneği sahibine
+kazandırmaktır. Oyun kuralı CORE'a taşınmaz; oyun içinde ikinci bir ortak UI,
+saat, RNG, depolama veya ağ altyapısı kurulmaz. Başlangıç komutları
+[README](README.md), ortak sınırlar [CORE tasarımındadır](../../core/DESIGN.md).
+
+## Sahiplik ve klasörler
+
+| Kaynak                  | Sorumluluk                                                    |
+| ----------------------- | ------------------------------------------------------------- |
+| `src/app/`              | Girdi, tercihler, native ömür, dünya sürücüsü ve laboratuvar  |
+| `src/config/`           | Oynanış, araç, hava, ses, sunum ve ağ sayılarının tek kaynağı |
+| `src/sim/`              | DOM/Phaser taşımayan dünya, fizik, savaş ve bot kuralları     |
+| `src/view/`             | Modelden poz alan Phaser çizimi ve efektler                   |
+| `src/scenes/`           | Sahne kurulumu ve model/sunum bileşimi                        |
+| `src/hud/`, `src/menu/` | CORE UI tüketimi, menü ve oyun HUD'u                          |
+| `server/`               | Yetkili oyun dünyasının network sunucu adaptörü               |
+| `tests/`                | Kaynak ağacını yansıtan regresyonlar ve iki motorlu E2E       |
+| `scripts/`              | Build, ölçüm ve gerçek SDK sürüş araçları                     |
+| records (yerel)         | Git dışı yerel kanıtlar; ürün kaynağı değildir                |
+
+Asset kaynağı üreticiye, gönderilen dosya oyuna aittir. Runtime yalnız paket
+exports yüzeylerini tüketir; audio-synth ve pen.dev geliştirme bağımlılığıdır.
+Oyun build'i bu araçları çalıştırmayı gerektirmez. Rig geometri/metadata
+sözleşmesini CORE doğrular; `.pen` kaynağına erişim Pencil kurallarına tabidir.
+
+## Model, saat ve yaşam döngüsü
+
+`Simulation` oyun durumunun sahibidir. Çizim, ses ve HUD modelin sonucunu
+sunar; kendi can, hasar, savaş veya kayıt defterini taşımaz. Çevrimdışı ve
+sunuculu dünya aynı simülasyon ve araç kurallarını tüketir. Tohumlu RNG ve
+sabit adım, render kare hızından ayrıdır; sayılar `src/config/` içindedir.
+
+Çevrimdışı dünya CORE `SimulationClock` ile 60 Hz ilerler. Fizik kuvvetleri
+iki alt adımda çözülür; önceki/güncel poz çizimde ara değerlenir. Sıfır süreli
+adım oyun olayı üretmez. Çevrimdışı duraklatma dünya saatini dondurur;
+çevrimiçi menü sunucuyu durdurmaz ve yalnız boş oyuncu girdisi yollar.
+
+Her sahnenin listener, timer, abonelik ve native callback ömrü bellidir;
+bağımsız kaynaklar `DisposableScope` altında kapanır. Yeniden başlatma ve
+ekran geçişleri her zaman yeni veri nesnesi verir: Phaser'ın önceki sahne
+verisini koruması eski çevrimiçi sürücüyü yeniden kurmamalıdır. Geç gelen
+async sonuç kapanmış sahneyi veya daha yeni kullanıcı tercihini ezemez.
+
+## Dünya, iklim ve araçlar
+
+Dünya; göl, kaya, bitki, yüzey ve mevsim durumunu modelde tutar. Çizim bu
+veriyi kullanır. Tutuş, hava direnci, birikim, erime, sıkışma ve batış kuralları
+simülasyon/config sahibindedir; görsel parçacıklar fizik kararını değiştirmez.
+Çevrimiçi iklim sunucudan gelir; istemci hava ve yeşillik sunumunu uygular,
+yerel tercih yetkili dünyanın yüzey kuralını değiştirmez.
+
+Araç aileleri paletli tanklar, Arachnid/Widow/Goliath yürüyücüleri,
+Manta/Barracuda/Leviathan süzülenleri, Warhound/Templar/Juggernaut mech'leri ve
+Jackal/Panther/Rhino sıçrayıcılarıdır. Ortak araç/şasi/komut yüzeyi farklı
+hareket modellerini aynı savaş, hasar, bot ve ağ akışına bağlar. Araç başına
+denge, ayak, gövde, silah, kalkan ve kuşatma sayıları config'ten okunur;
+bu belgede ikinci bir denge tablosu tutulmaz.
+
+Sürüş, fren, kayma, gövde/taret dönüşü, süspansiyon ve geri tepme ayrı
+sorumluluklardır. Bacaklılarda model ayak teması ile rig pozu ayrılır;
+süzülenlerde görsel salınım yetkili konumu değiştirmez. Sıçrama/iniş, göl/buz
+ve parça hasarı aynı model olaylarına bağlanır. Görsel oran veya sürüş hissi
+için insan değerlendirmesi sayısal regresyonun yerine geçmez.
+
+## Çarpışma, ateş ve savaş
+
+Mermi adımı segment boyunca ilk teması çözer. Tank OBB'si, duvar ve dünya
+sınırı aynı segment parametresini kullanır; önce aday bulup sonra kaynaklara
+göre ayrı uzaklık sıralaması yapılmaz. Gövde çarpışması SAT ve ayrıştırma
+kurallarıyla çözülür. Efekt havuzları çizim kaynaklarını sınırlar; görsel efekt
+silinmesi merminin hasar sonucunu değiştirmez.
+
+Can, parça hasarı, ölüm/enkaz, doğma ve koruma simülasyon durumudur. Oyuncu ve
+bot araçları cephe taşır; aynı cepheden ve kendine hasar engellenir. `War`
+bölgeler, cepheler, nüfus ve kazanma kuralını taşır; Colyseus odası bu kuralın
+ikinci uygulaması değildir. Savaş kazanılınca skor ve bölgeler sıfırlanır,
+bağlı oyuncular dünyada kalır. Bot niyeti insanla aynı komut yoluna girer.
+
+## Ekranlar, girdi ve ayarlar
+
+Ana menü, garaj, senaryo seçimi, ayarlar ve pause ekranı CORE bileşenlerini
+kullanır. Görünen metinler TR/EN i18n anahtarıdır; dil ve tema değişimi canlı
+uygulanır. Geliştirici HUD'u simülasyonun okunabilir sunumudur. Menü arka
+planı ve araç alayı oyunun config/sunum katmanında yaşar.
+
+Odak gezinmesi, modal LIFO sırası ve geri eyleminin tek sahibi vardır.
+Dünyada B fren, Escape/Start menü eylemidir; Steam Input action set'i bu
+bağlamı izler. Açık üst katman girdiyi alır, alttaki dünya veya ikinci modal
+aynı niyeti tekrar işlemez. İşaretçi/kol geçişi, dokunma alanı, kamera ve
+HUD; [UI sözleşmesine](../../docs/ui/CONTRACT.md) tabidir.
+
+İlerleme `synced`, cihaz tercihi `device` kapsamındadır. Depolama adapter
+arkasındadır; son kayıt, kapanış hatası ve native flush sonucu gizlenmez.
+Ölçüm oturumunda senaryo/tohum/kalite seçimi kalıcı tercihten önce gelir;
+ses veya titreşim ayarı ölçüm koşullarını değiştirmez ve bu seçim kayda yazılmaz.
+
+Ses üretimi audio-synth, çalma CORE sahibindedir. Oyun olayları ses niyetini
+tek kez üretir; ayar değişimi ve sahne kapanışı eski ses/haptik kaynağı
+bırakmaz. Yayın kabulü [audio teknik sözleşmesidir](../../devtools/audio-synth/DESIGN.md);
+dinleme değerlendirmesi ayrı geri bildirimdir.
 
 ## Çok oyunculu
 
-Çevrimiçi oyun opt-in'dir: ana menüdeki "Savaşa katıl" garaja götürür (alıştırma dünyasındaki duraklatma
-menüsünde de "Savaşa katıl" katılım panelini açar); çevrimdışı açılış ağ kodunu yüklemez (`online-*.js` ayrı parçadır, bütçesi `quality.json`'dadır). Sunucu `server/`
-altındadır (`build:server` çıktısı Node ile başlar) ve [network](../../network/README.md)
-çalışma zamanının üstünde Colyseus odası koşar; sunucu adresi `?server=host:port`, derleme zamanı
-`VITE_VOLTEST_SERVER` ya da geliştirme adresidir.
+[Network tasarımı](../../network/DESIGN.md) taşıma, protokol ve genel
+mekanizmaları; VOL.TEST dünya kuralını sahiplenir. Sunucu yalnız `TankInput`
+niyetini kabul eder; poz, hasar, skor, bölge ve ateş sonucu yetkilidir.
+Katılımda araç/cephe/protokol doğrulanır. Birincil dünya süreç içi yetkiyle
+kurulur; ağdan gelen JSON aynı yetkiyi üretemez. Dolu dünyadan sonra taşma
+odası açılır; `maxRooms` toplam oda güvenlik sınırıdır, ölçülmüş kapasite değildir.
 
-| Parça                                             | Sorumluluk                                                                                    |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `server/WorldRoom.ts`                             | Kalıcı savaş dünyası: 60 Hz adım, 20 Hz yama, `War` nesnesini sarar                           |
-| `server/index.ts`                                 | Oda kaydı ve birincil dünya (insan kalmasa da kapanmaz)                                       |
-| `@volstudio/network/server` `InputPacer`          | Ortak girdi titreşim tamponu; geç girdi sayılı boşta adım olur                                |
-| `src/network/OnlineSession.ts`                    | Bağlanma, bağlantı durumu, ping/titreşim, olay dağıtımı                                       |
-| `src/network/PredictedPilot.ts`, `OnlineWorld.ts` | Kendi aracın öngörüsü, uzlaştırma, uzak araç ara değeri                                       |
-| `src/network/warView.ts`                          | Şemadan savaş görüntüsü (cepheler, bölgeler, tablo) ve bildirim akışı satırı                  |
-| `src/scenes/world/`                               | `WorldDriver` sözleşmesi: çevrimdışı ve çevrimiçi sürücü, katılım                             |
-| `src/hud/LobbyPanel.ts`, `OnlinePanel.ts`         | CORE Modal/Input ile katılım paneli; VersusBar/RankList/ActivityFeed ile puan, sıralama, akış |
+`OnlineDriver` ve betikli sürücü aynı `PredictedPilot` ve network
+`PredictionStepper` mekanizmasını tüketir. SDK saatinin önüne ikinci bir
+biriktirici konmaz. Uzun kare sınırlı SDK dilimlerine ayrılır; her dilimin
+girdisi hemen gönderilir, toplam iş girdi tamponunu aşmaz. Çok uzun kesintide
+eski süre/girdi bırakılabilir; sınırlı iş, sınırsız yetişme garantisi değildir.
+Poz bütün dilimlerden sonra okunur; kapanış veya callback hatası üretimi durdurur.
 
-Maç, özel oda ve oda kodu yoktur: tek tür oda vardır, kalıcı savaş dünyası. Sunucu açıldığında birincil
-dünya kurulur (`createPrimaryWorld`); insan kalmasa da kapanmaz ve botlar savaşı sürdürür. Oyuncular
-`joinOrCreate` ile bu dünyaya düşer; dünya `NETWORK.maxPlayers` insana ulaşınca Colyseus bir taşma
-dünyası kurar, taşma dünyası son insan ayrılınca kapanır. Savaşın kuralı (bölgeler, cepheler, doğma, bot
-nüfusu) saf `War` nesnesindedir; oda yalnız ağ yaşamını (katılım, girdi tamponu, durum yayını, olay
-dağıtımı) taşır. Katılım seçenekleri `name`, `model` (`VEHICLE_IDS` indeksi) ve isteğe bağlı `faction`'dır;
-tanımsız araç ya da aralık dışı cephe protokol ihlali olarak reddedilir, istenen cephe insan dengesini
-bozacaksa sunucu kendi seçer. Botlar da oyuncu kaydında görünür (`bot` alanı: skor tablosu, harita).
-Kurallar yalnız `src/config/network.ts` ve `src/config/war.ts` içindedir; testler dünya seçeneklerini
-(`perFaction`, tohum) `createRooms`a verir, ağdan değiştirilemez.
-Oda kaydı yalnız süreç içi konfigürasyonu tüketir; birincil dünya oluşturma yetkisi nesne kimliğiyle
-taşınır ve JSON seçenekleri bunu taklit edemez. Statik katılım denetimi pahalı dünya kurulmadan çalışır.
-Birincil dahil toplam oda sayısı `NETWORK.maxRooms` güvenlik tavanındadır; HTTP rezervasyonuyla
-açılan odalar da sayılır, doluluk `busy` verir. Bu sayı ölçülmüş eşzamanlı oyuncu kapasitesi değildir.
-Başlatma sırasında birincil dünya veya ops portu başarısızsa oyun sunucusu geri kapatılır.
+Yerel araç aynı simülasyonla öngörülür ve yetkili snapshot sonrası bekleyen
+girdiler yeniden oynatılır. Uzak araçlar yama zamanları arasında gecikmeli
+çizilir; olaylar görüntü zamanına ertelenir. Yerel atışın sunucu yankısı
+ikinci görsel atış üretmez. Gecikme telafisi yoktur: isabet sunucunun o
+adımdaki dünyasına göredir. İlgi alanı süzmesi ve savaş sisi henüz yoktur.
 
-Sunucu yalnız niyeti (`TankInput`) kabul eder; poz, hasar, skor, bölge ve ateş sonucu onundur. İstemci her
-sabit adımda aynı `Simulation` adımıyla kendi aracını öngörür, Colyseus `Predict` sunucu durumunu
-bit bit alıp bekleyen girdileri yeniden oynatır (sapma `data-drift-peak` ile ölçülür). Uzak araçlar
-`interpolationDelayMs` geriden iki yama arasında ara değerlenir; olaylar aynı görüntü zamanına
-ertelenir ki atış ve ölüm tankın göründüğü yerle örtüşsün. Aşağıdakiler sözleşmedir:
+Bilerek ayrılma hemen tamamlanır; geçici kopma config'teki süre boyunca aynı
+oturuma dönüşü dener. İlk başarılı katılımdan itibaren yeniden deneme açıktır.
+Kopuk oyuncunun eski girdisi tutulmaz; dönüşte tampon ve yavaş tüketici
+zamanları sıfırlanır, iklim yeniden istenir. Süre aşımında çevrimdışı dünyaya
+bildirimle dönülür. Ölüm/doğma ve art arda kopuş aynı aracı iki kez kaydetmez;
+sunucu kapanışı bekleyen yeniden bağlanmadan işlenmemiş ret sızdırmaz.
 
-- `OnlineDriver` ve betikli botlar network `PredictionStepper`ını tüketir: uzun kare iki sınırlı
-  SDK tick'ine bölünür, her bütçe hemen gönderilir. Son dilim iki simülasyon adımıdır;
-  kesirli saat artığı dahil toplam girdi `NETWORK.inputBuffer` sınırını aşamaz. İkinci saat
-  biriktiricisi yoktur; çok uzun kesintinin eski kısmını SDK bırakabilir. Poz bütün dilimlerden
-  sonra okunur, kapanış ve callback hatası yeni girdi üretimini durdurur.
-- Çizim pozu `tank.previous` içinde ara değerlidir; sahne çevrimiçi alfa 0 ile çizer.
-- Kendi `fired` yankısı bastırılır (öngörü atışı zaten gösterdi); yerel mermi yerelde ilerler.
-- Hava ve yeşillik sunucu iklimidir (`CLIMATE_MESSAGE`); istemci yalnız sunumu uygular, yüzey etkisi (tutuş,
-  hava direnci) çevrimiçi yoktur. Ayrıntı: Yeşillik ve kalıcı iklim.
-- Duraklatma dünyayı dondurmaz (saat sunucudadır): menü canlı "Menü"dür (`WorldDriver.live`), sahne çizimi
-  ve ses sürer, araç yalnız boş girdi yollar; menüdeyken araç savunmasızdır ve arayüz bunu söyler.
-- Sahne başlarken ve yeniden başlarken (`restart`, ekran geçişleri, `toMenu`) veri her zaman bir nesnedir.
-  Phaser boş veriyi yok sayıp önceki veriyi korur; "Ayrıl" sonrası eski çevrimiçi sürücü fabrikası ölü
-  oturumla yeniden kurulurdu ve menüden açılan alıştırma çevrimiçi sürücüyle gelirdi.
-- Bilerek ayrılma `leave(true)` ile hemen düşer; kopma 15 sn yeniden bağlanma ister ve çubukta
-  uyarı verir; bağlantı kapanırsa oyuncu çevrimdışı dünyaya `online.lost` bildirimiyle döner.
-  İlk başarılı katılımdan hemen sonra da yeniden deneme açıktır (`reconnectMinUptimeMs: 0`);
-  SDK'nın varsayılan ilk 5 saniyelik yeniden bağlanmama eşiği kullanılmaz.
-- Kopuk oyuncunun tampon niyeti ve tutulan komutu yürütülmez; dönüşte girdi ve yavaş tüketici
-  zamanları sıfırlanır, istemci iklimi yeniden ister. Olay paketi tür/sayı/boyut denetiminden geçer.
-  Olay kuyruğu CORE `EventQueue`, saat dönüşümü network `ServerTimeline` tüketimidir.
-- Oyuncu araçları da cepheye bağlıdır (`Vehicle.team`): aynı cepheden ateş hasar vermez, kendi
-  kendine hasar da yoktur.
-- Savaş kazanılınca (`warWon`) puanlar ve bölgeler sıfırlanır; oyuncular çıkarılmaz, dünya sürer.
+Girdi/olay paketleri tür, sayı ve boyut sınırından geçer. Kuyruk sınırını
+tolerans süresince aşan yavaş tüketici atılır. Başlangıçta birincil dünya veya
+ops portu açılamazsa sunucu geri kapanır. Ortam değişkenleri, origin/IP/soket
+sınırları ve yerel `/healthz`, `/metrics`, `/logs` uçları
+[sunucu belgesinin](../../network/docs/server.md) sahibindedir.
 
-Sunucu işletimi (ortam değişkenleri ve sınırların gerekçesi [network sunucu belgesindedir](../../network/docs/server.md)):
-`server:dev` girişi `VOL_NET_*` değişkenlerinden bağlantı kapısını (adres başına hız ve soket sınırı, toplam soket,
-köken izin listesi) kurar; `VOL_NET_OPS_PORT` verilirse loopback'te `/healthz`, `/metrics` ve `/logs` açılır.
-`/metrics` her dünya odası için insan sayısı, adım süresi özeti (ortalama, p95, en büyük) ve trafik özeti
-(istemci sayısı, kuyruktaki ve toplam gönderilen/alınan bayt, atılan yavaş tüketici) ile kapı sayaçlarını verir.
-`clients[]` oda içi anonim istemci sırası ve araç numarasıyla gerçek soket baytlarını ayrı yayımlar;
-`measured: false` ölçümün yokluğudur. `PredictedPilot`, gerçek SDK `step.isReplay` ve `onReconcile`
-callbacklerini network `ReconciliationReporter` ile sayar. Canlı/yeniden oynatılan adım, uzlaştırma,
-düzeltme ve sıçrama sayısı ile son/en büyük düzeltme `NETWORK.metricsReportMs` aralığında bildirilir.
-Büyüklük SDK'nın sayısal poz alanları arasındaki en büyük mutlak farktır; Öklid uzaklığı değildir.
-`ClientMetricsRegistry` monoton sayaç, şema ve kabul hızını doğrular; `/metrics` bu değeri
-`source: 'client-reported'` ve rapor yaşıyla sunar. Sunucu kendi fizik doğrulaması olarak kullanmaz.
-Oda ayrılışı kayıt defterini bırakır, kopma sırasında son beyan yaşlanır; yeni soketin baytı sıfırdan başlar.
+Gerçek soket baytları ve oda adım süreleri sunucuda ölçülür. Uzlaştırma/replay
+sayaçları gerçek SDK callback'lerinden gelir; istemci beyanı sunucuda şema,
+monotonluk ve hız denetiminden geçer, `client-reported` ve yaş bilgisiyle
+sunulur. Düzeltme büyüklüğü sayısal poz alanlarının en büyük mutlak farkıdır;
+Öklid mesafesi değildir. Eksik ölçüm sıfır başarı olarak yazılmaz.
 
-`drive --scenario all` boşta bekleme, ilk gövde yönünde hızlanma–fren–dönüş ve nişanla ateş
-akışlarını gerçek SDK ve oyunun aynı `PredictedPilot`/dünya geometrisiyle koşar. Faz ve hüküm her
-senaryo için JSONL'ye yazılır. Yetkili durumun ilerleyişi, fren hızı ve sunucunun ateş olayları
-denetlenir; eksik bayt/uzlaştırma ölçümü tam kabul üretmez. `--profile` mevcut kalite bütçesini
-her senaryoya ayrı uygular. Rapor oda/oturum kimliği taşımaz. Bu başsız tur çizim veya cihaz kabulü
-değildir; komutlar ve kayıt sözleşmesi [network sürücü belgesindedir](../../network/docs/drive.md#betikli-senaryolar).
-Oda adım süresi geçmişi CORE `RollingWindow` mekanizmasını tüketir; örnek sayısı ve milisaniye sunumu
-sunucuya aittir.
-Yazma kuyruğu `NETWORK.slowConsumer.limitBytes` üstünde tolerans süresince kalan istemci `1013` koduyla atılır.
-Kapıya takılan katılım istemcide `online.error.busy` ("sunucu yoğun") olarak görünür.
-
-Oturum yaşam döngüsü (`tests/server/lifecycle.test.ts`, gerçek sunucu ve SDK istemcisi): oyuncu ölü yeniden
-doğmayı beklerken, doğma korumasındayken, savaşı bitiren ölümle aynı anda ya da arka arkaya iki kez kopsa
-aynı oturum, kayıt ve araca döner; ikinci `joined` olayı yayılmaz ve ölüm bir kez yazılır. Pencere
-(`reconnectSeconds`) dolunca oyuncu kalkar ve eski belirteç reddedilir; sunucu kopuk oyuncuyla kapanırsa
-işlenmemiş söz reddi sızmaz. Sessiz ölüm (uyuyan telefon, kopan Wi-Fi) `ImpairedLink.blackhole()` ile kurulur:
-sunucu canlılık yoklamasıyla oyuncuyu kopuk işaretler (Colyseus varsayılanı ~9 sn; testte
-`HostOptions.pingIntervalMs` ile hızlandırılır), ağ gelince aynı oturum döner. Ağ değişimi (Wi-Fi yerine LTE)
-yeni soketle sürer: kimlik IP değil yeniden bağlanma belirtecidir. Arka plan süresi pencereyi (15 sn)
-aşarsa oyuncu düşer ve yeni oyuncu olarak katılır; bu bilinçli bir ödündür.
-
-Ölçüm ve sınırlar: sapma ölçümü SDK'da yalnız bir eşik verilince açılır (`NETWORK.divergenceTolerance`);
-eşiksiz "sapma 0" hiçbir şey söylemez. E2E yetkili aracı kaydırıp sapmanın görünmesini ve istemcinin
-yakınsamasını doğrular. Gerçek sunucuya karşı düz sürüş + fren denemesinde (yerel döngü) iki motorda
-oturum boyunca en büyük sapma 0–0,05 birimdir (7 koşu; `data-drift-max`). Bu, manevra, çarpışma ve
-ateşte cihazlar arası determinizm kanıtı değildir. Gecikme telafisi yoktur: isabet, sunucunun o adımdaki dünyasına göredir.
-Bozuk ağ: `tests/e2e/impairedNetwork.spec.ts` sayfayı gerçek sunucunun önündeki TCP vekilinden
-(`tests/support/impairedProxy.ts`) bağlar. Vekil her yöne sabit gecikme ve titreşim ekler; WebSocket TCP
-üstünde olduğundan kayıp, yüzdesi `stallPct` olan parçaların `stallMs` beklemesi ve arkasındakileri de tutması
-olarak modellenir (gerçek paket kaybı değildir). Profiller ve bütçeler (en büyük düzeltme, en büyük gidiş-dönüş,
-ani sıçrama sayısı) `quality.json` → `networkImpairment` içindedir; sürüş konum eşiğine bağlıdır, sabit bekleme
-yoktur ve durunca sayfa yetkiyle 0,5 m içinde aynı yere oturur. Ölçülen: Chromium/WebKit'te kayıpsız, 40 ms ±15 ve
-60 ms ±30 + %3×250 ms bekleme profillerinde en büyük sapma 2,9–29,8 birim, snap 0 (ölçüm yazılım çizimli tek makinededir;
-bütçe tepenin 2,5–3 katıdır). Bu gerçek ağ, paketli uygulama ya da cihaz ölçümü değildir.
-Tüm durum her yamada her istemciye gider (ilgi alanı süzmesi yoktur); 24 insan + bot nüfusunda bant
-genişliği ölçülmemiştir ve kapasite iddiası yapılmaz. Paketli Windows/Android ağ kabulü ve insan sunum
-beğenisi yapılmamıştır.
+Bozuk ağ E2E'si gerçek sunucunun önündeki TCP vekiliyle gecikme, titreşim ve
+parça bekletmeyi sınar. TCP bekletme gerçek paket kaybı değildir. Profiller ve
+bütçeler `quality.json` içindedir. Loopback sonucu internet, paketli uygulama,
+cihazlar arası determinizm veya tam oda kapasitesi kabulüne taşınmaz. Auth,
+internet WSS/CSP, keşif ve cihaz matrisi kalan işleri [kök TODO](../../TODO.md)
+içinde izlenir.
 
 ### Ajan laboratuvarı
 
-Bir ajan (insan ya da model) çalışan oyunu okuyup sürebilsin diye `?lab=1` ile açılan `window.volLab`
-yüzeyi vardır (`src/app/AgentLab.ts`; sayılar `src/config/lab.ts`). Bayrak yoksa hiçbir şey kurulmaz ve
-sayfa farkı yoktur. Girdi geçersiz kılma oyuncunun kendi komut yolundan (`PlayerControls.step`) geçer;
-simülasyon saati, RNG ve kurallar aynıdır, yani laboratuvarla sürülen oturum insan oturumuyla aynı
-dünyadır. Telemetri sınırlı halkadadır (600 durum örneği, 400 olay), uzun oturumda bellek büyümez.
-Halkaları CORE `RingBuffer` taşır. Dışarı verilen örnek ve olaylar kopyadır;
-okuyanın değiştirmesi kayıtlı geçmişi değiştirmez. Geçersiz veya geri akan saat
-örneği atlanır, işaret alanları olay türü ve zamanını ezemez. Laboratuvar
-kapanınca girdi geçersiz kılması bırakılır ve saklanmış API referansı işlem yapamaz.
-Kullanım: `volLab.run('state')`, `volLab.run('input', { moveX: 1, fire: true })`. Komutlar ve belge
-tablosu `tests/app/AgentLab.test.ts` ile birebir eşitlenir:
+`?lab=1` ile açılan `window.volLab`, insan girdisiyle aynı `PlayerControls`
+yolunu kullanır. Bayrak yoksa kurulmaz. CORE `RingBuffer` ile sınırlı
+telemetri/olay halkalarının boyutları `src/config/lab.ts` içindedir. Dışarı
+verilen kayıt kopyadır; geri akan/geçersiz saat atlanır ve olay verisi zaman
+ve türü ezemez. Kapanınca girdi bırakılır, saklanmış API işlem yapamaz.
 
-| Komut              | Ne yapar                                                                                               |
-| ------------------ | ------------------------------------------------------------------------------------------------------ |
-| `volLab.help`      | Komut adlarını ve açıklamalarını döner.                                                                |
-| `volLab.state`     | Dünyanın o anki özeti: oyuncu, araç sayısı, senaryo, tohum.                                            |
-| `volLab.telemetry` | Son durum örnekleri (`count`, en çok 600), eskiden yeniye.                                             |
-| `volLab.events`    | Son oyun olayları ve işaretler (`count`, en çok 600), eskiden yeniye.                                  |
-| `volLab.input`     | Oyuncu girdisini geçersiz kılar: `moveX`, `moveY`, `aimX`, `aimY` ([-1, 1]), `fire`, `boost`, `brake`. |
-| `volLab.teleport`  | Oyuncu aracını (`x`, `y`) noktasına koyar; isteğe bağlı `hull` (rad). Çevrimiçi oturumda fırlatır.     |
-| `volLab.release`   | Girdi geçersiz kılmayı bırakır.                                                                        |
-| `volLab.mark`      | Olay halkasına etiketli bir işaret yazar (`label`).                                                    |
-| `volLab.jsonl`     | Telemetri ve olay halkasını zamana göre sıralı, satır başına bir JSON verir.                           |
+Çağrı `volLab.run('state')` biçimindedir; aşağıdaki adlar komut kimlikleridir.
+Tablo `tests/app/AgentLab.test.ts` ile gerçek kayıtla eşitlenir.
 
-Sunucu tarafı `games/vol-test/scripts/drive.ts` ile ölçülür: `--profile lan --ops <url>` özeti `quality.json` →
-`fleetBudget` profiline karşı yargılar (`@volstudio/network/drive` `judgeFleet`) ve geçmezse süreç 1 ile
-çıkar; `/metrics` verilmezse sunucu maddeleri atlanır ve hüküm tamamlanmış sayılmaz. 14 Ekim ölçümü
-(8 istemci, 30 sn, yerel sunucu): katılım p99 34-49 ms, yama aralığı p99 65 ms, bot başına 16,1 yama/s,
-sunucu adım p95 1,2-1,3 ms; bu yerel loopback ölçümüdür, kapasite ya da soak kabulü değildir (F13.5).
+| Komut              | Ne yapar                                                                       |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `volLab.help`      | Komut adlarını ve açıklamalarını verir.                                        |
+| `volLab.state`     | Oyuncu, dünya, senaryo ve tohum özetini verir.                                 |
+| `volLab.telemetry` | Son durum örneklerini eskiden yeniye verir (`count`).                          |
+| `volLab.events`    | Son olay ve işaretleri eskiden yeniye verir (`count`).                         |
+| `volLab.input`     | `moveX/moveY/aimX/aimY` [-1,1] ve `fire/boost/brake` girdisini geçersiz kılar. |
+| `volLab.teleport`  | `x/y` ve isteğe bağlı radyan `hull`; çevrimiçi oturumda reddedilir.            |
+| `volLab.release`   | Girdi geçersiz kılmayı bırakır.                                                |
+| `volLab.mark`      | `label` ile zamanlı işaret ekler.                                              |
+| `volLab.jsonl`     | Telemetri ve olayları zamana göre sıralı JSONL verir.                          |
 
-## Doğrulama
+Sunucu sürüşü `scripts/drive.ts` üzerinden gerçek SDK ile boşta bekleme,
+sürüş/fren/dönüş ve nişan/ateş senaryolarını koşar. `--profile` her senaryoya
+ayrı bütçe uygular; ops ölçümü eksikse tam kabul üretmez. Komutlar ve
+kimlik taşımayan kayıt biçimi [sürücü belgesindedir](../../network/docs/drive.md).
 
-`tests/sim/feel.test.ts` sürüş, fren, kayma, dönüş, hızlanma, taret, geri
-tepme ve sekme hissinin sayısal zarfını sınar. Bu zarfın değişmesi tasarım
-kararıdır. Tohumlu değişmez testleri NaN, dünya sınırı ve fizik tavanlarını;
-kare hızı testleri sabit adım sonucunu sınar. Hava testleri mevsim takvimini,
-birikimi, erimeyi, sıkışmayı ve model/sunum ayrımını korur.
+## Doğrulama ve sınırlar
 
-Native ölçüm ortamındaki senaryo, tohum ve kalite seçimi
-oturum boyunca kalıcı tercihlerden önce gelir; ses veya titreşim ayarı bu
-koşulları değiştirmez ve ölçüm seçimi kayda yazılmaz.
+`tests/sim/feel.test.ts` sürüş, fren, kayma, dönüş, taret, geri tepme ve sekmenin
+sayısal zarfını korur. Tohumlu testler sonlu sayı, dünya sınırı ve fizik
+sınırlarını; kare hızı testleri sabit adım sonucunu; hava testleri takvim,
+birikim/erime ve model/sunum ayrımını sınar. Zarf değişimi tasarım kararıdır.
 
-E2E gönderilen build'i Chromium ve WebKit'te klavye, sanal kol ve dokunmatik
-girdiyle açar; menü, garaj, ayarlar (dil kalıcılığı, dar ekran sığması), senaryolar, duraklatma,
-hava görünümü ve temiz konsol sınanır. Menüyü ilgilendirmeyen spec'ler `?start=world` ile açılır. Çok oyunculu E2E gerçek Colyseus sunucusunu test işleminde kurar (iki sayfa, bir Node
-gözlemcisi: ortak dünya, cephe seçimi, botlar, sürüş/uzlaştırma, ateş, ölüm/doğuş, ayrılma, ulaşılamayan sunucu); ölümü
-sunucudaki yetkili `Simulation`a hasar vererek tetikler. Kapsam, bundle ve algoritmik ölçekleme eşikleri kök `quality.json`
-içindedir. Gerçek cihaz performansı, görsel ve haptik kabulü otomatik testlerden
-ayrı kalır; ses yayın kabulü teknik QA sözleşmesidir. Açık kabul işleri kök [TODO.md](../../TODO.md) içinde izlenir.
+E2E build'i Chromium/WebKit'te açar: menü, garaj, ayarlar, dil, dar ekran,
+senaryo, pause, hava ve temiz konsol; gerçek sunucuyla çok oyunculu dünya,
+cephe, bot, uzlaştırma, ateş, ölüm/doğuş, ayrılma ve ulaşılamayan sunucu
+sınanır. Ölüm gibi kurulumlar yetkili test dünyasında tetiklenir.
+
+Kapsam, bundle ve ölçekleme eşikleri kök `quality.json` sahibindedir.
+[Kapı sözleşmesine](../../docs/gates.md) göre E2E `signoff` içindedir;
+`high` E2E koşmaz. Sanal girdi fiziksel kol değildir; headless ölçüm native
+pencere/ses/haptik veya gerçek cihaz performansını kanıtlamaz. Ölçülmeyen
+platform kabulü NOT-RUN kalır ve açık işinden silinerek tamamlanmış sayılmaz.

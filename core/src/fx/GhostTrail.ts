@@ -53,11 +53,26 @@ export class GhostTrail {
   private destroyed = false;
 
   constructor(scene: PoseSpriteScene, options: GhostTrailOptions) {
+    options = {
+      maxGhosts: options.maxGhosts,
+      lifespanMs: options.lifespanMs,
+      captureIntervalMs: options.captureIntervalMs,
+      startAlpha: options.startAlpha,
+      endAlpha: options.endAlpha,
+      tint: options.tint,
+      depth: options.depth,
+      blendMode: options.blendMode,
+    };
     requireFinite(options.lifespanMs, 'GhostTrailOptions.lifespanMs');
     requireFinite(options.startAlpha, 'GhostTrailOptions.startAlpha');
     requireFinite(options.maxGhosts, 'GhostTrailOptions.maxGhosts');
-    if (!Number.isInteger(options.maxGhosts) || options.maxGhosts <= 0) {
-      throw new RangeError('GhostTrail: maxGhosts pozitif bir tam sayı olmalı');
+    requireFinite(options.depth, 'GhostTrailOptions.depth');
+    for (const field of ['captureIntervalMs', 'endAlpha', 'tint', 'blendMode'] as const) {
+      const value = options[field];
+      if (value !== undefined) requireFinite(value, `GhostTrailOptions.${field}`);
+    }
+    if (!Number.isSafeInteger(options.maxGhosts) || options.maxGhosts <= 0) {
+      throw new RangeError('GhostTrail: maxGhosts pozitif güvenli tam sayı olmalı');
     }
     if (options.lifespanMs <= 0) {
       throw new RangeError('GhostTrail: lifespanMs pozitif olmalı');

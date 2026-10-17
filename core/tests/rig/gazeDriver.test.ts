@@ -12,6 +12,18 @@ const CONFIG = {
 const DT = 16;
 
 describe('GazeDriver', () => {
+  it.each(['minRadiusRatio', 'alertHoldScale'] as const)(
+    'sonlu olmayan %s pozu zehirleyemez',
+    (key) => {
+      for (const value of [NaN, Infinity, -Infinity])
+        expect(() => new GazeDriver({ ...CONFIG, [key]: value })).toThrow(key);
+    },
+  );
+  it('prototipteki yapılandırma aynı seed ile aynı bakışı üretir', () => {
+    const a = new GazeDriver(Object.create(CONFIG) as typeof CONFIG, createRandom(7));
+    const b = new GazeDriver(CONFIG, createRandom(7));
+    for (let i = 0; i < 80; i++) expect(a.update(DT, null, 0)).toEqual(b.update(DT, null, 0));
+  });
   it('geçersiz yapılandırmayı reddeder', () => {
     expect(() => new GazeDriver({ ...CONFIG, saccadeMs: 0 })).toThrow(/saccadeMs/);
     expect(() => new GazeDriver({ ...CONFIG, radiusPx: -1 })).toThrow(/radiusPx/);

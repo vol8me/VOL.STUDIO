@@ -10,6 +10,22 @@ function makeClock(maxStepsPerFrame = 8) {
 }
 
 describe('SimulationClock', () => {
+  it('prototipten gelen yapılandırmayı değer kaybetmeden bir kez okur', () => {
+    let reads = 0;
+    const config = Object.create({
+      get fixedStepMs() {
+        reads++;
+        return 10;
+      },
+      maxStepsPerFrame: 2,
+      partialStep: 'defer',
+    }) as { fixedStepMs: number; maxStepsPerFrame: number; partialStep: 'defer' };
+    const clock = new SimulationClock(config);
+    const frame = clock.advance(25, () => undefined);
+    expect(frame.fixedSteps).toBe(2);
+    expect(frame.accumulatorMs).toBe(5);
+    expect(reads).toBe(1);
+  });
   it('tam bir frame süresini tek sabit adıma çevirir', () => {
     const { clock, steps, step } = makeClock();
 

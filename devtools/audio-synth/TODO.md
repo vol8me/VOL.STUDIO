@@ -1,133 +1,24 @@
 # @volstudio/audio-synth — iş listesi
 
-Açık iş `[ ]`, biten iş `[x]` olur. Biten madde tek satırla
-`## Kapatılanlar` bölümüne taşınır; eksik çıkan kapanış yeni iş olarak açılır.
-Sözleşmeler ve sınırlar [DESIGN.md](DESIGN.md), kullanım [README.md](README.md),
-repo geneli işler kök [TODO.md](../../TODO.md) içindedir.
-
-Zorunlu dinleme kabulü kaldırıldı; teknik kabulün tam kapı kanıtı kök
-[F01](../../TODO.md#f01) kapanışında ve [denetimde](../../docs/monorepo-audit.md#audio-teknik-kabul).
+Açık ses üretimi işlerinin sahibidir. Kullanım [README](README.md),
+mekanizmalar ve teknik yayın kabulü [DESIGN](DESIGN.md), repo geneli işler
+[kök TODO](../../TODO.md) içindedir. Dinleme değerlendirmesi teknik yayın
+kapısı değildir; güncel sınırlar [denetimde](../../docs/monorepo-audit.md#audio-teknik-kabul) açıklanır.
 
 ## Açık
 
-Bu pakette açık iş yoktur. VOL.TEST yetenek sesleri ve kullanıcı değerlendirmeleri
-kök [TODO](../../TODO.md) F09.6/F09.10 sahibindedir.
+Bu pakette açık iş yoktur. VOL.TEST yetenek sesleri ve kullanıcı
+değerlendirmeleri kök TODO F09.6/F09.10 sahibindedir.
 
 ## Kapatılanlar
 
-- [x] AS20 — Manifest doğrulayıcısı ortak alt şemalara bölündü; yanlış PCM metadata kabulü kapandı.
-- [x] Genel ses benchmark ve canary korpusu.
-- [x] `audio:capabilities` kalite matrisi var.
-- [x] Referans ve dinleme korpusu estetik regresyonları izler.
-- [x] Araç sağlamlığı.
-- [x] Kanonik referans yayınları.
-- [x] Tek komutla dinleme paketi.
-- [x] Temizlik ve sağlamlaştırma denetimi.
-- [x] Anlamsal ses puanlayıcısı isteğe bağlı laboratuvar aracıdır.
-- [x] Referansa uydurma ve ters sentez araştırma yüzeyi.
-- [x] Genel vurmalı çalgı ve davul sentezi ailesi.
-- [x] `InstrumentDefinition` standardı.
-- [x] Retro ve arcade sentezi ailesi.
-- [x] `MusicBundle`.
-- [x] Nota ve olay ifade modeli artikülasyon taşır.
-- [x] Tracker ve adım deseni yüzeyi.
-- [x] Orkestrasyon ve rol katmanı.
-- [x] Kanal ve yerleşim politikası teslim türüne bağlıdır.
-- [x] Kodlama profili teslim sınıfına bağlıdır.
-- [x] Aynı kaynaktan yakın, orta ve uzak teslimler.
-- [x] Teslim profilleri kaynaktan ayrı işleme katmanı.
-- [x] Oyun durumu aileleri tek programdan.
-- [x] Akort sistemi farklı perde tablolarını destekler.
-- [x] Taslak ve son render kalite kipleri.
-- [x] Graf özeti tabanlı artımlı render ve önbellek.
-- [x] Deterministik paralel toplu render.
-- [x] `SoundGraph` tek bir sesi katmanlarına ayırır.
-- [x] `SoundOntology` ve yetenek matrisi.
-- [x] `ProgramPlanner` ve yetenek önerisi.
-- [x] `StyleProfile` kontrol alanlarına çözer.
-- [x] `MaterialProfile` fiziksel türetim taşır.
-- [x] `Impact/Contact` sentez ailesi.
-- [x] `Pressure/Explosion/Discharge` ailesi.
-- [x] Silah ve fırlatıcı arketipi.
-- [x] `Airflow/Turbulence/Hiss` ailesi.
-- [x] `Friction/Scrape/Rolling` ailesi.
-- [x] `Machine/Motor/Rotor` ailesi.
-- [x] `Electrical/Energy` ailesi.
-- [x] Prosedürel çevre dokusu ailesi.
-- [x] Prosedürel, örnekli ve karma kaynaklar aynı `SoundGraph` altında.
-- [x] Örnek motorunda artikülasyon ve bölge desteği.
-- [x] Bağımsız perde kaydırma ve zaman germe.
-- [x] Granüler ve örnek bulutu motoru.
-- [x] Çevrimdışı konvolüsyon ve dürtü yanıtı.
-- [x] Geçici bileşen ve gövde ayrıştırması (HPSS).
-- [x] STFT kapsamı yalnız ölçülmüş ihtiyaca göre genişletilir.
-- [x] Veriyolu ve gönderim grafiği efekt ve müzikte ortaktır.
-- [x] Parametrik EQ ve raf filtreleri.
-- [x] Kompresör, sınırlayıcı ve geçici bileşen şekillendirme ailesi.
-- [x] Çevrimdışı yan zincir ve ses bastırma primitifi.
-- [x] Çok bantlı işleme yalnız ölçülmüş ihtiyaçla eklenir.
-- [x] `MusicBriefV1` makine tarafından okunabilir müzik isteğidir.
-- [x] Proje başına makine-okunur `MusicThemeBookV1`.
-- [x] `MusicProgramV1` sembolik partisyonun kanonik JSON kaynağıdır.
-- [x] `Section` müzik biçimini açıkça taşır.
-- [x] Armoni ve ses dağılımı araçları.
-- [x] Motif ve köken kaydı.
-- [x] Ritim ve insanlaştırma profilleri.
-- [x] Bestecilik için enstrüman üstverisi.
-- [x] `MusicAssetSpecV1` çalma ve üretim üstverisinin tek kaynağıdır.
-- [x] Üç çalma semantiği mastering yolunu belirliyor.
-- [x] Müzik mastering hedefi tek yoldan.
-- [x] `StemBundle` hizalı kanallar ve referans karışımı üretir.
-- [x] Kanalların toplamını koruyan mastering.
-- [x] Uyarlanan müzik durumu birleşimleri yayın öncesi ölçülür.
-- [x] Kanal hizası kodlanmış çıktıda doğrulanır.
-- [x] Geçiş sözleşmesi çalışma zamanı kapasitesine bağlıdır.
-- [x] Sembolik analiz render öncesi çalışır.
-- [x] Hiyerarşik `MusicProgram` araması.
-- [x] `SoundFamilyProgramV1` ilişkili varyant üretir.
-- [x] Çevrimdışı `SoundFamilyBankV1` yayın biçimi.
-- [x] Aile varyasyon alanı kontrollü ve yeniden üretilebilir.
-- [x] Aile bankası çalışma zamanı ve oyun kavramlarından bağımsızdır.
-- [x] Deterministik aday arama motoru.
-- [x] `SoundFamily` kalite ölçüsü.
-- [x] Organik canary benchmark paketi (mühendislik).
-- [x] Aday dinleme aracı.
-- [x] Deterministik mikro olay motoru.
-- [x] Akışkan ve kabarcık sentezi ailesi.
-- [x] Organik vokal kaynağı.
-- [x] Genel boşluk ve tüp dalga kılavuzu.
-- [x] Akustik arketip katmanı.
-- [x] Genel jest ve otomasyon sistemi.
-- [x] Korelasyonlu stokastik modülasyon.
-- [x] Uyarıcı, rezonatör ve artikülasyon zinciri.
-- [x] Zamanla değişen modal banka.
-- [x] Makro akustik kontroller.
-- [x] OGG araç zinciri manifestte kayıtlı.
-- [x] Sürümlü `AudioJob` protokolü.
-- [x] `AudioBriefV1` türe göre ayrışan istek sözleşmesidir.
-- [x] `AcousticProgramV1` kanonik program.
-- [x] Düğüm kayıt sistemi tek kaynaktır.
-- [x] `audio:job context --json`.
-- [x] Özet zinciri.
-- [x] `AudioAnalysisReportV1` + `analyzeAudio()`.
-- [x] `AudioAssetManifestV1`.
-- [x] Tek kanonik publish kapısı.
-- [x] Agent ve sağlayıcı adaptörü ortak protokolü tüketir.
-- [x] `Reverb.decay` RT60 saniyesidir.
-- [x] İç içe parametreler tek sınırdan geçiyor (`src/guard/`).
-- [x] Ara tampon ve döngü tekrar işinin sınırlandırılması.
-- [x] Piyano gövde rezonansı stereo.
-- [x] Yaylı `gain` yalnız çıkış seviyesi.
-- [x] `compose()` flanger/phaser'ı bir kez uygular.
-- [x] `Timeline` yüksekliği yalnız tutulan aralıkta ölçer.
-- [x] Aynı `Timeline`'da ardışık `render()` birebir aynı.
-- [x] WAV `WAVE_FORMAT_EXTENSIBLE` alt alanları okunuyor.
-- [x] Döngü geçişi güç tamamlayıcı ve süreklidir.
-- [x] QA kırpması kanal örneği cinsinden.
-- [x] Tek aktif düzenleme/mastering yolu.
-- [x] Kaiser sinc yeniden örnekleme.
-- [x] Render bellek ve iş bütçesi.
-- [x] Kodek sonrası teslim sınıfına bağlı gerçek tepe ve ses yüksekliği QA.
-- [x] Filtre `poles`/`type` birleşimi sessizce değişmiyor.
-- [x] FM spektral alias regresyon paketi.
-- [x] Kenarlı osilatörlerin (PolyBLEP) kendi alias'ı.
+Teknik teslimlerin özeti aşağıdadır; ayrıntılı kapanış tarihçesi Git içindedir.
+
+- [x] AS20 — Manifest doğrulayıcısı ortak alt şemalara ayrıldı; yanlış PCM metadata kabulü kapandı.
+- [x] Deterministik sentez, örnek/karma kaynak, graf, preset ve parametre sınırları ortak üretim yoluna bağlandı.
+- [x] MusicProgram, tema kitabı, orkestrasyon, stem ve geçiş sözleşmeleri kaynak ve teslim biçimleriyle ayrıldı.
+- [x] SoundFamily, aday arama, benchmark ve canary korpusları yeniden üretilebilir kalite ölçümü sağlar.
+- [x] AudioJob, brief/program/asset manifesti ve özet zinciri tek kanonik publish kapısında birleşti.
+- [x] Render iş/bellek bütçesi, ara tampon ve döngü maliyeti sınırlanır; aynı Timeline ardışık render sırasında aynı çıktıyı verir.
+- [x] WAV/extensible metadata, yeniden örnekleme, kanal hizası ve kodek sonrası gerçek tepe/ses yüksekliği teknik QA ile doğrulanır.
+- [x] RT60, gain, yinelenen efekt, döngü sürekliliği, alias ve filtre birleşimleri anlamlı regresyonlarla korunur.

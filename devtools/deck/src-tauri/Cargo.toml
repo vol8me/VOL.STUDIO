@@ -1,6 +1,6 @@
 [package]
 name = "vol-deck-probe"
-version = "0.1.0"
+version.workspace = true
 description = "VOL.STUDIO Deck ölçüm sondası — paylaşılan kabuğun ilk aktif tüketicisi"
 authors = ["VOL.STUDIO"]
 edition = "2021"

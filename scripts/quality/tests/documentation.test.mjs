@@ -13,6 +13,7 @@ const budgets = {
   rootAgent: { lines: 120, words: 1000 },
   pencilAgent: { lines: 80, words: 650 },
   toolAgent: { lines: 40, words: 250 },
+  technical: { lines: 650, words: 6500 },
 };
 const config = () => ({
   budgets: structuredClone(budgets),
@@ -150,6 +151,21 @@ test('aktif paket README keşfi lifecycle kaynaklıdır; frozen paket dışarıd
       '# Paket\n\nBu paket ortak bir çalışma zamanı mekanizması sağlar.\n\n`pnpm --filter @vol/a test`\n\n[Ayrıntı](../../docs/detail.md)\n',
     );
     assert.deepEqual(check(config(), lifecycle), []);
+  });
+});
+
+test('teknik sözleşme satır ve sözcük bütçesini ayrı korur; başvuru rolü değişmez', () => {
+  fixture(({ write, check }) => {
+    const policy = config();
+    policy.paths.push({ path: 'docs/detail.md', role: 'technical' });
+    const introduction =
+      '# Sözleşme\n\n## Türkçe başlık\n\nBu belge mekanizmanın girdi ve çıktı sınırlarını tanımlar.\n\n[Başlangıç](../README.md)\n';
+    write('docs/detail.md', introduction);
+    assert.deepEqual(check(policy), []);
+    write('docs/detail.md', introduction + '\n'.repeat(650));
+    assert.ok(check(policy).some((p) => p.includes('650 satır')));
+    write('docs/detail.md', introduction + 'sözcük '.repeat(6501));
+    assert.ok(check(policy).some((p) => p.includes('6500 sözcük')));
   });
 });
 

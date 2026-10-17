@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -224,23 +225,26 @@ test('gerçek CORE UI yüzeyi 99 sınıf ve 73 yardımcıdır', () => {
   assert.ok(real.types > 100);
 });
 
-test('CATALOG.md başlık sayıları gerçek yüzey ve kayıtla birebirdir', () => {
+test('CATALOG canlı özet komutuna yönelir; komut gerçek yüzey ve kaydı bildirir', () => {
   const catalog = readFileSync(resolve(ROOT, 'docs/ui/CATALOG.md'), 'utf8');
   const real = uiSurface(ROOT);
   const registry = JSON.parse(readFileSync(resolve(ROOT, REGISTRY_PATH), 'utf8'));
   const direct = registry.entries.filter(
     (entry) => entry.kind === 'class' && entry.consumer === 'direct',
   ).length;
-  const stated = /(\d+) public sınıf, (\d+) runtime export, (\d+) type-only export/.exec(catalog);
-  assert.ok(stated, 'CATALOG.md "N public sınıf, M runtime export, K type-only export" satırı yok');
-  assert.deepEqual(
-    stated.slice(1).map(Number),
-    [real.classes.length, real.classes.length + real.helpers.length, real.types],
-    'CATALOG.md kapsam sayıları bayat; gerçek yüzeye göre güncelle',
+  assert.ok(catalog.includes('node scripts/quality/cli/ui-registry.mjs --summary'));
+  const summary = JSON.parse(
+    execFileSync(process.execPath, ['scripts/quality/cli/ui-registry.mjs', '--summary'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    }),
   );
-  const statedDirect = /(\d+) sınıf VOL\.TEST'te doğrudan/.exec(catalog);
-  assert.ok(statedDirect, `CATALOG.md "N sınıf VOL.TEST'te doğrudan" ifadesi yok`);
-  assert.equal(Number(statedDirect[1]), direct, 'doğrudan tüketilen sınıf sayısı bayat');
+  assert.equal(summary.classes, real.classes.length);
+  assert.equal(summary.helpers, real.helpers.length);
+  assert.equal(summary.types, real.types);
+  assert.equal(summary.classes + summary.helpers, registry.entries.length);
+  assert.equal(summary.directClasses, direct);
+  assert.equal(summary.tier1.open, 0, 'açık tier-1 hücresi saklanamaz');
 });
 
 const FOO_FILE = 'core/tests/ui/foo.test.ts';
