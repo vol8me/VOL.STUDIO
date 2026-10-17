@@ -1,0 +1,358 @@
+{
+  "buses": {
+    "space": {
+      "effects": [
+        {
+          "params": {
+            "amount": 0.3,
+            "damp": 0.55,
+            "decay": 0.8,
+            "preDelay": 0.012,
+            "roomSize": 0.7
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 110,
+            "order": 2,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ]
+    }
+  },
+  "channels": 1,
+  "description": "Sıçrama: hidrolik bırakma, arka itici ateşlemesi ve yükselen kükreme.",
+  "durationSeconds": 1,
+  "effects": [
+    {
+      "params": {
+        "frequency": 36,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 240,
+        "gainDb": 3,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 8,
+        "mix": 0.6,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 9000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "roar-p": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          0.35
+        ],
+        [
+          0.12,
+          1
+        ],
+        [
+          0.55,
+          0.45
+        ],
+        [
+          0.85,
+          0.1
+        ]
+      ],
+      "version": 1
+    },
+    "whine-f": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          220
+        ],
+        [
+          0.3,
+          760
+        ],
+        [
+          0.6,
+          760
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "gainDb": -12.34,
+      "mechanism": "pressure",
+      "name": "push",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -12
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.34,
+          "bodyHz": 58,
+          "decay": 1.6,
+          "positive": 0.008,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -15.17,
+      "mechanism": "pressure",
+      "name": "release",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.2,
+          "bodyHz": 140,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.006,
+          "curve": "cosine",
+          "decay": 0.7,
+          "release": 0.15,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.95,
+      "gainDb": -0.59,
+      "mechanism": "airflow",
+      "name": "roar",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 110,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2600,
+            "mode": "lowpass",
+            "q": 0.5
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "aperture": 34,
+          "cavity": 2,
+          "cavityMix": 0.3,
+          "pressure": {
+            "gesture": "roar-p"
+          },
+          "sibilance": 0.1,
+          "tilt": -0.35,
+          "turbulence": 1
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      },
+      "startSeconds": 0.01
+    },
+    {
+      "gainDb": 7.59,
+      "mechanism": "explosion",
+      "name": "ignite",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -12
+        }
+      ],
+      "source": {
+        "params": {
+          "brightness": 0.35,
+          "color": "pink",
+          "crackle": 0.15,
+          "darkening": 0.8,
+          "decay": 0.4
+        },
+        "primitive": "source.blast",
+        "version": 1
+      },
+      "startSeconds": 0.012
+    },
+    {
+      "gainDb": -63.69,
+      "mechanism": "mechanical",
+      "name": "hydraulic",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.1,
+          "mass": 5,
+          "materialA": "metal",
+          "materialB": "metal",
+          "size": 0.4,
+          "velocity": 2.2
+        },
+        "primitive": "source.contact",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.1,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.14,
+      "gainDb": -3.04,
+      "mechanism": "scrape",
+      "name": "claws",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 800,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 5000,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "granularity": 2,
+          "material": "metal",
+          "pressure": 0.6,
+          "roughness": 0.8,
+          "speed": 2.6
+        },
+        "primitive": "source.friction",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.6,
+          "release": 0.05,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -19.06,
+      "mechanism": "tonal",
+      "name": "whine",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1100,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "whine-f"
+          },
+          "waveform": "sawtooth"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "fadeInSeconds": 0.0005,
+    "fadeOutSeconds": 0.18,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "normalize": "peak",
+    "peakDbfs": -5
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 730302
+}

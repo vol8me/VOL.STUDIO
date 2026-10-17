@@ -1,0 +1,251 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { i18next } from '@volstudio/core/i18n';
+import { bootShowcase } from '../src/bootstrap';
+
+/**
+ * `bootShowcase` CORE UI alt yolunun tamamını, i18n'i ve font yüklemesini tek
+ * seferde ayağa kaldırır; süre o modül grafiğinin maliyetidir, bir takılma
+ * değil.
+ *
+ * Genel `testTimeout` ARTIRILMAZ: o, başka
+ * testlerdeki gerçek takılmaları gizler. Süre yalnızca bölünemeyen bu boot
+ * testlerine, gerekçesiyle verilir. Kapı `pnpm -r` ile bütün paketlerin
+ * kapsamını yan yana koştuğu için 5 sn yüklü makinede yetmiyor.
+ */
+const BOOT_TIMEOUT_MS = 20_000;
+
+describe('bootShowcase', () => {
+  let root: HTMLDivElement;
+
+  beforeEach(() => {
+    document.body.replaceChildren();
+    root = document.createElement('div');
+    document.body.appendChild(root);
+  });
+
+  afterEach(() => {
+    Reflect.deleteProperty(document.documentElement, 'requestFullscreen');
+    Reflect.deleteProperty(root, 'requestFullscreen');
+    const showcase = root.querySelector('.vol-showcase-root');
+    if (showcase) Reflect.deleteProperty(showcase, 'requestFullscreen');
+  });
+
+  it('kök verilmezse başlatmayı reddeder', async () => {
+    await expect(bootShowcase(null)).rejects.toThrow('#app');
+  });
+
+  it(
+    'i18n kaynaklarını yükler ve showcase kabuğunu monte eder',
+    async () => {
+      const session = await bootShowcase(root);
+
+      expect(i18next.getResourceBundle('tr', 'volui')).toBeTruthy();
+      expect(i18next.getResourceBundle('en', 'volui')).toBeTruthy();
+      expect(root.querySelector('.vol-showcase-root')).not.toBeNull();
+
+      session.destroy();
+    },
+    BOOT_TIMEOUT_MS,
+  );
+
+  it(
+    'destroy iki kez çağrılsa da DOM ve dinleyici bırakmaz',
+    async () => {
+      const session = await bootShowcase(root);
+
+      session.destroy();
+      session.destroy();
+
+      expect(root.querySelector('.vol-showcase-root')).toBeNull();
+      expect(session.app.element.isConnected).toBe(false);
+    },
+    BOOT_TIMEOUT_MS,
+  );
+
+  it(
+    'sayfa kapanışında oturumu kendiliğinden kapatır',
+    async () => {
+      const session = await bootShowcase(root);
+
+      window.dispatchEvent(new Event('beforeunload'));
+
+      expect(session.app.element.isConnected).toBe(false);
+    },
+    BOOT_TIMEOUT_MS,
+  );
+
+  it(
+    'tam ekrandayken düğme etiketi ve aria-pressed tersine döner',
+    async () => {
+      const session = await bootShowcase(root);
+      const button = root.querySelector<HTMLButtonElement>('.vol-showcase-fullscreen-button');
+      expect(button?.getAttribute('aria-pressed')).toBe('false');
+
+      // `fullscreenElement` doluyken etiket "çıkış" olmalı; yalnız GİRİŞ yolu
+      // test edilirse etiketin hiç güncellenmemesi fark edilmezdi.
+      Object.defineProperty(document, 'fullscreenElement', {
+        configurable: true,
+        value: session.app.element,
+      });
+      document.dispatchEvent(new Event('fullscreenchange'));
+
+      expect(button?.getAttribute('aria-pressed')).toBe('true');
+      expect(button?.getAttribute('aria-label')).toBe(i18next.t('volui:app.leaveFullscreen'));
+
+      Object.defineProperty(document, 'fullscreenElement', {
+        configurable: true,
+        value: null,
+      });
+      document.dispatchEvent(new Event('fullscreenchange'));
+      expect(button?.getAttribute('aria-pressed')).toBe('false');
+
+      session.destroy();
+    },
+    BOOT_TIMEOUT_MS,
+  );
+
+  it(
+    'F11 ortak fullscreen akışını tetikler',
+    async () => {
+      const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+      const session = await bootShowcase(root);
+      Object.defineProperty(session.app.element, 'requestFullscreen', {
+        configurable: true,
+        value: requestFullscreen,
+      });
+
+      // Tarayıcı F11'i uygulamaya veriyorsa CORE controller devralır.
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F11' }));
+      await Promise.resolve();
+      expect(requestFullscreen).toHaveBeenCalledOnce();
+
+      // Tuş basılı tutulduğunda tekrar tetiklenmez.
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F11', repeat: true }));
+      await Promise.resolve();
+      expect(requestFullscreen).toHaveBeenCalledOnce();
+
+      session.destroy();
+    },
+    BOOT_TIMEOUT_MS,
+  );
+
+  it(
+    'fullscreen butonu geniş tıklama alanıyla ortak controllerı çağırır',
+    async () => {
+      const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+      const session = await bootShowcase(root);
+      Object.defineProperty(session.app.element, 'requestFullscreen', {
+        configurable: true,
+        value: requestFullscreen,
+      });
+      const button = root.querySelector<HTMLButtonElement>('.vol-showcase-fullscreen-button');
+      expect(button?.getAttribute('aria-label')).toBe(i18next.t('volui:app.fullscreen'));
+
+      button?.click();
+      await Promise.resolve();
+      expect(requestFullscreen).toHaveBeenCalledOnce();
+      session.destroy();
+    },
+    BOOT_TIMEOUT_MS,
+  );
+
+  describe('akıllı tam ekran düğmesi (ortama göre)', () => {
+    const fullscreenButton = (): HTMLButtonElement | null =>
+      root.querySelector<HTMLButtonElement>('.vol-showcase-fullscreen-button');
+    const actions = (): HTMLElement | null =>
+      root.querySelector<HTMLElement>('.vol-showcase-header__actions');
+
+    it.each([
+      ['Steam Deck oyun kipi (gamescope)', 'desktop', 'gamescope'],
+      ['Android', 'android', 'desktop'],
+    ] as const)(
+      '%s: zaten tam ekran — düğme yok, F11 yakalanmaz, dil düğmesi satırı doldurur',
+      async (_name, platform, sessionKind) => {
+        const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+        const session = await bootShowcase(root, {
+          platform: () => platform,
+          session: () => Promise.resolve(sessionKind),
+          observeHaptics: [],
+        });
+        Object.defineProperty(session.app.element, 'requestFullscreen', {
+          configurable: true,
+          value: requestFullscreen,
+        });
+        expect(fullscreenButton()).toBeNull();
+        expect(actions()?.dataset.volFullscreen).toBe('none');
+        expect(session.app.element.dataset.volFullscreen).toBe('none');
+        // Düğmeler kalanları sırayla taşır: skin + dil. Tam ekran hücresi boş bir düğme değil, hiç yok.
+        expect(actions()?.querySelectorAll('button')).toHaveLength(2);
+        expect(
+          actions()?.querySelector('.vol-showcase-lang-button'),
+          'dil düğmesi duruyor',
+        ).not.toBeNull();
+
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F11' }));
+        await Promise.resolve();
+        expect(requestFullscreen).not.toHaveBeenCalled();
+        session.destroy();
+      },
+      BOOT_TIMEOUT_MS,
+    );
+
+    it(
+      'Fullscreen API desteklemeyen tarayıcı: düğme yok',
+      async () => {
+        const session = await bootShowcase(root, { browserFullscreen: () => false });
+        expect(fullscreenButton()).toBeNull();
+        expect(actions()?.dataset.volFullscreen).toBe('none');
+        session.destroy();
+      },
+      BOOT_TIMEOUT_MS,
+    );
+
+    it(
+      'tarayıcı: düğme var ve `browser` işaretlidir',
+      async () => {
+        const session = await bootShowcase(root);
+        expect(fullscreenButton()).not.toBeNull();
+        expect(actions()?.dataset.volFullscreen).toBe('browser');
+        expect(actions()?.querySelectorAll('button')).toHaveLength(3);
+        session.destroy();
+      },
+      BOOT_TIMEOUT_MS,
+    );
+
+    it(
+      'masaüstü native: düğme ve F11 pencere sürücüsüne gider, DOM tam ekranı çağrılmaz',
+      async () => {
+        const toggle = vi.fn().mockResolvedValue(undefined);
+        const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+        const session = await bootShowcase(root, {
+          platform: () => 'desktop',
+          session: () => Promise.resolve('desktop'),
+          createDisplay: () => ({
+            start: () => Promise.resolve(),
+            toggle,
+            flush: () => Promise.resolve(),
+            destroy: () => {},
+          }),
+          observeHaptics: [],
+        });
+        Object.defineProperty(session.app.element, 'requestFullscreen', {
+          configurable: true,
+          value: requestFullscreen,
+        });
+        expect(actions()?.dataset.volFullscreen).toBe('native-window');
+
+        fullscreenButton()?.click();
+        await Promise.resolve();
+        expect(toggle).toHaveBeenCalledTimes(1);
+
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F11' }));
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(toggle).toHaveBeenCalledTimes(2);
+        expect(requestFullscreen).not.toHaveBeenCalled();
+        session.destroy();
+      },
+      BOOT_TIMEOUT_MS,
+    );
+  });
+});

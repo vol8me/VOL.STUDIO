@@ -1,0 +1,231 @@
+/**
+ * Fiziksel model — formant sentezi / koro.
+ *
+ * Gırtlak kaynağı (sawtooth-benzeri zengin harmonikler) bir dizi bandpass
+ * filtrede geçirilerek ünlü (vokal) formantları oluşturulur. Koro etkisi
+ * için hafif detune'lu, farklı fazlı çok sayıda ses birlikte çalışır.
+ */
+
+import { createRandom, DEFAULT_SEED } from '@volstudio/core/random';
+import { clamp } from '@volstudio/core/math/interpolation';
+import type { SynthesisResult } from '../../types';
+import { resolveModelBase, type ModelRules } from '../../guard/models';
+import { checkArray, checkObject, requireNumber } from '../../guard/read';
+import { BiquadFilter } from '../../synthesis/filter';
+import { Envelope } from '../../synthesis/envelope';
+import { getPanGains } from '../../effects';
+
+export interface Formant {
+  /** Formant merkez frekansı (Hz). */
+  frequency: number;
+  /** Formant kazancı (0-1). */
+  gain: number;
+  /** Formant bant genişliği (Hz); küçük = yüksek Q. */
+  bandwidth: number;
+}
+
+export interface FormantParams {
+  /** Temel frekans (Hz). */
+  frequency: number;
+  /** Süre (saniye). */
+  duration: number;
+  /** Örnek oranı. Varsayılan 44100. */
+  sampleRate?: number;
+  /** Formant listesi. Varsayılan orta "ah" (700/1220/2600 Hz). */
+  formants?: Formant[];
+  /** Vibrato derinliği (Hz). */
+  vibratoDepth?: number;
+  /** Vibrato hızı (Hz). */
+  vibratoRate?: number;
+  /** Koro sesi sayısı (1-8). Varsayılan 4. */
+  voices?: number;
+  /** Sesler arası detune (cent). */
+  unisonDetune?: number;
+  /** Zarf atağı (saniye). Varsayılan 0.12. */
+  attack?: number;
+  /** Zarf sonuşu (saniye). Varsayılan 0.2. */
+  release?: number;
+  /** Genel kazanç (0-1). */
+  gain?: number;
+  /** Deterministik fazlar için seed. */
+  seed?: number;
+}
+
+function sawGain(n: number): number {
+  return 1 / n;
+}
+
+/** Bir bandpass formant filtresi oluştur; Q merkez/bant genişliği. */
+function createFormantFilter(sampleRate: number, formant: Formant): BiquadFilter {
+  const q = formant.frequency / Math.max(1, formant.bandwidth);
+  return new BiquadFilter(sampleRate, 'bandpass', Math.max(0.5, q));
+}
+
+function resolveFormants(value: unknown): Formant[] {
+  return checkArray(value, 'formant.formants').map((item, index) => {
+    const at = `formant.formants[${index}]`;
+    const o = checkObject(item, at, ['frequency', 'gain', 'bandwidth']);
+    return {
+      frequency: requireNumber(o, 'frequency', at, { above: 0 }),
+      gain: requireNumber(o, 'gain', at, { min: 0, max: 1 }),
+      bandwidth: requireNumber(o, 'bandwidth', at, { above: 0 }),
+    };
+  });
+}
+
+const FORMANT_RULES: ModelRules = {
+  keys: [
+    'frequency',
+    'duration',
+    'sampleRate',
+    'formants',
+    'vibratoDepth',
+    'vibratoRate',
+    'voices',
+    'unisonDetune',
+    'attack',
+    'release',
+    'gain',
+    'seed',
+  ],
+  minFrequency: 65,
+  buffersPerFrame: 2,
+  // Ses başına en çok 50 kısmi ton × iki kanal, artı formant filtreleri.
+  unitsPerFrame: (o) => 100 * clamp(typeof o.voices === 'number' ? o.voices : 4, 1, 8) + 32,
+};
+
+export function formant(params: FormantParams): SynthesisResult {
+  const {
+    sampleRate,
+    frequency: f0,
+    duration,
+  } = resolveModelBase(params, 'formant', FORMANT_RULES);
+  const totalSamples = Math.floor(sampleRate * duration);
+
+  const defaultFormants: Formant[] = [
+    { frequency: 700, gain: 1.0, bandwidth: 110 },
+    { frequency: 1220, gain: 0.63, bandwidth: 140 },
+    { frequency: 2600, gain: 0.4, bandwidth: 220 },
+  ];
+  const formants =
+    params.formants === undefined ? defaultFormants : resolveFormants(params.formants);
+  const vibratoDepth = clamp(params.vibratoDepth ?? 2.5, 0, f0 * 0.1);
+  const vibratoRate = clamp(params.vibratoRate ?? 5.0, 0, 20);
+  const voices = Math.floor(clamp(params.voices ?? 4, 1, 8));
+  const unisonDetune = clamp(params.unisonDetune ?? 8, 0, 50);
+  const attack = clamp(params.attack ?? 0.12, 0.001, duration * 0.5);
+  const release = clamp(params.release ?? 0.2, 0.001, duration * 0.5);
+  const gain = clamp(params.gain ?? 0.4, 0, 1);
+  const seed = Number.isFinite(params.seed) ? (params.seed as number) : DEFAULT_SEED;
+
+  const envelope = new Envelope(
+    {
+      attack,
+      decay: 0.05,
+      sustain: Math.max(0, duration - attack - 0.05 - release),
+      release,
+      sustainLevel: 0.95,
+    },
+    duration,
+  );
+
+  const nyquist = sampleRate * 0.49;
+  // Kısmi ton tavanı vibrato (%10) + unison detune (≤50 cent ≈ ×1,029) en
+  // kötü durumunu karşılayacak payla tutulur: 0,43 × 1,1 × 1,029 < 0,49.
+  const maxPartial = Math.min(50, Math.floor((sampleRate * 0.43) / f0));
+
+  type Voice = {
+    panGainL: number;
+    panGainR: number;
+    phases: Float64Array;
+    phaseSteps: Float64Array;
+    filters: { filter: BiquadFilter; gain: number; freq: number }[];
+  };
+
+  const voiceList: Voice[] = [];
+  const baseRandom = createRandom(seed);
+
+  for (let v = 0; v < voices; v++) {
+    const pan = voices === 1 ? 0 : (v / (voices - 1)) * 2 - 1;
+    const detune = voices === 1 ? 0 : (baseRandom.bipolar() * unisonDetune) / 2;
+    const voiceSeed = seed + v * 0x9e3779b9;
+    const random = createRandom(voiceSeed);
+    const [panGainL, panGainR] = getPanGains(pan);
+
+    const filters = formants
+      .filter((f) => f.frequency < nyquist)
+      .map((f) => ({
+        filter: createFormantFilter(sampleRate, f),
+        gain: f.gain,
+        freq: f.frequency,
+      }));
+
+    const phases = new Float64Array(maxPartial);
+    const phaseSteps = new Float64Array(maxPartial);
+    for (let n = 0; n < maxPartial; n++) {
+      phaseSteps[n] = (f0 * (n + 1) * Math.pow(2, detune / 1200)) / sampleRate;
+      phases[n] = random.next();
+    }
+
+    voiceList.push({ panGainL, panGainR, phases, phaseSteps, filters });
+  }
+
+  const left = new Float32Array(totalSamples);
+  const right = new Float32Array(totalSamples);
+
+  for (let i = 0; i < totalSamples; i++) {
+    const t = i / sampleRate;
+    const env = envelope.value(t);
+    // Vibrato, temelin anlık frekansını Hz cinsinden kaydırır; kısmi ton
+    // adımları f0 ile orantılı olduğundan aynı bağıl sapma tüm spektruma
+    // uygulanır (fiziksel olarak doğru: kısmi ton = n × anlık f0).
+    const lfo = Math.sin(2 * Math.PI * vibratoRate * t);
+    const frequencyRatio = 1 + (vibratoDepth * lfo) / f0;
+
+    let sumL = 0;
+    let sumR = 0;
+
+    for (const voice of voiceList) {
+      let source = 0;
+      for (let n = 0; n < maxPartial; n++) {
+        source += sawGain(n + 1) * Math.sin(2 * Math.PI * voice.phases[n]);
+        voice.phases[n] += voice.phaseSteps[n] * frequencyRatio;
+        voice.phases[n] -= Math.floor(voice.phases[n]);
+      }
+
+      // Formant filtreleri: aynı kaynak tüm formantlardan geçirilir.
+      // Formant listesi boşsa kaynak aynen iletilir; bu yüksek frekans
+      // mutasyon testinin anlamlı karşılaştırması için gerekli.
+      let filtered = 0;
+      if (voice.filters.length === 0) {
+        filtered = source;
+      } else {
+        for (const f of voice.filters) {
+          filtered += f.filter.process(source, f.freq) * f.gain;
+        }
+      }
+
+      sumL += filtered * voice.panGainL;
+      sumR += filtered * voice.panGainR;
+    }
+
+    left[i] = sumL * env;
+    right[i] = sumR * env;
+  }
+
+  // Tepeyi 0.95 × gain'e normalize et — `gain` çıkış seviyesini gerçekten
+  // belirler; sabit 0.95'e çekmek parametreyi etkisiz kılardı.
+  let peak = 0;
+  for (let i = 0; i < totalSamples; i++) {
+    peak = Math.max(peak, Math.abs(left[i]), Math.abs(right[i]));
+  }
+  if (peak > 0) {
+    const scale = (0.95 * gain) / peak;
+    for (let i = 0; i < totalSamples; i++) {
+      left[i] *= scale;
+      right[i] *= scale;
+    }
+  }
+
+  return { channels: [left, right], sampleRate, duration };
+}

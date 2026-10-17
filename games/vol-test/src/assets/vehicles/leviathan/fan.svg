@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <defs>
+    <radialGradient id="hub" cx="0.4" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.6" stop-color="#3a6bff"/>
+      <stop offset="1" stop-color="#0a1d6a"/>
+    </radialGradient>
+  </defs>
+  <g transform="translate(8 8)" fill="#aeb8c6" stroke="#0d1217" stroke-width=".35" stroke-linejoin="round">
+    <path d="M0 -1.1C1.4 -2.6 3.68 -6.26 4.42 -7.21C1.6 -7.36 -0.2 -5.89 -1.2 -2.2Z" transform="rotate(0)"/>
+    <path d="M0 -1.1C1.4 -2.6 3.68 -6.26 4.42 -7.21C1.6 -7.36 -0.2 -5.89 -1.2 -2.2Z" transform="rotate(51.43)"/>
+    <path d="M0 -1.1C1.4 -2.6 3.68 -6.26 4.42 -7.21C1.6 -7.36 -0.2 -5.89 -1.2 -2.2Z" transform="rotate(102.86)"/>
+    <path d="M0 -1.1C1.4 -2.6 3.68 -6.26 4.42 -7.21C1.6 -7.36 -0.2 -5.89 -1.2 -2.2Z" transform="rotate(154.29)"/>
+    <path d="M0 -1.1C1.4 -2.6 3.68 -6.26 4.42 -7.21C1.6 -7.36 -0.2 -5.89 -1.2 -2.2Z" transform="rotate(205.71)"/>
+    <path d="M0 -1.1C1.4 -2.6 3.68 -6.26 4.42 -7.21C1.6 -7.36 -0.2 -5.89 -1.2 -2.2Z" transform="rotate(257.14)"/>
+    <path d="M0 -1.1C1.4 -2.6 3.68 -6.26 4.42 -7.21C1.6 -7.36 -0.2 -5.89 -1.2 -2.2Z" transform="rotate(308.57)"/>
+  </g>
+  <circle cx="8" cy="8" r="2.08" fill="url(#hub)" stroke="#0d1217" stroke-width=".4"/>
+</svg>

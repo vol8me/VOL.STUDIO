@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:8eb37bade3262a83c912b5e75bf09f305bd0511547a209d5cb956a9d60cc6bee",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:f1f8eff0b468866e7552b8e442ee16e1217a3a0fab1e2e1863f248f87f9efe9f",
+    "familyId": "ui-steel-drag-drop",
+    "kind": "family-variant",
+    "variantId": "v-8e815e62c0290d40",
+    "variantKey": "drag-drop-c"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "dry",
+    "weapon",
+    "treatment:behind-wall"
+  ],
+  "durationSeconds": {
+    "max": 1.9,
+    "min": 0.8
+  },
+  "id": "reference-impact-behind-wall",
+  "intent": "Kuru, konumsal bir silah atışı: yakın/orta/uzak ve engel/ortam/cihaz teslim varyantlarının ortak kaynağı. Kuyruk ve yansıma kaynağa değil teslim profiline aittir. Teslim profili behind-wall: Duvarın ardı (iletim): kütle yasası tizi oktav başına ≈6 dB daha çok keser; 350 Hz, 24 dB/oktav alçak geçiren + atak kaybı; öteki odanın kısa yankısı, dar görüntü.",
+  "kind": "acoustic",
+  "mechanisms": [
+    "impact",
+    "pressure"
+  ],
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "treatment-profile"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Referans silah atışı — behind-wall"
+}

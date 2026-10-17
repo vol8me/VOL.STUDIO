@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a3540"/>
+      <stop offset="1" stop-color="#0d1115"/>
+    </linearGradient>
+    <linearGradient id="gem" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e0792f"/>
+      <stop offset="1" stop-color="#a04a18"/>
+    </linearGradient>
+    <clipPath id="clip"><rect width="64" height="64" rx="14"/></clipPath>
+  </defs>
+  <g clip-path="url(#clip)">
+    <rect width="64" height="64" fill="url(#plate)"/>
+    <rect x="3.5" y="3.5" width="57" height="57" rx="10.5" fill="none" stroke="#495865" stroke-width="1"/>
+    <rect x="6" y="6" width="52" height="52" rx="8.5" fill="none" stroke="#34414d" stroke-width=".6"/>
+    <path d="M6 16V6h10M48 6h10v10M58 48v10H48M16 58H6V48" fill="none" stroke="#b85518" stroke-width="2.2" stroke-linecap="square"/>
+    <path d="M32 11L53 32L32 53L11 32Z" fill="url(#gem)" stroke="#ffb27a" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M32 19L45 32L32 45L19 32Z" fill="none" stroke="#2a1608" stroke-opacity=".55" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M32 11L53 32H11Z" fill="#fff" fill-opacity=".14"/>
+  </g>
+</svg>

@@ -1,3 +1,9 @@
+import { playJuice } from '../motion/juice';
+import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { emitUiIntent } from '../feedback/uiIntent';
+import type { HapticFeedback } from './hapticFeedback';
+
 export type IconButtonVariant = 'default' | 'primary' | 'success' | 'danger';
 export type IconButtonSize = 'sm' | 'md' | 'lg';
 
@@ -6,15 +12,32 @@ export interface IconButtonOptions {
   size?: IconButtonSize;
   /** Erişilebilirlik için zorunlu (buton yalnızca ikon içerir). */
   label: string;
-  onClick?: () => void;
+  /**
+   * Asenkron olabilir: `Button` ile AYNI sözleşme — söz beklenirken buton
+   * `aria-busy` + `disabled` olur ve tekrar tetiklenemez.
+   */
+  onClick?: ButtonClickHandler;
   disabled?: boolean;
+  /** Kullanıcı aktivasyonundaki semantik titreşim; varsayılan `tap`. */
+  haptic?: HapticFeedback;
 }
 
-/** Sabit boyutlu, ikon-only kare buton. Button'dan farkı: width:100% yok — kompakt HUD köşeleri için. */
+/**
+ * Sabit boyutlu, ikon-only kare buton. `Button`dan farkı yalnızca YERLEŞİM:
+ * `width: 100%` yoktur — kompakt HUD köşeleri için. Tıklama sözleşmesi
+ * (asenkron bekleme, yeniden girişin engellenmesi, hata yakalama, `aria-busy`)
+ * `Button` ile AYNIDIR; ikisi de `runButtonClick`i kullanır.
+ */
 export class IconButton {
   readonly element: HTMLButtonElement;
   private readonly iconWrapper: HTMLSpanElement;
-  private onClickHandler?: () => void;
+  private onClickHandler?: ButtonClickHandler;
+  private readonly boundHandleClick: (event: Event) => void;
+  private readonly scope = new DisposableScope();
+  private loading = false;
+  /** Sahibin (çağıranın) istediği devre dışı durumu; yükleme bunu ezmez, bitince geri verir. */
+  private ownerDisabled: boolean;
+  private errored = false;
 
   constructor(icon: string | Node, options: IconButtonOptions) {
     const { variant = 'default', size = 'md', label, onClick, disabled = false } = options;
@@ -25,27 +48,78 @@ export class IconButton {
     this.element.setAttribute('aria-label', label);
     this.element.title = label;
     this.element.disabled = disabled;
+    this.ownerDisabled = disabled;
 
     this.iconWrapper = document.createElement('span');
     this.iconWrapper.className = 'vol-icon-button__icon';
     this.element.appendChild(this.iconWrapper);
     this.setIcon(icon);
 
+    // Listener BİR kez bağlanır; `onClick()` yalnız handler alanını değiştirir.
+    // Handler'ın kendisi listener olsaydı ikinci `onClick()` çağrısında eskisini
+    // kaldırmak çağıranın referansı saklamasına bağlı kalır ve asenkron
+    // sarmalayıcı (loading, hata yakalama) hiç eklenemezdi.
+    this.boundHandleClick = (event: Event) => {
+      emitUiIntent({
+        kind: 'press',
+        origin: 'IconButton',
+        target: this.element,
+        event,
+        haptic: options.haptic,
+        defaultHaptic: 'tap',
+      });
+      void this.handleClick();
+    };
+    this.scope.addListener(this.element, 'click', this.boundHandleClick);
+
     if (onClick) {
       this.onClick(onClick);
     }
   }
 
-  onClick(handler: () => void): void {
-    if (this.onClickHandler) {
-      this.element.removeEventListener('click', this.onClickHandler);
-    }
+  onClick(handler: ButtonClickHandler): void {
     this.onClickHandler = handler;
-    this.element.addEventListener('click', handler);
   }
 
   setDisabled(disabled: boolean): void {
-    this.element.disabled = disabled;
+    this.ownerDisabled = disabled;
+    this.element.disabled = disabled || this.loading;
+  }
+
+  /** Asenkron tıklama sürerken meşgul durumu — `Button.setLoading` ile aynı sözleşme. */
+  setLoading(loading: boolean): void {
+    this.loading = loading;
+    this.element.classList.toggle('vol-icon-button--loading', loading);
+    // Yükleme biterken dışarıdan verilmiş `disabled` korunur (async handler sırasında devre dışı bırakılan düğme açılmaz).
+    this.element.disabled = loading || this.ownerDisabled;
+    this.element.setAttribute('aria-busy', String(loading));
+  }
+
+  /** Hata durumu: `Button.setError` ile aynı sözleşme. */
+  get hasError(): boolean {
+    return this.errored;
+  }
+
+  setError(error: boolean): void {
+    this.errored = error;
+    this.element.classList.toggle('vol-icon-button--error', error);
+    if (error) {
+      this.element.dataset.state = 'error';
+      playJuice(this.element, 'shake');
+    } else delete this.element.dataset.state;
+  }
+
+  private handleClick(): Promise<void> {
+    return runButtonClick(
+      {
+        setLoading: (loading) => this.setLoading(loading),
+        setError: (error) => this.setError(error),
+        isLoading: () => this.loading,
+        logLabel: 'IconButton',
+        element: this.element,
+      },
+      this.onClickHandler,
+    );
   }
 
   /** İkonu değiştirir (ör. oynat/duraklat, sessize al). */
@@ -65,9 +139,7 @@ export class IconButton {
   }
 
   destroy(): void {
-    if (this.onClickHandler) {
-      this.element.removeEventListener('click', this.onClickHandler);
-    }
+    this.scope.dispose();
     this.element.remove();
   }
 

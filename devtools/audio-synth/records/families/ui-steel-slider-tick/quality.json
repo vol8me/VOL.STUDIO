@@ -1,0 +1,123 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.04,
+        "measured": 3,
+        "median": 0.03,
+        "min": 0.03,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 257.925,
+        "measured": 3,
+        "median": 257.563,
+        "min": 257.237,
+        "scale": 0.1
+      },
+      "maxMomentaryLufs": {
+        "max": -33.3319,
+        "measured": 3,
+        "median": -33.7005,
+        "min": -34.3775,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 0,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [
+      {
+        "descriptor": "activeSeconds",
+        "key": "slider-tick-c",
+        "robustZ": 4.15037,
+        "value": 0.04
+      }
+    ],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.257896,
+    "medianDistance": 0.206669,
+    "minDistance": 0.142012,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 2.593,
+    "medoid": "slider-tick-b",
+    "members": [
+      {
+        "distance": 2.593,
+        "key": "slider-tick-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "slider-tick-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 1.675,
+        "key": "slider-tick-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "slider-tick-a",
+      "nearest": {
+        "distance": 0.206669,
+        "key": "slider-tick-b"
+      },
+      "pcmHash": "sha256:ecb1ebcca2f78f8414e184c472540a4c58094e0a18e08da253e0c4ae56680fa3"
+    },
+    {
+      "key": "slider-tick-b",
+      "nearest": {
+        "distance": 0.142012,
+        "key": "slider-tick-c"
+      },
+      "pcmHash": "sha256:ff8de4f63376aab95e09cf2445dcfa7a9142e2282a3431c2a25147581faa58e3"
+    },
+    {
+      "key": "slider-tick-c",
+      "nearest": {
+        "distance": 0.142012,
+        "key": "slider-tick-b"
+      },
+      "pcmHash": "sha256:6a9d6051aa380f2c1146b22059afa1959479fe0e2f876a90cde224b9a8239a97"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

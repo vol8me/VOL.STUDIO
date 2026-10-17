@@ -1,0 +1,306 @@
+{
+  "channels": 1,
+  "description": "Yükte dizel: ağır dizel; 8 silindir, 1500 dev/dk.",
+  "durationSeconds": 4,
+  "effects": [
+    {
+      "params": {
+        "frequency": 40,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 230,
+        "gainDb": 4,
+        "q": 0.9
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 460,
+        "gainDb": 3.5,
+        "q": 0.9
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 900,
+        "gainDb": 2,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "asymmetric",
+        "driveDb": 4,
+        "mix": 0.6,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "attackSeconds": 0.02,
+        "kneeDb": 6,
+        "makeupDb": 2,
+        "ratio": 3,
+        "releaseSeconds": 0.18,
+        "thresholdDb": -22
+      },
+      "primitive": "effect.compressor",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 4800,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "gainDb": 0,
+      "mechanism": "motor",
+      "name": "firing",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1050,
+            "mode": "lowpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 95,
+            "mode": "bandpass",
+            "q": 1.4
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "routing": "parallel",
+      "source": {
+        "params": {
+          "bearing": 0.08,
+          "count": 8,
+          "harmonics": 32,
+          "imbalance": 0.28,
+          "load": 0.65,
+          "mechanism": "engine",
+          "noise": 0.22,
+          "rpm": 1500,
+          "tilt": 0.1
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "level": -3
+        },
+        "primitive": "articulation.amplitude",
+        "version": 1
+      },
+      "gainDb": -6,
+      "inserts": [
+        {
+          "params": {
+            "attackSeconds": 0.02,
+            "kneeDb": 6,
+            "makeupDb": 0,
+            "ratio": 3,
+            "releaseSeconds": 0.12,
+            "thresholdDb": -30
+          },
+          "primitive": "effect.compressor",
+          "version": 1
+        }
+      ],
+      "mechanism": "noise",
+      "name": "exhaust",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 700,
+            "mode": "lowpass",
+            "q": 0.9
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 110,
+            "mode": "highpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -24,
+      "mechanism": "debris",
+      "name": "knock",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1400,
+            "mode": "bandpass",
+            "q": 0.9
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 3600,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "clustering": 0.2,
+          "event": "click",
+          "levelSpread": 8,
+          "pitch": 0.8,
+          "rate": 200,
+          "regularity": 0.55,
+          "sizeSpread": 0.5
+        },
+        "primitive": "source.micro-events",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -23,
+      "mechanism": "motor",
+      "name": "gearbox",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bearing": 0.2,
+          "count": 23,
+          "harmonics": 6,
+          "imbalance": 0.05,
+          "load": 0.65,
+          "mechanism": "gear",
+          "noise": 0.05,
+          "rpm": 930,
+          "tilt": 0.8
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -26,
+      "mechanism": "noise",
+      "name": "rumble",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 70,
+            "mode": "lowpass",
+            "q": 1.1
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -24,
+      "mechanism": "tonal",
+      "name": "chassis",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 260,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "frequency": 100,
+          "waveform": "triangle"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "loop": {
+      "crossfadeSeconds": 0.3
+    },
+    "normalize": "peak",
+    "peakDbfs": -6
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 710202
+}

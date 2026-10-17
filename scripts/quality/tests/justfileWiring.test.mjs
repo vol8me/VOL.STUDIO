@@ -1,0 +1,99 @@
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from '../command.mjs';
+import { resolve } from 'node:path';
+import { test } from 'node:test';
+
+const ROOT = resolve(import.meta.dirname, '../../..');
+const justfile = readFileSync(resolve(ROOT, 'justfile'), 'utf8');
+
+/**
+ * KABLOYU sına, modülü değil.
+ *
+ * Bu test bir gerçek hatayla yazıldı: bundle bütçesi bekçisi yazıldı, kendi
+ * birim testleriyle 4/4 geçti ve elle çağrıldığında doğru çalıştı — ama
+ * justfile tarifi dosyayı YANLIŞ YOLDAN çağırıyordu. Kapı, `high` koşana
+ * kadar sessizce kırıktı.
+ *
+ * Bir bekçinin doğru çalışması, ONA ULAŞILDIĞI anlamına gelmez.
+ */
+test('justfile’ın çağırdığı her script gerçekten var', () => {
+  const referenced = [...justfile.matchAll(/node\s+([A-Za-z0-9_/.-]+\.mjs)/g)].map((m) => m[1]);
+
+  assert.ok(referenced.length > 0, 'justfile’da script çağrısı bulunamadı — tarama bozulmuş');
+
+  const missing = referenced.filter((path) => !existsSync(resolve(ROOT, path)));
+  assert.deepEqual(missing, [], `justfile var olmayan script çağırıyor: ${missing.join(', ')}`);
+});
+
+test('tarifler PATH’teki bash’a değil Git kurulumunun kabuğuna bağlanır', () => {
+  /*
+   * Windows'ta PATH'teki `bash`, `WindowsApps\bash.exe` WSL launcher'ına
+   * çözülür. O kabukla her tarif WSL'nin Linux node/pnpm'i altında koşar ve
+   * `rust-just` ile `esbuild` win32 ikilisi bulunamayınca kapılar koddan
+   * bağımsız kırılır. Kabuk sözleşmesi `bashShell.mjs` üzerinden Git
+   * kurulumuna sabitlenir; buradaki `bashShell` çağrısı bu yüzden bir
+   * kazara düşmez.
+   */
+  const shellLine = /^set shell := \[(.*)\]$/m.exec(justfile);
+  assert.ok(shellLine !== null, 'justfile’da `set shell` tanımı bulunamadı');
+  assert.match(
+    shellLine[1],
+    /"node",\s*"scripts\/quality\/bashShell\.mjs",\s*"-euo",\s*"pipefail",\s*"-c"/,
+    'kabuk Git Bash çözümleyicisi üzerinden sabitlenmeli',
+  );
+  assert.doesNotMatch(shellLine[1], /"bash"/, 'kabuk doğrudan PATH’teki `bash`a bağlanmamalı');
+});
+
+test('kapı aşamaları var olan tariflere işaret eder', () => {
+  /*
+   * `high: quick lint-css coverage build bundle e2e` gibi bir satırdaki her ad
+   * tanımlı bir tarif olmalı. Yazım hatası, `just` çalıştırılana kadar
+   * görünmez kalır ve o aşama sessizce hiç koşmaz.
+   */
+  const recipes = new Set(
+    [...justfile.matchAll(/^([a-z][a-z0-9-]*)(?:\s+[^:\n]*)?:/gm)].map((m) => m[1]),
+  );
+  const gates = ['quick', 'fast', 'high', 'signoff'];
+
+  const broken = [];
+  for (const gate of gates) {
+    const line = new RegExp(`^${gate}:([^\\n]*)$`, 'm').exec(justfile);
+    if (line === null) {
+      broken.push(`${gate}: tarif yok`);
+      continue;
+    }
+    for (const stage of line[1].trim().split(/\s+/).filter(Boolean)) {
+      if (!recipes.has(stage)) broken.push(`${gate} -> ${stage}: tanımsız tarif`);
+    }
+  }
+  assert.deepEqual(broken, []);
+});
+
+test('e2e kapısı lifecycle-active workspace keşfini kullanır', () => {
+  const e2eRecipe = /^e2e:\n((?:[ \t]+[^\n]*\n)+)/m.exec(justfile);
+  assert.ok(e2eRecipe !== null, 'justfile’da `e2e` tarifi bulunamadı');
+  assert.match(
+    e2eRecipe[1],
+    /node scripts\/quality\/runActive\.mjs test:e2e --if-present/,
+    'e2e tarifi lifecycle seçimini atlıyor',
+  );
+});
+
+test('just kapı aşamalarını gerçekten çözebiliyor', () => {
+  /*
+   * Son söz `just`ın kendisinde: ayrıştırıcısı tarifi çözemiyorsa kapı yoktur.
+   *
+   * `pnpm exec` ile çağrılır çünkü `just` global bir kurulum değil,
+   * exact pinli `rust-just` devDependency'sinden gelir — repo'nun kapıları da onu
+   * böyle çözer. Doğrudan `just` çağırmak, testi geliştiricinin global
+   * kurulumuna bağlardı.
+   */
+  const output = execFileSync('pnpm', ['exec', 'just', '--summary'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+  for (const gate of ['quick', 'high', 'signoff', 'bundle']) {
+    assert.match(output, new RegExp(`\\b${gate}\\b`), `just '${gate}' tarifini görmüyor`);
+  }
+});

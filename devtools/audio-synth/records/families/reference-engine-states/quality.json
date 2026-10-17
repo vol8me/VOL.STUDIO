@@ -1,0 +1,205 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 2,
+        "measured": 6,
+        "median": 2,
+        "min": 2,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 433.175,
+        "measured": 6,
+        "median": 228.314,
+        "min": 99.966,
+        "scale": 0.970068
+      },
+      "maxMomentaryLufs": {
+        "max": -13.546,
+        "measured": 6,
+        "median": -15.0825,
+        "min": -17.9122,
+        "scale": 1.81282
+      },
+      "pitchHz": {
+        "max": 110,
+        "measured": 4,
+        "median": 60.0112,
+        "min": 53.5496,
+        "scale": 0.179006
+      }
+    },
+    "outliers": [
+      {
+        "descriptor": "pitchHz",
+        "key": "high",
+        "robustZ": 4.8836,
+        "value": 110
+      }
+    ],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 1.6558,
+    "medianDistance": 0.917419,
+    "minDistance": 0.174092,
+    "nearIdentical": [],
+    "pairs": 15
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 12.267,
+    "medoid": "high",
+    "members": [
+      {
+        "distance": 0,
+        "key": "high",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 9.498,
+        "key": "high-damaged",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 11.301,
+        "key": "idle",
+        "shiftOctaves": -1.833
+      },
+      {
+        "distance": 11.526,
+        "key": "idle-damaged",
+        "shiftOctaves": -1.833
+      },
+      {
+        "distance": 8.411,
+        "key": "normal",
+        "shiftOctaves": -0.833
+      },
+      {
+        "distance": 12.267,
+        "key": "normal-damaged",
+        "shiftOctaves": -1
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "high",
+      "nearest": {
+        "distance": 0.174092,
+        "key": "high-damaged"
+      },
+      "pcmHash": "sha256:a1800c1794e3b8761a79c2ab72154df35dd5cb84963c1838a3d646a732acb8ab"
+    },
+    {
+      "key": "high-damaged",
+      "nearest": {
+        "distance": 0.174092,
+        "key": "high"
+      },
+      "pcmHash": "sha256:30b35562d595dda8c4d6ea5dcb57a9619a5f43ee27ee35d65cacb9763c69878e"
+    },
+    {
+      "key": "idle",
+      "nearest": {
+        "distance": 0.299568,
+        "key": "idle-damaged"
+      },
+      "pcmHash": "sha256:1473ce38dbf3aa1e0cfb57d65d22da56ac46f2940b9ab1e0582cee86dd90ee74"
+    },
+    {
+      "key": "idle-damaged",
+      "nearest": {
+        "distance": 0.299568,
+        "key": "idle"
+      },
+      "pcmHash": "sha256:2118689bfb7ebfd87575cdff4c6146b951575c2eb25d28a94e561e4c6cd2ea98"
+    },
+    {
+      "key": "normal",
+      "nearest": {
+        "distance": 0.232635,
+        "key": "normal-damaged"
+      },
+      "pcmHash": "sha256:cba7fba2342e105bafd4a9cf973cf7c069c41179dec54565256db903e65d8426"
+    },
+    {
+      "key": "normal-damaged",
+      "nearest": {
+        "distance": 0.232635,
+        "key": "normal"
+      },
+      "pcmHash": "sha256:90c86a6d211cb72822914d2230d4236f9d08a090f2f07754e1e4b41010682420"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 6,
+    "states": [
+      {
+        "axis": "energy",
+        "descriptor": "centroidHz",
+        "direction": 1
+      },
+      {
+        "axis": "energy",
+        "descriptor": "maxMomentaryLufs",
+        "direction": 1
+      },
+      {
+        "axis": "integrity",
+        "descriptor": "flatness",
+        "direction": 1
+      }
+    ]
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "states": [
+    {
+      "axis": "energy",
+      "descriptor": "centroidHz",
+      "direction": 1,
+      "pairs": 6,
+      "pass": true,
+      "violations": []
+    },
+    {
+      "axis": "energy",
+      "descriptor": "maxMomentaryLufs",
+      "direction": 1,
+      "pairs": 6,
+      "pass": true,
+      "violations": []
+    },
+    {
+      "axis": "integrity",
+      "descriptor": "flatness",
+      "direction": 1,
+      "pairs": 3,
+      "pass": true,
+      "violations": []
+    }
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

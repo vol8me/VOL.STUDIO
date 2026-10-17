@@ -1,0 +1,601 @@
+//! Ölçüm sondası köprüsü (diagnostics).
+//!
+//! Cihaz başında ölçüm yapan sonda uygulamasının (`devtools/deck-probe`)
+//! native yarısıdır: ön yüzün gördüğü her şeyi tek kanallı bir JSONL kaydına
+//! yazar. Kayıt, betiğin SSH üzerinden çektiği tek dosyadır — Deck'te uzaktan
+//! çıkış yoktur, ölçüm ancak böyle bir kayıtla toplanır.
+//!
+//! Taşıdığı üç gözlem kanalı:
+//!
+//! - `report`: JS'in yazdığı her satır dosyaya eklenir ve `fsync`lenir —
+//!   süreç ölürse o ana kadarki kanıt diskte kalır.
+//! - Kapanış kaydı: kabuğun (`volstudio-tauri`) yayınladığı `vol:terminate`
+//!   ve `vol:exiting` olayları kayda geçer; Steam'in "Oyundan çık"ının
+//!   gönderdiği sinyal sırası bu kayıttan okunur.
+//! - Uyku izleyici: `CLOCK_BOOTTIME − CLOCK_MONOTONIC` sıçraması uyku
+//!   süresini verir; `performance.now()` uykuyu saymadığı için JS tarafındaki
+//!   sıçrama bununla kıyaslanır.
+//!
+//! Ortam dökümü (`env_info`) izin listesiyle çalışır: oturum belirteci ya da
+//! kişisel veri taşıyabilecek değişkenler kayda girmez.
+
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::path::PathBuf;
+use tauri::{
+    plugin::{Builder, TauriPlugin},
+    AppHandle, Manager, Runtime,
+};
+
+/// Kayıt biçimi sürümü; ölçüm kayıtları bunu taşır ki okuyucu eski/yeni
+/// şemayı ayırt edebilsin.
+pub const RECORD_VERSION: u32 = 1;
+const MAX_REPORT_BYTES: usize = 64 * 1024;
+
+/// Kimlik, yol ve oturum belirteci taşımayan tam değişken adları.
+const ENV_ALLOWLIST: &[&str] = &[
+    "steamdeck",
+    "steamos",
+    "steamgamepadui",
+    "steamtenfoot",
+    "steam_client_launch",
+    "steam_display_refresh_limits",
+    "steam_gamescope",
+    "webkit_disable_dmabuf_renderer",
+    "webkit_force_vblank_timer",
+    "webkit_display_refresh_throttle_fps",
+    "__nv_disable_explicit_sync",
+    "gdk_backend",
+    "xdg_session_type",
+    "sdl_enable_steam_screen_keyboard",
+    "vol_deck_measure",
+    "vol_deck_haptics_probe",
+    "vol_deck_scenario",
+    "vol_deck_seed",
+    "vol_deck_weather",
+    "vol_deck_season",
+    "vol_deck_quality",
+    "pressure_vessel_architectures",
+    "srt_urlopen_prefer_steam",
+    "lang",
+];
+
+fn allowed_env_name(key: &str) -> bool {
+    ENV_ALLOWLIST.contains(&key.to_lowercase().as_str())
+}
+
+fn measurement_requested(value: Option<&str>) -> bool {
+    value == Some("1")
+}
+
+fn append(dir: &std::path::Path, line: &str) -> std::io::Result<()> {
+    std::fs::create_dir_all(dir)?;
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(dir.join("diagnostics.jsonl"))?;
+    // Tek write çağrısı şart: writeln! satırı ve '\n'ı ayrı write'a
+    // böler; sinyal işleyici ile JS `report` aynı anda yazarsa iki
+    // kayıt tek satırda birleşir. O_APPEND + tek write_all kaydı atomik tutar.
+    file.write_all(format!("{line}\n").as_bytes())?;
+    file.sync_data()
+}
+
+#[cfg(target_os = "linux")]
+fn clock(id: libc::clockid_t) -> f64 {
+    let mut ts = libc::timespec {
+        tv_sec: 0,
+        tv_nsec: 0,
+    };
+    unsafe { libc::clock_gettime(id, &mut ts) };
+    ts.tv_sec as f64 + ts.tv_nsec as f64 / 1e9
+}
+
+/// Rust tarafından üretilen kayıt satırı: mono/boot/wall saatleri birlikte
+/// yazılır ki uyku sıçraması ve JS saatleriyle kıyas yapılabilsin.
+#[cfg(target_os = "linux")]
+fn native(dir: &std::path::Path, kind: &str, extra: serde_json::Value) {
+    let value = native_record(
+        kind,
+        (
+            clock(libc::CLOCK_MONOTONIC),
+            clock(libc::CLOCK_BOOTTIME),
+            clock(libc::CLOCK_REALTIME),
+        ),
+        extra,
+    );
+    if let Err(error) = append(dir, &value.to_string()) {
+        eprintln!("Native ölçüm kaydı teslim edilemedi: {:?}", error.kind());
+    }
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn native_record(
+    kind: &str,
+    clocks: (f64, f64, f64),
+    extra: serde_json::Value,
+) -> serde_json::Value {
+    let mut value = serde_json::json!({
+        "v": RECORD_VERSION,
+        "src": "rust",
+        "type": kind,
+        "mono": clocks.0,
+        "boot": clocks.1,
+        "wall": clocks.2,
+    });
+    let fields: &[&str] = match kind {
+        "signal" => &["requestId", "reason", "signal"],
+        "exit-after-grace" => &["requestId", "reason", "signal", "outcome"],
+        "suspend-gap" => &["seconds"],
+        _ => &[],
+    };
+    if let (Some(target), Some(source)) = (value.as_object_mut(), extra.as_object()) {
+        for &key in fields {
+            if let Some(item) = source.get(key) {
+                target.insert(key.into(), item.clone());
+            }
+        }
+    }
+    value
+}
+
+#[cfg(test)]
+mod event_acl_tests;
+
+#[cfg(test)]
+mod native_record_tests {
+    use super::*;
+
+    #[test]
+    fn payload_cannot_override_native_envelope() {
+        let record = native_record(
+            "signal",
+            (1.0, 2.0, 3.0),
+            serde_json::json!({
+                "v": 99, "src": "js", "type": "perf", "mono": 88, "boot": 88, "wall": 88,
+                "requestId": "shutdown-1", "reason": "signal", "signal": 15,
+                "outcome": "success", "seconds": 50, "fps": 200, "secret": "yabancı",
+            }),
+        );
+        assert_eq!(
+            record,
+            serde_json::json!({
+                "v": 1, "src": "rust", "type": "signal", "mono": 1.0, "boot": 2.0, "wall": 3.0,
+                "requestId": "shutdown-1", "reason": "signal", "signal": 15,
+            })
+        );
+    }
+
+    #[test]
+    fn native_record_copies_only_fields_allowed_for_its_kind() {
+        let extra = serde_json::json!({
+            "requestId": "shutdown-1", "reason": "signal", "signal": 15,
+            "outcome": "failed", "seconds": 4, "fps": 200,
+        });
+        let exit = native_record("exit-after-grace", (1.0, 2.0, 3.0), extra.clone());
+        assert_eq!(exit["outcome"], "failed");
+        assert!(exit.get("seconds").is_none());
+        let suspend = native_record("suspend-gap", (1.0, 2.0, 3.0), extra.clone());
+        assert_eq!(suspend["seconds"], 4);
+        assert!(suspend.get("requestId").is_none());
+        let start = native_record("start", (1.0, 2.0, 3.0), extra);
+        assert_eq!(start.as_object().unwrap().len(), 6);
+    }
+}
+
+#[tauri::command]
+fn report<R: Runtime>(app: AppHandle<R>, line: String) -> Result<(), String> {
+    let dir = app
+        .try_state::<DiagnosticsDir>()
+        .ok_or_else(|| "Ölçüm kaydı etkin değil.".to_owned())?;
+    report_in(&dir.0, &line)
+}
+
+fn report_in(dir: &std::path::Path, line: &str) -> Result<(), String> {
+    if line.len() > MAX_REPORT_BYTES {
+        return Err("Ölçüm kaydı 64 KiB sınırını aşıyor.".to_owned());
+    }
+    let mut record: serde_json::Map<String, serde_json::Value> = serde_json::from_str(line)
+        .map_err(|_| "Ölçüm kaydı tek JSON nesnesi olmalı.".to_owned())?;
+    // Kaynak native sınırın kararıdır; IPC göndereni Rust gözlemi üretemez.
+    record.insert("src".into(), "js".into());
+    // Şema ve teslim damgası native sınırdan gelir; JS geçmiş kabulü üretemez.
+    record.insert("v".into(), RECORD_VERSION.into());
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|_| "Ölçüm teslim saati Unix başlangıcından önce.".to_owned())?
+        .as_millis();
+    record.insert("stamp".into(), (stamp as u64).into());
+    let normalized =
+        serde_json::to_string(&record).map_err(|_| "Ölçüm kaydı serileştirilemedi.".to_owned())?;
+    if normalized.len() > MAX_REPORT_BYTES {
+        return Err("Ölçüm kaydı 64 KiB sınırını aşıyor.".to_owned());
+    }
+    append(dir, &normalized)
+        .map_err(|error| format!("Ölçüm kaydı teslim edilemedi: {:?}", error.kind()))
+}
+
+#[tauri::command]
+fn env_info() -> serde_json::Value {
+    let mut map = serde_json::Map::new();
+    for (key, value) in std::env::vars() {
+        if allowed_env_name(&key) {
+            map.insert(key, value.into());
+        }
+    }
+    // Başlatıcının ortamı konteynerin gerçekten girildiğini kanıtlamaz.
+    #[cfg(target_os = "linux")]
+    let runtime = runtime_class(std::fs::read_to_string("/etc/os-release").ok().as_deref());
+    #[cfg(not(target_os = "linux"))]
+    let runtime = "host";
+    map.insert("VOL_DIAGNOSTICS_RUNTIME".into(), runtime.into());
+    map.insert("pid".into(), std::process::id().into());
+    serde_json::Value::Object(map)
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn runtime_class(os_release: Option<&str>) -> &'static str {
+    let Some(text) = os_release else {
+        return "unknown";
+    };
+    let field = |name: &str| {
+        let mut values = text.lines().filter_map(|line| {
+            let (key, value) = line.trim().split_once('=')?;
+            (key == name).then_some(value)
+        });
+        let value = values.next()?;
+        if values.next().is_some() {
+            return None;
+        }
+        if let Some(inner) = value.strip_prefix('"') {
+            return inner.strip_suffix('"');
+        }
+        if let Some(inner) = value.strip_prefix('\'') {
+            return inner.strip_suffix('\'');
+        }
+        Some(value)
+    };
+    match field("ID") {
+        Some("steamrt") => match field("VERSION_ID")
+            .filter(|value| {
+                value
+                    .split('.')
+                    .all(|part| !part.is_empty() && part.bytes().all(|c| c.is_ascii_digit()))
+            })
+            .and_then(|value| value.split('.').next())
+        {
+            Some("3") => "steamrt3",
+            Some("4") => "steamrt4",
+            _ => "unknown",
+        },
+        Some(id)
+            if !id.is_empty()
+                && id.bytes().all(|c| {
+                    c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'_' || c == b'-'
+                }) =>
+        {
+            "host"
+        }
+        _ => "unknown",
+    }
+}
+
+/// Kayıt dizini bir kez çözülür ve state olarak saklanır.
+struct DiagnosticsDir(PathBuf);
+
+fn diagnostics_dir<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
+    if let Ok(custom) = std::env::var("VOL_DIAGNOSTICS_DIR") {
+        return PathBuf::from(custom);
+    }
+    app.path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from("/tmp/vol-diagnostics"))
+}
+
+/// Kapanış kaydı: sinyali ve boşaltma sonucunu kabuk (`volstudio-tauri`)
+/// `vol:terminate` ve `vol:exiting` olarak yayınlar; burada yalnız kayda geçer.
+#[cfg(target_os = "linux")]
+fn record_shutdown<R: Runtime>(app: &AppHandle<R>, dir: PathBuf) {
+    use tauri::Listener;
+    let signal_dir = dir.clone();
+    app.listen_any("vol:terminate", move |event| {
+        let detail: serde_json::Value = serde_json::from_str(event.payload()).unwrap_or_default();
+        native(&signal_dir, "signal", detail);
+    });
+    app.listen_any("vol:exiting", move |event| {
+        let detail: serde_json::Value = serde_json::from_str(event.payload()).unwrap_or_default();
+        native(&dir, "exit-after-grace", detail);
+    });
+}
+
+/// Uyku izleyici: BOOTTIME uyku süresini de sayar, MONOTONIC saymaz —
+/// ikisinin farkının sıçraması uyku uzunluğudur.
+#[cfg(target_os = "linux")]
+fn watch_suspend(dir: PathBuf) {
+    std::thread::spawn(move || {
+        let mut offset = clock(libc::CLOCK_BOOTTIME) - clock(libc::CLOCK_MONOTONIC);
+        loop {
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            let next = clock(libc::CLOCK_BOOTTIME) - clock(libc::CLOCK_MONOTONIC);
+            if next - offset > 0.5 {
+                native(
+                    &dir,
+                    "suspend-gap",
+                    serde_json::json!({ "seconds": next - offset }),
+                );
+            }
+            offset = next;
+        }
+    });
+}
+
+pub fn init<R: Runtime>() -> TauriPlugin<R> {
+    build(true)
+}
+
+/// Oyunda komut yüzeyini korur; kayıt, uyku ve kapanış kaydı yalnız
+/// açık Deck ölçümünde kurulur. Sonda uygulaması `init()` ile sürekli kayıt alır.
+pub fn init_for_measurement<R: Runtime>() -> TauriPlugin<R> {
+    let enabled = measurement_requested(std::env::var("VOL_DECK_MEASURE").ok().as_deref());
+    build(enabled)
+}
+
+fn build<R: Runtime>(enabled: bool) -> TauriPlugin<R> {
+    Builder::new("vol-diagnostics")
+        .invoke_handler(tauri::generate_handler![report, env_info])
+        .setup(move |app, _api| {
+            if !enabled {
+                return Ok(());
+            }
+            let dir = diagnostics_dir(app);
+            #[cfg(target_os = "linux")]
+            {
+                native(&dir, "start", serde_json::json!({}));
+                record_shutdown(app, dir.clone());
+                watch_suspend(dir.clone());
+            }
+            app.manage(DiagnosticsDir(dir));
+            Ok(())
+        })
+        .build()
+}
+
+#[cfg(test)]
+mod delivery_tests {
+    use super::*;
+
+    #[test]
+    fn ipc_rejects_records_other_than_single_objects() {
+        let dir = temp_dir();
+        for line in ["{}\n{}", "[]", "null", "42", "{yarim"] {
+            assert!(report_in(&dir, line).is_err(), "{line}");
+        }
+        assert!(!dir.join("diagnostics.jsonl").exists());
+    }
+
+    #[test]
+    fn ipc_rejects_oversized_records_before_disk_write() {
+        let dir = temp_dir();
+        let line = format!(r#"{{"x":"{}"}}"#, "a".repeat(64 * 1024));
+        assert!(report_in(&dir, &line).is_err());
+        assert!(!dir.join("diagnostics.jsonl").exists());
+    }
+
+    #[test]
+    fn ipc_cannot_forge_native_source_and_preserves_body() {
+        let dir = temp_dir();
+        report_in(
+            &dir,
+            r#"{"src":"rust","v":99,"stamp":1,"type":"perf","window":1,"note":"iki\nsatır"}"#,
+        )
+        .unwrap();
+        let written = std::fs::read_to_string(dir.join("diagnostics.jsonl")).unwrap();
+        std::fs::remove_dir_all(dir).unwrap();
+        assert_eq!(written.lines().count(), 1);
+        let record: serde_json::Value = serde_json::from_str(written.trim()).unwrap();
+        assert_eq!(record["src"], "js");
+        assert_eq!(record["v"], RECORD_VERSION);
+        assert!(record["stamp"].as_u64().unwrap() > 1_700_000_000_000);
+        assert_eq!(record["window"], 1);
+        assert_eq!(record["note"], "iki\nsatır");
+    }
+
+    fn temp_dir() -> PathBuf {
+        temp_dir_at(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos(),
+        )
+    }
+
+    fn temp_dir_at(stamp: u128) -> PathBuf {
+        // Duvar saati paralel testlerde aynı değeri döndürebilir; sahipliği sayaç ayırır.
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        std::env::temp_dir().join(format!(
+            "vol-diagnostics-delivery-{}-{}-{}",
+            std::process::id(),
+            stamp,
+            NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ))
+    }
+
+    #[test]
+    fn parallel_disk_tests_do_not_share_paths_when_clock_does_not_advance() {
+        let paths: std::collections::HashSet<_> = std::thread::scope(|scope| {
+            let tasks: Vec<_> = (0..32).map(|_| scope.spawn(|| temp_dir_at(1))).collect();
+            tasks.into_iter().map(|task| task.join().unwrap()).collect()
+        });
+        assert_eq!(
+            paths.len(),
+            32,
+            "Aynı saat damgası disk sahipliğini birleştiremez"
+        );
+    }
+
+    #[test]
+    fn append_rejects_real_disk_open_failure() {
+        let dir = temp_dir();
+        std::fs::create_dir_all(dir.join("diagnostics.jsonl")).unwrap();
+        let result = append(&dir, "{\"type\":\"perf\"}");
+        std::fs::remove_dir_all(dir).unwrap();
+        assert!(
+            result.is_err(),
+            "Açılamayan JSONL dosyası teslim başarısı değildir"
+        );
+    }
+
+    #[test]
+    fn append_delivers_complete_jsonl_records_to_real_disk() {
+        let dir = temp_dir();
+        append(&dir, "{\"window\":1}").unwrap();
+        append(&dir, "{\"window\":2}").unwrap();
+        let written = std::fs::read_to_string(dir.join("diagnostics.jsonl")).unwrap();
+        std::fs::remove_dir_all(dir).unwrap();
+        assert_eq!(written, "{\"window\":1}\n{\"window\":2}\n");
+    }
+
+    #[test]
+    fn append_rejects_real_directory_creation_failure() {
+        let dir = temp_dir();
+        std::fs::write(&dir, "engel").unwrap();
+        let result = append(&dir.join("nested"), "{}");
+        std::fs::remove_file(dir).unwrap();
+        assert!(result.is_err());
+    }
+}
+#[cfg(test)]
+mod privacy_tests {
+    use super::{allowed_env_name, measurement_requested};
+
+    #[test]
+    fn game_recording_requires_exact_measurement_flag() {
+        for value in [None, Some(""), Some("0"), Some("true"), Some("01")] {
+            assert!(!measurement_requested(value));
+        }
+        assert!(measurement_requested(Some("1")));
+    }
+
+    #[test]
+    fn environment_does_not_admit_paths_ids_or_prefix_secrets() {
+        for key in [
+            "HOME",
+            "APPDIR",
+            "SteamAppId",
+            "SteamEnv",
+            "SteamVirtualGamepadInfo",
+            "VOL_DECK_TOKEN",
+            "WEBKIT_SESSION_TOKEN",
+            "XDG_SESSION_ID",
+        ] {
+            assert!(!allowed_env_name(key));
+        }
+        for key in [
+            "VOL_DECK_MEASURE",
+            "VOL_DECK_SCENARIO",
+            "VOL_DECK_SEED",
+            "VOL_DECK_WEATHER",
+            "VOL_DECK_SEASON",
+            "VOL_DECK_QUALITY",
+            "STEAM_GAMESCOPE",
+            "WEBKIT_FORCE_VBLANK_TIMER",
+        ] {
+            assert!(allowed_env_name(key));
+        }
+    }
+}
+
+#[cfg(test)]
+mod runtime_tests {
+    use super::*;
+
+    #[test]
+    fn runtime_class_uses_process_namespace_not_launcher_path() {
+        for version in ["3", "3.0.20261001"] {
+            assert_eq!(
+                runtime_class(Some(&format!("ID=steamrt\nVERSION_ID=\"{version}\"\n"))),
+                "steamrt3"
+            );
+        }
+        assert_eq!(
+            runtime_class(Some(
+                "ID=\"steamrt\"\nVERSION_ID='4'\nBUILD_ID=4.0.20260928.262390\n"
+            )),
+            "steamrt4"
+        );
+        assert_eq!(runtime_class(Some("ID=steamos\nVERSION_ID=3.7\n")), "host");
+        assert_eq!(runtime_class(Some("ID=debian\nVERSION_ID=13\n")), "host");
+    }
+
+    #[test]
+    fn missing_or_ambiguous_runtime_is_never_host() {
+        for value in [
+            None,
+            Some(""),
+            Some("ID=steamrt"),
+            Some("ID=steamrt\nVERSION_ID=2"),
+            Some("ID=steamrt\nVERSION_ID=4.secret"),
+            Some("ID=steamrt\nVERSION_ID=4..0"),
+            Some("ID=steamrt\nVERSION_ID=4\nVERSION_ID=3"),
+            Some("ID=steamos\nID=steamrt"),
+            Some("ID=\"steamos"),
+            Some("ID=private/device"),
+        ] {
+            assert_eq!(runtime_class(value), "unknown", "{value:?}");
+        }
+    }
+
+    #[test]
+    fn native_environment_has_explicit_runtime_class() {
+        let environment = env_info();
+        assert!(["host", "unknown", "steamrt3", "steamrt4"]
+            .contains(&environment["VOL_DIAGNOSTICS_RUNTIME"].as_str().unwrap()));
+        #[cfg(not(target_os = "linux"))]
+        assert_eq!(environment["VOL_DIAGNOSTICS_RUNTIME"], "host");
+    }
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod shutdown_tests {
+    use super::*;
+    use tauri::Emitter;
+
+    #[test]
+    fn kapanis_event_packeti_gercek_kayitta_kimlik_neden_ve_sinyali_korur() {
+        let app = tauri::test::mock_app();
+        let dir =
+            std::env::temp_dir().join(format!("vol-diagnostics-shutdown-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("diagnostics.jsonl");
+        if path.exists() {
+            std::fs::remove_file(&path).unwrap();
+        }
+        record_shutdown(app.handle(), dir.clone());
+        app.emit(
+            "vol:terminate",
+            serde_json::json!({
+                "requestId": "shutdown-1", "reason": "signal", "signal": 15,
+            }),
+        )
+        .unwrap();
+        app.emit(
+            "vol:exiting",
+            serde_json::json!({
+                "requestId": "shutdown-1", "reason": "signal", "signal": 15, "outcome": "failed",
+            }),
+        )
+        .unwrap();
+        let records: Vec<serde_json::Value> = std::fs::read_to_string(&path)
+            .unwrap()
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect();
+        assert_eq!(records.len(), 2);
+        assert_eq!(records[0]["requestId"], "shutdown-1");
+        assert_eq!(records[0]["reason"], "signal");
+        assert_eq!(records[0]["signal"], 15);
+        assert_eq!(records[1]["requestId"], "shutdown-1");
+        assert_eq!(records[1]["outcome"], "failed");
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+}

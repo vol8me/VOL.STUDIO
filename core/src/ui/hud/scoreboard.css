@@ -1,0 +1,293 @@
+/* VersusBar, RankList ve ActivityFeed: sıkı, kaydırmasız HUD sunumu (hud.css 1000 satır sınırı için ayrı dosya). */
+
+/* VersusBar: iki taraf, ortada hedefe uzanan iz; iz altında işaretler, sağda ek öğe. */
+.vol-versus {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-md);
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: var(--vol-space-xs) var(--vol-space-md);
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--vol-ui-text);
+}
+
+.vol-versus__side {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--vol-space-xs);
+  min-width: 0;
+  color: var(--vol-ui-text-secondary);
+}
+
+.vol-versus__side[data-own='true'] {
+  color: var(--vol-ui-text);
+  font-weight: 700;
+}
+
+.vol-versus__swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.vol-versus__wins {
+  padding: 0 5px;
+  font-size: var(--vol-text-micro);
+  line-height: 14px;
+  color: var(--vol-ui-text-muted);
+  background: var(--vol-ui-surface-2);
+  border-radius: 999px;
+}
+
+.vol-versus__middle {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  min-width: 72px;
+}
+
+/* İz: iki ucundan ortaya uzanan yarım dolgular; ortada buluşmak hedefe varmaktır. */
+.vol-versus__track {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  background: var(--vol-ui-surface-2);
+  border-radius: 3px;
+}
+
+.vol-versus__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transition: width var(--vol-transition-medium);
+}
+
+.vol-versus__fill--start {
+  left: 0;
+}
+
+.vol-versus__fill--end {
+  right: 0;
+}
+
+.vol-versus__pips {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.vol-versus__pips[hidden],
+.vol-versus__trailing[hidden],
+.vol-versus__wins[hidden] {
+  display: none;
+}
+
+.vol-versus__pip {
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: 2px;
+}
+
+.vol-versus__pip[data-contested='true'] {
+  border-color: var(--vol-ui-warning-solid);
+  box-shadow: 0 0 0 1px var(--vol-ui-warning-solid);
+}
+
+.vol-versus__trailing {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  padding-left: var(--vol-space-md);
+  border-left: 1px solid var(--vol-ui-border-soft);
+  color: var(--vol-ui-text-muted);
+  font-size: var(--vol-text-label);
+}
+
+/* RankList: sabit satır sayılı sıralama; kaydırma yok, kendi satırı vurgulu. */
+.vol-rank {
+  box-sizing: border-box;
+  min-width: 168px;
+  max-width: 100%;
+  padding: var(--vol-space-xs) 0;
+  overflow: hidden;
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--vol-ui-text-secondary);
+}
+
+.vol-rank__title {
+  margin: 0;
+  padding: 2px var(--vol-space-md) var(--vol-space-xs);
+  font-size: var(--vol-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vol-ui-text-muted);
+}
+
+.vol-rank__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vol-rank__list[hidden],
+.vol-rank__empty[hidden] {
+  display: none;
+}
+
+.vol-rank__row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 3px var(--vol-space-md);
+  line-height: 16px;
+}
+
+.vol-rank__row[data-gap='true'] {
+  margin-top: 3px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--vol-ui-border-soft);
+}
+
+.vol-rank__row[data-self='true'] {
+  background: var(--vol-ui-surface-2);
+  color: var(--vol-ui-text);
+  font-weight: 700;
+}
+
+.vol-rank__row[data-muted='true'] {
+  opacity: 0.55;
+}
+
+.vol-rank__rank {
+  flex: none;
+  width: 1.4em;
+  text-align: right;
+  color: var(--vol-ui-text-muted);
+}
+
+.vol-rank__swatch {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.vol-rank__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vol-rank__tag {
+  flex: none;
+  padding: 0 4px;
+  font-size: var(--vol-text-micro);
+  line-height: 13px;
+  color: var(--vol-ui-text-muted);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: 3px;
+}
+
+.vol-rank__tag[hidden],
+.vol-rank__secondary[hidden] {
+  display: none;
+}
+
+.vol-rank__value {
+  flex: none;
+  min-width: 2ch;
+  text-align: right;
+}
+
+.vol-rank__secondary {
+  flex: none;
+  min-width: 2ch;
+  text-align: right;
+  color: var(--vol-ui-text-muted);
+}
+
+.vol-rank__empty {
+  margin: 0;
+  padding: var(--vol-space-xs) var(--vol-space-md);
+  color: var(--vol-ui-text-muted);
+}
+
+/* ActivityFeed: kısa ömürlü satırlar; süresi dolan söner, kaydırma ve geçmiş yoktur. */
+.vol-feed {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+}
+
+.vol-feed[hidden] {
+  display: none;
+}
+
+.vol-feed__list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vol-feed__line {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 2px var(--vol-space-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--vol-ui-text-secondary);
+  background: var(--vol-ui-overlay-panel);
+  border-radius: var(--vol-radius-sm);
+  transition: opacity var(--vol-transition-medium);
+}
+
+.vol-feed__line[data-leaving='true'] {
+  opacity: 0;
+}
+
+.vol-feed__line--success {
+  color: var(--vol-ui-success-border);
+}
+
+.vol-feed__line--warning {
+  color: var(--vol-ui-warning-border);
+}
+
+.vol-feed__line--danger {
+  color: var(--vol-ui-danger-border);
+}
+
+.vol-feed__line--info {
+  color: var(--vol-ui-info-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-versus__fill,
+  .vol-feed__line {
+    transition: none;
+  }
+}

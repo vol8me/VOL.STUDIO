@@ -1,0 +1,20 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 4.125,
+    "min": 2.64
+  },
+  "id": "vt-hardsteel-servo",
+  "intent": "Taret servosu: dolgun dişli uğultusu ve alçak hidrolik.",
+  "kind": "acoustic",
+  "loop": true,
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — servo"
+}

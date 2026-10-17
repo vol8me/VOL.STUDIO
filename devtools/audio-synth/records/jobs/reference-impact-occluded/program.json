@@ -1,0 +1,172 @@
+{
+  "channels": 1,
+  "description": "Referans silah atışı (fırlatıcı archetype, kuru): teslim profillerinin ortak kaynağı.",
+  "durationSeconds": 1.2,
+  "layers": [
+    {
+      "gainDb": -16,
+      "mechanism": "mechanical",
+      "name": "trigger",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0,
+          "mass": 0.02,
+          "materialA": "metal",
+          "materialB": "metal",
+          "size": 0.08,
+          "velocity": 2.2
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.005
+    },
+    {
+      "mechanism": "pressure",
+      "name": "muzzle",
+      "role": "transient",
+      "source": {
+        "params": {
+          "body": 0.42,
+          "bodyDecay": 0.36,
+          "bodyHz": 94.230767,
+          "decay": 1.4,
+          "positive": 0.004911,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.05
+    },
+    {
+      "gainDb": -12.8,
+      "mechanism": "explosion",
+      "name": "blast",
+      "role": "body",
+      "source": {
+        "params": {
+          "brightness": 0.69,
+          "crackle": 0.15,
+          "darkening": 0.6,
+          "decay": 0.310991
+        },
+        "primitive": "source.blast",
+        "version": 1
+      },
+      "startSeconds": 0.05
+    },
+    {
+      "gainDb": -8,
+      "mechanism": "impact",
+      "name": "body",
+      "resonators": [
+        {
+          "params": {
+            "material": "metal",
+            "modes": 16,
+            "size": 0.576837,
+            "thickness": 0.04
+          },
+          "primitive": "resonator.material",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "contactTime": 0.0006,
+          "roughness": 0.3
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      },
+      "startSeconds": 0.05
+    },
+    {
+      "gainDb": -13.6,
+      "mechanism": "mechanical",
+      "name": "bolt",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.05,
+          "mass": 0.22,
+          "materialA": "metal",
+          "materialB": "metal",
+          "size": 0.21,
+          "velocity": 2.7
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.22
+    },
+    {
+      "gainDb": -23,
+      "mechanism": "debris",
+      "name": "shell",
+      "role": "detail",
+      "source": {
+        "params": {
+          "debris": 0.58,
+          "mass": 0.05,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.1,
+          "velocity": 2.5
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.44
+    }
+  ],
+  "master": {
+    "fadeOutSeconds": 0.05,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 2550812508,
+  "treatment": {
+    "chain": [
+      {
+        "params": {
+          "frequency": 1800,
+          "order": 1,
+          "response": "lowpass"
+        },
+        "primitive": "effect.eq-pass",
+        "version": 1
+      },
+      {
+        "params": {
+          "attackDb": -6,
+          "sustainDb": 0
+        },
+        "primitive": "effect.transient-shaper",
+        "version": 1
+      },
+      {
+        "params": {
+          "amount": 0.25,
+          "damp": 0.6,
+          "decay": 1,
+          "preDelay": 0.02,
+          "roomSize": 0.6
+        },
+        "primitive": "effect.reverb",
+        "version": 1
+      }
+    ],
+    "channels": 1,
+    "levelLu": -5,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "tailSeconds": 0.9
+  }
+}

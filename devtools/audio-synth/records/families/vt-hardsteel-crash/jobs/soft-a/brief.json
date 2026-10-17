@@ -1,0 +1,24 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "intensity:soft",
+    "rarity:common",
+    "crash"
+  ],
+  "durationSeconds": {
+    "max": 0.95,
+    "min": 0.55
+  },
+  "id": "vt-hardsteel-crash-soft-a",
+  "intent": "Engel çarpması: ağır gövde, plaka çınlaması ve savrulan çakıl. Varyant soft-a (intensity:soft, rarity:common).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST crash — soft-a"
+}

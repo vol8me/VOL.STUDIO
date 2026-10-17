@@ -1,0 +1,923 @@
+import { DisposableScope, type CancellableDisposable } from '@volstudio/core/lifecycle';
+import {
+  ActionBar,
+  Button,
+  ChargeButton,
+  DirectionButton,
+  DPad,
+  DualAxisScrollPanel,
+  Joystick,
+  LongPressButton,
+  MultiTouchZone,
+  PauseResumeButton,
+  PullToRefresh,
+  SegmentedControl,
+  SlotGrid,
+  type SlotItem,
+  SquareJoystick,
+  SwipeableCardStack,
+  SwipeGestureZone,
+  type SwipeGestureEvent,
+  Text,
+  HoldButton,
+  KeyBindingList,
+  type KeyBindingRow,
+} from '@volstudio/core/ui';
+import { i18n, i18next } from '@volstudio/core/i18n';
+import { findBindingConflicts } from '@volstudio/core/input/bindings';
+import { getAppSoundKit } from '../appSound';
+import { buildPinchZoomDemo, buildWorldCameraDemo } from './touchCameraDemo';
+import { buildGamepadDemo } from './touchGamepadDemo';
+import { buildRadialMenuDemo } from './touchRadialDemo';
+import { card, cardGrid, svgIcon } from './shared';
+import { intentProbe } from './intentProbe';
+import {
+  ICON_DASH,
+  ICON_FIRE,
+  ICON_INVENTORY,
+  ICON_JUMP,
+  ICON_CROUCH,
+  ICON_SPEED,
+  ICON_WAVE,
+} from './icons';
+
+/** Showcase demo zamanlama sabitleri (ms). */
+const DEMO_TIMEOUTS = {
+  rankingShuffle: 900,
+  chargeDuration: 1100,
+  resetDelay: 1500,
+} as const;
+
+function axisReadout(x: number, y: number): string {
+  return i18next.t('volui:touch.axisReadout', { x: x.toFixed(2), y: y.toFixed(2) });
+}
+
+/** Joystick demosu. Durum satırı joystick'in ALTINDA — yanına koyunca metin genişliği joystick'i kaydırıyordu. */
+function buildJoystickDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+  wrap.style.alignItems = 'center';
+
+  const { element: statusRow, text: readout } = buildStatusRow(axisReadout(0, 0));
+  disposables.addDestroyables(readout);
+
+  const joystick = new Joystick({
+    onMove: ({ x, y }) => readout.setContent(axisReadout(x, y)),
+    onRelease: () => readout.setContent(axisReadout(0, 0)),
+  });
+  disposables.addDestroyables(joystick);
+
+  wrap.appendChild(joystick.element);
+  wrap.appendChild(statusRow);
+
+  return wrap;
+}
+
+/** SquareJoystick demosu: kare sınır — thumb köşelere ulaşır (dairesel Joystick köşegeni erken keser). Ayrı bileşen, alt sınıf değil. */
+function buildSquareJoystickDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+  wrap.style.alignItems = 'center';
+
+  const { element: statusRow, text: readout } = buildStatusRow(axisReadout(0, 0));
+  disposables.addDestroyables(readout);
+
+  const squareJoystick = new SquareJoystick({
+    onMove: ({ x, y }) => readout.setContent(axisReadout(x, y)),
+    onRelease: () => readout.setContent(axisReadout(0, 0)),
+  });
+  disposables.addDestroyables(squareJoystick);
+
+  wrap.appendChild(squareJoystick.element);
+  wrap.appendChild(statusRow);
+
+  return wrap;
+}
+
+function buildHoldButtonDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-row__group';
+
+  const status = new Text(i18next.t('volui:touch.released'), { variant: 'muted' });
+  disposables.addDestroyables(status);
+
+  const fireButton = new HoldButton({
+    shape: 'circle',
+    icon: svgIcon(ICON_FIRE),
+    label: i18next.t('volui:touch.fire'),
+    onPress: () => status.setContent(i18next.t('volui:touch.pressedFire')),
+    onRelease: () => status.setContent(i18next.t('volui:touch.released')),
+  });
+
+  const dashButton = new HoldButton({
+    shape: 'square',
+    icon: svgIcon(ICON_DASH),
+    label: i18next.t('volui:touch.dash'),
+    size: 64,
+    onPress: () => status.setContent(i18next.t('volui:touch.pressedDash')),
+    onRelease: () => status.setContent(i18next.t('volui:touch.released')),
+  });
+  disposables.addDestroyables(fireButton, dashButton);
+
+  wrap.appendChild(fireButton.element);
+  wrap.appendChild(dashButton.element);
+  wrap.appendChild(status.element);
+
+  // HoldButton dokunmatiğe ÖZEL değildir: taşıdığı şey press/hold semantiği.
+  // Klavye de aynı olayları üretir; showcase bunu görünür kılmalı, aksi hâlde
+  // yetenek yalnızca testte var olur.
+  const keyboardHint = new Text(i18next.t('volui:touch.holdButtonKeyboardHint'), {
+    variant: 'muted',
+  });
+  disposables.addDestroyables(keyboardHint);
+  wrap.appendChild(keyboardHint.element);
+
+  return wrap;
+}
+
+function buildDualAxisScrollDemo(disposables: DisposableScope): HTMLElement {
+  const panel = new DualAxisScrollPanel({ width: 320, height: 200 });
+  disposables.addDestroyables(panel);
+
+  const grid = document.createElement('div');
+  grid.className = 'vol-showcase-dual-scroll-grid';
+  for (let i = 1; i <= 24; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'vol-showcase-dual-scroll-cell';
+    cell.textContent = String(i);
+    grid.appendChild(cell);
+  }
+  panel.add({ element: grid });
+
+  return panel.element;
+}
+
+/** PullToRefresh demosu: lider tablosu. Yukarıdan aşağı çek onRefresh tetikler, 900ms yapay bekleme sonra sıralama karışır. scrollTop > 0'da pasif. */
+function buildPullToRefreshDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const list = document.createElement('div');
+  list.className = 'vol-showcase-leaderboard';
+
+  let names: string[] = i18next.t('volui:touch.leaderboardNames', { returnObjects: true });
+
+  const renderList = (): void => {
+    list.replaceChildren();
+    names.forEach((name, index) => {
+      const row = document.createElement('div');
+      row.className = 'vol-showcase-leaderboard__row';
+      row.textContent = `${index + 1}. ${name}`;
+      list.appendChild(row);
+    });
+  };
+  renderList();
+
+  const status = new Text(i18next.t('volui:touch.pullToRefreshHint'), { variant: 'muted' });
+  disposables.addDestroyables(status);
+
+  const pullToRefresh = new PullToRefresh({
+    content: list,
+    label: i18next.t('volui:touch.refreshing'),
+    onRefresh: async () => {
+      status.setContent(i18next.t('volui:touch.updatingRanking'));
+      await new Promise<void>((resolve) => {
+        disposables.addTimeout(resolve, DEMO_TIMEOUTS.rankingShuffle);
+      });
+      names = [...names].sort(() => Math.random() - 0.5);
+      renderList();
+      status.setContent(i18next.t('volui:touch.rankingUpdated'));
+    },
+  });
+  disposables.addDestroyables(pullToRefresh);
+  pullToRefresh.element.style.height = '220px';
+
+  // Çekme jesti tek yol olamaz: aynı yenileme klavye ve kolla düğmeden çalışır.
+  const refreshButton = new Button(i18next.t('volui:touch.refreshButton'), {
+    size: 'sm',
+    onClick: () => pullToRefresh.refresh(),
+  });
+  disposables.addDestroyables(refreshButton);
+
+  wrap.appendChild(pullToRefresh.element);
+  wrap.appendChild(refreshButton.element);
+  wrap.appendChild(status.element);
+
+  return wrap;
+}
+
+/** SwipeableCardStack demosu: görev kabul/red, kaydırma veya butonla. onEmpty özet gösterir. */
+function buildSwipeableCardStackDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const quests = [
+    {
+      id: 'q1',
+      title: i18next.t('volui:touch.quest1Title'),
+      desc: i18next.t('volui:touch.quest1Desc'),
+    },
+    {
+      id: 'q2',
+      title: i18next.t('volui:touch.quest2Title'),
+      desc: i18next.t('volui:touch.quest2Desc'),
+    },
+    {
+      id: 'q3',
+      title: i18next.t('volui:touch.quest3Title'),
+      desc: i18next.t('volui:touch.quest3Desc'),
+    },
+    {
+      id: 'q4',
+      title: i18next.t('volui:touch.quest4Title'),
+      desc: i18next.t('volui:touch.quest4Desc'),
+    },
+  ];
+
+  let accepted = 0;
+  let rejected = 0;
+
+  const result = new Text(i18next.t('volui:touch.swipeHint'), { variant: 'muted' });
+  disposables.addDestroyables(result);
+
+  const cards = quests.map((q) => {
+    const el = document.createElement('div');
+    el.className = 'vol-showcase-quest-card';
+    const title = new Text(q.title, { variant: 'body' });
+    const desc = new Text(q.desc, { variant: 'muted' });
+    disposables.addDestroyables(title, desc);
+    el.appendChild(title.element);
+    el.appendChild(desc.element);
+    return { id: q.id, label: q.title, element: el };
+  });
+
+  const stack = new SwipeableCardStack({
+    cards,
+    showActionButtons: true,
+    announce: true,
+    onSwipe: (id, direction) => {
+      const quest = quests.find((q) => q.id === id);
+      if (direction === 'right') {
+        accepted += 1;
+        result.setContent(
+          i18next.t('volui:touch.accepted', { title: quest?.title ?? '', accepted, rejected }),
+        );
+      } else {
+        rejected += 1;
+        result.setContent(
+          i18next.t('volui:touch.rejected', { title: quest?.title ?? '', accepted, rejected }),
+        );
+      }
+    },
+    onEmpty: () => {
+      result.setContent(i18next.t('volui:touch.allQuestsDone', { accepted, rejected }));
+    },
+  });
+  disposables.addDestroyables(stack);
+
+  wrap.appendChild(stack.element);
+  wrap.appendChild(result.element);
+
+  return wrap;
+}
+
+/** ChargeButton demosu: basılı tutunca halka dolar. Erken bırakma yine sonuç üretir; tam dolum kritik vuruş tetikler. */
+function buildChargeButtonDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+  wrap.style.alignItems = 'center';
+
+  // Durum metni butonun altında — metin genişliği butonu kaydırmasın.
+  const { element: statusRow, text: result } = buildStatusRow(i18next.t('volui:touch.chargeHint'));
+  disposables.addDestroyables(result);
+
+  const chargeButton = new ChargeButton({
+    label: i18next.t('volui:touch.hit'),
+    icon: svgIcon('sword'),
+    chargeDurationMs: DEMO_TIMEOUTS.chargeDuration,
+    announce: true,
+    onChargeProgress: (progress) => {
+      result.setContent(i18next.t('volui:touch.charging', { n: Math.round(progress * 100) }));
+    },
+    onCharged: () => {
+      result.setContent(i18next.t('volui:touch.criticalHit'));
+    },
+    onRelease: (progress) => {
+      if (progress >= 1) return;
+      const strength =
+        progress < 0.34
+          ? i18next.t('volui:touch.weak')
+          : progress < 0.7
+            ? i18next.t('volui:touch.mediumStrength')
+            : i18next.t('volui:touch.strong');
+      result.setContent(
+        i18next.t('volui:touch.strengthHit', { strength, n: Math.round(progress * 100) }),
+      );
+    },
+  });
+  disposables.addDestroyables(chargeButton);
+
+  wrap.appendChild(chargeButton.element);
+  wrap.appendChild(statusRow);
+
+  return wrap;
+}
+
+const SLOT_COLUMNS = 6;
+
+/** SlotGrid demosu: 24 slot (6x4) envanter, sürüklenebilir 1x1/2x1/2x2 eşyalar. onSwapRequest true → 1x1 eşyalar yer değiştirebilir. */
+function buildSlotGridDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const result = new Text(i18next.t('volui:touch.slotGridHint'), {
+    variant: 'muted',
+  });
+  disposables.addDestroyables(result);
+
+  const items: Record<number, SlotItem> = {
+    0: { id: 'i1', label: i18next.t('volui:touch.sword'), icon: svgIcon('sword'), rarity: 'rare' },
+    2: {
+      id: 'i2',
+      label: i18next.t('volui:touch.shield'),
+      icon: svgIcon('defend'),
+      rarity: 'common',
+    },
+    3: {
+      id: 'i3',
+      label: i18next.t('volui:touch.potion'),
+      icon: svgIcon('potion'),
+      quantity: 5,
+      rarity: 'common',
+    },
+    4: {
+      id: 'i4',
+      label: i18next.t('volui:touch.scroll'),
+      icon: svgIcon('scroll'),
+      quantity: 2,
+      rarity: 'epic',
+    },
+    6: {
+      id: 'i5',
+      label: i18next.t('volui:touch.twoHandedSword'),
+      icon: svgIcon('axe'),
+      rarity: 'epic',
+      span: { cols: 2, rows: 1 },
+    },
+    9: {
+      id: 'i6',
+      label: i18next.t('volui:touch.arrow'),
+      icon: svgIcon('bullet'),
+      quantity: 24,
+      rarity: 'common',
+    },
+    11: {
+      id: 'i7',
+      label: i18next.t('volui:touch.armor'),
+      icon: svgIcon('helmet'),
+      rarity: 'rare',
+    },
+    12: {
+      id: 'i8',
+      label: i18next.t('volui:touch.chest'),
+      icon: svgIcon('chest'),
+      rarity: 'epic',
+      span: { cols: 2, rows: 2 },
+    },
+  };
+
+  const grid = new SlotGrid({
+    slotCount: 24,
+    columns: SLOT_COLUMNS,
+    // Telefon dikeyinde kart ~318 px'tir: 6×56 sütun taşar ve sağdaki hücreler kırpılırdı; 44 px hücreler (6×44 + 5×8) sığar.
+    size: window.matchMedia?.('(max-width: 480px)').matches ? 44 : undefined,
+    items,
+    onMove: (itemId, from, to) => {
+      // Kuşanma oyun kararıdır (bileşen bilemez): ilk satır kısayol çubuğudur, oraya bırakılan eşya kuşanılır.
+      const equipped = to < SLOT_COLUMNS && from >= SLOT_COLUMNS;
+      if (equipped) getAppSoundKit()?.play('equip');
+      result.setContent(
+        i18next.t(equipped ? 'volui:touch.itemEquipped' : 'volui:touch.itemMoved', {
+          itemId,
+          from,
+          to: equipped ? to + 1 : to,
+        }),
+      );
+    },
+    onSwapRequest: () => true,
+    onSlotClick: (item, index) => {
+      selectedIndex = index;
+      moveButton.setDisabled(false);
+      result.setContent(
+        i18next.t('volui:touch.itemDetail', { label: item.label, qty: item.quantity ?? 0 }),
+      );
+    },
+  });
+  disposables.addDestroyables(grid);
+
+  // Sürükleme tek yol değildir: seçili öğeyi "Taşı" ile tutun, oklar/D-pad hedefi seçer, kol A/Boşluk/Enter bırakır, B/Escape
+  // vazgeçer; dokunmada bir hücreye ya da öğeye dokunmak hedefi seçip bırakır (kol-only ve dokunmatik eşdeğeri).
+  let selectedIndex = -1;
+  const moveButton = new Button(i18next.t('volui:touch.moveItem'), {
+    disabled: true,
+    onClick: () => {
+      if (selectedIndex >= 0) grid.beginMove(selectedIndex);
+    },
+  });
+  disposables.addDestroyables(moveButton);
+  moveButton.element.dataset.action = 'slot-move';
+
+  wrap.appendChild(grid.element);
+  wrap.appendChild(moveButton.element);
+  wrap.appendChild(result.element);
+  wrap.appendChild(intentProbe(wrap, disposables));
+
+  return wrap;
+}
+
+/** Sabit yükseklikli durum satırı — metin değişince layout kaymaz. */
+function buildStatusRow(initialText: string): {
+  element: HTMLElement;
+  text: InstanceType<typeof Text>;
+} {
+  const row = document.createElement('div');
+  row.className = 'vol-showcase-status-row';
+  const text = new Text(initialText, { variant: 'muted' });
+  row.appendChild(text.element);
+  return { element: row, text };
+}
+
+/** DPad demosu: dört yön bileşeni. Basılan yön buildStatusRow ile gösterilir. */
+function buildDPadDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+  wrap.style.alignItems = 'center';
+
+  const { element: statusRow, text: status } = buildStatusRow(i18next.t('volui:touch.dpadHint'));
+  disposables.addDestroyables(status);
+
+  const dpad = new DPad({
+    onDirectionDown: (direction) =>
+      status.setContent(i18next.t('volui:touch.pressedDir', { dir: direction })),
+    onDirectionUp: () => status.setContent(i18next.t('volui:touch.dpadHint')),
+  });
+  disposables.addDestroyables(dpad);
+
+  wrap.appendChild(dpad.element);
+  wrap.appendChild(statusRow);
+
+  return wrap;
+}
+
+/** DirectionButton demosu — zıpla/eğil gibi bağımsız aksiyon butonları. */
+function buildDirectionActionButtonDemo(
+  disposables: DisposableScope,
+  opts: {
+    label: string;
+    icon: Node;
+    activeText: string;
+  },
+): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+  wrap.style.alignItems = 'center';
+
+  const { element: statusRow, text: status } = buildStatusRow(i18next.t('volui:touch.holdHint'));
+  disposables.addDestroyables(status);
+
+  const button = new DirectionButton({
+    label: opts.label,
+    icon: opts.icon,
+    size: 68,
+    onPress: () => status.setContent(opts.activeText),
+    onRelease: () => status.setContent(i18next.t('volui:touch.holdHint')),
+  });
+  disposables.addDestroyables(button);
+
+  wrap.appendChild(button.element);
+  wrap.appendChild(statusRow);
+
+  return wrap;
+}
+
+/** PauseResumeButton demosu: tek toggle buton. counter: { direction: 'up' } bileşenin kendi interval'ini yönetir. */
+function buildPauseResumeDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-row__group';
+  // vol-showcase-row__group'ün flex:1'i kartı doldurup ortalamayı bozar — flex:0 1 auto gerekir.
+  wrap.style.flex = '0 1 auto';
+  wrap.style.justifyContent = 'center';
+
+  const status = new Text(i18next.t('volui:touch.simulationRunning'), { variant: 'muted' });
+  disposables.addDestroyables(status);
+
+  const pauseResumeButton = new PauseResumeButton({
+    size: 64,
+    counter: { direction: 'up' },
+    onToggle: (isRunning) => {
+      status.setContent(
+        isRunning
+          ? i18next.t('volui:touch.simulationRunning')
+          : i18next.t('volui:touch.simulationPaused'),
+      );
+    },
+  });
+  disposables.addDestroyables(pauseResumeButton);
+
+  wrap.appendChild(pauseResumeButton.element);
+  wrap.appendChild(status.element);
+
+  return wrap;
+}
+
+/**
+ * ActionBar demosu: sabit eylem çubuğu (UI-08.3). "Kule" 3 sn bekleme başlatır; bekleyen slot `aria-disabled` olur, odaklanabilir
+ * kalır, balon kalan süreyi söyler ve basış reddedilir (`reject`). "Dalga" mana yetmeyince nedenli kullanılamaz olur (neden
+ * host'tan gelir). Kısayol 1/2/3, oklar slotlar arasında gezinir; dokunmada uzun basış balonu açar.
+ */
+function buildActionBarDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  // Sabit yükseklikli durum satırı — metin değişimi ActionBar'ı kaydırmaz.
+  const { element: statusRow, text: result } = buildStatusRow(
+    i18next.t('volui:touch.actionBarHint'),
+  );
+  disposables.addDestroyables(result);
+
+  const TOWER_COOLDOWN_SECONDS = 3;
+  let towerCooldownEnd = 0;
+
+  const bar = new ActionBar({
+    showLabels: true,
+    enableKeyboardShortcuts: true,
+    showTooltips: true,
+    slots: [
+      {
+        id: 'tower',
+        label: i18next.t('volui:touch.buildTower'),
+        icon: svgIcon('archerTower'),
+        shortcut: '1',
+      },
+      {
+        id: 'wave',
+        label: i18next.t('volui:touch.startWave'),
+        icon: svgIcon(ICON_WAVE),
+        shortcut: '2',
+      },
+      {
+        id: 'speed',
+        label: i18next.t('volui:touch.speedX2'),
+        icon: svgIcon(ICON_SPEED),
+        shortcut: '3',
+      },
+    ],
+    onActivate: (id) => {
+      if (id === 'tower') {
+        towerCooldownEnd = performance.now() + TOWER_COOLDOWN_SECONDS * 1000;
+        result.setContent(i18next.t('volui:touch.towerBuilt', { n: TOWER_COOLDOWN_SECONDS }));
+        tickCooldown();
+      } else if (id === 'wave') {
+        result.setContent(i18next.t('volui:touch.waveStarted'));
+      } else {
+        result.setContent(i18next.t('volui:touch.speedSetX2'));
+      }
+    },
+    // Bileşen "hazır değil"i bildirir, geri bildirim oyunundur (burada durum satırı; gerçek oyunda SFX/yanıp sönme).
+    onBlocked: (id, reason) =>
+      result.setContent(
+        i18next.t(
+          reason === 'cooldown' ? 'volui:touch.blockedCooldown' : 'volui:touch.blockedMana',
+          {
+            name:
+              id === 'tower'
+                ? i18next.t('volui:touch.buildTower')
+                : i18next.t('volui:touch.startWave'),
+          },
+        ),
+      ),
+  });
+  disposables.addDestroyables(bar);
+
+  const tickCooldown = (): void => {
+    const remaining = towerCooldownEnd - performance.now();
+    const progress = Math.max(0, remaining / (TOWER_COOLDOWN_SECONDS * 1000));
+    bar.setCooldown('tower', progress, TOWER_COOLDOWN_SECONDS);
+    if (progress > 0) {
+      disposables.addAnimationFrame(tickCooldown);
+    }
+  };
+
+  // Mana host kararıdır: düşükken "dalga" nedenli kullanılamaz olur, yeterliyken geri açılır.
+  const mana = new SegmentedControl({
+    ariaLabel: i18next.t('volui:touch.manaLabel'),
+    value: 'ok',
+    options: [
+      { value: 'ok', label: i18next.t('volui:touch.manaOk') },
+      { value: 'low', label: i18next.t('volui:touch.manaLow') },
+    ],
+    onCommit: (value) =>
+      bar.setUnavailable('wave', value === 'low' ? i18next.t('volui:touch.notEnoughMana') : null),
+  });
+  disposables.addDestroyables(mana);
+
+  wrap.append(mana.element, bar.element, statusRow, intentProbe(wrap, disposables));
+
+  return wrap;
+}
+
+/** LongPressButton demosu: kısa dokunuş seçer (onTap), yarım saniye basılı tutma menü açar (onLongPress). Progress halkası 500ms'e dolar. */
+function buildLongPressButtonDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+  wrap.style.alignItems = 'center';
+
+  // Kısa ipucu — uzun metin iki satıra sarıp kartı komşularından uzun yapıyordu.
+  const { element: statusRow, text: status } = buildStatusRow(
+    i18next.t('volui:touch.longPressHint'),
+  );
+  disposables.addDestroyables(status);
+
+  // onRelease callback'indeki 1500ms'lik reset timeout'unun ID'si — sahne/sekme
+  // değişiminde temizlenmezse destroyed status'a setContent çağrılır.
+  let resetTimeout: CancellableDisposable | null = null;
+
+  const longPressButton = new LongPressButton({
+    shape: 'square',
+    label: i18next.t('volui:touch.inventoryItem'),
+    icon: svgIcon(ICON_INVENTORY),
+    size: 72,
+    onTap: () => status.setContent(i18next.t('volui:touch.selectedItem')),
+    onLongPress: () => status.setContent(i18next.t('volui:touch.contextMenuOpened')),
+    onRelease: () => {
+      // Kısa gecikme sonra ipucuna döner — demo tekrar denenebilsin.
+      resetTimeout?.cancel();
+      resetTimeout = disposables.addTimeout(() => {
+        resetTimeout = null;
+        status.setContent(i18next.t('volui:touch.longPressHint'));
+      }, DEMO_TIMEOUTS.resetDelay);
+    },
+  });
+  disposables.addDestroyables(longPressButton);
+
+  wrap.appendChild(longPressButton.element);
+  wrap.appendChild(statusRow);
+
+  return wrap;
+}
+
+/** Klavye/kol eşdeğeri düğmelerinin gönderdiği kaydırma mesafesi (jest eşiğiyle aynı, 40 px). */
+const KEYBOARD_SWIPE_PX = 40;
+
+/**
+ * SwipeGestureZone demosu: yön+mesafe+hız dedektörü (kart hareketi yok). onSwipeMove sürükleme sırasında canlı ipucu
+ * günceller. Jest tek yol olamaz (CONTRACT §9): dört yön düğmesi AYNI `onSwipe` yolunu çağırır; alan bir kontrol değil
+ * dedektör olduğundan eşdeğeri sahibin sorumluluğudur ve burada görünür kılınır.
+ */
+function buildSwipeGestureZoneDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+  wrap.style.alignItems = 'center';
+
+  const result = new Text(i18next.t('volui:touch.swipeZoneHint'), { variant: 'muted' });
+  disposables.addDestroyables(result);
+
+  const surface = document.createElement('div');
+  surface.className = 'vol-showcase-swipe-zone-surface';
+  surface.append(svgIcon('range', 44));
+
+  const report = (event: SwipeGestureEvent): void => {
+    result.setContent(
+      i18next.t('volui:touch.cameraPanned', {
+        dir: i18n.tDynamic(`volui:touch.directions.${event.direction}`),
+        distance: Math.round(event.distance),
+        velocity: event.velocity.toFixed(2),
+      }),
+    );
+  };
+
+  const zone = new SwipeGestureZone({
+    content: surface,
+    size: { width: 220, height: 140 },
+    onSwipeMove: (dx, dy) => {
+      surface.style.transform = `translate(${Math.max(-16, Math.min(16, dx * 0.1))}px, ${Math.max(
+        -16,
+        Math.min(16, dy * 0.1),
+      )}px)`;
+    },
+    onSwipe: (event) => {
+      surface.style.transform = '';
+      report(event);
+    },
+  });
+  disposables.addDestroyables(zone);
+
+  const keys = document.createElement('div');
+  keys.className = 'vol-showcase-row__group';
+  for (const direction of ['left', 'up', 'down', 'right'] as const) {
+    const button = new Button(i18n.tDynamic(`volui:touch.directions.${direction}`), {
+      onClick: () => report({ direction, distance: KEYBOARD_SWIPE_PX, velocity: 0 }),
+    });
+    disposables.addDestroyables(button);
+    keys.appendChild(button.element);
+  }
+  const keyHint = new Text(i18next.t('volui:touch.swipeKeyboardHint'), { variant: 'muted' });
+  disposables.addDestroyables(keyHint);
+
+  wrap.appendChild(zone.element);
+  wrap.appendChild(keys);
+  wrap.appendChild(result.element);
+  wrap.appendChild(keyHint.element);
+
+  return wrap;
+}
+
+/** MultiTouchZone demosu: N parmağı bağımsız izler, her biri pointerId ile ayrı nokta. */
+function buildMultiTouchZoneDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+  wrap.style.alignItems = 'center';
+
+  const result = new Text(i18next.t('volui:touch.multiTouchHint'), { variant: 'muted' });
+  disposables.addDestroyables(result);
+
+  const surface = document.createElement('div');
+  surface.className = 'vol-showcase-multitouch-surface';
+
+  const dots = new Map<number, HTMLDivElement>();
+
+  const zone = new MultiTouchZone({
+    content: surface,
+    size: { width: 220, height: 140 },
+    maxTouches: 5,
+    onTouchStart: (point) => {
+      const dot = document.createElement('div');
+      dot.className = 'vol-showcase-multitouch-dot';
+      dot.style.left = `${point.x}px`;
+      dot.style.top = `${point.y}px`;
+      surface.appendChild(dot);
+      dots.set(point.pointerId, dot);
+      result.setContent(
+        i18next.t('volui:touch.activeTouches', { n: zone.getActivePointerIds().length }),
+      );
+    },
+    onTouchMove: (point) => {
+      const dot = dots.get(point.pointerId);
+      if (!dot) return;
+      dot.style.left = `${point.x}px`;
+      dot.style.top = `${point.y}px`;
+    },
+    onTouchEnd: (pointerId) => {
+      dots.get(pointerId)?.remove();
+      dots.delete(pointerId);
+      result.setContent(
+        i18next.t('volui:touch.activeTouches', { n: zone.getActivePointerIds().length }),
+      );
+    },
+  });
+  disposables.addDestroyables(zone);
+
+  wrap.appendChild(zone.element);
+  wrap.appendChild(result.element);
+
+  return wrap;
+}
+
+export function buildTouchTab(): { element: HTMLElement; destroy: () => void } {
+  const container = document.createElement('div');
+  container.className = 'vol-showcase-section';
+  const disposables = new DisposableScope();
+
+  const cards = [
+    card(i18next.t('volui:touch.joystick'), buildJoystickDemo(disposables), { center: true }),
+    card(i18next.t('volui:touch.squareJoystick'), buildSquareJoystickDemo(disposables), {
+      center: true,
+    }),
+    card(i18next.t('volui:touch.holdButton'), buildHoldButtonDemo(disposables)),
+    buildKeyBindingDemo(disposables),
+    card(i18next.t('volui:touch.chargeButton'), buildChargeButtonDemo(disposables), {
+      center: true,
+    }),
+    card(i18next.t('volui:touch.radialMenu'), buildRadialMenuDemo(disposables), { center: true }),
+    card(i18next.t('volui:touch.dpad'), buildDPadDemo(disposables)),
+    card(
+      i18next.t('volui:touch.directionJump'),
+      buildDirectionActionButtonDemo(disposables, {
+        label: i18next.t('volui:touch.jump'),
+        icon: svgIcon(ICON_JUMP),
+        activeText: i18next.t('volui:touch.jumping'),
+      }),
+      { center: true },
+    ),
+    card(
+      i18next.t('volui:touch.directionCrouch'),
+      buildDirectionActionButtonDemo(disposables, {
+        label: i18next.t('volui:touch.crouch'),
+        icon: svgIcon(ICON_CROUCH),
+        activeText: i18next.t('volui:touch.crouching'),
+      }),
+      { center: true },
+    ),
+    card(i18next.t('volui:touch.pauseResume'), buildPauseResumeDemo(disposables), { center: true }),
+    card(i18next.t('volui:touch.longPressButton'), buildLongPressButtonDemo(disposables), {
+      center: true,
+    }),
+
+    // Action Bar/Dual-Axis Scroll doğal kart genişliğine uyar; span:2 boşluk ekler.
+    card(i18next.t('volui:touch.actionBar'), buildActionBarDemo(disposables)),
+    card(i18next.t('volui:touch.dualAxisScroll'), buildDualAxisScrollDemo(disposables)),
+
+    // Geniş içerik span:2 — Forms'taki Timer Bar/Range Slider ile aynı mantık.
+    card(i18next.t('volui:touch.pinchZoom'), buildPinchZoomDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:touch.worldCamera'), buildWorldCameraDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:touch.pullToRefresh'), buildPullToRefreshDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:touch.slotGrid'), buildSlotGridDemo(disposables), { span: 2 }),
+
+    card(i18next.t('volui:touch.swipeGestureZone'), buildSwipeGestureZoneDemo(disposables), {
+      center: true,
+    }),
+    card(i18next.t('volui:touch.multiTouchZone'), buildMultiTouchZoneDemo(disposables), {
+      center: true,
+    }),
+    card(i18next.t('volui:touch.swipeableCardStack'), buildSwipeableCardStackDemo(disposables), {
+      spanAll: true,
+    }),
+    card(i18next.t('volui:touch.gamepad'), buildGamepadDemo(disposables), { span: 2 }),
+  ];
+
+  container.appendChild(cardGrid(cards));
+
+  return {
+    element: container,
+    destroy: () => disposables.dispose(),
+  };
+}
+
+/**
+ * Tuş atama listesi CANLI çalışır: gerçekten dinler, gerçekten çakışma bulur.
+ * Sahte bir görüntü, bileşenin asıl zor kısmını (yakalama ve çakışma) gizlerdi.
+ *
+ * Çakışma çözümü ÇAĞIRANIN: burada takas edilir — çakışan eylem, yeni bağı
+ * alan eylemin eski bağını devralır. Bu bir CORE kuralı değil, bu demonun
+ * tercihidir.
+ */
+function buildKeyBindingDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const defaults: Record<string, KeyBindingRow['binding']> = {
+    moveUp: { source: 'key', keyCode: 87 },
+    dash: { source: 'key', keyCode: 32 },
+    fire: { source: 'pointerButton', button: 'left' },
+  };
+  const labels: Record<string, string> = {
+    moveUp: i18next.t('volui:touch.bindingMoveUp'),
+    dash: i18next.t('volui:touch.bindingDash'),
+    fire: i18next.t('volui:touch.bindingFire'),
+  };
+  let current = { ...defaults };
+
+  const status = new Text('', { variant: 'muted' });
+  disposables.addDestroyables(status);
+
+  const rows = (): KeyBindingRow[] =>
+    Object.keys(current).map((action) => ({
+      action,
+      label: labels[action],
+      binding: current[action],
+    }));
+
+  /*
+   * Takas TEK yerdedir ve sıfırlama da ondan geçer. Ayrı yazıldığında
+   * sıfırlama çakışmayı atlıyordu: varsayılana dönen eylem, o tuşu tutan başka
+   * bir eylemle aynı bağa oturuyor ve iki satır aynı tuşu gösteriyordu
+   * (tarayıcıda görüldü).
+   */
+  const apply = (action: string, binding: KeyBindingRow['binding']): void => {
+    const conflicts = findBindingConflicts(current, action, binding);
+    const previous = current[action];
+    current = { ...current, [action]: binding };
+    for (const other of conflicts) current[other] = previous;
+    status.setContent(
+      conflicts.length > 0
+        ? i18next.t('volui:touch.bindingSwapped', { action: labels[conflicts[0]] })
+        : '',
+    );
+    list.setRows(rows());
+  };
+
+  const list = new KeyBindingList({
+    rows: rows(),
+    onRebind: apply,
+    onReset: (action) => apply(action, defaults[action]),
+  });
+  disposables.addDestroyables(list);
+  wrap.appendChild(list.element);
+
+  const hint = new Text(i18next.t('volui:touch.bindingHint'), { variant: 'muted' });
+  disposables.addDestroyables(hint);
+  wrap.appendChild(hint.element);
+  wrap.appendChild(status.element);
+
+  return card(i18next.t('volui:touch.keyBindings'), wrap);
+}

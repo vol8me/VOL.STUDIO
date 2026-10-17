@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-e3bd053d652d963c": {
+        "hash": "sha256:126e9d639b002f93791744e610edb98d957d86542ac2ee193cd6c5fbd681d96c",
+        "path": "analyses/r-e3bd053d652d963c.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:9e6fba482788d4d44a7f5a423d58fc03845badf49f603a5b33948c1285debef2",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:9e6fba482788d4d44a7f5a423d58fc03845badf49f603a5b33948c1285debef2",
+      "hash": "sha256:1d8d8a62f5ffb25a99ff45d0d1b1fab87c1048b1c5020dbd5a6e25cf3ba04130",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:ce4768e99307b1bdf04b74ce144724cb92d4196f6aeab763933bad4dc3612874",
+      "path": "core/audio-manifests/ui/steel/reward-b.json"
+    },
+    "renders": {
+      "r-e3bd053d652d963c": {
+        "hash": "sha256:1f479405c30aa2468594a089a9d58d21da69b4f8ad02b20b172a6cfe967949b0",
+        "path": "renders/r-e3bd053d652d963c.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:a4012698d413162937555cb2c4777f9e7fde95452cf7d966fdd8c1cf8697c787",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "reward-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/reward-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-reward/reward-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

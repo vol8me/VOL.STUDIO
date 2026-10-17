@@ -2,7 +2,14 @@ import { Vector2 } from '../math/Vector2';
 import { normalizeAnalog, normalizeDirection } from './InputUtils';
 import type { InputState } from './InputState';
 
-export interface WasdDownState {
+/**
+ * Hareket eksenlerinin o karedeki basılı durumu.
+ *
+ * Eksenler klavye düzeninden BAĞIMSIZDIR: eşleme `MoveKeyBindings` ile
+ * verilir (varsayılan WASD, ok tuşları da geçerlidir). Tüketici bu tipten
+ * belirli bir tuşu çıkarsayamaz.
+ */
+export interface MoveDownState {
   up: boolean;
   down: boolean;
   left: boolean;
@@ -17,21 +24,59 @@ export interface PointerLikeState {
   wasTouch: boolean;
 }
 
-export interface ExtraKeysState {
-  dash: boolean;
+/** Pointer düğmesi — `PointerLikeState`'in raporladığı düğmelerle sınırlı. */
+export type PointerButton = 'left';
+
+/**
+ * Bir eylemin PC'de neye bağlandığı.
+ *
+ * Eşleme VERİDİR: hangi eylemin hangi tuşa/düğmeye bağlı olduğunu CORE
+ * bilmez, tüketici verir. Bu yüzden tuşları yeniden atamak bir kayıt
+ * değişikliğidir, kod değişikliği değil.
+ */
+export type PCActionBinding =
+  { source: 'key'; keyCode: number } | { source: 'pointerButton'; button: PointerButton };
+
+/**
+ * Eylem eşlemelerini o karenin basılı/basılı değil kaydına çevirir.
+ *
+ * `keyDown` çağrılabilir olarak alınır (Phaser `Key` nesnesi değil) — böylece
+ * bu mantık Phaser sahnesi kurulmadan test edilebilir.
+ *
+ * **`wasTouch` koruması:** pointer düğmesine bağlı eylemler, pointer'ın son
+ * olayı bir DOKUNUŞ ise basılı SAYILMAZ. Dokunmatikte joystick zaten kendi
+ * eylemini üretir; bu koruma olmadan tek bir dokunuş hem stick'i hem PC
+ * eylemini tetikler (çift girdi).
+ */
+export function resolvePCActions<TAction extends string>(
+  bindings: Readonly<Record<TAction, PCActionBinding>>,
+  keyDown: (keyCode: number) => boolean,
+  pointer: PointerLikeState,
+): Record<TAction, boolean> {
+  const result = {} as Record<TAction, boolean>;
+
+  for (const action of Object.keys(bindings) as TAction[]) {
+    const binding = bindings[action];
+    result[action] =
+      binding.source === 'key'
+        ? keyDown(binding.keyCode)
+        : pointer.leftButtonDown && !pointer.wasTouch;
+  }
+
+  return result;
 }
 
 /**
  * WASD + pointer'dan InputState hesaplayan saf mantık, Phaser nesnelerinden bağımsız
  * (PCController tipleri çevirip burayı çağırır) — Phaser.Scene kurmadan test edilebilir.
  */
-export function computePCInputState(
-  keys: WasdDownState,
+export function computePCInputState<TAction extends string>(
+  keys: MoveDownState,
   pointer: PointerLikeState,
   worldTarget: Vector2,
   playerPosition: Vector2,
-  extra: ExtraKeysState,
-): InputState {
+  actions: Readonly<Record<TAction, boolean>>,
+): InputState<TAction> {
   const move = new Vector2();
   if (keys.up) move.y -= 1;
   if (keys.down) move.y += 1;
@@ -43,26 +88,28 @@ export function computePCInputState(
   return {
     move: normalizeAnalog(move),
     aim: normalizeDirection(aimRaw),
-    fire: pointer.leftButtonDown && !pointer.wasTouch,
-    dash: extra.dash,
+    actions,
   };
 }
 
 /**
  * Gerçek klavye/pointer girdisi var mı? `wasTouch` KASITLI kontrol edilmez —
  * miras kalan pointer durumu tek başına provider'ı "aktif" göstermemeli.
+ *
+ * Eylemler tek tek adlarıyla değil topluca sorgulanır: hangi eylemlerin var
+ * olduğu CORE'un bilgisi değil, "herhangi biri basılı mı" sorusu yeterli.
  */
 export function isPCInputActive(
-  keys: WasdDownState,
+  keys: MoveDownState,
   pointer: PointerLikeState,
-  extra: ExtraKeysState,
+  actions: Readonly<Record<string, boolean>>,
 ): boolean {
   return (
     keys.up ||
     keys.down ||
     keys.left ||
     keys.right ||
-    extra.dash ||
+    Object.values(actions).some(Boolean) ||
     (pointer.isDown && !pointer.wasTouch)
   );
 }

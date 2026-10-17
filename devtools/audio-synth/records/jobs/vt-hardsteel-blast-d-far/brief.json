@@ -1,0 +1,25 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "rarity:rare",
+    "weight:heavy",
+    "blast",
+    "treatment:distance-far"
+  ],
+  "durationSeconds": {
+    "max": 3.1000208333333332,
+    "min": 0.85
+  },
+  "id": "vt-hardsteel-blast-blast-d-distance-far",
+  "intent": "Yakın patlama: kocaman şok dalgası, ateş topu ve uzun gümbürdeyen kuyruk. Varyant blast-d (rarity:rare, weight:heavy). Teslim profili distance-far: 150 m: ISO 9613-1 hava soğurması, atak -15 dB, yansıma payı 0.55, görüntü ×0.25. 1/r zayıflaması çalışma zamanınındır.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "treatment-profile"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST blast — blast-d — distance-far"
+}

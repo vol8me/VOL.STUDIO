@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:7d6c0dd98cb8fa27eba1c5eabc8e74e29a66cbae03871844721b2c19b15a472b",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:f371f1b935f76e41a7414f67488bcaa746b9dfaf3f74c6169969444a2a423a0b",
+    "familyId": "ui-aurum-panel-close",
+    "kind": "family-variant",
+    "variantId": "v-9447044e3883c0e2",
+    "variantKey": "panel-close-b"
+  }
+}

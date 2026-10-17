@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:a88020909a8eb38e5c8ab56b0212312b5e9434df49f9886143021cab1c119e7e",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:eb4ec30d634db304112f9ae17c57d7d5e69a67f4921f635a81b5631de443e987",
+    "familyId": "ui-steel-panel-close",
+    "kind": "family-variant",
+    "variantId": "v-4e7b840260192f60",
+    "variantKey": "panel-close-c"
+  }
+}

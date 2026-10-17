@@ -1,0 +1,123 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.03,
+        "measured": 3,
+        "median": 0.03,
+        "min": 0.02,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 251.563,
+        "measured": 3,
+        "median": 192.494,
+        "min": 168.488,
+        "scale": 0.284909
+      },
+      "maxMomentaryLufs": {
+        "max": -38.1857,
+        "measured": 3,
+        "median": -38.237,
+        "min": -39.2323,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 0,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [
+      {
+        "descriptor": "activeSeconds",
+        "key": "hover-a",
+        "robustZ": -5.84963,
+        "value": 0.02
+      }
+    ],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.280235,
+    "medianDistance": 0.241128,
+    "minDistance": 0.0642404,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 1.548,
+    "medoid": "hover-b",
+    "members": [
+      {
+        "distance": 1.548,
+        "key": "hover-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "hover-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 1.037,
+        "key": "hover-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "hover-a",
+      "nearest": {
+        "distance": 0.241128,
+        "key": "hover-b"
+      },
+      "pcmHash": "sha256:aa96870d029428482253ca6583a296350075a34bdfd151ee4517ee0c787312b5"
+    },
+    {
+      "key": "hover-b",
+      "nearest": {
+        "distance": 0.0642404,
+        "key": "hover-c"
+      },
+      "pcmHash": "sha256:57d0c11f91c034560d327df0ff514cf11eeade12aa4303949a018e251cabb414"
+    },
+    {
+      "key": "hover-c",
+      "nearest": {
+        "distance": 0.0642404,
+        "key": "hover-b"
+      },
+      "pcmHash": "sha256:1467803f881144b450010d290b6ff815e65ed72e531fcc9fec38ca509ca7966f"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

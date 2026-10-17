@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:91d9223329338448ffa59ddba10ed4ff535fbb703d95fb049962c42c166d0bae",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:b296352ece39fdcbeb21d1a8a7d5b1dbc8480e9eaaca77251086d689ea382b99",
+    "familyId": "ui-aurum-press",
+    "kind": "family-variant",
+    "variantId": "v-df65e909bcb528dc",
+    "variantKey": "press-a"
+  }
+}

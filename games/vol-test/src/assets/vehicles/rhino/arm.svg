@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="55" height="18" viewBox="0 0 55 18">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9b79b"/>
+      <stop offset="0.5" stop-color="#5d4a33"/>
+      <stop offset="1" stop-color="#1c140b"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e6c9a0"/>
+      <stop offset="0.5" stop-color="#94693f"/>
+      <stop offset="1" stop-color="#35241a"/>
+    </linearGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f1e6d2"/>
+      <stop offset="0.5" stop-color="#a09076"/>
+      <stop offset="1" stop-color="#40362a"/>
+    </linearGradient>
+  </defs>
+  <path d="M2 3.6L5.6 1.2H17L20.2 3.4V14.6L17 16.8H5.6L2 14.4Z" fill="url(#plate)" stroke="#0d1217" stroke-width="1" stroke-linejoin="round"/>
+  <path d="M3.4 5H15.4" stroke="#ffffff" stroke-opacity=".4" stroke-width=".55" stroke-linecap="round"/>
+  <circle cx="10" cy="9" r="3.6" fill="#0d1217" fill-opacity=".84"/><circle cx="10" cy="9" r="1.9" fill="#5ef0ff"/>
+  <rect x="19" y="4.4" width="26" height="9.2" rx="1.6" fill="url(#steel)" stroke="#0d1217" stroke-width=".8"/>
+  <path d="M20.4 6.4H43.6" stroke="#f3ead8" stroke-opacity=".45" stroke-width=".5" stroke-linecap="round"/>
+  <rect x="25" y="3.4" width="2.4" height="11.2" rx=".6" fill="url(#band)" stroke="#0d1217" stroke-width=".45"/>
+  <rect x="32" y="3.4" width="2.4" height="11.2" rx=".6" fill="url(#band)" stroke="#0d1217" stroke-width=".45"/>
+  <path d="M44 2H51.4L55 4.4V13.6L51.4 16H44Z" fill="#2a1f13" stroke="#0d1217" stroke-width=".85" stroke-linejoin="round"/>
+  <path d="M47.4 3.6V14.4" stroke="#0a0705" stroke-width="1" stroke-linecap="round"/>
+  <path d="M53.6 5.4V12.6" stroke="#5ef0ff" stroke-opacity=".9" stroke-width=".9" stroke-linecap="round"/>
+</svg>

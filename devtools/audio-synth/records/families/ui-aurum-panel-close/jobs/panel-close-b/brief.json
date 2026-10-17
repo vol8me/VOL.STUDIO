@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "panel-close"
+  ],
+  "durationSeconds": {
+    "max": 0.42,
+    "min": 0.112
+  },
+  "id": "ui-aurum-panel-close-panel-close-b",
+  "intent": "yaldızlı cam ve lake: panel-close Varyant panel-close-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum panel-close — panel-close-b"
+}

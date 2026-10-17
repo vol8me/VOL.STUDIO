@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.09,
+        "measured": 3,
+        "median": 0.08,
+        "min": 0.08,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 359.334,
+        "measured": 3,
+        "median": 310.637,
+        "min": 275.549,
+        "scale": 0.256373
+      },
+      "maxMomentaryLufs": {
+        "max": -23.4814,
+        "measured": 3,
+        "median": -24.2834,
+        "min": -24.9646,
+        "scale": 1.00989
+      },
+      "pitchHz": {
+        "max": 619.879,
+        "measured": 3,
+        "median": 614.188,
+        "min": 613.703,
+        "scale": 0.05
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.185689,
+    "medianDistance": 0.103699,
+    "minDistance": 0.0918759,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 3.163,
+    "medoid": "toggle-on-b",
+    "members": [
+      {
+        "distance": 3.163,
+        "key": "toggle-on-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "toggle-on-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 2.975,
+        "key": "toggle-on-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "toggle-on-a",
+      "nearest": {
+        "distance": 0.0918759,
+        "key": "toggle-on-b"
+      },
+      "pcmHash": "sha256:0d7ae1ba70be8246a35dffe441ead276e7af8b5de8a2de0ef6803faee65be9d2"
+    },
+    {
+      "key": "toggle-on-b",
+      "nearest": {
+        "distance": 0.0918759,
+        "key": "toggle-on-a"
+      },
+      "pcmHash": "sha256:d1cf902db24f82ed09f6788d365dca35e7f83e0169348a0877f757101af6baa0"
+    },
+    {
+      "key": "toggle-on-c",
+      "nearest": {
+        "distance": 0.103699,
+        "key": "toggle-on-b"
+      },
+      "pcmHash": "sha256:ed932e7cd7bdacdb67f19e6f7b8e3d8b4d89258ee81523074c809d5062c653aa"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

@@ -1,39 +1,125 @@
 {
   "name": "volstudio-monorepo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "packageManager": "pnpm@11.18.0",
   "type": "module",
   "scripts": {
-    "dev": "pnpm --parallel -r --filter @volstudio/vol-hell --filter @volstudio/vol-ui run dev",
-    "build:game": "pnpm --filter @volstudio/vol-hell build",
-    "build:tauri": "pnpm run build:game && pnpm --filter @volstudio/tauri-v2 tauri build",
-    "tauri:dev": "pnpm --filter @volstudio/tauri-v2 tauri dev --config tauri.dev.conf.json",
-    "tauri:build": "pnpm --filter @volstudio/tauri-v2 tauri build",
-    "tauri:android:dev": "pnpm --filter @volstudio/tauri-v2 tauri android dev --config tauri.dev.conf.json",
-    "tauri:ios:dev": "pnpm --filter @volstudio/tauri-v2 tauri ios dev --config tauri.dev.conf.json",
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r --if-present test",
+    "postinstall": "node -e \"try{require('child_process').execSync('simple-git-hooks',{stdio:'inherit'})}catch(e){console.warn('\\n[postinstall] UYARI: git hook kurulumu atlandi (git deposi degil veya git yok). Kalite kapilari (pnpm quick/high) elle calistirilmali.\\n')}\"",
+    "quick": "node scripts/quality/gate.mjs quick",
+    "fast": "node scripts/quality/gate.mjs fast",
+    "high": "node scripts/quality/gate.mjs high",
+    "signoff": "node scripts/quality/gate.mjs signoff",
+    "doctor:env": "just doctor",
+    "dev": "node scripts/quality/runActive.mjs dev --if-present --parallel",
+    "typecheck": "node scripts/quality/runActive.mjs typecheck",
+    "test": "node scripts/quality/runActive.mjs test --if-present",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "lint:css": "stylelint \"core/src/ui/**/*.css\" \"games/*/src/**/*.css\"",
-    "format": "prettier --write \"**/*.{ts,css,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,css,json,md}\"",
-    "gen:theme": "node core/scripts/gen-theme.mjs"
+    "lint:css": "stylelint \"**/*.css\" --ignore-pattern core/src/ui/theme.css --cache --cache-strategy content --cache-location node_modules/.cache/vol-quality/stylelint.cache",
+    "format": "prettier --write \"**/*.{ts,mts,cts,js,mjs,cjs,css,json,md,yaml,yml,html}\"",
+    "format:check": "prettier --check --cache --cache-strategy content --cache-location node_modules/.cache/vol-quality/prettier.cache \"**/*.{ts,mts,cts,js,mjs,cjs,css,json,md,yaml,yml,html}\"",
+    "gen:theme": "node core/scripts/gen-theme.mjs",
+    "test:coverage": "node scripts/quality/runActive.mjs test:coverage --if-present",
+    "build:all": "node scripts/quality/runActive.mjs build --if-present",
+    "benchmark:core": "pnpm --filter @volstudio/core benchmark",
+    "build:linux-appimage": "node scripts/linux/build-appimage.mjs",
+    "contract": "node scripts/quality/cli/workspace-contract.mjs",
+    "benchmark:device": "node scripts/android/device-benchmark.mjs",
+    "build:linux-steamrt4": "node scripts/linux/build-steamrt4.mjs",
+    "deck": "node devtools/deck/scripts/deck.mjs",
+    "new:game": "node scripts/new-game.mjs"
   },
   "devDependencies": {
-    "eslint": "9.0.0",
-    "eslint-config-prettier": "10.0.0",
-    "jiti": "^2.7.0",
-    "prettier": "3.0.0",
-    "stylelint": "^16.20.0",
-    "stylelint-config-standard": "^38.0.0",
+    "@eslint/js": "10.0.1",
+    "@types/cross-spawn": "6.0.6",
+    "@types/node": "^26.1.2",
+    "@vitest/coverage-v8": "5.0.5",
+    "cross-spawn": "7.0.6",
+    "eslint": "10.12.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "14.0.0",
+    "prettier": "3.9.9",
+    "rust-just": "1.57.0",
+    "simple-git-hooks": "^2.13.1",
+    "stylelint": "^17.16.0",
+    "stylelint-config-standard": "^40.0.0",
+    "tsx": "^4.23.11",
     "typescript": "^6.0.3",
-    "typescript-eslint": "8.58.0",
+    "typescript-eslint": "8.71.2",
     "vite": "^8.2.0"
   },
   "engines": {
-    "node": "^20.19.0 || >=22.12.0",
+    "node": "22.23.1",
     "pnpm": ">=11.18.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm quick --index",
+    "pre-push": "pnpm high"
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "printWidth": 100,
+    "tabWidth": 2,
+    "useTabs": false,
+    "arrowParens": "always",
+    "bracketSpacing": true,
+    "endOfLine": "lf"
+  },
+  "stylelint": {
+    "extends": "stylelint-config-standard",
+    "rules": {
+      "custom-property-pattern": null,
+      "custom-property-empty-line-before": null,
+      "selector-class-pattern": "^[a-z0-9]+(-[a-z0-9]+)*(__[a-z0-9]+(-[a-z0-9]+)*)?(--[a-z0-9]+(-[a-z0-9]+)*)?$",
+      "value-keyword-case": [
+        "lower",
+        {
+          "ignoreKeywords": [
+            "currentColor"
+          ]
+        }
+      ],
+      "declaration-property-value-disallowed-list": {
+        "/^(color|background|background-color|border|border-color|border-top-color|border-right-color|border-bottom-color|border-left-color|outline|outline-color|fill|stroke)$/": [
+          "/^#/",
+          "/^rgb/",
+          "/^hsl/"
+        ]
+      },
+      "property-no-vendor-prefix": [
+        true,
+        {
+          "ignoreProperties": [
+            "-webkit-appearance",
+            "-webkit-user-select"
+          ]
+        }
+      ]
+    },
+    "overrides": [
+      {
+        "files": [
+          "core/src/ui/theme.css",
+          "core/src/diagnostics/diagnostics.css"
+        ],
+        "rules": {
+          "declaration-property-value-disallowed-list": null
+        }
+      }
+    ],
+    "ignoreFiles": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/coverage/**",
+      "**/target/**",
+      "**/android/build/**",
+      "devtools/deck/records/**",
+      "devtools/vol-showcase/records/**",
+      "games/vol-test/records/**",
+      "devtools/*/export/**"
+    ]
   }
 }

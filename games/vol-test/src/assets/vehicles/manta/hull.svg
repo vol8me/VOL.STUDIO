@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40">
+  <defs>
+    <linearGradient id="wing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6b7889"/>
+      <stop offset="0.28" stop-color="#3a4452"/>
+      <stop offset="0.5" stop-color="#232b35"/>
+      <stop offset="0.72" stop-color="#3a4452"/>
+      <stop offset="1" stop-color="#6b7889"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f1f4f8"/>
+      <stop offset="0.5" stop-color="#bcc5d1"/>
+      <stop offset="1" stop-color="#7c8797"/>
+    </linearGradient>
+    <linearGradient id="spine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dfe5ec"/>
+      <stop offset="0.5" stop-color="#a9b3c1"/>
+      <stop offset="1" stop-color="#6c7788"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="0.4" cy="0.4" r="0.65">
+      <stop offset="0" stop-color="#fbf0ff"/>
+      <stop offset="0.45" stop-color="#b15cff"/>
+      <stop offset="1" stop-color="#3b1070"/>
+    </radialGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5a1fb0"/>
+      <stop offset="0.5" stop-color="#d9b0ff"/>
+      <stop offset="1" stop-color="#5a1fb0"/>
+    </linearGradient>
+  </defs>
+  <!-- kanat gövde -->
+  <path d="M59 20C53.4 15.4 45.6 11.6 36 9.2C28 7.4 19 5 10.6 3.4C7.6 2.3 5.6 3.5 5.8 5.5C6.4 9.2 8.6 12.6 11 15.2L6.9 17.4C6.1 18.2 6.1 21.8 6.9 22.6L11 24.8C8.6 27.4 6.4 30.8 5.8 34.5C5.6 36.5 7.6 37.7 10.6 37.4C19 35 28 32.6 36 30.8C45.6 28.4 53.4 24.6 59 20Z" fill="url(#wing)" stroke="#0d1217" stroke-width="1" stroke-linejoin="round"/>
+  <!-- kanat üst yüzey levhaları -->
+  <path d="M52.5 19.2C47.2 15.8 41 13.2 34.4 11.4C27 9.2 19.6 7.4 12.4 6.4C10.4 6.1 9.4 7 9.8 8.4C10.6 10.6 12.2 12.8 14 14.8L30 15.2C38 15.6 46 17.2 52.5 19.2Z" fill="url(#plate)" stroke="#0d1217" stroke-width=".6" stroke-linejoin="round"/>
+  <path d="M52.5 20.8C47.2 24.2 41 26.8 34.4 28.6C27 30.8 19.6 32.6 12.4 33.6C10.4 33.9 9.4 33 9.8 31.6C10.6 29.4 12.2 27.2 14 25.2L30 24.8C38 24.4 46 22.8 52.5 20.8Z" fill="url(#plate)" stroke="#0d1217" stroke-width=".6" stroke-linejoin="round"/>
+  <!-- levha çizgileri -->
+  <path d="M18.4 7.4L21 14.8M26.4 9L28.2 15M34 11L35 15.3M18.4 32.6L21 25.2M26.4 31L28.2 25M34 29L35 24.7" stroke="#4a5666" stroke-width=".55" stroke-linecap="round"/>
+  <!-- kanat ucu enerji çizgisi -->
+  <path d="M57 20C51.6 15.8 44.4 12.4 35.6 10C27.6 7.7 19.2 5.7 11.4 4.7" fill="none" stroke="#b15cff" stroke-opacity=".8" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M57 20C51.6 24.2 44.4 27.6 35.6 30C27.6 32.3 19.2 34.3 11.4 35.3" fill="none" stroke="#b15cff" stroke-opacity=".8" stroke-width=".6" stroke-linecap="round"/>
+  <!-- omurga -->
+  <path d="M50 20C44.6 16.6 38.4 14.4 31 13.6H17.4C14.6 13.6 12.8 15.4 12.8 17.6V22.4C12.8 24.6 14.6 26.4 17.4 26.4H31C38.4 25.6 44.6 23.4 50 20Z" fill="url(#spine)" stroke="#0d1217" stroke-width=".8" stroke-linejoin="round"/>
+  <path d="M15 16.4H29.6M15 23.6H29.6" stroke="#5a6676" stroke-width=".5" stroke-linecap="round"/>
+  <!-- reaktör penceresi -->
+  <rect x="13.6" y="17.8" width="6.4" height="4.4" rx="1.2" fill="url(#core)" stroke="#0d1217" stroke-width=".5"/>
+  <path d="M14.6 20H19" stroke="#fff" stroke-opacity=".7" stroke-width=".5" stroke-linecap="round"/>
+  <!-- burun sensör gözü ve hava girişleri -->
+  <path d="M42 17.4L46.4 18.6M42 22.6L46.4 21.4" stroke="#0d1217" stroke-opacity=".75" stroke-width=".8" stroke-linecap="round"/>
+  <circle cx="53" cy="20" r="2.2" fill="url(#eye)" stroke="#0d1217" stroke-width=".5"/>
+  <circle cx="52.3" cy="19.3" r=".6" fill="#fff" fill-opacity=".9"/>
+  <!-- kuyruk: egzoz lüleleri ve kanatçıklar -->
+  <g fill="#0b0f13" fill-opacity=".9">
+    <rect x="6.6" y="17" width="3.6" height="2.2" rx=".6"/>
+    <rect x="6.6" y="20.8" width="3.6" height="2.2" rx=".6"/>
+  </g>
+  <g fill="#b15cff" fill-opacity=".95">
+    <rect x="7.2" y="17.4" width="2.4" height="1.4" rx=".4"/>
+    <rect x="7.2" y="21.2" width="2.4" height="1.4" rx=".4"/>
+  </g>
+</svg>

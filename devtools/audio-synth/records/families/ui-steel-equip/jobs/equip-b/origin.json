@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:ac30f4be533f47f81a5fd114e2467a75815a84385c3551aa9af743b9f9768e56",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:4b7867faafda154db558778f8c7932d36b0be674aba15965940b9ce5d13dde7e",
+    "familyId": "ui-steel-equip",
+    "kind": "family-variant",
+    "variantId": "v-b88733174ded6055",
+    "variantKey": "equip-b"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "programHash": "sha256:17f3ad3533cb4e26d3afe37082bc4bdded764f076b7db84a404ee409312db777",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "kind": "treatment",
+    "profile": {
+      "hash": "sha256:746ef33323fd1cbcfac8f7eabedcd3978a3df95281436d7611b46d99c2fe5897",
+      "id": "radio",
+      "version": 1
+    },
+    "source": {
+      "assetId": "reference-impact",
+      "manifest": "devtools/audio-synth/reference/production/manifests/sfx/reference-impact.json",
+      "pcmHash": "sha256:510345c94cff800483f08e4df9d86a52b540d49f79bf6c8cd1f22269d8392996",
+      "programHash": "sha256:f782650efb653ff8c3c682aa85a9b0c83cf935814f8666b4488bf694f5136371",
+      "seed": 2550812508
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "UiGeometryExceptionsV1",
+  "note": "Dokunma hedefi geometri bulgularının bilinen kusur kaydı. Her kayıt sahip açık UI görevine bağlıdır; bulgu düzelince kayıt bayatlar ve layout.spec.ts düşer. rule: size (görünür kutu <44 px), clipped (kutu büyük ama atası kırpıyor), covered (merkez başka elemanda).",
+  "hitTargets": [
+    {
+      "scope": "layer/forms/osk",
+      "rule": "size",
+      "target": ".vol-osk__key",
+      "owner": "UI-11.4",
+      "reason": "393 px genişlikte 12 tuşluk satır 44 px genişliğe sığmaz; tuşlar taşmadan daralır (≥ 28 px, WCAG 2.5.8 AA 24 px) ve yükseklik 44 px kalır. Telefonda metin girişi yerel IME ile yapılır; ekran klavyesi kol ve tablet içindir. Android IME köprüsü UI-11.3'te doğrulandı (yerel seçim çubuğu, klavye görünürlüğü); dar genişlikte ekran klavyesi yerleşimi UI-11.4 ile kapanır."
+    }
+  ],
+  "glyphHeights": []
+}

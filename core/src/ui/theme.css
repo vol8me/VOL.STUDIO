@@ -1,24 +1,47 @@
-﻿@import url('./base.css');
-@import url('./primitives.css');
-@import url('./layout.css');
-@import url('./overlays.css');
-@import url('./feedback.css');
-@import url('./controls.css');
-@import url('./hud.css');
-@import url('./data.css');
+@import url('./base.css');
+@import url('./primitives/primitives.css');
+@import url('./primitives/choices.css');
+@import url('./primitives/views.css');
+@import url('./glyphs/glyphs.css');
+@import url('./icons/icons.css');
+@import url('./cursors/cursors.css');
+@import url('./layout/layout.css');
+@import url('./layout/density.css');
+@import url('./overlays/overlays.css');
+@import url('./overlays/dialogs.css');
+@import url('./overlays/loading.css');
+@import url('./feedback/feedback.css');
+@import url('./hud/hud.css');
+@import url('./hud/skillTree.css');
+@import url('./hud/scoreboard.css');
+@import url('./touch/touch.css');
+@import url('./buttons/buttons.css');
+@import url('./layout/scroll.css');
+@import url('./cards/cards.css');
+@import url('./camera/camera.css');
+@import url('./data/data.css');
+@import url('./data/boards.css');
+@import url('./primitives/workbench.css');
+@import url('./textEntry/keyboard.css');
+@import url('./textEntry/editMenu.css');
+@import url('./material/material.css');
+@import url('./material/hud.css');
+@import url('./material/overlays.css');
+@import url('./material/selection.css');
 
-/* RENKLER — colors.ts'ten generate edilir (pnpm gen:theme). Manuel düzenleme yapma. */
+/* RENKLER — colors.ts, themes/semanticColors.ts ve themes/ember.ts'ten üretilir (pnpm gen:theme). Elle düzenleme yapma. */
 :root {
+  /* @generated:tokens:begin */
   --vol-ui-bg: #0d1115;
   --vol-ui-bg-subtle: #12181e;
   --vol-ui-surface-1: #182028;
   --vol-ui-surface-2: #212a33;
   --vol-ui-surface-3: #2a3540;
   --vol-ui-border-soft: #34414d;
-  --vol-ui-border-strong: #495865;
+  --vol-ui-border-strong: #68788a;
   --vol-ui-text: #e8eef5;
   --vol-ui-text-secondary: #b5c1cc;
-  --vol-ui-text-muted: #83919d;
+  --vol-ui-text-muted: #96a4b0;
   --vol-ui-text-disabled: #5d6a75;
   --vol-ui-icon: #9aa7b3;
   --vol-ui-brand-solid: #b85518;
@@ -69,8 +92,122 @@
   --vol-ui-scrim: #05070ab8;
   --vol-ui-hairline-alpha: #ffffff14;
   --vol-ui-selection-glow: #7c84ff33;
+  --vol-ui-page: #0d1115;
+  --vol-ui-well: #0a0d11;
+  --vol-ui-panel: #182028;
+  --vol-ui-plate: #212a33;
+  --vol-ui-plate-top-light: #ffffff1f;
+  --vol-ui-well-inner-shadow: #00000066;
+  --vol-ui-brand-fill-hover: #ac5017;
+  --vol-ui-frame-hairline: #34414d;
+  --vol-ui-frame-corner: #864a2c;
+  --vol-ui-frame-header: #1d252d;
+  --vol-ui-frame-divider: #2a3540;
+  --vol-ui-glow-brand: #d6743459;
+  --vol-ui-glow-support: #2c748359;
+  --vol-ui-glow-success: #307a5759;
+  --vol-ui-glow-warning: #d2a03c59;
+  --vol-ui-glow-danger: #b94a4a59;
+  --vol-ui-rarity-common-solid: #83919d;
+  --vol-ui-rarity-common-hover: #9aa7b3;
+  --vol-ui-rarity-common-selected: #b5c1cc;
+  --vol-ui-rarity-common-disabled: #4a5560;
+  --vol-ui-rarity-common-border: #34414d;
+  --vol-ui-rarity-common-glow: #9aa7b340;
+  --vol-ui-rarity-rare-solid: #356eb0;
+  --vol-ui-rarity-rare-hover: #4580c4;
+  --vol-ui-rarity-rare-selected: #5a95d9;
+  --vol-ui-rarity-rare-disabled: #2a3d55;
+  --vol-ui-rarity-rare-border: #2c557f;
+  --vol-ui-rarity-rare-glow: #4580c459;
+  --vol-ui-rarity-epic-solid: #565dbe;
+  --vol-ui-rarity-epic-hover: #6a71d4;
+  --vol-ui-rarity-epic-selected: #7f86e6;
+  --vol-ui-rarity-epic-disabled: #363a66;
+  --vol-ui-rarity-epic-border: #6269c4;
+  --vol-ui-rarity-epic-glow: #6a71d459;
+  --vol-ui-rarity-legendary-solid: #d2a03c;
+  --vol-ui-rarity-legendary-hover: #e3b24d;
+  --vol-ui-rarity-legendary-selected: #f0c568;
+  --vol-ui-rarity-legendary-disabled: #5e4a22;
+  --vol-ui-rarity-legendary-border: #a67c25;
+  --vol-ui-rarity-legendary-glow: #e3b24d66;
+  /* @generated:tokens:end */
+  /* @generated:motion:begin */
+  --vol-motion-duration-fast: 120ms;
+  --vol-motion-duration-base: 200ms;
+  --vol-motion-duration-slow: 320ms;
+  --vol-motion-duration-cinematic: 480ms;
+  --vol-motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --vol-motion-ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --vol-motion-ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --vol-motion-preset-scrim-in: 120ms;
+  --vol-motion-preset-dialog-in: 200ms;
+  --vol-motion-preset-modal-out: 140ms;
+  --vol-motion-preset-card-stagger: 40ms;
+  --vol-motion-preset-hud-gain: 200ms;
+  --vol-motion-preset-hud-loss: 80ms;
+  --vol-motion-preset-tab-switch: 160ms;
+  --vol-motion-preset-tab-switch-offset: 6px;
+  --vol-motion-preset-scene-out: 200ms;
+  --vol-motion-preset-scene-in: 320ms;
+  --vol-motion-hover-scale: 1.02;
+  --vol-motion-press-scale: 0.96;
+  --vol-motion-card-select-scale: 1.04;
+  --vol-motion-loading-min-visible: 500ms;
+  --vol-motion-juice-press-squash: 0.985;
+  --vol-motion-juice-hover-lift: 1px;
+  --vol-motion-juice-press-drop: 1px;
+  --vol-motion-juice-focus-pulse: 1100ms;
+  --vol-motion-juice-number-pop-scale: 1.18;
+  --vol-motion-juice-number-pop-duration: 260ms;
+  --vol-motion-juice-hit-flash: 140ms;
+  --vol-motion-juice-panel-in-scale: 0.96;
+  --vol-motion-juice-shake-distance: 4px;
+  --vol-motion-juice-shake-duration: 220ms;
+  --vol-motion-juice-trail-delay: 420ms;
+  --vol-motion-juice-trail-duration: 380ms;
+  /* @generated:motion:end */
   --vol-font-family: 'Jura', sans-serif;
   --vol-font-family-body: 'Exo 2', sans-serif;
+  /*
+   * Gönderilen yazı tipleri tek aralıklı değildir; genel `monospace` yedeği motora ve sisteme göre değişir (WebKit
+   * Courier New'a düşer: 14 px'te büyük harf yüksekliği 8 ekran px). Tek aralıklı yazı bu yığınla istenir; sıra,
+   * büyük harf yüksekliği bol olan yazı tipleri önce gelir.
+   */
+  --vol-font-family-mono:
+    'Cascadia Mono', Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+
+  /*
+   * Tip ölçeği rol taşır; yeni boyut eklenmez, en yakın rol seçilir.
+   *   micro   rozet, sayaç üstü, ikincil birim
+   *   label   HUD etiketi, düğme, sekme, tablo başlığı
+   *   body    okunacak metin, açıklama, diyalog
+   *   lead    öne çıkan gövde, büyük düğme
+   *   title   panel/kart başlığı
+   *   heading bölüm başlığı
+   *   display ekran başlığı, hasar sayısı
+   * Taban 12 px'tir (Steam Deck okunabilirliği; vol-showcase readability kapısı). Jura büyük harfleri küçüktür (cap
+   * oranı 0,633; Exo 2 0,69): Jura'lı roller (micro, label) 13 px'tir ve büyük harf mürekkep yüksekliği 9 ekran px
+   * (Valve alt sınırı) verir, Jura 12 px 8 verir. Gövde yazısı Exo 2'dir, 12 px'te de 9 verir.
+   */
+  --vol-text-micro: 13px;
+  --vol-text-label: 13px;
+  --vol-text-body: 14px;
+  --vol-text-lead: 16px;
+  --vol-text-title: 20px;
+  --vol-text-heading: 24px;
+  --vol-text-display: 28px;
+
+  /*
+   * İkon ölçeği: düğme içi ikonlar tamsayı pikseldir (1,3 em kesirli boyut kenarı bulandırıyordu).
+   * Düğme boyutuna bağlıdır: sm 32 px kutuda 16, md 40 px kutuda 20, lg 48 px kutuda 24 (kutunun
+   * yarısı; dolu siluet etiketle aynı ağırlıkta okunur). Açık `size` verilen `Icon` bu ölçeği aşar.
+   */
+  --vol-icon-sm: 16px;
+  --vol-icon-md: 20px;
+  --vol-icon-lg: 24px;
+
   --vol-space-xs: 4px;
   --vol-space-sm: 8px;
   --vol-space-md: 16px;
@@ -80,4 +217,314 @@
   --vol-radius-md: 4px;
   --vol-transition-fast: 0.12s ease;
   --vol-transition-medium: 0.24s ease;
+
+  /*
+   * Katman (z-index) ölçeği — TEK doğruluk kaynağı.
+   * Yeni bir floating component eklerken BURADAN bir katman seç;
+   * yeni bir sabit sayı UYDURMA.
+   *
+   * Sıralama (düşükten yükseğe), NEDEN'iyle:
+   *  root     — DOM UI'ın taban katmanı, diğer her şey bunun üstünde birikir.
+   *  float    — geçici, bağlamsal oyun kontrolleri (RadialMenu). Bir dialog
+   *             açıksa altında kalmalı, üstüne binmemeli.
+   *  toast    — bildirimler; sayfa içeriğinin üstünde ama bloklayıcı değil.
+   *  dialog   — etkileşimi BLOKLAYAN yüzeyler: Modal, CommandPalette, kart
+   *             seçim ekranları (level-up/dükkan). Aynı tier'da olmaları
+   *             kasıtlı — ikisi aynı anda açık olmamalı, ama açık olsalar
+   *             bile biri diğerini rastgele ezmemeli.
+   *  dialog-content — bir dialog'un İÇİNDEKİ öğelere iğnelenenler: Tooltip,
+   *             Popup/ContextMenu, RichTooltip. `dialog`'dan yüksek olması
+   *             ZORUNLU — aksi halde bir Modal içindeki butonun tooltip'i
+   *             modalın arkasında kalırdı.
+   *  loading  — tam ekran yükleme/sahne geçişi; açık bir dialog'un bile
+   *             üstünü kapatmalı (sahne değişirken her şey gizlenir).
+   *  debug    — Diagnostics paneli. HER ZAMAN kesin en üstte; geliştirici
+   *             bir fatal error ekranında bile paneli görebilmeli.
+   */
+  --vol-z-root: 10;
+  --vol-z-float: 15;
+  --vol-z-toast: 20;
+  --vol-z-dialog: 30;
+  --vol-z-dialog-content: 40;
+  --vol-z-loading: 50;
+  --vol-z-debug: 999999;
+
+  /*
+   * Kanban sütununun OKUNABİLİR tabanı.
+   *
+   * Sütunlar bu değerin altına küçülmez; sığmadıklarında pano yatay kayar.
+   * Token olması bilinçli: bir tüketici daha dar kartlarla çalışıyorsa değeri
+   * kendi kökünde düşürebilir, bileşeni çatallamak zorunda kalmaz.
+   */
+  --vol-kanban-column-min: 200px;
+
+  /* --vol-hit-target-min BURADA BİLİNÇLİ OLARAK TANIMLANMAZ: varsayılanda
+     (mouse) tanımsız kalıp min-height/min-width'te `auto`ya düşer, yani
+     masaüstü görünümü sıfır etkilenir. Değeri yalnızca aşağıdaki
+     `pointer: coarse` bloğunda gelir. */
+
+  /*
+   * GÜVENLİ ALAN — çentik, kamera deliği, jest çubuğu ve YUVARLATILMIŞ KÖŞE.
+   *
+   * `env(safe-area-inset-*)` yalnızca çentik/sistem çubuklarını anlatır;
+   * yuvarlatılmış köşeleri anlatmaz. Ekranı kaplayan bir arayüzde köşeye
+   * yapışan bir eleman, çentik olmasa bile köşe yarıçapı içinde kalır ve
+   * kırpılır (ör. Galaxy S21 FE: 108 px köşe yarıçapı). Bu yüzden taban bir
+   * pay ile `env()` toplanır ve tüm kenar-yapışık yerleşimler bu token'ı
+   * kullanır — çıplak `env()` değil.
+   *
+   * Masaüstünde `env()` sıfırdır ve taban pay da sıfır kalır: görünüm
+   * etkilenmez. Dokunmatik kip için değer aşağıdaki `pointer: coarse`
+   * bloğunda yükselir.
+   */
+  --vol-safe-area-base: 0px;
+  --vol-safe-top: max(env(safe-area-inset-top, 0px), var(--vol-safe-area-base));
+  --vol-safe-right: max(env(safe-area-inset-right, 0px), var(--vol-safe-area-base));
+  --vol-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--vol-safe-area-base));
+  --vol-safe-left: max(env(safe-area-inset-left, 0px), var(--vol-safe-area-base));
+}
+
+/* @generated:themes:begin */
+:root[data-vol-theme='default'],
+[data-vol-theme='default'] {
+  --vol-ui-bg: #0d1115;
+  --vol-ui-bg-subtle: #12181e;
+  --vol-ui-surface-1: #182028;
+  --vol-ui-surface-2: #212a33;
+  --vol-ui-surface-3: #2a3540;
+  --vol-ui-border-soft: #34414d;
+  --vol-ui-border-strong: #68788a;
+  --vol-ui-text: #e8eef5;
+  --vol-ui-text-secondary: #b5c1cc;
+  --vol-ui-text-muted: #96a4b0;
+  --vol-ui-text-disabled: #5d6a75;
+  --vol-ui-icon: #9aa7b3;
+  --vol-ui-brand-solid: #b85518;
+  --vol-ui-brand-hover: #d67434;
+  --vol-ui-brand-pressed: #a04a18;
+  --vol-ui-brand-subtle: #352217;
+  --vol-ui-brand-border: #864a2c;
+  --vol-ui-on-brand: #fff6f0;
+  --vol-ui-support-solid: #246a79;
+  --vol-ui-support-hover: #2c7483;
+  --vol-ui-support-pressed: #1b505c;
+  --vol-ui-support-subtle: #15292f;
+  --vol-ui-support-border: #2d5863;
+  --vol-ui-on-support: #eafbfd;
+  --vol-ui-accent-solid: #565dbe;
+  --vol-ui-accent-hover: #5c63c8;
+  --vol-ui-accent-pressed: #3d438f;
+  --vol-ui-accent-subtle: #23274d;
+  --vol-ui-accent-border: #6269c4;
+  --vol-ui-on-accent: #f5f6ff;
+  --vol-ui-success-solid: #307a57;
+  --vol-ui-success-subtle: #163126;
+  --vol-ui-success-border: #2c6b4d;
+  --vol-ui-on-success: #eaf7f0;
+  --vol-ui-warning-solid: #d2a03c;
+  --vol-ui-warning-subtle: #3b2c12;
+  --vol-ui-warning-border: #6e5526;
+  --vol-ui-on-warning: #1e1605;
+  --vol-ui-danger-solid: #b94a4a;
+  --vol-ui-danger-subtle: #3a1e21;
+  --vol-ui-danger-border: #8e3636;
+  --vol-ui-on-danger: #fff0f0;
+  --vol-ui-info-solid: #356eb0;
+  --vol-ui-info-subtle: #18283e;
+  --vol-ui-info-border: #2c557f;
+  --vol-ui-on-info: #eaf3fb;
+  --vol-ui-hover-fill: #19222a;
+  --vol-ui-pressed-fill: #202b34;
+  --vol-ui-selected-fill: #2a3844;
+  --vol-ui-focus-ring: #ffd37a;
+  --vol-ui-focus-halo: #fff1c133;
+  --vol-ui-disabled-fill: #1b2128;
+  --vol-ui-disabled-border: #2a333c;
+  --vol-ui-disabled-text: #5c6772;
+  --vol-ui-inverse-surface: #eaf0f6;
+  --vol-ui-inverse-text: #11161a;
+  --vol-ui-overlay-panel: #11171dd9;
+  --vol-ui-scrim: #05070ab8;
+  --vol-ui-hairline-alpha: #ffffff14;
+  --vol-ui-selection-glow: #7c84ff33;
+  --vol-ui-page: #0d1115;
+  --vol-ui-well: #0a0d11;
+  --vol-ui-panel: #182028;
+  --vol-ui-plate: #212a33;
+  --vol-ui-plate-top-light: #ffffff1f;
+  --vol-ui-well-inner-shadow: #00000066;
+  --vol-ui-brand-fill-hover: #ac5017;
+  --vol-ui-frame-hairline: #34414d;
+  --vol-ui-frame-corner: #864a2c;
+  --vol-ui-frame-header: #1d252d;
+  --vol-ui-frame-divider: #2a3540;
+  --vol-ui-glow-brand: #d6743459;
+  --vol-ui-glow-support: #2c748359;
+  --vol-ui-glow-success: #307a5759;
+  --vol-ui-glow-warning: #d2a03c59;
+  --vol-ui-glow-danger: #b94a4a59;
+  --vol-ui-rarity-common-solid: #83919d;
+  --vol-ui-rarity-common-hover: #9aa7b3;
+  --vol-ui-rarity-common-selected: #b5c1cc;
+  --vol-ui-rarity-common-disabled: #4a5560;
+  --vol-ui-rarity-common-border: #34414d;
+  --vol-ui-rarity-common-glow: #9aa7b340;
+  --vol-ui-rarity-rare-solid: #356eb0;
+  --vol-ui-rarity-rare-hover: #4580c4;
+  --vol-ui-rarity-rare-selected: #5a95d9;
+  --vol-ui-rarity-rare-disabled: #2a3d55;
+  --vol-ui-rarity-rare-border: #2c557f;
+  --vol-ui-rarity-rare-glow: #4580c459;
+  --vol-ui-rarity-epic-solid: #565dbe;
+  --vol-ui-rarity-epic-hover: #6a71d4;
+  --vol-ui-rarity-epic-selected: #7f86e6;
+  --vol-ui-rarity-epic-disabled: #363a66;
+  --vol-ui-rarity-epic-border: #6269c4;
+  --vol-ui-rarity-epic-glow: #6a71d459;
+  --vol-ui-rarity-legendary-solid: #d2a03c;
+  --vol-ui-rarity-legendary-hover: #e3b24d;
+  --vol-ui-rarity-legendary-selected: #f0c568;
+  --vol-ui-rarity-legendary-disabled: #5e4a22;
+  --vol-ui-rarity-legendary-border: #a67c25;
+  --vol-ui-rarity-legendary-glow: #e3b24d66;
+}
+
+:root[data-vol-theme='aurum'],
+[data-vol-theme='aurum'] {
+  --vol-ui-bg: #0e0818;
+  --vol-ui-bg-subtle: #150e21;
+  --vol-ui-surface-1: #1d1530;
+  --vol-ui-surface-2: #271c3c;
+  --vol-ui-surface-3: #342752;
+  --vol-ui-border-soft: #45386a;
+  --vol-ui-border-strong: #7a69a3;
+  --vol-ui-text: #f5efe3;
+  --vol-ui-text-secondary: #d6ccbd;
+  --vol-ui-text-muted: #b3a8c2;
+  --vol-ui-text-disabled: #756b86;
+  --vol-ui-icon: #cbc0d9;
+  --vol-ui-brand-solid: #c9a14a;
+  --vol-ui-brand-hover: #dcb560;
+  --vol-ui-brand-pressed: #b08a35;
+  --vol-ui-brand-subtle: #2e2410;
+  --vol-ui-brand-border: #8e7230;
+  --vol-ui-on-brand: #1b1406;
+  --vol-ui-support-solid: #2f9880;
+  --vol-ui-support-hover: #3aa690;
+  --vol-ui-support-pressed: #2a8f78;
+  --vol-ui-support-subtle: #11302a;
+  --vol-ui-support-border: #2b6b5d;
+  --vol-ui-on-support: #021410;
+  --vol-ui-accent-solid: #a64a92;
+  --vol-ui-accent-hover: #a94892;
+  --vol-ui-accent-pressed: #873676;
+  --vol-ui-accent-subtle: #321636;
+  --vol-ui-accent-border: #c46bb1;
+  --vol-ui-on-accent: #fff4fb;
+  --vol-ui-success-solid: #2e9467;
+  --vol-ui-success-subtle: #11301f;
+  --vol-ui-success-border: #2a7a56;
+  --vol-ui-on-success: #03150b;
+  --vol-ui-warning-solid: #e3a63a;
+  --vol-ui-warning-subtle: #3a2a0d;
+  --vol-ui-warning-border: #7a5a1e;
+  --vol-ui-on-warning: #1c1304;
+  --vol-ui-danger-solid: #c23b55;
+  --vol-ui-danger-subtle: #3a1520;
+  --vol-ui-danger-border: #8e2c40;
+  --vol-ui-on-danger: #fff0f3;
+  --vol-ui-info-solid: #3a6fba;
+  --vol-ui-info-subtle: #14233e;
+  --vol-ui-info-border: #2f5ea0;
+  --vol-ui-on-info: #f0f6ff;
+  --vol-ui-hover-fill: #221a38;
+  --vol-ui-pressed-fill: #2b2144;
+  --vol-ui-selected-fill: #392c58;
+  --vol-ui-focus-ring: #ffe9a3;
+  --vol-ui-focus-halo: #ffe9a333;
+  --vol-ui-disabled-fill: #1a1230;
+  --vol-ui-disabled-border: #2f2745;
+  --vol-ui-disabled-text: #756b86;
+  --vol-ui-inverse-surface: #f1ebe0;
+  --vol-ui-inverse-text: #1a1424;
+  --vol-ui-overlay-panel: #140f1fd9;
+  --vol-ui-scrim: #07040cb8;
+  --vol-ui-hairline-alpha: #fff0d414;
+  --vol-ui-selection-glow: #d27bd033;
+  --vol-ui-page: #0e0818;
+  --vol-ui-well: #09050f;
+  --vol-ui-panel: #1d1530;
+  --vol-ui-plate: #271c3c;
+  --vol-ui-plate-top-light: #ffeab81f;
+  --vol-ui-well-inner-shadow: #00000099;
+  --vol-ui-brand-fill-hover: #dcb560;
+  --vol-ui-frame-hairline: #52447a;
+  --vol-ui-frame-corner: #c9a14a;
+  --vol-ui-frame-header: #241a38;
+  --vol-ui-frame-divider: #3a2d5a;
+  --vol-ui-glow-brand: #e3b95a66;
+  --vol-ui-glow-support: #3fbf9f4d;
+  --vol-ui-glow-success: #4ac28a4d;
+  --vol-ui-glow-warning: #f0b94d66;
+  --vol-ui-glow-danger: #e0526d66;
+}
+/* @generated:themes:end */
+
+/*
+ * pointer: coarse — dokunmatik ekran, kalem gibi kaba işaretçi cihazlar.
+ * `--vol-hit-target-min` küçük interaktif kontrollerin (ör. `.vol-button--sm`,
+ * `.vol-checkbox`) min-height/min-width'ine bağlanır (bkz. primitives.css,
+ * layout.css). GERÇEK kutu büyür — görünmez bir overlay değil — bu yüzden
+ * flex/grid `gap` içindeki komşular otomatik aralanır, örtüşme riski yok.
+ */
+@media (pointer: coarse) {
+  :root {
+    /* WCAG 2.5.5 AAA / Apple HIG / Material dokunma hedefi önerisi. */
+    --vol-hit-target-min: 44px;
+
+    /*
+     * Dokunmatik cihazlarda köşe yarıçapı payı. `env()` sıfır dönse bile
+     * (yatay kipte üst/alt çentik kenarı olmayabilir) köşeye yapışan bir
+     * eleman yuvarlatmanın içinde kalmamalı. 12 px, tipik 24-40 dp köşe
+     * yarıçaplarında elemanın görünür kalması için yeterli paydır ve
+     * `max()` sayesinde gerçek çentik daha büyükse o kazanır.
+     */
+    --vol-safe-area-base: 12px;
+  }
+}
+
+/*
+ * OTURMA MESAFESİ ÖLÇEĞİ — "ten-foot UI".
+ *
+ * Tasarım tabanı 1280 CSS px'dir (Deck elde ~0,4 m). Bir televizyonda piksel
+ * açısal boyutu çok daha küçülür: 55" 1080p'de px ≈ Deck px'inin ~0,7 katı
+ * (~1,4 kat büyütme gerekir), aynı panelde 2160p'de px dörtte birine düşer
+ * (~2,9 kat). Katsayılar genişlik/1280 oranından türetilir; ara basamak
+ * (2560→2) aynı orantının sürekliliğidir.
+ *
+ * Kökler (`UIRoot` `.vol-ui-root`, vol-ui vitrini `.vol-showcase-root`) bu
+ * token'ı `zoom` + `width: 100vw / zoom` ile uygular: UI her zaman 1280
+ * CSS px genişliğinde yerleşir, zoom çizimi büyütür — metin, boşluk ve
+ * dokunma hedefleri TEK seferde ve tutarlı ölçeklenir.
+ */
+html {
+  --vol-layout-zoom: 1;
+}
+
+@media (width >= 1920px) {
+  :root {
+    --vol-layout-zoom: 1.5;
+  }
+}
+
+@media (width >= 2560px) {
+  :root {
+    --vol-layout-zoom: 2;
+  }
+}
+
+@media (width >= 3200px) {
+  :root {
+    --vol-layout-zoom: 3;
+  }
 }

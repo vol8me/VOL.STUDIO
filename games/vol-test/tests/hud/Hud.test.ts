@@ -1,0 +1,569 @@
+import { describe, expect, it, vi } from 'vitest';
+import { Vector2, VirtualActionSource, VirtualStickSource } from '@volstudio/core';
+import { GraphicsQuality } from '@volstudio/core/graphics';
+import { LocalStorageAdapter, ScopedSaveManager } from '@volstudio/core';
+import { i18next } from '@volstudio/core/i18n';
+import { EFFECT_LEVELS, type EffectLevel, type EffectProfile } from '@/config/quality';
+import { IntegrityFeed } from '@/app/IntegrityFeed';
+import type { GameServices } from '@/app/GameServices';
+import { GameSettings } from '@/app/GameSettings';
+import { Hud } from '@/hud/Hud';
+import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
+import { hudFrame } from './support';
+
+function mount(touch = false, fullscreen = true, live = false, services?: GameServices) {
+  const parent = document.createElement('div');
+  document.body.append(parent);
+  const onResume = vi.fn();
+  const source = new VirtualActionSource<TestAction>();
+  const sticks = new VirtualStickSource();
+  const quality = new GraphicsQuality<EffectLevel, EffectProfile>({
+    levels: EFFECT_LEVELS,
+    initial: 'high',
+  });
+  const hud = new Hud({
+    parent,
+    metre: 32,
+    worldWidth: 4096,
+    worldHeight: 4096,
+    mapGridStep: 128,
+    mapGridMajorEvery: 8,
+    actionSource: source,
+    stickSource: sticks,
+    touch,
+    fullscreen,
+    onResume,
+    quality,
+    live,
+    services,
+  });
+  const find = <T extends HTMLElement = HTMLElement>(id: string): T =>
+    parent.querySelector<T>(`[data-testid="${id}"]`)!;
+  return { hud, parent, onResume, source, sticks, find, quality };
+}
+
+describe('Hud kayıt bütünlüğü bildirimi', () => {
+  function mountWithFeed(feed: IntegrityFeed) {
+    const parent = document.createElement('div');
+    document.body.append(parent);
+    const hud = new Hud({
+      parent,
+      metre: 32,
+      worldWidth: 4096,
+      worldHeight: 4096,
+      mapGridStep: 128,
+      mapGridMajorEvery: 8,
+      actionSource: new VirtualActionSource<TestAction>(),
+      stickSource: new VirtualStickSource(),
+      touch: false,
+      fullscreen: false,
+      onResume: vi.fn(),
+      quality: new GraphicsQuality<EffectLevel, EffectProfile>({
+        levels: EFFECT_LEVELS,
+        initial: 'high',
+      }),
+      services: { integrity: feed } as unknown as GameServices,
+    });
+    return { hud, parent };
+  }
+
+  it('HUD kurulmadan önce olan kurtarma ve sıfırlama oyuncuya görünür kalıcı bildirim olur', () => {
+    const feed = new IntegrityFeed();
+    feed.record({ name: 'voltest-device.json', kind: 'recovered' });
+    feed.record({ name: 'voltest-synced.json', kind: 'reset' });
+    const { parent } = mountWithFeed(feed);
+    const alerts = [...parent.querySelectorAll('.vol-toast')].map((el) => el.textContent ?? '');
+    expect(alerts).toHaveLength(2);
+    expect(alerts[0]).toContain('yedeğinden geri yüklendi');
+    expect(alerts[1]).toContain('yeni kayıt başlatıldı');
+    expect(parent.querySelectorAll('.vol-toast__dismiss')).toHaveLength(2);
+  });
+
+  it('HUD kurulduktan sonra gelen olay da bildirilir', () => {
+    const feed = new IntegrityFeed();
+    const { parent } = mountWithFeed(feed);
+    expect(parent.querySelectorAll('.vol-toast')).toHaveLength(0);
+    feed.record({ name: 'voltest-device.json', kind: 'reset' });
+    expect(parent.querySelectorAll('.vol-toast')).toHaveLength(1);
+  });
+});
+
+function read(source: VirtualActionSource<TestAction>): Record<TestAction, boolean> {
+  const actions = Object.fromEntries(TEST_ACTIONS.map((action) => [action, false])) as Record<
+    TestAction,
+    boolean
+  >;
+  source.applyTo(actions);
+  return actions;
+}
+
+function pointer(type: string): PointerEvent {
+  const event = new Event(type, { bubbles: true, cancelable: true }) as PointerEvent;
+  Object.defineProperties(event, { pointerId: { value: 1 }, pointerType: { value: 'touch' } });
+  return event;
+}
+
+describe('Hud odak koruması', () => {
+  it('oynarken Tab düğme seçtirmez; HUD düğmesi odak almaz; giriş alanı Tab tuşunu korur', () => {
+    const { hud, parent } = mount();
+    const tab = (target: EventTarget = document.body): KeyboardEvent => {
+      const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      return event;
+    };
+    expect(tab().defaultPrevented).toBe(true);
+    const fullscreen = parent.querySelector<HTMLButtonElement>(
+      '.vt-hud__fullscreen button, button.vt-hud__fullscreen',
+    );
+    fullscreen?.focus();
+    expect(document.activeElement).not.toBe(fullscreen);
+    // Giriş alanı Tab'ı kendi sözleşmesiyle alır (katılım paneli adı).
+    const field = document.createElement('input');
+    parent.append(field);
+    expect(tab(field).defaultPrevented).toBe(false);
+    hud.showPause();
+    expect(hud.paused).toBe(true);
+    hud.destroy();
+  });
+});
+
+describe('Hud', () => {
+  it('can çubuğu, ölüm sayacı ve koruma durumu HUD karesini izler ve dil değiştirir', async () => {
+    const { hud, parent, find } = mount();
+    const health = parent.querySelector<HTMLElement>('.vt-hud__vitals .vol-bar--health')!;
+    expect(health.getAttribute('aria-label')).toBe('Araç canı');
+    hud.update(hudFrame({ health: 25 }), 100);
+    expect(health.getAttribute('aria-valuenow')).toBe('25');
+    hud.update(hudFrame({ health: 0, alive: false, respawnRemainingMs: 2050 }), 200);
+    expect(health.getAttribute('aria-valuenow')).toBe('0');
+    expect(find('lifecycle').textContent).toContain('3 sn sonra');
+    hud.update(hudFrame({ protectionRemainingMs: 980 }), 300);
+    expect(find('lifecycle').textContent).toContain('koruması');
+    await i18next.changeLanguage('en');
+    expect(health.getAttribute('aria-label')).toBe('Vehicle health');
+    hud.update(hudFrame({ health: 0, alive: false, respawnRemainingMs: 2050 }), 400);
+    expect(find('lifecycle').textContent).toContain('respawn in 3 s');
+    await i18next.changeLanguage('tr');
+    hud.destroy();
+    expect(parent.querySelector('.vt-hud__vitals')).toBeNull();
+  });
+
+  it('harita adı ve araç özeti HUD dil geçişinde birlikte yenilenir', async () => {
+    await i18next.changeLanguage('tr');
+    const { hud, parent } = mount();
+    hud.update(
+      hudFrame({ vehicles: () => [{ id: 2, x: 300, y: 400, hull: 0, player: false }] }),
+      0,
+    );
+    const canvas = parent.querySelector('.vt-hud__map canvas')!;
+    expect(canvas.getAttribute('aria-label')).toBe(i18next.t('voltest:hud.map'));
+    await i18next.changeLanguage('en');
+    expect(canvas.getAttribute('aria-label')).toBe(i18next.t('voltest:hud.map'));
+    expect(canvas.getAttribute('aria-description')).toBe(
+      i18next.t('voltest:hud.mapSummary', { vehicles: 1, zoom: 1 }),
+    );
+    hud.destroy();
+    await i18next.changeLanguage('tr');
+  });
+  it('harita kalite profilindeki aralıkla yenilenir: yüksekte her karede, düşükte seyreltilmiş', () => {
+    const { hud, parent, quality } = mount();
+    const map = parent.querySelector<HTMLElement>('.vt-hud__map')!;
+    hud.update(hudFrame({ x: 0, y: 0 }), 0);
+    hud.update(hudFrame({ x: 64, y: 0 }), 1);
+    expect(map.dataset.position).toBe('2,0');
+    quality.setLevel('low');
+    hud.update(hudFrame({ x: 128, y: 0 }), 2);
+    expect(map.dataset.position).toBe('4,0');
+    hud.update(hudFrame({ x: 192, y: 0 }), 10);
+    expect(map.dataset.position).toBe('4,0');
+    hud.update(hudFrame({ x: 192, y: 0 }), 40);
+    expect(map.dataset.position).toBe('6,0');
+    hud.destroy();
+  });
+
+  it('atış dolum barı kalan beklemeyi gösterir ve dil değişiminde erişilebilir adı yenilenir', async () => {
+    const { hud, parent } = mount();
+    const bar = parent.querySelector<HTMLElement>('.vt-hud__vitals .vol-bar--cooldown')!;
+    expect(bar).not.toBeNull();
+    expect(bar.getAttribute('aria-label')).toBe('Atış dolumu');
+    hud.update(hudFrame({ fireProgress: 0.25 }), 0);
+    expect(Number(bar.getAttribute('aria-valuenow'))).toBe(25);
+    hud.update(hudFrame({ fireProgress: 1 }), 1000);
+    expect(Number(bar.getAttribute('aria-valuenow'))).toBe(100);
+    await i18next.changeLanguage('en');
+    expect(bar.getAttribute('aria-label')).toBe('Shot reload');
+    await i18next.changeLanguage('tr');
+    hud.destroy();
+    expect(parent.querySelector('.vt-hud__vitals')).toBeNull();
+  });
+
+  it('görünen her parça CORE bileşenidir', () => {
+    const { hud, parent } = mount();
+    const layer = parent.querySelector('.vt-hud')!;
+    const containers = new Set(['vt-hud__hints', 'vt-hud__touch']);
+    // Göstergeler tek CORE `Panel` içindedir (`vol-panel`); çubukları CORE `Bar`dır.
+    expect(layer.querySelectorAll('.vt-hud__vitals > .vol-bar')).toHaveLength(3);
+    for (const child of layer.children) {
+      const isContainer = [...child.classList].some((name) => containers.has(name));
+      const isCore = [...child.classList].some((name) => name.startsWith('vol-'));
+      expect(isContainer || isCore, child.className).toBe(true);
+    }
+    for (const row of parent.querySelectorAll('.vt-hud__hint')) {
+      for (const cell of row.children) expect(cell.className).toMatch(/^vol-/);
+    }
+    for (const control of parent.querySelectorAll('.vt-hud__touch > *')) {
+      expect(control.className).toMatch(/vol-/);
+    }
+    hud.destroy();
+  });
+
+  it('göstergeler can, hızlanma ve atış dolumunu yazısız CORE çubuklarında taşır, değeri okuyucuya söyler; güncelleme seyreltilir', () => {
+    const { hud, find, parent } = mount();
+    hud.update(hudFrame({ health: 60, maxHealth: 100, boost: 45, fireProgress: 0.5 }), 1000);
+    // Çubuğun üstünde yazı yoktur; ad ve değer yalnız erişilebilirlik özelliklerindedir.
+    expect(find('vitals').querySelector('.vol-bar__label')).toBeNull();
+    const labels = (): string[] =>
+      [...find('vitals').querySelectorAll('[role="progressbar"]')].map(
+        (bar) => `${bar.getAttribute('aria-label')} ${bar.getAttribute('aria-valuetext')}`,
+      );
+    expect(labels()).toEqual(['Araç canı 60/100', 'Hızlanma deposu 45/100', 'Atış dolumu 50%']);
+    // Sıradaki güncelleme aralıktan önce gelirse göstergeler yerinde kalır.
+    hud.update(hudFrame({ health: 10 }), 1010);
+    expect(labels()[0]).toBe('Araç canı 60/100');
+    hud.update(hudFrame({ health: 10 }), 1200);
+    expect(labels()[0]).toBe('Araç canı 10/100, düşük');
+    // Sürüş hızı, yön ve vites HUD'da yoktur.
+    expect(parent.querySelector('[data-testid="telemetry"]')).toBeNull();
+    expect(parent.querySelector('.vt-hud__title')).toBeNull();
+    // Okuyucu çubuğun adını ve değerini duyar.
+    const health = find('vitals').querySelector('[role="progressbar"]')!;
+    expect(health.getAttribute('aria-label')).toBe('Araç canı');
+    expect(health.getAttribute('aria-valuetext')).toContain('10/100');
+    hud.destroy();
+  });
+
+  it('yürüyücüde Shift hızlanması yoktur: çubuk "Atılım deposu", Space ipucu ve düğmesi "Atılım" olur', () => {
+    const { hud, find, parent } = mount(true);
+    const label = (): string | null =>
+      find('vitals').querySelectorAll('[role="progressbar"]')[1].getAttribute('aria-label');
+    const hints = (): string[] =>
+      [...parent.querySelectorAll<HTMLElement>('.vt-hud__hint:not([hidden])')].map(
+        (row) => row.textContent ?? '',
+      );
+    hud.update(hudFrame({ kind: 'tank' }), 1000);
+    expect(label()).toBe('Hızlanma deposu');
+    expect(hints().some((text) => text.includes('Hızlanma'))).toBe(true);
+    expect(find('touch-boost').hidden).toBe(false);
+    expect(find('touch-brake').getAttribute('aria-label')).toBe('Fren');
+
+    hud.update(hudFrame({ kind: 'walker' }), 2000);
+    expect(label()).toBe('Atılım deposu');
+    expect(hints().some((text) => text.includes('Hızlanma'))).toBe(false);
+    expect(hints().some((text) => text.includes('Atılım'))).toBe(true);
+    expect(find('touch-boost').hidden).toBe(true);
+    expect(find('touch-brake').getAttribute('aria-label')).toBe('Atılım');
+
+    hud.update(hudFrame({ kind: 'tank' }), 3000);
+    expect(label()).toBe('Hızlanma deposu');
+    expect(find('touch-boost').hidden).toBe(false);
+    hud.destroy();
+  });
+
+  it('tank dışında çubuk, ipucu ve düğme aracın yeteneğinin adını taşır; yetenek değişince etiket yenilenir', () => {
+    const { hud, find, parent } = mount(true);
+    const label = (): string | null =>
+      find('vitals').querySelectorAll('[role="progressbar"]')[1].getAttribute('aria-label');
+    const hints = (): string =>
+      [...parent.querySelectorAll<HTMLElement>('.vt-hud__hint:not([hidden])')]
+        .map((row) => row.textContent ?? '')
+        .join('|');
+    const names = [
+      ['leap', 'Sıçrama'],
+      ['shield', 'Kalkan'],
+      ['overdrive', 'Aşırı yük'],
+      ['ram', 'Çarpma atağı'],
+      ['siege', 'Kuşatma'],
+      ['dash', 'Atılım'],
+    ] as const;
+    let now = 1000;
+    for (const [skill, name] of names) {
+      hud.update(hudFrame({ kind: 'walker', skill }), (now += 500));
+      expect(label(), skill).toBe(`${name} deposu`);
+      expect(hints(), skill).toContain(name);
+      expect(find('touch-brake').getAttribute('aria-label'), skill).toBe(name);
+      expect(find('touch-boost').hidden).toBe(true);
+    }
+    // Tanka dönünce yetenek adı bırakılır.
+    hud.update(hudFrame({ kind: 'tank', skill: 'dash' }), (now += 500));
+    expect(label()).toBe('Hızlanma deposu');
+    expect(hints()).not.toContain('Atılım');
+    hud.destroy();
+  });
+
+  it('kontrol ipuçları girişten 10 sn sonra solar; sayaç ilk güncellemede başlar', () => {
+    const { hud, find } = mount();
+    const hints = find('control-hints');
+    // Sahne saati sahneyle başlamaz: sayaç ilk güncellemeden sayılır.
+    hud.update(hudFrame(), 50_000);
+    hud.update(hudFrame(), 59_900);
+    expect(hints.classList.contains('vt-hud__hints--faded')).toBe(false);
+    hud.update(hudFrame(), 60_000);
+    expect(hints.classList.contains('vt-hud__hints--faded')).toBe(true);
+    // Solduktan sonra geri gelmez.
+    hud.update(hudFrame(), 61_000);
+    expect(hints.classList.contains('vt-hud__hints--faded')).toBe(true);
+    hud.destroy();
+  });
+
+  it('çevrimdışı duraklatma "Duraklatıldı" der, canlı dünyada "Menü" ve not gösterir', () => {
+    const offline = mount();
+    offline.hud.showPause();
+    expect(offline.find('pause').textContent).toContain('Duraklatıldı');
+    expect(offline.find('pause-resume').textContent).toBe('Devam et');
+    expect(offline.find('pause').textContent).not.toContain('sunucuda');
+    expect(offline.find('touch-pause').getAttribute('aria-label')).toBe('Duraklat');
+    offline.hud.destroy();
+
+    const live = mount(false, true, true);
+    live.hud.showPause();
+    const sheet = live.find('pause');
+    expect(sheet.querySelector('h1')!.textContent).toBe('Menü');
+    expect(sheet.textContent).toContain('Dünya sunucuda akmaya devam eder');
+    expect(live.find('pause-resume').textContent).toBe('Savaşa dön');
+    expect(live.find('touch-pause').getAttribute('aria-label')).toBe('Menü');
+    expect(live.find('control-hints').textContent).toContain('Menü');
+    expect(live.find('control-hints').textContent).not.toContain('Duraklat');
+    live.hud.destroy();
+  });
+
+  it('hızlanma durumu HUD katmanına yansır', () => {
+    const { hud, parent } = mount();
+    hud.update(hudFrame({ boost: 25, boosting: true }), 0);
+    expect(parent.querySelector('.vt-hud')!.classList.contains('vt-hud--boosting')).toBe(true);
+    hud.update(hudFrame(), 1000);
+    expect(parent.querySelector('.vt-hud')!.classList.contains('vt-hud--boosting')).toBe(false);
+    hud.destroy();
+  });
+
+  it('dokunuş dokunmatik kipe, tuş masaüstü kipine geçirir', async () => {
+    const { hud, find } = mount();
+    const touch = new Event('pointerdown') as PointerEvent;
+    Object.defineProperty(touch, 'pointerType', { value: 'touch' });
+    document.dispatchEvent(touch);
+    await vi.waitFor(() => {
+      hud.update(hudFrame(), 0);
+      expect(find('hud').dataset.mode).toBe('touch');
+    });
+    expect(find('control-hints').hidden).toBe(true);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }));
+    await vi.waitFor(() => {
+      hud.update(hudFrame(), 0);
+      expect(find('hud').dataset.mode).toBe('desktop');
+    });
+    expect(find('touch-controls').hidden).toBe(true);
+    hud.destroy();
+  });
+
+  it('dokunmatik düğmeler sanal kaynağa yazar; kısa dokunuş kaybolmaz', () => {
+    const { hud, find, source } = mount(true);
+    const boost = find('touch-boost');
+    boost.dispatchEvent(pointer('pointerdown'));
+    expect(read(source).boost).toBe(true);
+    boost.dispatchEvent(pointer('pointerup'));
+    expect(read(source).boost).toBe(false);
+    const brake = find('touch-brake');
+    brake.dispatchEvent(pointer('pointerdown'));
+    expect(read(source).brake).toBe(true);
+    brake.dispatchEvent(pointer('pointerup'));
+    expect(read(source).brake).toBe(false);
+    find<HTMLButtonElement>('touch-zoomIn').click();
+    expect(read(source).zoomIn).toBe(true);
+    expect(read(source).zoomIn).toBe(false);
+    find<HTMLButtonElement>('touch-pause').click();
+    hud.setTouchMode(false);
+    expect(read(source).pause).toBe(false);
+    hud.destroy();
+  });
+
+  it('sabit joystick sürüklendikçe eksen kaynağına yazar, bırakınca sıfırlar', () => {
+    const { hud, find, sticks } = mount(true);
+    const base = find('stick-move').querySelector<HTMLElement>('.vol-joystick__base')!;
+    const event = (type: string, x: number, y: number) => {
+      const pointerEvent = new Event(type, { bubbles: true, cancelable: true }) as PointerEvent;
+      Object.defineProperties(pointerEvent, {
+        pointerId: { value: 7 },
+        clientX: { value: x },
+        clientY: { value: y },
+      });
+      return pointerEvent;
+    };
+    base.dispatchEvent(event('pointerdown', 0, 0));
+    window.dispatchEvent(event('pointermove', 60, 0));
+    expect(sticks.isHeld('move')).toBe(true);
+    expect(sticks.write('move', Vector2.zero()).x).toBeGreaterThan(0.5);
+    window.dispatchEvent(event('pointerup', 60, 0));
+    expect(sticks.isHeld('move')).toBe(false);
+    hud.setTouchMode(false);
+    expect(sticks.hasInput).toBe(false);
+    hud.destroy();
+  });
+
+  it('duraklatma: düğmeyle kapanış devam eder, oyun kapatınca etmez', () => {
+    const { hud, onResume, find } = mount();
+    hud.showPause();
+    expect(hud.paused).toBe(true);
+    find<HTMLButtonElement>('pause-resume').click();
+    expect(hud.paused).toBe(false);
+    expect(onResume).toHaveBeenCalledTimes(1);
+    hud.showPause();
+    hud.hidePause();
+    expect(onResume).toHaveBeenCalledTimes(1);
+    hud.destroy();
+  });
+
+  it('duraklatma ayar satırı taşımaz; ayarlar ve geliştirici ayrı düğmeyle şeridin içinde açılır', async () => {
+    localStorage.clear();
+    const settings = new GameSettings(
+      new ScopedSaveManager({
+        synced: new LocalStorageAdapter(),
+        device: new LocalStorageAdapter(),
+      }),
+      'Linux',
+    );
+    await settings.load();
+    const { hud, find, parent } = mount(false, true, false, {
+      settings,
+      displayAvailable: true,
+    } as unknown as GameServices);
+    hud.showPause();
+    const sheet = find('pause');
+    // Ana görünüm: yalnız düğmeler; ses, kalite, senaryo ve tohum satırı yoktur.
+    expect(sheet.querySelector('input, select, [role="radio"]')).toBeNull();
+    expect(find('pause-settings').textContent).toBe('Ayarlar');
+    expect(find('pause-dev').textContent).toBe('Geliştirici');
+
+    find('pause-settings').click();
+    expect(sheet.hidden).toBe(true);
+    const settingsScreen = find('settings');
+    expect(settingsScreen.hidden).toBe(false);
+    expect(find('dev').hidden).toBe(true);
+    const buttons = [...find('settings-quality').querySelectorAll<HTMLButtonElement>('button')];
+    expect(buttons.map((button) => button.textContent)).toEqual(['Yüksek', 'Düşük']);
+    buttons[1].click();
+    await vi.waitFor(() => expect(settings.get().quality).toBe('low'));
+    expect(settingsScreen.querySelector('[data-testid="settings-volume"]')).not.toBeNull();
+    expect(settingsScreen.querySelector('[data-testid="dev-scenario"]')).toBeNull();
+    find('settings-back').click();
+    expect(sheet.hidden).toBe(false);
+    expect(settingsScreen.hidden).toBe(true);
+    expect(document.activeElement).toBe(find('pause-settings'));
+
+    find('pause-dev').click();
+    expect(find('dev').hidden).toBe(false);
+    expect(find('dev').querySelector('[data-testid="dev-scenario"]')).not.toBeNull();
+    expect(find('dev').querySelector('[data-testid="dev-seed"]')).not.toBeNull();
+    find('dev-back').click();
+    expect(sheet.hidden).toBe(false);
+
+    // Katmanı kapatmak görünümü ana şeride döndürür.
+    find('pause-settings').click();
+    find('pause-resume');
+    hud.hidePause();
+    hud.showPause();
+    expect(sheet.hidden).toBe(false);
+    expect(find('settings').hidden).toBe(true);
+    expect(parent.querySelectorAll('[data-testid="pause"]')).toHaveLength(1);
+    hud.destroy();
+    settings.dispose();
+  });
+
+  it('ayar kaydı yoksa (servissiz HUD) ayarlar ve geliştirici düğmesi de yoktur', () => {
+    const { hud, find } = mount();
+    hud.showPause();
+    expect(find('pause-settings')).toBeNull();
+    expect(find('pause-dev')).toBeNull();
+    expect(find('pause-resume')).not.toBeNull();
+    hud.destroy();
+  });
+
+  it('dil değişimi metinleri yeniler; native kabukta tam ekran düğmesi yok', async () => {
+    const { hud, find, parent } = mount(true, false);
+    expect(parent.querySelector('.vt-hud__fullscreen')).toBeNull();
+    await i18next.changeLanguage('en');
+    hud.update(hudFrame(), 0);
+    expect(find('vitals').querySelector('[role="progressbar"]')!.getAttribute('aria-label')).toBe(
+      'Vehicle health',
+    );
+    expect(find('touch-boost').getAttribute('aria-label')).toBe('Boost');
+    expect(find('touch-brake').getAttribute('aria-label')).toBe('Brake');
+    await i18next.changeLanguage('tr');
+    hud.destroy();
+    expect(parent.querySelector('[data-testid="hud"]')).toBeNull();
+  });
+
+  it('tam ekran düğmesi CORE denetleyicisini tetikler', () => {
+    const { hud, parent } = mount();
+    const button = parent.querySelector<HTMLButtonElement>('.vt-hud__fullscreen')!;
+    expect(button.getAttribute('aria-label')).toBe('Tam ekran');
+    button.click();
+    hud.destroy();
+  });
+
+  it('parça ve bindirme katmanına ekler, sökücü parçayı kaldırır', () => {
+    const { hud, parent } = mount();
+    const part = document.createElement('div');
+    const overlay = document.createElement('div');
+    const unmount = hud.mount(part);
+    const unmountOverlay = hud.mountOverlay(overlay);
+    expect(parent.querySelector('.vt-hud')?.contains(part)).toBe(true);
+    expect(parent.contains(overlay)).toBe(true);
+    expect(parent.querySelector('.vt-hud')?.contains(overlay)).toBe(false);
+    unmount();
+    unmountOverlay();
+    expect(parent.contains(part)).toBe(false);
+    expect(parent.contains(overlay)).toBe(false);
+    hud.destroy();
+  });
+
+  it('bildirim anahtarını çevirip toast olarak gösterir', () => {
+    const { hud, parent } = mount();
+    hud.notify('voltest:online.lost', 'warning');
+    expect(parent.textContent).toContain(i18next.t('voltest:online.lost'));
+    hud.destroy();
+  });
+
+  it('duraklatma eylemleri düğme olur, dil ve değişimle yenilenir, menüyü kapatmaz', async () => {
+    const { hud, find, onResume } = mount();
+    const run = vi.fn();
+    hud.setPauseActions([
+      { id: 'online', labelKey: 'voltest:online.title', run },
+      { id: 'leave', labelKey: 'voltest:online.leave', variant: 'danger', run: vi.fn() },
+    ]);
+    hud.showPause();
+    expect(find('pause-online').textContent).toBe('Savaşa katıl');
+    expect(find('pause-leave').className).toContain('danger');
+    find('pause-online').click();
+    expect(run).toHaveBeenCalledOnce();
+    expect(hud.paused).toBe(true);
+    expect(onResume).not.toHaveBeenCalled();
+
+    await i18next.changeLanguage('en');
+    expect(find('pause-online').textContent).toBe('Join the war');
+    await i18next.changeLanguage('tr');
+
+    hud.setPauseActions([{ id: 'only', labelKey: 'voltest:online.leave', run }]);
+    expect(document.querySelector('[data-testid="pause-online"]')).toBeNull();
+    expect(find('pause-only')).not.toBeNull();
+    hud.destroy();
+  });
+
+  it('eylemler ve devam düğmesi aynı yapışkan altlıktadır: panel kayarken ikisi de erişilebilir', () => {
+    const { hud, find } = mount();
+    hud.setPauseActions([{ id: 'online', labelKey: 'voltest:online.title', run: vi.fn() }]);
+    hud.showPause();
+    const footer = find('pause-resume').closest('.vt-pause__footer');
+    expect(footer).not.toBeNull();
+    expect(footer?.contains(find('pause-online'))).toBe(true);
+    hud.destroy();
+  });
+});

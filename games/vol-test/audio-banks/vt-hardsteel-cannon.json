@@ -1,0 +1,171 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "vt-hardsteel-cannon",
+    "hash": "sha256:9c9b00fefe2fa7bb49e560648f1f927c5cbee070dd4d9f6096fd89686bcf685e",
+    "path": "devtools/audio-synth/records/families/vt-hardsteel-cannon/family.json",
+    "seed": 8301,
+    "variationPolicy": "role-subrange-v1",
+    "version": 3
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/vol-test",
+  "quality": {
+    "hash": "sha256:f9e336cb03669f173b4f8a6b886238cbddd17f27feb2b1e6a9a2d6b8c071164f",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/vt-hardsteel-cannon/quality.json"
+  },
+  "roleAxes": {
+    "rarity": [
+      "common",
+      "rare"
+    ],
+    "weight": [
+      "heavy",
+      "light"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 13665,
+        "encodedHash": "sha256:9068af6accd4b44765d9a8772ef044069c63af3dc43046f83059637fd8e78bf5",
+        "path": "public/assets/audio/sfx/steel/families/cannon/cannon-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.89,
+        "centroidHz": 407.26492692940644,
+        "pitchHz": 171.7559261885373
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "cannon-a",
+      "loudness": {
+        "integratedLufs": -26.371134659960674,
+        "maxMomentaryLufs": -20.467862473549783,
+        "truePeakDbtp": -5.058898261855348
+      },
+      "manifest": {
+        "hash": "sha256:8fcabd64e5eb0374525569ec7327e9b6f40b93bf381fdd849d60effc7b81240c",
+        "path": "audio-manifests/sfx/steel/families/cannon/cannon-a.json"
+      },
+      "pcmHash": "sha256:09f156f93a7c55b1fbefaaf29560490b34e27474116ecbd36a9e183d00e8d55b",
+      "programHash": "sha256:c915e3761fbe5799ce4ff8ce3f8766056398e5a7ace1a585e838153c73f9e9f2",
+      "roles": {
+        "rarity": "common",
+        "weight": "light"
+      },
+      "tags": [
+        "cannon"
+      ],
+      "variantId": "v-f3fe69b7476f0ef0"
+    },
+    {
+      "asset": {
+        "bytes": 13665,
+        "encodedHash": "sha256:92d889a477342caffc74af8be7442dbfbc9e1392e6bab2b2c92719191d38e9a2",
+        "path": "public/assets/audio/sfx/steel/families/cannon/cannon-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.89,
+        "centroidHz": 356.092213044761,
+        "pitchHz": 171.7725227487637
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "cannon-b",
+      "loudness": {
+        "integratedLufs": -26.25521217892245,
+        "maxMomentaryLufs": -20.350255358914776,
+        "truePeakDbtp": -4.9440029845754125
+      },
+      "manifest": {
+        "hash": "sha256:d64a19425a343ace3eb693557828ce9f83aea1de016eb22aa75f66e6c9175914",
+        "path": "audio-manifests/sfx/steel/families/cannon/cannon-b.json"
+      },
+      "pcmHash": "sha256:c9baed9af3909559b9ba196909e668e428a1fc2bfaadb8cad7ec03d014f5acbe",
+      "programHash": "sha256:dd8b9542ae95bda0616ae289ccabe965aa67ca47a82c880ad431c37cbb92d567",
+      "roles": {
+        "rarity": "common",
+        "weight": "heavy"
+      },
+      "tags": [
+        "cannon"
+      ],
+      "variantId": "v-48cb18300c71ade7"
+    },
+    {
+      "asset": {
+        "bytes": 13612,
+        "encodedHash": "sha256:8e81df29a0d913e22cfc1183e777119cfd2baa9a2423e1310581128cba4ee1f1",
+        "path": "public/assets/audio/sfx/steel/families/cannon/cannon-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.89,
+        "centroidHz": 403.8299216300951,
+        "pitchHz": 171.75822265851383
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "cannon-c",
+      "loudness": {
+        "integratedLufs": -27.19172635805404,
+        "maxMomentaryLufs": -21.277898188524325,
+        "truePeakDbtp": -4.872744473687088
+      },
+      "manifest": {
+        "hash": "sha256:709d57198af09050b1580c184ca2ee97f91e619cf43b9b6da9ba25d82bfac7d4",
+        "path": "audio-manifests/sfx/steel/families/cannon/cannon-c.json"
+      },
+      "pcmHash": "sha256:f1206b0fcfd3e02593f6441250394b0f509ccaf6a4b472cd9aa74871be1fba0c",
+      "programHash": "sha256:1c02a090b90ca1052416223df5734056de27aa137715f75f47ac6948e6efaba5",
+      "roles": {
+        "rarity": "rare",
+        "weight": "light"
+      },
+      "tags": [
+        "cannon"
+      ],
+      "variantId": "v-e67cba64c51a8834"
+    },
+    {
+      "asset": {
+        "bytes": 13568,
+        "encodedHash": "sha256:70d54817c6fd9a201191135d9eaf6a70b5307f08f1fc5b2f041cef34b3dc3844",
+        "path": "public/assets/audio/sfx/steel/families/cannon/cannon-d.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.89,
+        "centroidHz": 357.1039026790287,
+        "pitchHz": 171.7557528315976
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "cannon-d",
+      "loudness": {
+        "integratedLufs": -28.397563146879452,
+        "maxMomentaryLufs": -22.462045216532005,
+        "truePeakDbtp": -5.564515511959693
+      },
+      "manifest": {
+        "hash": "sha256:fed0edfc880acc4dae4ab5b0a54e26145d20c3413660fd8144d6df92bdf94616",
+        "path": "audio-manifests/sfx/steel/families/cannon/cannon-d.json"
+      },
+      "pcmHash": "sha256:f52147ff289808cd36fff2c17ee4402745dbca9b526928db0a4432aa407bd68c",
+      "programHash": "sha256:6e9099c0d769b39f19013dce9131147c8b0273954dd34a5ca18135761f6a88e5",
+      "roles": {
+        "rarity": "rare",
+        "weight": "heavy"
+      },
+      "tags": [
+        "cannon"
+      ],
+      "variantId": "v-b3b9ffabc098ae17"
+    }
+  ]
+}

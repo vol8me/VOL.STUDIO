@@ -1,0 +1,103 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": null,
+        "measured": 2,
+        "median": null,
+        "min": null,
+        "scale": null
+      },
+      "centroidHz": {
+        "max": null,
+        "measured": 2,
+        "median": null,
+        "min": null,
+        "scale": null
+      },
+      "maxMomentaryLufs": {
+        "max": null,
+        "measured": 2,
+        "median": null,
+        "min": null,
+        "scale": null
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 2,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.23763,
+    "medianDistance": 0.23763,
+    "minDistance": 0.23763,
+    "nearIdentical": [],
+    "pairs": 1
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 8.751,
+    "medoid": "hit-a",
+    "members": [
+      {
+        "distance": 0,
+        "key": "hit-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 8.751,
+        "key": "hit-b",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "hit-a",
+      "nearest": {
+        "distance": 0.23763,
+        "key": "hit-b"
+      },
+      "pcmHash": "sha256:aa829af484a017fbd48d08514bdd2b9153e4567abb8d3b859fff7805f520ea16"
+    },
+    {
+      "key": "hit-b",
+      "nearest": {
+        "distance": 0.23763,
+        "key": "hit-a"
+      },
+      "pcmHash": "sha256:48c46c25ba2193bd39f7eacfed96702da6947af69a473a5d72614e835642a542"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 2
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

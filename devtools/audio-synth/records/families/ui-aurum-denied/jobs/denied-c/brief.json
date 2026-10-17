@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "denied"
+  ],
+  "durationSeconds": {
+    "max": 0.4,
+    "min": 0.112
+  },
+  "id": "ui-aurum-denied-denied-c",
+  "intent": "yaldızlı cam ve lake: denied Varyant denied-c (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum denied — denied-c"
+}

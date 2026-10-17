@@ -1,0 +1,24 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "intensity:soft",
+    "rarity:common",
+    "weight:heavy",
+    "tap"
+  ],
+  "durationSeconds": {
+    "max": 1.5,
+    "min": 0.5
+  },
+  "id": "reference-shell-hits-soft-heavy",
+  "intent": "audio-synth referans ailesi: ResonantShell kimliğinden yoğunluk ve ağırlık rolleriyle sekiz vuruş varyantı. Yalnız aile üretim ve bank yolunu uçtan uca sınamak içindir; hiçbir oyun tüketmez. Varyant soft-heavy (intensity:soft, rarity:common, weight:heavy).",
+  "kind": "acoustic",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Referans kabuk vuruşları — soft-heavy"
+}

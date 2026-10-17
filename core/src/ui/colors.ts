@@ -6,12 +6,12 @@ export const VOL_COLORS = {
   uiSurface2: '#212a33',
   uiSurface3: '#2a3540',
   uiBorderSoft: '#34414d',
-  uiBorderStrong: '#495865',
+  uiBorderStrong: '#68788a',
 
   // metin
   uiText: '#e8eef5',
   uiTextSecondary: '#b5c1cc',
-  uiTextMuted: '#83919d',
+  uiTextMuted: '#96a4b0',
   uiTextDisabled: '#5d6a75',
   uiIcon: '#9aa7b3',
 

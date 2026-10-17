@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-6f92c0f3a917bfe1": {
+        "hash": "sha256:e689819c0d3242a93f0e92b9e89cdeffa65ba664f0fcc6c1ad50b212ac5858f5",
+        "path": "analyses/r-6f92c0f3a917bfe1.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:af42093f8552810ce991d7d7b9d1be048ec3ea7852e0413c19ec1f8fa3c45b1a",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:af42093f8552810ce991d7d7b9d1be048ec3ea7852e0413c19ec1f8fa3c45b1a",
+      "hash": "sha256:37900f9ec8d8ec2e736c24d722dff561b888d8ada3b05c2d7e5e03c97effc832",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:4eb18272f60f908f2aa9d0d77b0caa0d275d8676acee367420954c6b565546f2",
+      "path": "games/vol-test/audio-manifests/ui/steel/resume.json"
+    },
+    "renders": {
+      "r-6f92c0f3a917bfe1": {
+        "hash": "sha256:2cd9d9272b3b8f2a7efabe8ef438b22f088c28498cf304783d1121ace5811b82",
+        "path": "renders/r-6f92c0f3a917bfe1.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:be2b85dbf8c05c73b698d219a1fd9ad87b6646231993c7639ca4a9cbab67d9d9",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-ui-resume",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/resume.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "violations": [],
+  "incomplete": [
+    {
+      "scope": "tab/scroll",
+      "rule": "color-contrast",
+      "target": ".vol-text--body:nth-child(6)",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    },
+    {
+      "scope": "tab/scroll",
+      "rule": "color-contrast",
+      "target": ".vol-text--body:nth-child(7)",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    },
+    {
+      "scope": "tab/touch",
+      "rule": "aria-prohibited-attr",
+      "target": "span[aria-label=\"LMB\"]",
+      "owner": "UI-12.2",
+      "reason": "Glyph span'ı rolsüz aria-label taşıyor; elle inceleme"
+    },
+    {
+      "scope": "tab/touch",
+      "rule": "aria-prohibited-attr",
+      "target": "span[aria-label=\"Space\"]",
+      "owner": "UI-12.2",
+      "reason": "Glyph span'ı rolsüz aria-label taşıyor; elle inceleme"
+    },
+    {
+      "scope": "tab/touch",
+      "rule": "color-contrast",
+      "target": "[id^=\"vol-charge-label-\"]",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    },
+    {
+      "scope": "tab/hud",
+      "rule": "color-contrast",
+      "target": "[id^=\"vol-bar-label-\"]",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": "[id^=\"vol-bar-label-\"]",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": ".vol-showcase-material__frame-header > .vol-text--muted.vol-text",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": ".vol-mat--pressed > .vol-text--muted.vol-text",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": ".vol-mat--well > .vol-text--muted.vol-text",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": ".vol-showcase-material__frame > p",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": "div[data-material=\"Panel\"] > .vol-text--muted.vol-text",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": "div[data-material=\"Plate\"] > .vol-text--muted.vol-text",
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
+    }
+  ]
+}

@@ -1,0 +1,298 @@
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { builtinModules } from 'node:module';
+import { dirname, join, relative, resolve, sep } from 'node:path';
+import ts from 'typescript';
+import { sourceImports } from './sourceImports.mjs';
+import { frozenWorkspacePaths, loadRepoLifecycle, posixPath } from './workspaceLifecycle.mjs';
+
+/**
+ * Devtool → devtool kenarları yalnız burada gerekçesiyle yazılırsa meşrudur.
+ * Biçim: `{ '<sahip>': { '<hedef>': '<gerekçe>' } }`; bugün böyle kenar yoktur.
+ */
+const DEVTOOL_EDGES = {};
+
+/**
+ * Başka bir workspace paketine yalnız `exports` haritasındaki yoldan girilir;
+ * haritası olmayan paket dışarıya kapalıdır.
+ */
+export function exportViolation(specifier, target) {
+  if (!specifier.startsWith(target.name)) return null;
+  const rest = specifier.slice(target.name.length);
+  if (rest !== '' && !rest.startsWith('/')) return null;
+  const subpath = rest === '' ? '.' : `.${rest}`;
+  const exports = target.manifest.exports;
+  if (exports === undefined) {
+    return `"${target.name}" exports tanımlamıyor; paket dışarıya kapalıdır ("${specifier}").`;
+  }
+  const keys = typeof exports === 'string' ? ['.'] : Object.keys(exports);
+  return keys.includes(subpath) ? null : `"${specifier}" ${target.name} exports haritasında yok.`;
+}
+const SKIP_DIRS = new Set([
+  'node_modules',
+  'dist',
+  'coverage',
+  'test-results',
+  '.cache',
+  'gen',
+  'target',
+]);
+const SOURCE = /\.(?:[cm]?[jt]s|[jt]sx)$/;
+
+/**
+ * `network/src` dört yüzeye bölünür: protokol ve istemci tarayıcıda da çalışır, sunucu ve yük sürücüsü
+ * (`drive`) yalnız Node'dadır. Sürücü gerçek istemciyi kullanır ama sunucu kodunu içe aktarmaz; hiçbir
+ * yüzey sürücüye uzanamaz. Her yüzeyin içe aktaramayacağı kardeş yüzeyler.
+ */
+const NETWORK_SIDES = {
+  protocol: ['client', 'server', 'drive'],
+  client: ['server', 'drive'],
+  server: ['client', 'drive'],
+  drive: ['server'],
+};
+const NODE_SIDES = new Set(['server', 'drive']);
+const NODE_ONLY_PACKAGES = new Set(['@colyseus/core', '@colyseus/ws-transport']);
+const NODE_BUILTINS = new Set(builtinModules);
+
+function inside(parent, child) {
+  const path = relative(parent, child);
+  return path === '' || (path !== '..' && !path.startsWith(`..${sep}`) && !path.startsWith(sep));
+}
+
+function packagesAt(root) {
+  const dirs = ['core', 'tauri-v2', 'network'];
+  for (const group of ['games', 'devtools']) {
+    if (!existsSync(join(root, group))) continue;
+    for (const entry of readdirSync(join(root, group), { withFileTypes: true })) {
+      if (entry.isDirectory() && !SKIP_DIRS.has(entry.name)) dirs.push(`${group}/${entry.name}`);
+    }
+  }
+  return dirs
+    .filter((dir) => existsSync(join(root, dir, 'package.json')))
+    .map((dir) => {
+      const manifest = JSON.parse(readFileSync(join(root, dir, 'package.json'), 'utf8'));
+      return {
+        dir,
+        root: resolve(root, dir),
+        name: manifest.name,
+        manifest,
+        kind: dir.startsWith('games/')
+          ? 'game'
+          : dir.startsWith('devtools/')
+            ? 'tool'
+            : dir === 'core'
+              ? 'core'
+              : dir === 'network'
+                ? 'network'
+                : 'platform',
+      };
+    });
+}
+
+function walk(dir, visit) {
+  if (!existsSync(dir)) return;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (SKIP_DIRS.has(entry.name) || entry.isSymbolicLink()) continue;
+    const file = join(dir, entry.name);
+    if (entry.isDirectory()) walk(file, visit);
+    else if (SOURCE.test(entry.name) && !/\.d\.[cm]?ts$/.test(entry.name)) visit(file);
+  }
+}
+
+/** `network/src/<yüzey>` içindeki bir dosyanın kardeş yüzeye ya da Node'a uzanan kenarları. */
+function networkSideProblems(owner, file, specifier, where) {
+  const side = relative(join(owner.root, 'src'), file).split(sep)[0];
+  const forbidden = NETWORK_SIDES[side];
+  if (!forbidden) return [];
+  const problems = [];
+  for (const other of forbidden) {
+    const viaName = specifier === `${owner.name}/${other}`;
+    const viaPath =
+      specifier.startsWith('.') &&
+      inside(join(owner.root, 'src', other), resolve(dirname(file), specifier));
+    if (viaName || viaPath) {
+      problems.push(`${where}: network ${side} kodu ${other} kodunu içe aktaramaz.`);
+    }
+  }
+  if (!NODE_SIDES.has(side)) {
+    const bare = specifier.startsWith('node:') ? specifier.slice(5) : specifier;
+    if (
+      specifier.startsWith('node:') ||
+      NODE_BUILTINS.has(bare.split('/')[0]) ||
+      NODE_ONLY_PACKAGES.has(specifier)
+    ) {
+      problems.push(
+        `${where}: network ${side} kodu tarayıcıda da çalışır; Node/sunucu bağımlılığı içe aktaramaz ("${specifier}").`,
+      );
+    }
+  }
+  return problems;
+}
+
+/**
+ * Runtime, manifest ve devtool sunucu/script kenarları aynı kurala tabidir.
+ * Import sözdizimi AST'den, tsconfig alias'ları TypeScript çözümleyicisinden
+ * gelir. Yorumlar kenar değildir; ts/js ve sabit dinamik importlar kenardır.
+ * Değişkenle kurulan import hedefleri statik olarak çözülemez.
+ */
+export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root)) {
+  const problems = [];
+  const packages = packagesAt(root);
+  // Frozen paketler grafikte HEDEF olarak kalır (aktif → frozen kenar hâlâ
+  // yakalanır) ama SAHİP olarak taranmaz: manifestleri ve kaynakları
+  // değiştirilemez, bulunan bir ihlal düzeltilemez.
+  const frozenDirs = new Set(lifecycle ? frozenWorkspacePaths(lifecycle) : []);
+  const byName = new Map(packages.map((pkg) => [pkg.name, pkg]));
+  const graph = new Map(packages.map((pkg) => [pkg.name, new Set()]));
+  const configCache = new Map();
+  const ownerOf = (file) => packages.find((pkg) => inside(pkg.root, file));
+  const optionsFor = (file) => {
+    const config = ts.findConfigFile(dirname(file), ts.sys.fileExists);
+    if (!config) return { moduleResolution: ts.ModuleResolutionKind.Bundler, allowJs: true };
+    if (!configCache.has(config)) {
+      const raw = ts.readConfigFile(config, ts.sys.readFile);
+      configCache.set(
+        config,
+        ts.parseJsonConfigFileContent(raw.config ?? {}, ts.sys, dirname(config)).options,
+      );
+    }
+    return configCache.get(config);
+  };
+  const targetOf = (specifier, file) => {
+    const name = specifier.startsWith('@')
+      ? specifier.split('/').slice(0, 2).join('/')
+      : specifier.split('/')[0];
+    if (byName.has(name)) return byName.get(name);
+    if (specifier.startsWith('.')) return ownerOf(resolve(dirname(file), specifier));
+    const resolved = ts.resolveModuleName(specifier, file, optionsFor(file), ts.sys).resolvedModule;
+    return resolved ? ownerOf(resolved.resolvedFileName) : undefined;
+  };
+  const check = (owner, target, where, runtime) => {
+    if (!target || target === owner) return;
+    graph.get(owner.name)?.add(target.name);
+    const allowed = DEVTOOL_EDGES[owner.name]?.[target.name];
+    if (owner.kind === 'core' && target.kind !== 'core') {
+      problems.push(`${where}: CORE bir tüketici paketi import ediyor ("${target.name}").`);
+    } else if (owner.kind === 'platform' && (target.kind === 'game' || target.kind === 'tool')) {
+      problems.push(`${where}: platform katmanı bir oyun/devtool tüketiyor ("${target.name}").`);
+    } else if (
+      owner.kind === 'network' &&
+      (target.kind === 'game' || target.kind === 'tool' || target.kind === 'platform')
+    ) {
+      problems.push(
+        `${where}: network paketi oyun, devtool veya native kabuğa bağımlı olamaz ("${target.name}").`,
+      );
+    } else if (
+      owner.kind === 'game' &&
+      (target.kind === 'game' || (runtime && target.kind === 'tool'))
+    ) {
+      problems.push(
+        `${where}: oyun ${runtime ? 'çalışma zamanı' : 'bağımlılığı'} yasak pakete uzanıyor ("${
+          target.name
+        }").`,
+      );
+    } else if (
+      owner.kind === 'tool' &&
+      (target.kind === 'game' || (target.kind === 'tool' && !allowed?.trim()))
+    ) {
+      problems.push(`${where}: devtool bildirilmemiş/yasak pakete uzanıyor ("${target.name}").`);
+    }
+  };
+  for (const owner of packages) {
+    if (frozenDirs.has(owner.dir)) continue;
+    for (const field of [
+      'dependencies',
+      'optionalDependencies',
+      'peerDependencies',
+      'devDependencies',
+    ]) {
+      for (const name of Object.keys(owner.manifest[field] ?? {})) {
+        check(
+          owner,
+          byName.get(name),
+          `${owner.dir}/package.json (${field})`,
+          field !== 'devDependencies',
+        );
+      }
+    }
+    const roots =
+      owner.kind === 'tool'
+        ? ['src', 'server', 'shared', 'scripts']
+        : owner.kind === 'game'
+          ? ['src', 'server', 'shared']
+          : ['src'];
+    for (const directory of roots)
+      walk(join(owner.root, directory), (file) => {
+        for (const specifier of sourceImports(readFileSync(file, 'utf8'), file)) {
+          const where = posixPath(relative(root, file));
+          if (
+            owner.kind === 'game' &&
+            directory === 'src' &&
+            specifier.startsWith('.') &&
+            inside(join(owner.root, 'server'), resolve(dirname(file), specifier))
+          ) {
+            problems.push(`${where}: oyun istemcisi Node sunucu kaynağını içe aktaramaz.`);
+          }
+          if (
+            owner.kind === 'game' &&
+            directory === 'server' &&
+            specifier === '@volstudio/network/client'
+          ) {
+            problems.push(`${where}: Node sunucusu browser network istemcisini içe aktaramaz.`);
+          }
+          if (
+            owner.kind === 'game' &&
+            directory === 'src' &&
+            (specifier === '@volstudio/network/server' || specifier === '@volstudio/network/drive')
+          ) {
+            problems.push(
+              `${where}: oyun istemcisi network sunucu çalışma zamanını ya da yük sürücüsünü içe aktaramaz.`,
+            );
+          }
+          if (owner.kind === 'network') {
+            problems.push(...networkSideProblems(owner, file, specifier, where));
+          }
+          const target = targetOf(specifier, file);
+          check(owner, target, where, directory !== 'scripts');
+          if (target && target !== owner) {
+            const violation = exportViolation(specifier, target);
+            if (violation) problems.push(`${where}: ${violation}`);
+          }
+          if (
+            directory !== 'scripts' &&
+            specifier.startsWith('.') &&
+            !inside(owner.root, resolve(dirname(file), specifier))
+          ) {
+            problems.push(
+              `${where}: çalışma zamanı paketin dışına göreli yolla uzanıyor ("${specifier}").`,
+            );
+          }
+        }
+      });
+  }
+  for (const owner of packages) {
+    if (frozenDirs.has(owner.dir)) continue;
+    walk(join(owner.root, 'tests'), (file) => {
+      for (const specifier of sourceImports(readFileSync(file, 'utf8'), file)) {
+        const target = targetOf(specifier, file);
+        if (!target || target === owner) continue;
+        const violation = exportViolation(specifier, target);
+        if (violation) problems.push(`${posixPath(relative(root, file))}: ${violation}`);
+      }
+    });
+  }
+  const visiting = new Set();
+  const done = new Set();
+  const visit = (name, chain) => {
+    if (visiting.has(name)) {
+      problems.push(`Paket bağımlılıklarında döngü var: ${[...chain, name].join(' -> ')}`);
+      return;
+    }
+    if (done.has(name)) return;
+    visiting.add(name);
+    for (const target of graph.get(name) ?? []) visit(target, [...chain, name]);
+    visiting.delete(name);
+    done.add(name);
+  };
+  for (const name of graph.keys()) visit(name, []);
+  return [...new Set(problems)];
+}

@@ -1,0 +1,218 @@
+{
+  "channels": 1,
+  "description": "Kayma: metal-toprak sürtünmesi, öğütme ve çakıl.",
+  "durationSeconds": 3.6,
+  "effects": [
+    {
+      "params": {
+        "frequency": 38,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 300,
+        "gainDb": 2.5,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 7,
+        "mix": 0.55,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 7500,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "gainDb": -18.6,
+      "mechanism": "scrape",
+      "name": "slide",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 150,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 800,
+            "mode": "bandpass",
+            "q": 0.45
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "granularity": 2,
+          "material": "metal",
+          "pressure": 0.9,
+          "roughness": 0.7,
+          "speed": 2.2
+        },
+        "primitive": "source.friction",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -3.28,
+      "mechanism": "noise",
+      "name": "grind",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 120,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 700,
+            "mode": "lowpass",
+            "q": 0.7
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -21.59,
+      "mechanism": "debris",
+      "name": "grit",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 250,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 3500,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "clustering": 0.5,
+          "event": "pop",
+          "levelSpread": 10,
+          "pitch": 0.7,
+          "rate": 140,
+          "regularity": 0.1,
+          "sizeSpread": 0.6
+        },
+        "primitive": "source.micro-events",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -31.16,
+      "mechanism": "tonal",
+      "name": "moan",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 900,
+            "mode": "lowpass",
+            "q": 0.9
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "frequency": 210,
+          "waveform": "sawtooth"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    },
+    {
+      "gainDb": -8.1,
+      "mechanism": "noise",
+      "name": "sub",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 80,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "loop": {
+      "crossfadeSeconds": 0.3
+    },
+    "normalize": "peak",
+    "peakDbfs": -8
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 730106
+}

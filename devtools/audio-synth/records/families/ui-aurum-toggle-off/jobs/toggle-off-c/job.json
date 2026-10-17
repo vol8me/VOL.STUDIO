@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-a1821b85311ceecc": {
+        "hash": "sha256:34891fbeadee01b675ed369933e8d00b51ebe702fff9ccadf4b869141780e937",
+        "path": "analyses/r-a1821b85311ceecc.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:851828a9aac11fdb08969df2161ab36a90e75defbcc53ab8bcfd1abec68b0053",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:851828a9aac11fdb08969df2161ab36a90e75defbcc53ab8bcfd1abec68b0053",
+      "hash": "sha256:98dd2b81b80480d26b432a544c22d646f60178ed0c345fad9d6c2fe4b7fd43eb",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:ef1eb6efed886140c79e0020b4f11b62f70ed556a6f9d2220aba3a281e50d847",
+      "path": "core/audio-manifests/ui/aurum/toggle-off-c.json"
+    },
+    "renders": {
+      "r-a1821b85311ceecc": {
+        "hash": "sha256:3f411871ace554b8b89d195f030a447c21544a4959dc72ba66def79c17d783c1",
+        "path": "renders/r-a1821b85311ceecc.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:7a0446477c304f77e812330d64e1b269220d579065708245b97426d69b0242dc",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "toggle-off-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/toggle-off-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-toggle-off/toggle-off-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

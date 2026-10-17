@@ -1,3 +1,5 @@
+import { requiredAt } from '../../collections/requiredAt';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { Popup, type PopupPlacement } from './Popup';
 
 export interface ContextMenuItem {
@@ -21,6 +23,8 @@ export interface ContextMenuOptions {
   container?: HTMLElement;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /** Menü her kapandığında (seçim, Escape, dışa tıklama, tetikleyicinin kaybı) bir kez çağrılır. */
+  onClose?: () => void;
 }
 
 function isSeparator(entry: ContextMenuEntry): entry is ContextMenuSeparator {
@@ -35,8 +39,11 @@ function isSeparator(entry: ContextMenuEntry): entry is ContextMenuSeparator {
 export class ContextMenu {
   readonly popup: Popup;
   private readonly itemButtons: HTMLButtonElement[] = [];
-  private readonly boundClicks: (() => void)[] = [];
-  private readonly boundKeydowns: ((event: KeyboardEvent) => void)[] = [];
+  /**
+   * Tüm dinleyiciler tek bir kapsamda (`DisposableScope`) tutulur;
+   * `destroy()` ile topluca ve güvenli kaldırılır.
+   */
+  private readonly scope = new DisposableScope();
   private boundToggle: () => void;
   private readonly target: HTMLElement;
 
@@ -44,7 +51,11 @@ export class ContextMenu {
     this.target = target;
     this.popup = new Popup(target, {
       placement: options.placement ?? 'bottom-end',
-      onClose: () => this.target.setAttribute('aria-expanded', 'false'),
+      signal: 'ContextMenu',
+      onClose: () => {
+        this.target.setAttribute('aria-expanded', 'false');
+        options.onClose?.();
+      },
       container: options.container,
     });
     this.popup.element.classList.add('vol-context-menu');
@@ -93,15 +104,14 @@ export class ContextMenu {
       itemButton.tabIndex = -1;
 
       const onClick = (): void => {
-        this.popup.close();
+        // Seçimin kendi sesi vardır (menü öğesi tıklaması); ayrıca kapanış sesi çalmaz.
+        this.popup.close({ silent: true });
         entry.onSelect();
       };
-      itemButton.addEventListener('click', onClick);
-      this.boundClicks.push(onClick);
+      this.scope.addListener(itemButton, 'click', onClick);
 
       const onKeydown = (event: KeyboardEvent): void => this.handleItemKeydown(event, index);
-      itemButton.addEventListener('keydown', onKeydown);
-      this.boundKeydowns.push(onKeydown);
+      this.scope.addListener(itemButton, 'keydown', onKeydown as EventListener);
 
       this.itemButtons.push(itemButton);
       this.popup.element.appendChild(itemButton);
@@ -114,15 +124,11 @@ export class ContextMenu {
         this.focusItem(this.firstEnabledIndex());
       }
     };
-    this.target.addEventListener('click', this.boundToggle);
+    this.scope.addListener(this.target, 'click', this.boundToggle);
   }
 
   destroy(): void {
-    this.target.removeEventListener('click', this.boundToggle);
-    for (let i = 0; i < this.itemButtons.length; i++) {
-      this.itemButtons[i].removeEventListener('click', this.boundClicks[i]);
-      this.itemButtons[i].removeEventListener('keydown', this.boundKeydowns[i]);
-    }
+    this.scope.dispose();
     this.popup.destroy();
   }
 
@@ -147,6 +153,8 @@ export class ContextMenu {
     } else if (event.key === 'End') {
       nextIndex = this.lastEnabledIndex();
     } else if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
       this.popup.close();
       this.target.setAttribute('aria-expanded', 'false');
       this.target.focus();
@@ -169,7 +177,7 @@ export class ContextMenu {
     const count = this.itemButtons.length;
     for (let step = 1; step <= count; step++) {
       const candidate = (from + direction * step + count) % count;
-      if (!this.itemButtons[candidate].disabled) {
+      if (!requiredAt(this.itemButtons, candidate).disabled) {
         return candidate;
       }
     }
@@ -178,7 +186,7 @@ export class ContextMenu {
 
   private lastEnabledIndex(): number {
     for (let i = this.itemButtons.length - 1; i >= 0; i--) {
-      if (!this.itemButtons[i].disabled) return i;
+      if (!requiredAt(this.itemButtons, i).disabled) return i;
     }
     return -1;
   }

@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "toggle-on"
+  ],
+  "durationSeconds": {
+    "max": 0.3,
+    "min": 0.08
+  },
+  "id": "ui-aurum-toggle-on-toggle-on-c",
+  "intent": "yaldızlı cam ve lake: toggle-on Varyant toggle-on-c (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum toggle-on — toggle-on-c"
+}

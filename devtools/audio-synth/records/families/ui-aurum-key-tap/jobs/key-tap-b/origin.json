@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:90b9f8797516c86225d49fdfa1ca94e1a441bc4ecb301bac8f7b604946278230",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:12afcf3dc9a8e4348ab891f23e8b6817e00240443d5df5a40496eb7bae192419",
+    "familyId": "ui-aurum-key-tap",
+    "kind": "family-variant",
+    "variantId": "v-2a7a7a5420ebd70c",
+    "variantKey": "key-tap-b"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-7cae7b7e960ebfb1": {
+        "hash": "sha256:372c675605abf1dca9afcd23a653d250684b49a671d9e042e8412bf48cdef9c8",
+        "path": "analyses/r-7cae7b7e960ebfb1.json"
+      },
+      "r-877c022ba60ed15a": {
+        "hash": "sha256:abfd03cbc3fbeb66ed6304f449b73e5762a1c315e6685d3c231828d02566dc41",
+        "path": "analyses/r-877c022ba60ed15a.json"
+      },
+      "r-e1c5903ebea2b4f8": {
+        "hash": "sha256:63ff1afdedf57199e224ad70b4adbeb217cc7d7c18b70bb2722b4507265ec733",
+        "path": "analyses/r-e1c5903ebea2b4f8.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:da81c6d5e5ec52bdd279b5ca9ca9a16fc513f87285b54bd0a8b6a7954a371631",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:da81c6d5e5ec52bdd279b5ca9ca9a16fc513f87285b54bd0a8b6a7954a371631",
+      "hash": "sha256:6e9099c0d769b39f19013dce9131147c8b0273954dd34a5ca18135761f6a88e5",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:fed0edfc880acc4dae4ab5b0a54e26145d20c3413660fd8144d6df92bdf94616",
+      "path": "games/vol-test/audio-manifests/sfx/steel/families/cannon/cannon-d.json"
+    },
+    "renders": {
+      "r-7cae7b7e960ebfb1": {
+        "hash": "sha256:a63624b707be9875e2db98883368f3c0526449e81c0dfe1cab0fbca7bad22fb5",
+        "path": "renders/r-7cae7b7e960ebfb1.json"
+      },
+      "r-877c022ba60ed15a": {
+        "hash": "sha256:86985853ea27455b8bb5e2718d66fe01b8d566e26096eabbbe7cb21dd4930b97",
+        "path": "renders/r-877c022ba60ed15a.json"
+      },
+      "r-e1c5903ebea2b4f8": {
+        "hash": "sha256:c9acae563832ad20cbdf8d35ae6ba2da7ff6cb70a52e77f5e8b9ab68e5bc706a",
+        "path": "renders/r-e1c5903ebea2b4f8.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:fd1478fcc17a1d04036b20eb2ee0f16e156cfa4789e67b58f367c970d6e71d05",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "cannon-d",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 17,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/families/cannon/cannon-d.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "vt-hardsteel-cannon/cannon-d"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

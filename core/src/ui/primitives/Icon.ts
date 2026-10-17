@@ -1,0 +1,318 @@
+import {
+  SPRITE_PREFIX,
+  loadIconSprite,
+  isIconSpriteLoaded,
+  resolveCatalogIcon,
+  spriteOf,
+  type CatalogIconName,
+} from '../icons/sprite';
+
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
+/**
+ * Eski çizgi ikon adları (kebab-case). Çoğunun kataloğun kalın dolu karşılığı vardır ve
+ * (`LEGACY_ICON_ALIASES`) otomatik oraya yönlenir; geri kalanı (editör araçları) eski
+ * çizgi gövdesiyle çizilir.
+ */
+export type LegacyIconName =
+  | 'apps'
+  | 'audio'
+  | 'chevron-down'
+  | 'chevron-left'
+  | 'chevron-right'
+  | 'chevron-up'
+  | 'close'
+  | 'collapse'
+  | 'expand'
+  | 'file'
+  | 'font'
+  | 'fullscreen'
+  | 'grid'
+  | 'image'
+  | 'list'
+  | 'modified'
+  | 'more'
+  | 'copy'
+  | 'music'
+  | 'volume'
+  | 'eraser'
+  | 'eyedropper'
+  | 'fill'
+  | 'fit'
+  | 'layer-add'
+  | 'layers'
+  | 'merge-down'
+  | 'move-down'
+  | 'move-up'
+  | 'pause'
+  | 'play'
+  | 'trash'
+  | 'visible'
+  | 'hidden'
+  | 'pencil'
+  | 'redo'
+  | 'refresh'
+  | 'reset'
+  | 'save'
+  | 'search'
+  | 'settings'
+  | 'stop'
+  | 'undo'
+  | 'warning'
+  | 'zoom-in'
+  | 'zoom-out';
+
+/** Katalog ikonu (oyun/kabuk ikonları, camelCase) ya da eski çizgi ikon adı. */
+export type IconName = LegacyIconName | CatalogIconName;
+
+export interface IconDefinition {
+  /** SVG viewBox; bütün yerleşik ikonlarda 24×24 koordinat sistemi kullanılır. */
+  viewBox: string;
+  /** `fill="none"` ve `currentColor` stroke ile çizilecek SVG path'leri. */
+  paths: readonly string[];
+}
+
+/**
+ * Ürünlerin birbirinden kopuk emoji/metin ikonları üretmesini engelleyen küçük,
+ * birinci taraf ikon kaydı. Path verisi inert SVG attribute'larına yazılır;
+ * `innerHTML` kullanılmaz.
+ */
+export const VOL_ICONS: Readonly<Record<LegacyIconName, IconDefinition>> = {
+  apps: {
+    viewBox: '0 0 24 24',
+    paths: ['M4 4h6v6H4z', 'M14 4h6v6h-6z', 'M4 14h6v6H4z', 'M14 14h6v6h-6z'],
+  },
+  audio: {
+    viewBox: '0 0 24 24',
+    paths: [
+      'M9 18V5l10-2v13',
+      'M9 9l10-2',
+      'M6 20a3 2 0 1 0 0-4 3 2 0 0 0 0 4Z',
+      'M16 18a3 2 0 1 0 0-4 3 2 0 0 0 0 4Z',
+    ],
+  },
+  'chevron-down': { viewBox: '0 0 24 24', paths: ['m6 9 6 6 6-6'] },
+  'chevron-left': { viewBox: '0 0 24 24', paths: ['m15 18-6-6 6-6'] },
+  'chevron-right': { viewBox: '0 0 24 24', paths: ['m9 18 6-6-6-6'] },
+  'chevron-up': { viewBox: '0 0 24 24', paths: ['m6 15 6-6 6 6'] },
+  close: { viewBox: '0 0 24 24', paths: ['M6 6l12 12', 'M18 6 6 18'] },
+  collapse: { viewBox: '0 0 24 24', paths: ['M8 4v16', 'm16 8-4 4 4 4'] },
+  expand: { viewBox: '0 0 24 24', paths: ['M8 4v16', 'm12 8-4 4 4 4'] },
+  file: { viewBox: '0 0 24 24', paths: ['M6 3h8l4 4v14H6z', 'M14 3v5h5'] },
+  font: { viewBox: '0 0 24 24', paths: ['M5 20 12 4l7 16', 'M8 14h8'] },
+  fullscreen: {
+    viewBox: '0 0 24 24',
+    paths: ['M4 9V4h5', 'M15 4h5v5', 'M20 15v5h-5', 'M9 20H4v-5'],
+  },
+  grid: {
+    viewBox: '0 0 24 24',
+    paths: ['M4 4h7v7H4z', 'M13 4h7v7h-7z', 'M4 13h7v7H4z', 'M13 13h7v7h-7z'],
+  },
+  image: { viewBox: '0 0 24 24', paths: ['M4 5h16v14H4z', 'm4 10 3-3 5 5 2-2 4 4', 'M15 9h.01'] },
+  list: {
+    viewBox: '0 0 24 24',
+    paths: ['M9 6h11', 'M9 12h11', 'M9 18h11', 'M4 6h.01', 'M4 12h.01', 'M4 18h.01'],
+  },
+  modified: { viewBox: '0 0 24 24', paths: ['m4 16-1 5 5-1L19 9l-4-4Z', 'm13 7 4 4'] },
+  more: { viewBox: '0 0 24 24', paths: ['M5 12h.01', 'M12 12h.01', 'M19 12h.01'] },
+  music: {
+    viewBox: '0 0 24 24',
+    paths: ['M10 18V5l7 1', 'M8 20a3 2 0 1 0 0-4 3 2 0 0 0 0 4Z'],
+  },
+  volume: {
+    viewBox: '0 0 24 24',
+    paths: ['M5 10v4h3l5 4V6l-5 4H5z', 'M16 10c2 2 2 4 0 6', 'M18 8c3 3 3 7 0 10'],
+  },
+  copy: { viewBox: '0 0 24 24', paths: ['M8 8h12v12H8z', 'M16 8V4H4v12h4'] },
+  // Katman ve zaman çizelgesi ikonları. Yön ikonları (`collapse`/`expand`)
+  // bölme paneline aittir; katman sırası için kullanıldıklarında ekranda
+  // anlamsız birer çentik olarak okunuyordu.
+  layers: {
+    viewBox: '0 0 24 24',
+    paths: ['m12 3 9 5-9 5-9-5Z', 'm3 13 9 5 9-5', 'm3 17 9 5 9-5'],
+  },
+  'layer-add': {
+    viewBox: '0 0 24 24',
+    paths: ['m12 3 9 5-9 5-9-5Z', 'm3 13 9 5 9-5', 'M12 15v6', 'M9 18h6'],
+  },
+  'merge-down': {
+    viewBox: '0 0 24 24',
+    paths: ['M5 5h14v6H5z', 'M12 12v7', 'm8 15 4 4 4-4'],
+  },
+  'move-up': { viewBox: '0 0 24 24', paths: ['M12 20V5', 'm6 11 6-6 6 6'] },
+  'move-down': { viewBox: '0 0 24 24', paths: ['M12 4v15', 'm6 13 6 6 6-6'] },
+  play: { viewBox: '0 0 24 24', paths: ['M7 4v16l13-8Z'] },
+  pause: { viewBox: '0 0 24 24', paths: ['M8 4v16', 'M16 4v16'] },
+  trash: {
+    viewBox: '0 0 24 24',
+    paths: ['M4 7h16', 'M9 7V4h6v3', 'M6 7l1 14h10l1-14', 'M10 11v6', 'M14 11v6'],
+  },
+  visible: {
+    viewBox: '0 0 24 24',
+    paths: ['M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z', 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z'],
+  },
+  hidden: {
+    viewBox: '0 0 24 24',
+    paths: [
+      'M3 3l18 18',
+      'M10.6 6.2A9.7 9.7 0 0 1 12 6c6 0 10 6 10 6a17 17 0 0 1-3.2 3.7',
+      'M6.6 7.6A16.8 16.8 0 0 0 2 12s4 6 10 6a9.6 9.6 0 0 0 3.5-.65',
+    ],
+  },
+  // Piksel editörü araç ikonları. Ürüne değil ROLE bağlıdır: kalem, silgi,
+  // kova ve damlalık her raster editöründe aynı anlamı taşır.
+  pencil: { viewBox: '0 0 24 24', paths: ['m4 20 1.5-4.5L16 5l3 3L8.5 18.5Z', 'm14 7 3 3'] },
+  eraser: {
+    viewBox: '0 0 24 24',
+    paths: ['M8 20 3 15l9-9 5 5-9 9Z', 'M8 20h11', 'm10 8 5 5'],
+  },
+  fill: {
+    viewBox: '0 0 24 24',
+    paths: ['M5 11 12 4l7 7-7 7Z', 'm5 11 7 7', 'M19 15c1.5 2 1.5 4 0 4s-1.5-2 0-4Z'],
+  },
+  // Damlalık: pipet gövdesi + ampul. Kalemden AÇIKÇA ayrılmalı; ikisi de
+  // eğik bir çubuk çizerse kullanıcı araç çubuğunda hangisinin seçili
+  // olduğunu ikondan ayırt edemez.
+  eyedropper: {
+    viewBox: '0 0 24 24',
+    paths: ['m3 21 2-6 7-7 4 4-7 7Z', 'M13 5.5 18.5 11', 'M15.5 3a3.5 3.5 0 0 1 5 5l-2 2-5-5Z'],
+  },
+  // Sığdır: köşe köşebentleri. `expand` bir bölme ikonudur ve burada
+  // anlamsızdı.
+  fit: {
+    viewBox: '0 0 24 24',
+    paths: ['M4 9V4h5', 'M20 9V4h-5', 'M4 15v5h5', 'M20 15v5h-5'],
+  },
+  redo: { viewBox: '0 0 24 24', paths: ['m15 7 4 4-4 4', 'M19 11h-8a6 6 0 0 0-6 6'] },
+  refresh: {
+    viewBox: '0 0 24 24',
+    paths: ['M20 6v5h-5', 'M4 18v-5h5', 'M18 9a7 7 0 0 0-12-2', 'M6 15a7 7 0 0 0 12 2'],
+  },
+  reset: { viewBox: '0 0 24 24', paths: ['M4 12a8 8 0 1 0 2-5.3', 'M4 4v6h6'] },
+  save: { viewBox: '0 0 24 24', paths: ['M5 4h12l2 2v14H5z', 'M8 4v6h8V4', 'M8 20v-6h8v6'] },
+  search: { viewBox: '0 0 24 24', paths: ['M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z', 'm16 16 4 4'] },
+  // Ayarlar: sekiz dişli çark. Dişlerin arası taban dairesi üstünde yaydır;
+  // merkezdeki halka küçük boyutta çarkı dolu bir yıldızdan ayırır.
+  settings: {
+    viewBox: '0 0 24 24',
+    paths: [
+      'M10.52 5.57L10.72 2.89L13.28 2.89L13.48 5.57A6.6 6.6 0 0 1 15.5 6.4L17.54 4.65L19.35 6.46L17.6 8.5A6.6 6.6 0 0 1 18.43 10.52L21.11 10.72L21.11 13.28L18.43 13.48A6.6 6.6 0 0 1 17.6 15.5L19.35 17.54L17.54 19.35L15.5 17.6A6.6 6.6 0 0 1 13.48 18.43L13.28 21.11L10.72 21.11L10.52 18.43A6.6 6.6 0 0 1 8.5 17.6L6.46 19.35L4.65 17.54L6.4 15.5A6.6 6.6 0 0 1 5.57 13.48L2.89 13.28L2.89 10.72L5.57 10.52A6.6 6.6 0 0 1 6.4 8.5L4.65 6.46L6.46 4.65L8.5 6.4A6.6 6.6 0 0 1 10.52 5.57Z',
+      'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+    ],
+  },
+  stop: {
+    viewBox: '0 0 24 24',
+    paths: ['M8 6h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z'],
+  },
+  undo: { viewBox: '0 0 24 24', paths: ['m9 7-4 4 4 4', 'M5 11h8a6 6 0 0 1 6 6'] },
+  warning: { viewBox: '0 0 24 24', paths: ['M12 3 2 21h20Z', 'M12 9v5', 'M12 18h.01'] },
+  'zoom-in': {
+    viewBox: '0 0 24 24',
+    paths: ['M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z', 'm16 16 4 4', 'M8 11h6', 'M11 8v6'],
+  },
+  'zoom-out': {
+    viewBox: '0 0 24 24',
+    paths: ['M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z', 'm16 16 4 4', 'M8 11h6'],
+  },
+};
+
+export interface IconOptions {
+  name: IconName;
+  /** Verilmezse ikon dekoratiftir ve erişilebilirlik ağacından çıkarılır. */
+  label?: string;
+  size?: number;
+  className?: string;
+}
+
+export class Icon {
+  readonly element: SVGSVGElement;
+  private size?: number;
+
+  constructor(options: IconOptions) {
+    this.size = options.size;
+    this.element = document.createElementNS(SVG_NAMESPACE, 'svg');
+    this.element.classList.add('vol-icon');
+    if (options.className) this.element.classList.add(options.className);
+    this.element.setAttribute('focusable', 'false');
+
+    if (options.label) {
+      this.element.setAttribute('role', 'img');
+      this.element.setAttribute('aria-label', options.label);
+    } else {
+      this.element.setAttribute('aria-hidden', 'true');
+    }
+    this.render(options.name);
+  }
+
+  setName(name: IconName): void {
+    this.render(name);
+  }
+
+  /** Piksel boyutu; ilk kurulumdaki `size` ile aynı ağırlıkta uygulanır. */
+  setSize(size: number): void {
+    this.size = size;
+    this.applySize(this.element.classList.contains('vol-icon--sprite'));
+  }
+
+  destroy(): void {
+    this.element.remove();
+  }
+
+  private applySize(sprite: boolean): void {
+    const dimension = this.size ?? (sprite ? 24 : undefined);
+    if (dimension === undefined) return;
+    this.element.setAttribute('width', String(dimension));
+    this.element.setAttribute('height', String(dimension));
+    // Sprite ikonunun boyutu satır içi verilir: genel `.vol-icon` kutusu (1em) bunu ezemez.
+    if (sprite) {
+      this.element.style.width = `${dimension}px`;
+      this.element.style.height = `${dimension}px`;
+    }
+  }
+
+  /** Katalog ikonu sprite simgesine bağlanır; eski ad eski çizgi gövdesiyle çizilir. */
+  private render(name: IconName): void {
+    this.element.replaceChildren();
+    for (const attribute of [
+      'fill',
+      'stroke',
+      'stroke-width',
+      'stroke-linecap',
+      'stroke-linejoin',
+    ]) {
+      this.element.removeAttribute(attribute);
+    }
+    const catalogName = resolveCatalogIcon(name);
+    this.element.style.removeProperty('width');
+    this.element.style.removeProperty('height');
+    if (catalogName) {
+      this.element.classList.add('vol-icon--sprite');
+      this.applySize(true);
+      this.element.setAttribute('viewBox', '0 0 256 256');
+      const use = document.createElementNS(SVG_NAMESPACE, 'use');
+      const href = `#${SPRITE_PREFIX}${catalogName}`;
+      use.setAttribute('href', href);
+      this.element.appendChild(use);
+      const kind = spriteOf(catalogName);
+      if (!isIconSpriteLoaded(kind)) {
+        // İlk kullanım: sprite arka planda gelir; bazı motorlar `use` bağını yeniden çözmez, yeniden ata.
+        void loadIconSprite(kind).then(() => use.setAttribute('href', href));
+      }
+      return;
+    }
+    this.element.classList.remove('vol-icon--sprite');
+    this.applySize(false);
+    const definition = VOL_ICONS[name as LegacyIconName];
+    this.element.setAttribute('viewBox', definition.viewBox);
+    this.element.setAttribute('fill', 'none');
+    this.element.setAttribute('stroke', 'currentColor');
+    this.element.setAttribute('stroke-width', '1.75');
+    this.element.setAttribute('stroke-linecap', 'round');
+    this.element.setAttribute('stroke-linejoin', 'round');
+    for (const pathData of definition.paths) {
+      const path = document.createElementNS(SVG_NAMESPACE, 'path');
+      path.setAttribute('d', pathData);
+      this.element.appendChild(path);
+    }
+  }
+}

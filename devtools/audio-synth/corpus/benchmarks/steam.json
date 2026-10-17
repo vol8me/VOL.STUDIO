@@ -1,0 +1,122 @@
+{
+  "schema": "BenchmarkTaskV1",
+  "id": "steam",
+  "version": 1,
+  "title": "Buhar püskürmesi",
+  "purpose": "source.airflow geniş açıklık + yüksek türbülans ve alçak geçişli gürültü katmanı: tıslamadan daha tok, sürekli buhar jeti.",
+  "category": "steam-jet",
+  "parts": [
+    {
+      "id": "main",
+      "source": {
+        "kind": "program",
+        "program": {
+          "schema": "AcousticProgramV1",
+          "sampleRate": 48000,
+          "channels": 1,
+          "durationSeconds": 2.5,
+          "seed": 37,
+          "master": {
+            "normalize": "peak",
+            "peakDbfs": -3,
+            "fadeInSeconds": 0.1,
+            "fadeOutSeconds": 0.5
+          },
+          "layers": [
+            {
+              "name": "jet",
+              "source": {
+                "primitive": "source.airflow",
+                "version": 1,
+                "params": {
+                  "pressure": 0.9,
+                  "sibilance": 0.05,
+                  "turbulence": 0.85,
+                  "aperture": 14,
+                  "cavity": 2,
+                  "tilt": -0.4,
+                  "cavityMix": 0.3
+                }
+              },
+              "resonators": [
+                {
+                  "primitive": "resonator.biquad",
+                  "version": 1,
+                  "params": {
+                    "mode": "lowpass",
+                    "frequency": 5200,
+                    "q": 0.6
+                  }
+                }
+              ]
+            },
+            {
+              "name": "roar",
+              "gainDb": -10,
+              "source": {
+                "primitive": "source.noise",
+                "version": 1,
+                "params": {
+                  "color": "pink"
+                }
+              },
+              "resonators": [
+                {
+                  "primitive": "resonator.biquad",
+                  "version": 1,
+                  "params": {
+                    "mode": "lowpass",
+                    "frequency": 2500,
+                    "q": 0.7
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectations": [
+        {
+          "kind": "asset-policy",
+          "assetClass": "sfx"
+        },
+        {
+          "kind": "clipping"
+        },
+        {
+          "kind": "clicks",
+          "max": 0
+        },
+        {
+          "kind": "aperiodic",
+          "maxConfidence": 0.3
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "durationSeconds",
+          "min": 1.6,
+          "max": 3.4
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "centroidHz",
+          "min": 800,
+          "max": 5000
+        },
+        {
+          "kind": "onset-rate",
+          "max": 3
+        },
+        {
+          "kind": "band-dominance",
+          "dominant": "mid",
+          "over": "sub"
+        }
+      ]
+    }
+  ],
+  "listeningGuide": [
+    "Basınçlı buharın sürekli uğultusu; yılan tıslamasından daha dolgun ve alçak frekanslı.",
+    "Hata belirtileri: ince düdük, patlamalı ya da kesik kesik akım, perdeli motor sesi."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "reward"
+  ],
+  "durationSeconds": {
+    "max": 0.98,
+    "min": 0.36
+  },
+  "id": "ui-steel-reward-reward-b",
+  "intent": "çelik donanım: reward Varyant reward-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel reward — reward-b"
+}

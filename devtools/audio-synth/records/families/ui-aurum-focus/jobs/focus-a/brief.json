@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "focus"
+  ],
+  "durationSeconds": {
+    "max": 0.18,
+    "min": 0.032
+  },
+  "id": "ui-aurum-focus-focus-a",
+  "intent": "yaldızlı cam ve lake: focus Varyant focus-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum focus — focus-a"
+}

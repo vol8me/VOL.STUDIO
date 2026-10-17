@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-bc132617eb1f1037": {
+        "hash": "sha256:04cb4fe1ffb5c401cd167f8f5aac3ac4cadb1e52c5a9432a08ba4667989bde24",
+        "path": "analyses/r-bc132617eb1f1037.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:7e88bdffff705a819adcb2fa7b6295a2f41453f2c0aee66119d6e588ffa5ffdd",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:7e88bdffff705a819adcb2fa7b6295a2f41453f2c0aee66119d6e588ffa5ffdd",
+      "hash": "sha256:726caa24cb1e98e07727ff1c228fc9fd74e8fffed8aab8dc0674d64583415299",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:e186301ada334df2e861b86b54f88f271e8aa53761708e2e405641b9b9c206ac",
+      "path": "games/vol-test/audio-manifests/sfx/steel/shot-flak.json"
+    },
+    "renders": {
+      "r-bc132617eb1f1037": {
+        "hash": "sha256:75f00b61288fc0e7e593582f82b27b2f6e56def6136a85ca17d2c4182bd63340",
+        "path": "renders/r-bc132617eb1f1037.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:cd3bd2b7aa0d9fa94678adef6b709fdd3f0927f4c37ebdfd872f1c1aec3ad7f9",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-shot-flak",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 154,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/shot-flak.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

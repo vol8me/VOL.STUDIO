@@ -1,0 +1,286 @@
+{
+  "buses": {
+    "space": {
+      "effects": [
+        {
+          "params": {
+            "amount": 0.3,
+            "damp": 0.55,
+            "decay": 0.7,
+            "preDelay": 0.012,
+            "roomSize": 0.7
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 110,
+            "order": 2,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ]
+    }
+  },
+  "channels": 1,
+  "description": "Atılım: itici ateşlemesi, hava patlaması ve yükselen kükreme.",
+  "durationSeconds": 0.8,
+  "effects": [
+    {
+      "params": {
+        "frequency": 36,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 260,
+        "gainDb": 3,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 8,
+        "mix": 0.6,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 9000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "rise-f": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          140
+        ],
+        [
+          0.22,
+          340
+        ],
+        [
+          0.5,
+          340
+        ]
+      ],
+      "version": 1
+    },
+    "whoosh-p": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          0.3
+        ],
+        [
+          0.2,
+          0.95
+        ],
+        [
+          0.6,
+          0.5
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "gainDb": -12.59,
+      "mechanism": "pressure",
+      "name": "thump",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -12
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.3,
+          "bodyHz": 66,
+          "decay": 1.5,
+          "positive": 0.007,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -14.3,
+      "mechanism": "pressure",
+      "name": "punch",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.18,
+          "bodyHz": 170,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.01,
+          "curve": "cosine",
+          "decay": 0.55,
+          "release": 0.12,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.7,
+      "gainDb": 2.05,
+      "mechanism": "airflow",
+      "name": "whoosh",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 120,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2400,
+            "mode": "lowpass",
+            "q": 0.5
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "aperture": 36,
+          "cavity": 2,
+          "cavityMix": 0.3,
+          "pressure": {
+            "gesture": "whoosh-p"
+          },
+          "sibilance": 0.1,
+          "tilt": -0.4,
+          "turbulence": 1
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": 6.68,
+      "mechanism": "explosion",
+      "name": "burst",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -12
+        }
+      ],
+      "source": {
+        "params": {
+          "brightness": 0.3,
+          "color": "pink",
+          "crackle": 0.1,
+          "darkening": 0.8,
+          "decay": 0.5
+        },
+        "primitive": "source.blast",
+        "version": 1
+      },
+      "startSeconds": 0.01
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.5,
+          "release": 0.05,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -16.57,
+      "mechanism": "tonal",
+      "name": "rise",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 700,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "rise-f"
+          },
+          "waveform": "sine"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "fadeInSeconds": 0.0005,
+    "fadeOutSeconds": 0.12,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "normalize": "peak",
+    "peakDbfs": -5
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 730201
+}

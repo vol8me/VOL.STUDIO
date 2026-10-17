@@ -1,0 +1,17 @@
+{
+  "cost": {
+    "peakBytes": 416256,
+    "workUnits": 2341440
+  },
+  "pcm": {
+    "channels": 1,
+    "frames": 13008,
+    "hash": "sha256:e007072c278f6354374d57413a5cf73b4ddead2a85194db3819138f7c3c32de7",
+    "sampleRate": 48000
+  },
+  "programHash": "sha256:86985cd1c46b16e945aa36949ae6a16f6459fe513cfe67eabbf50e27e757561a",
+  "renderId": "r-c4ebd73836c0a094",
+  "rendererVersion": 2,
+  "schema": "AudioRenderRecordV1",
+  "seed": 9412
+}

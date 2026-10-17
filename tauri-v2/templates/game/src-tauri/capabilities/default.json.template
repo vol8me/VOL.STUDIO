@@ -1,0 +1,13 @@
+{
+  "identifier": "main-capability",
+  "description": "Ana pencere izinleri",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:event:deny-emit",
+    "core:event:deny-emit-to",
+    "core:window:allow-close",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-set-size"
+  ]
+}

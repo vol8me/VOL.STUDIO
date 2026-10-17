@@ -1,0 +1,7 @@
+{
+  "app": {
+    "title": "{{TITLE}}",
+    "ready": "Ready",
+    "fatal": "Could not start the game"
+  }
+}

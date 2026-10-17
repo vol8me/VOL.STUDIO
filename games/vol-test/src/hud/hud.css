@@ -1,0 +1,248 @@
+/*
+ * HUD yerleşimi. Bileşenlerin görünümü CORE'undur; bu dosya konum, boyut ve
+ * aralık verir. Metin taşıyan bölgeler oyun zemininden bağımsız okunsun diye
+ * UI yüzey tokenıyla (`--vol-ui-overlay-panel`) zeminlenir: HUD yalnız UI
+ * renklerini kullanır, oyun paletine dokunmaz. Güvenli alan payları
+ * (`--vol-safe-*`) çentikli ekranlarda HUD'u kamera deliğinden uzak tutar.
+ */
+.vt-hud {
+  --vt-edge: 16px;
+  --vt-map: 168px;
+  --vt-chip-padding: 6px 10px;
+  --vt-vitals: 224px;
+
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * Göstergeler (can, hızlanma, atış dolumu): tek CORE `Panel` içinde üç etiketli yatay `Bar`. Panel
+ * HUD'da pasiftir: işaretçi altındaki oyun tuvaline geçer. Masaüstünde sol altta, dokunmatikte sol
+ * üsttedir.
+ */
+.vol-panel.vt-hud__vitals {
+  pointer-events: none;
+  bottom: calc(var(--vol-safe-bottom) + var(--vt-edge));
+  left: calc(var(--vol-safe-left) + 20px);
+  gap: var(--vol-space-xs);
+  box-sizing: border-box;
+  width: var(--vt-vitals);
+  padding: var(--vol-space-xs);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
+}
+
+.vt-hud__vitals .vol-bar {
+  height: 10px;
+}
+
+.vt-hud__lifecycle {
+  position: absolute;
+  top: calc(var(--vol-safe-top) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 4px 8px;
+  background: var(--vol-ui-overlay-panel);
+  white-space: nowrap;
+}
+
+.vt-hud__lifecycle:empty {
+  display: none;
+}
+
+.vt-hud__map {
+  position: absolute;
+  top: calc(var(--vol-safe-top) + 10px);
+  right: calc(var(--vol-safe-right) + var(--vt-edge));
+}
+
+/* Tam ekran yalnız tarayıcıda kurulur; haritanın altında, sağ kenarına hizalı. */
+.vt-hud__fullscreen {
+  pointer-events: auto;
+  position: absolute;
+  top: calc(var(--vol-safe-top) + 10px + var(--vt-map) + 8px);
+  right: calc(var(--vol-safe-right) + var(--vt-edge));
+}
+
+.vt-hud__hints {
+  padding: var(--vt-chip-padding);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
+  position: absolute;
+  bottom: calc(var(--vol-safe-bottom) + var(--vt-edge));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  transition:
+    opacity 0.6s ease,
+    visibility 0s;
+
+  /* Göstergelerin ve haritanın arasında kalan genişlik; sığmazsa ipuçları satıra bölünür. */
+  max-width: calc(100vw - 2 * (var(--vt-vitals) + var(--vt-edge) + 48px));
+}
+
+.vt-hud__hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vt-hud__hint .vol-glyph {
+  height: 22px;
+}
+
+.vt-hud__hint > :last-child {
+  margin-left: 6px;
+}
+
+/* Girişten sonra solar; görünmez olunca okuyucudan da çıkar ve tıklamayı tutmaz. */
+.vt-hud__hints--faded {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.6s ease,
+    visibility 0s 0.6s;
+}
+
+.vt-hud__hints[hidden],
+.vt-hud__touch[hidden] {
+  display: none;
+}
+
+.vt-hud__touch > * {
+  pointer-events: auto;
+  touch-action: none;
+  position: absolute;
+}
+
+.vt-hud__pause {
+  top: calc(var(--vol-safe-top) + 10px);
+  right: calc(var(--vol-safe-right) + var(--vt-edge) + var(--vt-map) + 68px);
+}
+
+.vt-hud__stick-move {
+  left: calc(var(--vol-safe-left) + 32px);
+  bottom: calc(var(--vol-safe-bottom) + 28px);
+}
+
+.vt-hud__stick-aim {
+  right: calc(var(--vol-safe-right) + 32px);
+  bottom: calc(var(--vol-safe-bottom) + 28px);
+}
+
+/*
+ * Basılı tutulan düğmeler nişan joystick'inin solunda tek sütundur: fren
+ * altta, hızlanma üstte. Sağ başparmak nişandan düğmeye kayar; sol başparmak
+ * sürüşü bırakmaz. Sütun, kısa telefon ekranında bile harita ve tam ekran
+ * düğmesinin altında kalır.
+ */
+.vt-hud__brake,
+.vt-hud__boost {
+  right: calc(var(--vol-safe-right) + 196px);
+}
+
+.vt-hud__brake {
+  bottom: calc(var(--vol-safe-bottom) + 40px);
+}
+
+.vt-hud__boost {
+  bottom: calc(var(--vol-safe-bottom) + 128px);
+}
+
+/* Zoom düğmeleri harita sütununun solunda, haritayla aynı hizada. */
+.vt-hud__zoom-in,
+.vt-hud__zoom-out {
+  right: calc(var(--vol-safe-right) + var(--vt-edge) + var(--vt-map) + 12px);
+}
+
+.vt-hud__zoom-in {
+  top: calc(var(--vol-safe-top) + 10px);
+}
+
+.vt-hud__zoom-out {
+  top: calc(var(--vol-safe-top) + 66px);
+}
+
+/* Dokunmatikte sağ sütun düğmelerindir; göstergeler sol üsttedir. */
+.vt-hud[data-mode='touch'] {
+  --vt-vitals: 168px;
+}
+
+.vt-hud[data-mode='touch'] .vol-panel.vt-hud__vitals {
+  inset: calc(var(--vol-safe-top) + 12px) auto auto calc(var(--vol-safe-left) + 20px);
+}
+
+/* Dokunmatikte harita küçüktür: 44 px'lik yakınlaştırma düğmeleri haritayı örter, kamera zoom düğmeleri vardır. */
+.vt-hud[data-mode='touch'] .vol-minimap__controls {
+  display: none;
+}
+
+@media (height <= 520px) {
+  .vt-hud {
+    --vt-map: 120px;
+  }
+
+  .vt-hud__map .vol-minimap__canvas {
+    width: var(--vt-map);
+    height: var(--vt-map);
+  }
+}
+
+/*
+ * Duraklatma: ana menü ve ayarlarla aynı sağ şerit (`ScreenFrame`). CORE `Modal` yalnız odak
+ * tuzağı, Escape ve geri sözleşmesini verir; kutusu ekranı kaplar ve şeridi taşır, scrim oyunu hafifçe
+ * karartır (menüde scrim yoktur ama oyun arkada görünür kalır).
+ */
+.vt-pause .vol-modal__scrim {
+  background: color-mix(in srgb, var(--vol-ui-scrim) 45%, transparent);
+}
+
+.vt-pause .vol-modal__content {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  pointer-events: none;
+}
+
+.vt-pause .vt-screen {
+  opacity: 1;
+
+  /* Oyun HUD'u şeridin arkasında kalır: geçiş yalnız kenarda, gövde opak. */
+  background: linear-gradient(270deg, var(--vol-ui-surface-1) 94%, transparent);
+}
+
+/* Şeridin içindeki ayar ekranları sırayla görünür; gizli olan yer kaplamaz. */
+.vt-pause .vt-screen[hidden] {
+  display: none;
+}
+
+@media (width <= 720px) {
+  .vt-pause .vt-screen {
+    background: var(--vol-ui-surface-1);
+  }
+}
+
+/* Sürücü eylemleri devam düğmesinin altında, ana menüdeki düğmeler gibi tek sütun dizilir. */
+.vt-pause__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+}
+
+.vt-pause__actions:empty {
+  display: none;
+}

@@ -1,8 +1,38 @@
 {
+  "loading": {
+    "title": "Yükleniyor",
+    "stalled": "Hâlâ çalışıyor… beklenenden uzun sürüyor.",
+    "tip": "İpucu",
+    "failed": "Yükleme başarısız",
+    "retry": "Tekrar dene",
+    "cancel": "Vazgeç",
+    "progress": "Yükleme ilerlemesi"
+  },
   "carousel": {
     "prev": "Önceki",
     "next": "Sonraki",
+    "slide": "{{n}} / {{total}}",
     "page": "Sayfa {{n}}"
+  },
+  "keyboard": {
+    "space": "Boşluk",
+    "done": "Bitti",
+    "cancel": "Vazgeç",
+    "symbols": "#+=",
+    "letters": "ABC",
+    "shiftLabel": "Büyük harf",
+    "backspaceLabel": "Geri sil",
+    "layoutLabel": "Klavye dilini değiştir",
+    "leftLabel": "İmleci sola taşı",
+    "rightLabel": "İmleci sağa taşı",
+    "newlineLabel": "Yeni satır",
+    "symbolsLabel": "Semboller ve noktalama",
+    "lettersLabel": "Harfler",
+    "title": {
+      "default": "Metin girişi",
+      "password": "Parola",
+      "search": "Arama"
+    }
   },
   "dpad": {
     "up": "Yukarı",
@@ -12,7 +42,12 @@
   },
   "swipe": {
     "reject": "Reddet",
-    "accept": "Kabul Et"
+    "accept": "Kabul Et",
+    "stack": "Kart destesi: sol ok reddeder, sağ ok kabul eder",
+    "accepted": "Kabul edildi: {{label}}",
+    "rejected": "Reddedildi: {{label}}",
+    "remaining": "Kalan kart: {{count}}",
+    "done": "Kart kalmadı"
   },
   "pause": {
     "pause": "Duraklat",
@@ -50,7 +85,14 @@
     "label": "Kaynaklar"
   },
   "bar": {
-    "ariaLabel": "{{variant}} bar"
+    "ariaLabel": "ilerleme çubuğu",
+    "valueText": "{{value}} / {{max}}",
+    "low": "düşük",
+    "error": "hata"
+  },
+  "timerBar": {
+    "ariaLabel": "zamanlayıcı",
+    "valueText": "{{seconds}} sn kaldı"
   },
   "datatable": {
     "empty": "Kayıt yok"
@@ -61,32 +103,218 @@
     "placeholder": "Komut ara…",
     "general": "Genel"
   },
+  "editMenu": {
+    "label": "Düzenle",
+    "cut": "Kes",
+    "copy": "Kopyala",
+    "paste": "Yapıştır",
+    "selectAll": "Tümünü seç"
+  },
+  "toast": {
+    "dismiss": "Kapat"
+  },
+  "slotGrid": {
+    "grabbed": "{{label}} alındı. Ok tuşları ya da dokunuş yuva seçer, Boşluk veya Enter bırakır, Escape iptal eder.",
+    "targetEmpty": "Yuva {{n}}, boş",
+    "targetSwap": "Yuva {{n}}, {{label}} ile yer değiştir",
+    "targetBlocked": "Yuva {{n}}, izin yok",
+    "dropped": "{{label}} yuva {{n}}'e taşındı",
+    "rejected": "{{label}} yuva {{n}}'e konamaz",
+    "cancelled": "Taşıma iptal edildi"
+  },
+  "actionBar": {
+    "label": "Eylemler",
+    "remaining": "{{seconds}} sn kaldı"
+  },
+  "buildMenu": {
+    "label": "İnşa menüsü"
+  },
+  "skillTree": {
+    "label": "Yetenek ağacı",
+    "locked": "kilitli",
+    "available": "açılabilir",
+    "unlocked": "açık",
+    "requires": "Gerekli: {{names}}",
+    "view": "Ağaç görünümü",
+    "controls": "Görünüm denetimleri",
+    "zoomIn": "Yakınlaştır",
+    "zoomOut": "Uzaklaştır",
+    "resetView": "Görünümü sıfırla",
+    "zoomLevel": "Yakınlaştırma yüzde {{percent}}"
+  },
+  "chargeButton": {
+    "start": "Doluyor",
+    "percent": "Yüzde {{percent}}",
+    "ready": "Tamamen doldu"
+  },
+  "dualAxisScroll": {
+    "label": "Kaydırılabilir alan"
+  },
+  "pinchZoom": {
+    "label": "Yakınlaştırılabilir alan",
+    "level": "Yakınlaştırma %{{percent}}"
+  },
+  "joystick": {
+    "label": "Sanal çubuk"
+  },
   "confirm": {
     "yes": "Evet",
     "no": "Hayır"
   },
   "select": {
-    "placeholder": "Seçiniz"
+    "placeholder": "Seçiniz",
+    "listbox": "Seçenekler",
+    "empty": "Seçenek yok"
+  },
+  "curveEditor": {
+    "hint": "Ok tuşları noktayı taşır, Shift ile on kat. Enter noktayı tutar veya bırakır, Escape geri alır, Delete siler.",
+    "add": "Nokta ekle",
+    "remove": "Noktayı sil",
+    "point": "Nokta {{index}} / {{count}}: X {{x}}, Y {{y}}",
+    "grabbed": "Tutuldu.",
+    "added": "Eklendi.",
+    "removed": "Silindi."
+  },
+  "rangeSlider": {
+    "min": "Alt sınır",
+    "max": "Üst sınır",
+    "minOf": "{{label}} (alt sınır)",
+    "maxOf": "{{label}} (üst sınır)"
   },
   "stepper": {
     "decrement": "Azalt",
     "increment": "Artır"
   },
+  "splitPane": {
+    "resize": "Panel boyutunu değiştir"
+  },
+  "propertyField": {
+    "reset": "Varsayılana döndür"
+  },
+  "settingsForm": {
+    "apply": "Uygula",
+    "revert": "Değişiklikleri geri al",
+    "resetAll": "Varsayılana dön",
+    "resetRow": "Varsayılan",
+    "resetRowNamed": "Varsayılana döndür: {{label}}",
+    "unsaved_one": "{{count}} kaydedilmemiş değişiklik",
+    "unsaved_other": "{{count}} kaydedilmemiş değişiklik",
+    "saving": "Kaydediliyor…",
+    "saved": "Kaydedildi",
+    "saveFailed": "Kaydedilemedi. Değişiklikleriniz duruyor.",
+    "invalid": "Önce vurgulanan ayarları düzeltin.",
+    "audio": {
+      "master": "Ana ses",
+      "ui": "Arayüz sesi",
+      "sfx": "Efektler",
+      "music": "Müzik",
+      "speech": "Konuşma",
+      "muted": "Tümünü sessize al"
+    }
+  },
   "wizard": {
+    "step": "Adım {{n}} / {{total}}: {{title}}",
     "back": "Geri",
     "next": "İleri",
     "finish": "Bitir"
   },
-  "wavecounter": {
-    "wave": "Dalga {{wave}}",
-    "waveTotal": "Dalga {{wave}} / {{total}}",
-    "next": "Sonraki dalga: {{seconds}}s"
+  "versusBar": {
+    "label": "Skor",
+    "side": "{{name}} {{value}} / {{target}}"
+  },
+  "rankList": {
+    "label": "Sıralama",
+    "empty": "Kayıt yok"
+  },
+  "activityFeed": {
+    "label": "Etkinlik"
   },
   "minimap": {
+    "summary_one": "{{label}}: {{count, number}} işaret, yakınlaştırma {{zoom}}x",
+    "summary_other": "{{label}}: {{count, number}} işaret, yakınlaştırma {{zoom}}x",
+    "zoomIn": "Haritayı yakınlaştır",
+    "zoomOut": "Haritayı uzaklaştır",
     "label": "Harita",
+    "north": "K",
     "interactive": "{{label}}, etkileşimli — Enter ile merkeze zıpla"
   },
   "selectionInfo": {
-    "emptyState": "Seçili öğe yok"
+    "emptyState": "Seçili öğe yok",
+    "label": "Seçim",
+    "selected": "Seçili: {{name}}",
+    "health": "Can"
+  },
+  "statsPanel": {
+    "close": "İstatistikleri kapat"
+  },
+  "roundcounter": {
+    "round": "Tur {{round}}",
+    "roundTotal": "Tur {{round}} / {{total}}",
+    "next": "Sonraki: {{seconds}}s"
+  },
+  "fpsMeter": {
+    "value": "{{fps}} FPS",
+    "ariaLabel": "Kare hızı"
+  },
+  "keyBindings": {
+    "listeningFor": "{{action}} için bir tuşa bas. Escape iptal eder.",
+    "listening": "Tuşa bas…",
+    "rebind": "{{action}} için yeni tuş ata",
+    "reset": "Sıfırla",
+    "resetAction": "{{action}} tuşunu varsayılana döndür",
+    "empty": "Yeniden atanacak eylem yok"
+  },
+  "xp": {
+    "progress": "Sv. {{level}} — {{value}} / {{max}}"
+  },
+  "dialogue": {
+    "fastForward": "Yazımı hızlandır",
+    "skipLine": "Satırı tamamla"
+  },
+  "dialog": {
+    "cancel": "İptal",
+    "busy": "İşleniyor…",
+    "failed": "İşlem tamamlanamadı. Yeniden deneyebilir ya da vazgeçebilirsiniz.",
+    "destructive": {
+      "confirm": "Sil",
+      "consequence": "Bu işlem geri alınamaz."
+    },
+    "exit": {
+      "title": "Çıkmadan önce",
+      "message": "Kaydedilmemiş değişiklikler var.",
+      "saveAndExit": "Kaydet ve çık",
+      "discardAndExit": "Kaydetmeden çık",
+      "stay": "Vazgeç, kalayım"
+    },
+    "permission": {
+      "allow": "İzin ver",
+      "deny": "Şimdi değil"
+    },
+    "conflict": {
+      "title": "Kayıt çakışması",
+      "message": "Bu cihazdaki kayıt ile uzaktaki kopya farklı. Hangisini koruyacağınızı seçin; diğeri değiştirilir.",
+      "local": "Bu cihaz",
+      "remote": "Uzak kopya",
+      "keepLocal": "Bu cihazdakini koru",
+      "useRemote": "Uzak kopyayı kullan",
+      "keepLocalNote": "Uzaktaki kopya bu cihazdakiyle değiştirilir.",
+      "useRemoteNote": "Bu cihazdaki kayıt uzak kopyayla değiştirilir.",
+      "cancelNote": "İptal ederseniz hiçbir şey değişmez.",
+      "failed": "Çakışma çözülemedi; kayıtlara dokunulmadı. Yeniden deneyebilir ya da vazgeçebilirsiniz."
+    },
+    "tour": {
+      "next": "İleri",
+      "back": "Geri",
+      "skip": "Atla",
+      "done": "Bitti",
+      "step": "Adım {{current}} / {{total}}"
+    },
+    "legal": {
+      "close": "Kapat",
+      "attributions": "Atıflar",
+      "license": "Lisans",
+      "source": "Kaynak",
+      "author": "Yazar"
+    }
   }
 }

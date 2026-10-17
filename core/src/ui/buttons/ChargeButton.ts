@@ -1,0 +1,286 @@
+import { UI_SIZE, UI_TIMING } from '../../constants';
+import { i18next } from '../../i18n/I18n';
+import { bindHoldInput } from './holdInput';
+
+/** Dolum duyuru basamağı: yüzde 25'lik adımlar (4 duyuru, dolu dahil); kare başına değil. */
+const ANNOUNCE_STEPS = 4;
+let announcerSerial = 0;
+
+export interface ChargeButtonOptions {
+  label?: string;
+  icon?: string | Node;
+  /** Tam dolum için gereken basılı tutma süresi (milisaniye). Varsayılan 900. */
+  chargeDurationMs?: number;
+  /**
+   * true ise erken bırakışta `onRelease` o anki doluluk oranıyla (0-1) çağrılır
+   * (kademeli güç mekaniği için). false ise yalnızca tam dolumda `onCharged`
+   * çağrılır, erken bırakma iptal sayılır. Varsayılan true.
+   */
+  allowPartialRelease?: boolean;
+  /** Basılı tutma sırasında her karede (dolum oranı 0-1 ile) çağrılır — HUD göstergesi senkronize etmek için. */
+  onChargeProgress?: (progress: number) => void;
+  /** Dolum tam tamamlandığında (bırakılmadan, otomatik) çağrılır. */
+  onCharged?: () => void;
+  /** Bırakıldığında çağrılır; progress 0-1 arası doluluk oranıdır. */
+  onRelease?: (progress: number) => void;
+  /** Dolum iptal edildi (pointercancel, yakalama kaybı, sayfa gizlendi, söküm): `onRelease`/`onCharged` ÇAĞRILMAZ. */
+  onCancel?: () => void;
+  size?: number;
+  /**
+   * Ekran okuyucu duyurusu (varsayılan kapalı; host kendi HUD'ında duyuruyorsa çift okunmasın):
+   * dolum başlayınca "Doluyor", yüzde 25/50/75'te yüzde, tam dolunca "Tamamen doldu" (kibar canlı
+   * bölge, kare başına değil). Metin `core:chargeButton` çevirisinden gelir. Bırakış/iptalde bölge
+   * temizlenir; sonucu oyun duyurur. `label` verilmişse düğmenin adı etikettir (canlı bölge ada karışmaz).
+   */
+  announce?: boolean;
+}
+
+/**
+ * Basılı tutuldukça dolan bir halka göstergesiyle çevrili buton (saldırı gücü
+ * biriktirme, cast time gibi yetenekler için). HoldButton'dan farkı: basılı
+ * tutma süresi bir değer taşır (0-1 doluluk oranı), ani bas-bırak değil.
+ */
+export class ChargeButton {
+  readonly element: HTMLButtonElement;
+  private readonly ring: SVGCircleElement;
+  private readonly ringCircumference: number;
+  private readonly chargeDurationMs: number;
+  private readonly allowPartialRelease: boolean;
+  private readonly onChargeProgressHandler?: (progress: number) => void;
+  private readonly onChargedHandler?: () => void;
+  private readonly onReleaseHandler?: (progress: number) => void;
+  private readonly onCancelHandler?: () => void;
+  private chargeStartTime = 0;
+  private isCharging = false;
+  private isFullyCharged = false;
+  private readonly announcer: HTMLSpanElement | null = null;
+  private announcedStep = 0;
+  private rafHandle: number | null = null;
+  private activePointerId: number | null = null;
+  private boundPointerDown: (event: PointerEvent) => void;
+  private boundPointerUp: (event: PointerEvent) => void;
+  private readonly boundCancel: () => void;
+  private readonly boundVisibility: () => void;
+  private readonly unbindHoldInput: () => void;
+
+  constructor(options: ChargeButtonOptions) {
+    this.chargeDurationMs = options.chargeDurationMs ?? UI_TIMING.CHARGE_DURATION_MS;
+    this.allowPartialRelease = options.allowPartialRelease ?? true;
+    this.onChargeProgressHandler = options.onChargeProgress;
+    this.onChargedHandler = options.onCharged;
+    this.onCancelHandler = options.onCancel;
+    this.onReleaseHandler = options.onRelease;
+
+    const size = options.size ?? UI_SIZE.BUTTON_DEFAULT_PX;
+    this.element = document.createElement('button');
+    this.element.type = 'button';
+    this.element.className = 'vol-charge-button';
+    // Oynanış denetimi: arayüz sesi çalmaz (ateş/şarj/yön sesi oyunun kendi SFX'idir); kök yedek `press` sesi de almaz.
+    this.element.dataset.volSilent = '';
+    this.element.setAttribute('aria-pressed', 'false');
+    this.element.style.setProperty('--vol-charge-button-size', `${size}px`);
+    this.element.style.touchAction = 'none';
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.classList.add('vol-charge-button__ring');
+    svg.setAttribute('viewBox', '0 0 100 100');
+
+    const trackCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    trackCircle.classList.add('vol-charge-button__ring-track');
+    trackCircle.setAttribute('cx', '50');
+    trackCircle.setAttribute('cy', '50');
+    trackCircle.setAttribute('r', '46');
+    svg.appendChild(trackCircle);
+
+    this.ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    this.ring.classList.add('vol-charge-button__ring-fill');
+    this.ring.setAttribute('cx', '50');
+    this.ring.setAttribute('cy', '50');
+    this.ring.setAttribute('r', '46');
+    this.ringCircumference = 2 * Math.PI * 46;
+    this.ring.style.strokeDasharray = String(this.ringCircumference);
+    this.ring.style.strokeDashoffset = String(this.ringCircumference);
+    svg.appendChild(this.ring);
+
+    this.element.appendChild(svg);
+
+    if (options.icon) {
+      const iconSlot = document.createElement('span');
+      iconSlot.className = 'vol-charge-button__icon';
+      if (typeof options.icon === 'string') {
+        iconSlot.textContent = options.icon;
+      } else {
+        iconSlot.appendChild(options.icon);
+      }
+      this.element.appendChild(iconSlot);
+    }
+
+    if (options.label) {
+      const labelEl = document.createElement('span');
+      labelEl.className = 'vol-charge-button__label';
+      labelEl.textContent = options.label;
+      this.element.appendChild(labelEl);
+      if (options.announce) {
+        labelEl.id = `vol-charge-label-${++announcerSerial}`;
+        this.element.setAttribute('aria-labelledby', labelEl.id);
+      }
+    }
+
+    if (options.announce) {
+      const announcer = document.createElement('span');
+      announcer.className = 'vol-sr-only';
+      announcer.setAttribute('role', 'status');
+      announcer.setAttribute('aria-live', 'polite');
+      announcer.setAttribute('aria-atomic', 'true');
+      this.element.appendChild(announcer);
+      this.announcer = announcer;
+    }
+
+    this.boundPointerDown = (event) => this.handlePointerDown(event);
+    this.boundCancel = () => this.cancel();
+    this.boundVisibility = () => {
+      if (document.visibilityState === 'hidden') this.cancel();
+    };
+    this.boundPointerUp = (event) => this.handlePointerUp(event);
+    this.element.addEventListener('pointerdown', this.boundPointerDown);
+    this.element.addEventListener('pointerup', this.boundPointerUp);
+    this.element.addEventListener('pointercancel', this.boundCancel);
+    this.element.addEventListener('lostpointercapture', this.boundCancel);
+    document.addEventListener('visibilitychange', this.boundVisibility);
+    // pointerleave kasıtlı olarak dinlenmiyor — parmak dışarı kayarsa dolum iptal edilmemeli.
+    // Klavye (Space/Enter) ve kol A aynı dolum/bırakış çiftini üretir; odak kaybı dolumu iptal eder.
+    this.unbindHoldInput = bindHoldInput(this.element, {
+      down: () => this.beginCharge(),
+      up: () => this.finishCharge(),
+      cancel: () => this.cancel(),
+      isBusy: () => this.isCharging,
+    });
+  }
+
+  /** Şu an dolum yüzdesi (0-1). */
+  getProgress(): number {
+    if (!this.isCharging) return 0;
+    return Math.min(1, (performance.now() - this.chargeStartTime) / this.chargeDurationMs);
+  }
+
+  /** Dolumu iptal eder: ne `onCharged` ne `onRelease`; durum ve halka sıfırlanır. Dolum yoksa etkisiz. */
+  cancel(): void {
+    if (!this.isCharging) return;
+    this.activePointerId = null;
+    this.stopCharging();
+    this.onCancelHandler?.();
+  }
+
+  destroy(): void {
+    if (this.rafHandle !== null) cancelAnimationFrame(this.rafHandle);
+    this.element.removeEventListener('pointerdown', this.boundPointerDown);
+    this.element.removeEventListener('pointerup', this.boundPointerUp);
+    this.element.removeEventListener('pointercancel', this.boundCancel);
+    this.element.removeEventListener('lostpointercapture', this.boundCancel);
+    document.removeEventListener('visibilitychange', this.boundVisibility);
+    this.unbindHoldInput();
+    this.element.remove();
+  }
+
+  private handlePointerDown(event: PointerEvent): void {
+    // Devam eden dolumda ikinci işaretçi yok sayılır.
+    if (this.element.disabled || this.isCharging) return;
+    this.activePointerId = event.pointerId;
+    this.element.setPointerCapture(event.pointerId);
+    this.beginCharge();
+  }
+
+  private handlePointerUp(event: PointerEvent): void {
+    if (this.activePointerId !== event.pointerId) return;
+    if (this.element.hasPointerCapture(event.pointerId)) {
+      this.element.releasePointerCapture(event.pointerId);
+    }
+    this.activePointerId = null;
+    this.finishCharge();
+  }
+
+  private beginCharge(): void {
+    if (this.element.disabled || this.isCharging) return;
+    this.isCharging = true;
+    this.isFullyCharged = false;
+    this.chargeStartTime = performance.now();
+    this.element.classList.add('vol-charge-button--charging');
+    this.element.setAttribute('aria-pressed', 'true');
+    this.announcedStep = 0;
+    this.announce(i18next.t('core:chargeButton.start'));
+    this.tick();
+  }
+
+  /** Bırakış (işaretçi, klavye ya da kol): tam dolumda `onRelease(1)`, erken bırakışta kısmi ya da hiçbiri. */
+  private finishCharge(): void {
+    if (!this.isCharging) return;
+
+    const progress = this.getProgress();
+    this.stopCharging();
+
+    if (this.isFullyCharged) {
+      // onCharged zaten tick() içinde tetiklendi; burada yalnızca onRelease bilgilendirme amaçlı çağrılır.
+      this.onReleaseHandler?.(1);
+      return;
+    }
+
+    if (this.allowPartialRelease) {
+      this.onReleaseHandler?.(progress);
+    }
+  }
+
+  private tick(): void {
+    if (!this.isCharging) return;
+
+    const progress = this.getProgress();
+    const offset = this.ringCircumference * (1 - progress);
+    this.ring.style.strokeDashoffset = String(offset);
+    this.onChargeProgressHandler?.(progress);
+    this.announceProgress(progress);
+
+    if (progress >= 1) {
+      // wasAlreadyFull koruması olmadan, tick() rAF ile devam ettiği sürece (allowPartialRelease:true)
+      // onCharged her karede tekrar tetiklenirdi — burada bir kez tetiklenmesi garanti edilir.
+      const wasAlreadyFull = this.isFullyCharged;
+      this.isFullyCharged = true;
+      this.element.classList.add('vol-charge-button--full');
+      if (!wasAlreadyFull) {
+        this.onChargedHandler?.();
+      }
+      if (!this.allowPartialRelease) {
+        return;
+      }
+    }
+
+    this.rafHandle = requestAnimationFrame(() => this.tick());
+  }
+
+  private announce(message: string): void {
+    if (this.announcer) this.announcer.textContent = message;
+  }
+
+  /** Her yüzde 25 eşiği bir kez; tam dolum "Tamamen doldu". Kare başına duyuru yok. */
+  private announceProgress(progress: number): void {
+    if (!this.announcer) return;
+    const step = Math.min(ANNOUNCE_STEPS, Math.floor(progress * ANNOUNCE_STEPS));
+    if (step <= this.announcedStep) return;
+    this.announcedStep = step;
+    this.announce(
+      step >= ANNOUNCE_STEPS
+        ? i18next.t('core:chargeButton.ready')
+        : i18next.t('core:chargeButton.percent', { percent: (step * 100) / ANNOUNCE_STEPS }),
+    );
+  }
+
+  private stopCharging(): void {
+    this.isCharging = false;
+    this.announce('');
+    if (this.rafHandle !== null) {
+      cancelAnimationFrame(this.rafHandle);
+      this.rafHandle = null;
+    }
+    this.element.classList.remove('vol-charge-button--charging', 'vol-charge-button--full');
+    this.element.setAttribute('aria-pressed', 'false');
+    this.ring.style.strokeDashoffset = String(this.ringCircumference);
+  }
+}

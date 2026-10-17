@@ -1,0 +1,67 @@
+{
+  "pcmHash": "sha256:d924c346141127ee112cc4af7a0368953149692e2a592b4d1f947fcccaef72de",
+  "renderHash": "sha256:c7703ab4125db4fb39b3d8234582285a6de8439144032f3932421c4ac2e30d81",
+  "renderId": "r-5c5194533ec711c1",
+  "report": {
+    "analyzerVersion": 1,
+    "dc": {
+      "channelOffset": [0.00000102586244587631, 3.923337605864568e-7]
+    },
+    "defects": {
+      "clicks": {
+        "count": 1,
+        "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+      },
+      "clips": {
+        "channelSamples": 0,
+        "frames": 0,
+        "perChannel": [0, 0]
+      }
+    },
+    "format": {
+      "channels": 2,
+      "durationSeconds": 10,
+      "frames": 441000,
+      "sampleRate": 44100
+    },
+    "level": {
+      "channelPeakDbfs": [-1.8794967255211281, -2.164782106969805],
+      "channelRmsDbfs": [-19.49616270425386, -20.004074707564556],
+      "crestFactorDb": 17.86320110214262,
+      "integratedLufs": -16.061939653382623,
+      "maxMomentaryLufs": -12.432925008877604,
+      "rmsDbfs": -19.74269782766375,
+      "samplePeakDbfs": -1.8794967255211281,
+      "truePeakDbtp": -1.8748859800176079
+    },
+    "measuredFrom": "source-pcm",
+    "schema": "AudioAnalysisReportV1",
+    "spectral": {
+      "bandsDb": {
+        "air": -83.26424607706265,
+        "high": -46.8312471693174,
+        "low": -22.484647992305963,
+        "mid": -28.19065004028234,
+        "sub": -24.862021556110115
+      },
+      "centroidHz": 306.665820469593,
+      "flatness": 0.0000018704816917016197,
+      "peakHz": 86.1328125,
+      "rolloff85Hz": 452.197265625
+    },
+    "stereo": {
+      "correlation": 0.9775203814842804,
+      "width": 0.1105523403137622
+    },
+    "temporal": {
+      "activeSeconds": 7.2,
+      "attackSeconds": 0.02,
+      "decay40Seconds": 1.18,
+      "leadingSilenceSeconds": 0,
+      "peakTimeSeconds": 5.02,
+      "temporalCentroidSeconds": 4.905038536493045,
+      "trailingSilenceSeconds": 0.41000000000000014
+    }
+  },
+  "schema": "AudioAnalysisRecordV1"
+}

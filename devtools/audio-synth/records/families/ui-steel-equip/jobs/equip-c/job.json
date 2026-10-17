@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-d2179d7b3ee66730": {
+        "hash": "sha256:809c113dd51459875d83078b71d23e6cd6ff9ed8035b7b27a3029fa2db269a57",
+        "path": "analyses/r-d2179d7b3ee66730.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:be4328d6266a1efd6d659d549c7c97525ffb2090880d920f265e48003a89fca5",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:be4328d6266a1efd6d659d549c7c97525ffb2090880d920f265e48003a89fca5",
+      "hash": "sha256:d541887e54eb5c97ac296fd7eeb74eeca80afeda5143070d4aacbbadb457dd10",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:54c9b717dde4d77b31b343cda6b369e6d7d51c60a9a9bf1529dfcd9a0b5dbfe1",
+      "path": "core/audio-manifests/ui/steel/equip-c.json"
+    },
+    "renders": {
+      "r-d2179d7b3ee66730": {
+        "hash": "sha256:a069b91aa45a19d36d4ef7f6b6c678c29e8c58a8b269dd4f1e9ee5cf5f9490ed",
+        "path": "renders/r-d2179d7b3ee66730.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:d62fce8bda6a9ea5cd10c78dbcb058f9f11c161546cadebbf6933d169db6c29a",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "equip-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/equip-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-equip/equip-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

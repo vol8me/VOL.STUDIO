@@ -1,11 +1,45 @@
-import { animateValue } from '../animation';
+import { Easing, animateValue } from '../animation';
+import { prefersReducedMotion } from '../motion/reducedMotion';
 
 export interface CounterOptions {
   value?: number;
   /** Sayı gösterimini biçimlendirir (örn. binlik ayraç, "x3" formatı). Varsayılan: Math.round + String. */
   format?: (value: number) => string;
-  /** Değer değişimini akıcı sayma animasyonu süresi. 0 = anında. */
+  /**
+   * Değer değişimini akıcı sayma animasyonu süresi. 0 = anında. Hareket azaltma açıkken sayma yoktur: sayı doğrudan son
+   * değere gider (duyuru ve `getValue()` zaten hedef değerdir).
+   */
   animateMs?: number;
+  /** Okuyucu duyurusunun başına eklenen ad ("Mermi 12"); ikonlu sayaçlar adını buradan taşır. */
+  announcePrefix?: string;
+  /**
+   * Sayma hedefi kısa süre (en çok %3,7) aşıp yerine oturur. Yalnız görseldir: okuyucu duyurusu ve
+   * `getValue()` hedef değerdir. Azaltılmış harekette yoktur. Varsayılan kapalı: ara değerin hedefi
+   * aşması her sayaçta istenmez (kalan can, mermi gibi sınırlı değerlerde kapalı kalmalı).
+   */
+  overshoot?: boolean;
+}
+
+/**
+ * Okuyucu duyuruları arasındaki asgari aralık (ms). Skor/süre gibi sık yazılan sayaç her değişimde
+ * duyurulsaydı okuyucu boğulurdu: ilk değişim hemen, sonrakiler birleşip aralık sonunda SON değerle duyulur.
+ */
+export const COUNTER_ANNOUNCE_GAP_MS = 1000;
+
+/** Sayı değişiminin kullanıcıya görsel olarak anlatılan yönü. */
+export type CounterValueChange = 'increase' | 'decrease' | 'none';
+
+export interface CounterSetValueOptions {
+  /**
+   * Yön verilmezse eski ve yeni değer karşılaştırılarak otomatik bulunur.
+   *
+   * **`'none'` vurguyu KAPATIR.** Değeri her karede yazan bir HUD (skor,
+   * süre, mesafe) varsayılan otomatik yönü kullanırsa sürekli animasyon
+   * alır; böyle bir tüketici açıkça `change: 'none'` geçer.
+   */
+  change?: CounterValueChange;
+  /** Değer değişmese bile nötr vurgu oynatır. */
+  pulse?: boolean;
 }
 
 export class Counter {
@@ -15,11 +49,23 @@ export class Counter {
   private value: number;
   private readonly format: (value: number) => string;
   private readonly animateMs: number;
+  private readonly overshoot: boolean;
   private cancelAnimation?: () => void;
-  private pulseTimeout?: ReturnType<typeof setTimeout>;
+  private feedbackTimeout?: ReturnType<typeof setTimeout>;
+  private readonly announcePrefix: string;
+  private lastAnnounceAt = Number.NEGATIVE_INFINITY;
+  private pendingAnnounce?: ReturnType<typeof setTimeout>;
 
   constructor(options: CounterOptions = {}) {
-    const { value = 0, format = (v) => String(Math.round(v)), animateMs = 150 } = options;
+    const {
+      value = 0,
+      format = (v) => String(Math.round(v)),
+      animateMs = 150,
+      announcePrefix = '',
+      overshoot = false,
+    } = options;
+    this.overshoot = overshoot;
+    this.announcePrefix = announcePrefix;
 
     this.value = value;
     this.format = format;
@@ -40,33 +86,61 @@ export class Counter {
     this.announceElement.className = 'vol-sr-only';
     this.announceElement.setAttribute('role', 'status');
     this.announceElement.setAttribute('aria-live', 'polite');
-    this.announceElement.textContent = this.format(value);
+    this.announceElement.textContent = this.announceText();
     this.element.appendChild(this.announceElement);
   }
 
-  setValue(value: number, options: { pulse?: boolean } = {}): void {
+  /**
+   * Değeri yazar ve varsayılan olarak DEĞİŞİM YÖNÜNÜ vurgular.
+   *
+   * Sözleşme (öncelik sırasıyla):
+   * - `change: 'increase' | 'decrease'` → o yön zorlanır.
+   * - `change: 'none'` → vurgu yok (`pulse: true` verilirse yalnız nötr pulse).
+   * - `change` yok, `pulse: true` → eski nötr sözleşme korunur.
+   * - Hiçbiri yok → yön eski/yeni değerden çıkarılır; değer aynıysa vurgu yok.
+   *
+   * Yön çıkarımı varsayılandır. Her karede aynı sayacı yazan tüketiciler için
+   * `change: 'none'` çıkış kapısıdır.
+   */
+  setValue(value: number, options: CounterSetValueOptions = {}): void {
+    // Geçersiz sayı ("NaN", "Infinity") oyuncuya yazılmaz: son geçerli değer kalır. Gösterilen yanlış bir sayı,
+    // gösterilmeyen güncellemeden kötüdür.
+    if (!Number.isFinite(value)) return;
     const from = this.value;
     this.value = value;
 
     this.cancelAnimation?.();
+    this.cancelAnimation = undefined;
 
-    if (this.animateMs <= 0 || from === value) {
+    if (this.animateMs <= 0 || from === value || prefersReducedMotion()) {
       this.displayElement.textContent = this.format(value);
     } else {
       this.cancelAnimation = animateValue({
         from,
         to: value,
         durationMs: this.animateMs,
+        easing: this.overshoot ? Easing.easeOutOvershoot : undefined,
         onUpdate: (v) => {
           this.displayElement.textContent = this.format(v);
         },
       });
     }
 
-    this.announceElement.textContent = this.format(value);
+    this.announce();
 
-    if (options.pulse) {
+    const change = options.change ?? inferValueChange(from, value);
+    if (options.change !== undefined) {
+      if (options.change === 'none') {
+        if (options.pulse) this.pulse();
+      } else {
+        this.flashChange(options.change);
+      }
+    } else if (options.pulse) {
+      // `pulse:true` eski API'nin nötr vurgu sözleşmesidir; yön bilgisi
+      // isteyen çağrı açıkça `change` verir veya varsayılan infer davranışını kullanır.
       this.pulse();
+    } else if (change !== 'none') {
+      this.flashChange(change);
     }
   }
 
@@ -76,20 +150,71 @@ export class Counter {
 
   /** Değer görsel olarak değişmese bile vurgu animasyonu tetikler (örn. hasar aldığında). */
   pulse(): void {
-    this.element.classList.remove('vol-counter--pulse');
+    this.clearFeedbackClasses();
     // Reflow zorunlu: aynı class art arda eklenirse animasyon oynamaz.
     void this.element.offsetWidth;
     this.element.classList.add('vol-counter--pulse');
 
-    clearTimeout(this.pulseTimeout);
-    this.pulseTimeout = setTimeout(() => {
-      this.element.classList.remove('vol-counter--pulse');
+    this.scheduleFeedbackCleanup();
+  }
+
+  /** Değer yönünü renk ve aynı kısa pulse animasyonuyla anlatır. */
+  private flashChange(change: Exclude<CounterValueChange, 'none'>): void {
+    this.clearFeedbackClasses();
+    void this.element.offsetWidth;
+    this.element.classList.add(`vol-counter--${change}`);
+    this.scheduleFeedbackCleanup();
+  }
+
+  private clearFeedbackClasses(): void {
+    this.element.classList.remove(
+      'vol-counter--pulse',
+      'vol-counter--increase',
+      'vol-counter--decrease',
+    );
+    clearTimeout(this.feedbackTimeout);
+    this.feedbackTimeout = undefined;
+  }
+
+  private scheduleFeedbackCleanup(): void {
+    this.feedbackTimeout = setTimeout(() => {
+      this.feedbackTimeout = undefined;
+      this.clearFeedbackClasses();
     }, 400);
+  }
+
+  private announceText(): string {
+    const text = this.format(this.value);
+    return this.announcePrefix ? `${this.announcePrefix} ${text}` : text;
+  }
+
+  /** İlk duyuru hemen, sıkışık olanlar aralık sonunda son değerle (bkz. `COUNTER_ANNOUNCE_GAP_MS`). */
+  private announce(): void {
+    const wait = COUNTER_ANNOUNCE_GAP_MS - (Date.now() - this.lastAnnounceAt);
+    if (wait <= 0) {
+      clearTimeout(this.pendingAnnounce);
+      this.pendingAnnounce = undefined;
+      this.announceElement.textContent = this.announceText();
+      this.lastAnnounceAt = Date.now();
+    } else if (this.pendingAnnounce === undefined) {
+      this.pendingAnnounce = setTimeout(() => {
+        this.pendingAnnounce = undefined;
+        this.announceElement.textContent = this.announceText();
+        this.lastAnnounceAt = Date.now();
+      }, wait);
+    }
   }
 
   destroy(): void {
     this.cancelAnimation?.();
-    clearTimeout(this.pulseTimeout);
+    clearTimeout(this.feedbackTimeout);
+    clearTimeout(this.pendingAnnounce);
     this.element.remove();
   }
+}
+
+function inferValueChange(from: number, to: number): CounterValueChange {
+  if (to > from) return 'increase';
+  if (to < from) return 'decrease';
+  return 'none';
 }

@@ -1,0 +1,71 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-1899fd0206a7235a": {
+        "hash": "sha256:6e095d012d03885ed27c184706db3c89c465233823d09e6202e19283bc2704d5",
+        "path": "analyses/r-1899fd0206a7235a.json"
+      },
+      "r-78ba971c32578df7": {
+        "hash": "sha256:3656a6ee58769e82893681a1461f9ee07ed892c805d7b7aae457b390e480fd8e",
+        "path": "analyses/r-78ba971c32578df7.json"
+      },
+      "r-7bc2ab5cde956109": {
+        "hash": "sha256:bd0927d00c5b03d1c1f058d2bdf4c5f3bda12f5601f36a44fadf73708e009f78",
+        "path": "analyses/r-7bc2ab5cde956109.json"
+      },
+      "r-ef5cc0526c51f20a": {
+        "hash": "sha256:81d16d32a85f0d33f1bec3403af1ab44a22b82cbdacfd23906b4d5347596875c",
+        "path": "analyses/r-ef5cc0526c51f20a.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:cab4a710cebebc677a80deae7d0a32b7bcf04b177d87c29a8f00da794fa63192",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:cab4a710cebebc677a80deae7d0a32b7bcf04b177d87c29a8f00da794fa63192",
+      "hash": "sha256:a333149f8f27332e910d1a8e52bb8d67fef77385e22caf70a9a40ae8220d1234",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:768c7908ef712d890ee8d1ca9ae7bc4fd6fce5bc1afd09406daf8fdc48820f38",
+      "path": "devtools/audio-synth/reference/production/manifests/ambience/reference-ambience.json"
+    },
+    "renders": {
+      "r-1899fd0206a7235a": {
+        "hash": "sha256:c5fc1b7fbfdd9c3265be6be6128304159fcd014d8fa655c4476fd63dab1a984a",
+        "path": "renders/r-1899fd0206a7235a.json"
+      },
+      "r-78ba971c32578df7": {
+        "hash": "sha256:48767e018b01db60a42a5ab77f735362fc0dad785a17d6ecd45d68adef9d3567",
+        "path": "renders/r-78ba971c32578df7.json"
+      },
+      "r-7bc2ab5cde956109": {
+        "hash": "sha256:be0f6da4110b99ab822e58f286c619efaa18cd3364bf2774accedf41d661bc5b",
+        "path": "renders/r-7bc2ab5cde956109.json"
+      },
+      "r-ef5cc0526c51f20a": {
+        "hash": "sha256:df8e689e3ed32ed1fd1849e2a51d25a6df68cc03886f3687eae66c87e8f44a37",
+        "path": "renders/r-ef5cc0526c51f20a.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:9c22ffa88b5ce96dbf27f2b51ac7509a6e5e4d37eec2c9483484f1f703015811",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "reference-ambience",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 22,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/ambience/reference-ambience.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "reference/ambience"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-b876231d523e0ad8": {
+        "hash": "sha256:7f7b20cd6bed4cecd3d7f81dd0a1a91bfab86510bc0cddfa7995d8e9d5c30cac",
+        "path": "analyses/r-b876231d523e0ad8.json"
+      },
+      "r-c29da3f393c10ca2": {
+        "hash": "sha256:95f8c7391d2fd1fc48402b664bd6bec927501e48ab8385d4bed425df3bcda0d1",
+        "path": "analyses/r-c29da3f393c10ca2.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:077537f6d14e17b4a33d0535ad0c79d94bc56a80b91f031c89dc5743ef0566a0",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:077537f6d14e17b4a33d0535ad0c79d94bc56a80b91f031c89dc5743ef0566a0",
+      "hash": "sha256:17f3ad3533cb4e26d3afe37082bc4bdded764f076b7db84a404ee409312db777",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:69fff9cc7e52786173b8660c870fd844c31729873a66a10439b0ecaf7fde7b17",
+      "path": "devtools/audio-synth/reference/production/manifests/sfx/delivery/reference-impact-radio.json"
+    },
+    "renders": {
+      "r-b876231d523e0ad8": {
+        "hash": "sha256:ceea7c8870e1667ca118aed967fe258c4e058f1417ed6344ed1f0fecfef89e5b",
+        "path": "renders/r-b876231d523e0ad8.json"
+      },
+      "r-c29da3f393c10ca2": {
+        "hash": "sha256:417bc57738156fc58264d9e427293e2d7680c46fcaa5d402db790951aec0acec",
+        "path": "renders/r-c29da3f393c10ca2.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:af6193cd6ade5061c5e26360f475991c41231ea7f345d2f97cedb8866535e04e",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "reference-impact-radio",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 11,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/sfx/delivery/reference-impact-radio.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "reference/impact/radio"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

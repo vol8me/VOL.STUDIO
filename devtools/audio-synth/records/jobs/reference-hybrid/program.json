@@ -1,0 +1,123 @@
+{
+  "buses": {
+    "space": {
+      "effects": [
+        {
+          "params": {
+            "gainDb": 0,
+            "ir": "room",
+            "mix": 1
+          },
+          "primitive": "effect.convolution",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 120,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ]
+    }
+  },
+  "channels": 2,
+  "description": "Hybrid: kayıttan transient (HPSS) + prosedürel basınç gövdesi + materyal gövdesi + IR konvolüsyon kuyruğu.",
+  "durationSeconds": 1.8,
+  "layers": [
+    {
+      "gainDb": -2,
+      "mechanism": "sampled",
+      "name": "transient",
+      "role": "transient",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "component": "transient",
+          "sample": "hit"
+        },
+        "primitive": "source.sample",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -4,
+      "mechanism": "pressure",
+      "name": "body",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -18
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.6,
+          "bodyDecay": 0.5,
+          "bodyHz": 70,
+          "positive": 0.012
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -10,
+      "mechanism": "impact",
+      "name": "ring",
+      "pan": 0.2,
+      "resonators": [
+        {
+          "params": {
+            "material": "metal",
+            "size": 0.5
+          },
+          "primitive": "resonator.material",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "contactTime": 0.0004
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "fadeOutSeconds": 0.05,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 48000,
+  "samples": {
+    "hit": {
+      "channels": 1,
+      "frames": 38400,
+      "hash": "sha256:5145cd48f17951758d793191afc393b0ad0d4267120548e35688025e73941736",
+      "id": "metal-hit",
+      "sampleRate": 48000
+    },
+    "room": {
+      "channels": 2,
+      "frames": 48000,
+      "hash": "sha256:2bc9a6ebb52b68b51586b95f14538dc2ca4595c9c508abf227608cae80b654ed",
+      "id": "room-ir",
+      "sampleRate": 48000
+    }
+  },
+  "schema": "AcousticProgramV1",
+  "seed": 11
+}

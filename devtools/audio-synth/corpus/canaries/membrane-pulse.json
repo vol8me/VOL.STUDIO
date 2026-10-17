@@ -1,0 +1,66 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "membrane-pulse",
+  "version": 1,
+  "title": "Zar nabzı",
+  "purpose": "Timbal/zar exciter’ı 22 Hz nabızla zar yerleşimli modal gövdeyi sürer.",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 1,
+      "seed": 14,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.02
+      },
+      "layers": [
+        {
+          "name": "pulse",
+          "source": {
+            "primitive": "exciter.membrane",
+            "version": 1,
+            "params": {
+              "rate": 22,
+              "tension": 0.5
+            }
+          },
+          "resonators": [
+            {
+              "primitive": "resonator.modal",
+              "version": 1,
+              "params": {
+                "layout": "membrane",
+                "frequency": 180,
+                "decay": 0.15,
+                "modes": 8
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "pulse-rate",
+      "min": 19.8,
+      "max": 24.2
+    },
+    {
+      "kind": "band-dominance",
+      "dominant": "low",
+      "over": "high"
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Saniyede ~22 kez tekrarlanan, boğuk, zar benzeri bir tırıltı/vızıltı beklenir.",
+    "Hata belirtileri: tek sürekli ton (nabız kaybı), düzensiz takılma, ince/metalik tını."
+  ]
+}

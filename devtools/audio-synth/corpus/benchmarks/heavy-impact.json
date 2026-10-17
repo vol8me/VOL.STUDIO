@@ -1,0 +1,75 @@
+{
+  "schema": "BenchmarkTaskV1",
+  "id": "heavy-impact",
+  "version": 1,
+  "title": "Ağır gerçekçi darbe",
+  "purpose": "source.contact ağır kütle metal–taş teması + source.pressure-wave gövde: perdeli metal çınlaması taşıyan tok darbe.",
+  "category": "impact",
+  "parts": [
+    {
+      "id": "main",
+      "source": {
+        "kind": "program",
+        "program": {
+          "schema": "AcousticProgramV1",
+          "sampleRate": 48000,
+          "channels": 1,
+          "durationSeconds": 1.8,
+          "seed": 29,
+          "master": {
+            "normalize": "peak",
+            "peakDbfs": -3,
+            "fadeOutSeconds": 0.05,
+            "limiter": { "ceilingDbtp": -1.5 }
+          },
+          "layers": [
+            {
+              "name": "hit",
+              "source": {
+                "primitive": "source.contact",
+                "version": 1,
+                "params": {
+                  "mass": 6,
+                  "materialA": "metal",
+                  "materialB": "stone",
+                  "velocity": 2.5,
+                  "size": 0.8,
+                  "debris": 0.3
+                }
+              }
+            },
+            {
+              "name": "sub",
+              "gainDb": -8,
+              "source": {
+                "primitive": "source.pressure-wave",
+                "version": 1,
+                "params": {
+                  "bodyHz": 55,
+                  "body": 0.7,
+                  "decay": 1.2,
+                  "positive": 0.01,
+                  "rise": 0.005
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expectations": [
+        { "kind": "asset-policy", "assetClass": "sfx" },
+        { "kind": "clipping" },
+        { "kind": "clicks", "max": 2 },
+        { "kind": "descriptor", "descriptor": "durationSeconds", "min": 1.0, "max": 2.4 },
+        { "kind": "descriptor", "descriptor": "attackSeconds", "max": 0.015 },
+        { "kind": "pitch", "min": 50, "max": 500, "minConfidence": 0.5 },
+        { "kind": "descriptor", "descriptor": "centroidHz", "max": 3000 },
+        { "kind": "band-dominance", "dominant": "low", "over": "high" }
+      ]
+    }
+  ],
+  "listeningGuide": [
+    "Ağır bir cismin sert yüzeye vurduğu tok darbe; metal gövde çınlaması doğal sönümlenir.",
+    "Hata belirtileri: plastik ya da boş teneke tınısı, patlamaya dönüşme, atakta tık."
+  ]
+}

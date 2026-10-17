@@ -1,0 +1,301 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          7.700722408840146e-7
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.8973333333333333,
+        "frames": 43072,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -3.0037123800967933
+        ],
+        "channelRmsDbfs": [
+          -20.605841613036464
+        ],
+        "crestFactorDb": 17.60212923293967,
+        "integratedLufs": -21.976644149220668,
+        "maxMomentaryLufs": -17.808023128465916,
+        "rmsDbfs": -20.605841613036464,
+        "samplePeakDbfs": -3.0037123800967933,
+        "truePeakDbtp": -3.0037123800967933
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -107.96124736562331,
+          "high": -87.37880759743834,
+          "low": -58.27388117802216,
+          "mid": -21.05401247221161,
+          "sub": -57.601472764881095
+        },
+        "centroidHz": 583.1415641484455,
+        "flatness": 2.0420975122586565e-10,
+        "peakHz": 585.9375,
+        "rolloff85Hz": 585.9375
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.9,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.89,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0,
+        "temporalCentroidSeconds": 0.09817477953421781,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:b8a7b26a7b51fef4b6cc547b4a93918ce8555b67318027aa5f4f854593dcac77"
+  },
+  "asset": {
+    "bytes": 7113,
+    "encodedHash": "sha256:d82c61609c192cd7c49b87e0df7a90e81021fb2f7923f86d28c0d15cbf2b23f8",
+    "format": "ogg-vorbis",
+    "path": "devtools/audio-synth/reference/production/assets/sfx/families/reference-shell-hits/medium-light-alt.ogg"
+  },
+  "assetId": "reference-shell-hits-medium-light-alt",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": [
+        "intensity:medium",
+        "rarity:alternate",
+        "weight:light",
+        "knock"
+      ],
+      "durationSeconds": {
+        "max": 1.5,
+        "min": 0.5
+      },
+      "id": "reference-shell-hits-medium-light-alt",
+      "intent": "audio-synth referans ailesi: ResonantShell kimliğinden yoğunluk ve ağırlık rolleriyle sekiz vuruş varyantı. Yalnız aile üretim ve bank yolunu uçtan uca sınamak içindir; hiçbir oyun tüketmez. Varyant medium-light-alt (intensity:medium, rarity:alternate, weight:light).",
+      "kind": "acoustic",
+      "provenance": {
+        "author": "agent",
+        "by": "sound-family"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "Referans kabuk vuruşları — medium-light-alt"
+    },
+    "hash": "sha256:7cffb377a9d28e41997c9869bc2c183bd3a8a3514eae216d294bc5cdf5afb909",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:2749e17fe685aa80f40acc5d54864e35094d1123a92b45933e4128bbe96cdc15",
+      "nodes": [
+        {
+          "hash": "sha256:a4e744aa41285d06324f8898045f2250df8684764f90dc8e2ebed939917a0146",
+          "id": "control.body-size",
+          "version": 1
+        },
+        {
+          "hash": "sha256:35228f057d6a249c1a6195198d4a66709609bcad326ed9e6b75fe061b53878bb",
+          "id": "control.roughness",
+          "version": 1
+        },
+        {
+          "hash": "sha256:08c072b664bf7c4f4e72f91a3ed0a352ec7b797433cd8563f37d5a1a20aa1078",
+          "id": "control.viscosity",
+          "version": 1
+        },
+        {
+          "hash": "sha256:7e3ae986781771d633de1f73e9d814b4e9f542fdb2e0ce6eed209e20dd989fe0",
+          "id": "effect.reverb",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:ade86fbd3a23e7fcdf99f84204e2ebdb0948dbdce66cf54334a11ad1f05489c1",
+          "id": "resonator.cavity",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f24fa5c87c6aecf74eab9406650b96dcbc6c29891df1676fc98b15871c4d251c",
+          "id": "resonator.modal",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/audio-synth",
+    "runtimeDeclaration": null,
+    "runtimeKey": "reference-shell-hits/medium-light-alt",
+    "targetKind": "reference"
+  },
+  "job": {
+    "jobId": "medium-light-alt",
+    "path": "devtools/audio-synth/records/families/reference-shell-hits/jobs/medium-light-alt",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "controls": [
+        {
+          "control": "control.body-size",
+          "value": 0.290695,
+          "version": 1
+        },
+        {
+          "control": "control.viscosity",
+          "value": 0.305359,
+          "version": 1
+        },
+        {
+          "control": "control.roughness",
+          "value": 0.64834,
+          "version": 1
+        }
+      ],
+      "durationSeconds": 0.9,
+      "effects": [
+        {
+          "params": {
+            "amount": 0.12,
+            "decay": 0.5552899744093627
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        }
+      ],
+      "layers": [
+        {
+          "name": "strike",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.4,
+                "decay": 1.2,
+                "frequency": 431.3968715544069,
+                "layout": "membrane",
+                "modes": 12
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "q": 20,
+                "volume": 0.29096513109674393
+              },
+              "primitive": "resonator.cavity",
+              "version": 1
+            }
+          ],
+          "routing": "parallel",
+          "source": {
+            "params": {
+              "contactTime": 0.0016730845000000002,
+              "roughness": 0.2
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 3730083200
+    },
+    "hash": "sha256:c1810f3abdc6ca58b02b6c345cdeceb28fb04670189fd0a73db236e6e76800e0",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 43200,
+      "hash": "sha256:2d882099d5ce3cb34af05f3470dd0f0b1efd48ab518b53b2b60c218ca03b0089",
+      "sampleRate": 48000
+    },
+    "renderId": "r-d5e1a6b75eba8b80",
+    "rendererVersion": 2,
+    "seed": 3730083200
+  },
+  "schema": "AudioAssetManifestV1"
+}

@@ -1,0 +1,164 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { InputPresentationController } from '../../../src/ui/glyphs/InputPresentationController';
+import type { PadLike } from '../../../src/input/GamepadState';
+
+const pad = (id: string, pressed = false): PadLike => ({
+  id,
+  index: 0,
+  connected: true,
+  mapping: 'standard',
+  axes: [0, 0, 0, 0],
+  buttons: [{ pressed, value: pressed ? 1 : 0 }],
+});
+
+afterEach(() => document.body.replaceChildren());
+
+describe('InputPresentationController', () => {
+  it('paylaşılan girdi durumunda kolu yeniden yoklamaz ve kendi kip hakemini açmaz', () => {
+    const getGamepads = vi.fn(() => []);
+    const state = { mode: 'gamepad' as string | undefined, padId: 'DualSense', padConnected: true };
+    const presentation = new InputPresentationController({ readState: () => state, getGamepads });
+    const glyph = presentation.createGlyph({
+      padName: 'faceDown',
+      keyboardName: 'key',
+      label: 'Onay',
+    });
+    document.body.append(glyph);
+    presentation.start();
+    presentation.poll();
+    expect(getGamepads).not.toHaveBeenCalled();
+    expect(presentation.mode).toBe('gamepad');
+    expect(glyph.querySelector('img')?.getAttribute('src')).toContain('/playstation/');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+    presentation.poll();
+    expect(presentation.mode).toBe('gamepad');
+    state.mode = 'pc';
+    presentation.poll();
+    expect(glyph.querySelector('img')?.getAttribute('src')).toContain('/keyboard/');
+    presentation.destroy();
+  });
+
+  it('aynı glif düğümü canlı kol ailesine ve klavye/dokunmatik kipine geçer', () => {
+    let now = 0;
+    let pads: PadLike[] = [pad('Steam Deck')];
+    const presentation = new InputPresentationController({
+      initialMode: 'gamepad',
+      getGamepads: () => pads,
+      now: () => now,
+    });
+    const element = presentation.createGlyph({
+      padName: 'faceDown',
+      keyboardName: 'key',
+      key: 'enter',
+      label: 'Onay',
+    });
+    document.body.appendChild(element);
+    presentation.start();
+    presentation.poll();
+    expect(element.querySelector('img')?.getAttribute('src')).toContain('/valve/');
+    pads = [pad('DualSense')];
+    presentation.poll();
+    expect(element.querySelector('img')?.getAttribute('src')).toContain('/playstation/');
+    now = 300;
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    presentation.poll();
+    expect(element.querySelector('img')?.getAttribute('src')).toContain('/keyboard/');
+    now = 600;
+    const touch = new Event('pointerdown', { bubbles: true });
+    Object.defineProperty(touch, 'pointerType', { value: 'touch' });
+    document.dispatchEvent(touch);
+    presentation.poll();
+    expect(element.hidden).toBe(true);
+    now = 900;
+    pads = [pad('Xbox', true)];
+    presentation.poll();
+    expect(element.hidden).toBe(false);
+    expect(element.querySelector('img')?.getAttribute('src')).toContain('/xbox/');
+    presentation.destroy();
+  });
+
+  it('sunum girdisi değişmedikçe glifler her çağrıda taranmaz; değişince hemen, yerinde bağlama için aralıkla', () => {
+    const state = { mode: 'pc' as string | undefined, padId: '', padConnected: false };
+    const presentation = new InputPresentationController({ readState: () => state });
+    const binding = {
+      padName: 'faceDown' as const,
+      keyboardName: 'key' as const,
+      key: 'e',
+      label: 'Eylem',
+    };
+    const glyph = presentation.createGlyph(binding);
+    document.body.append(glyph);
+    const scan = vi.spyOn(document, 'querySelectorAll');
+
+    presentation.poll(); // ilk çağrı her zaman tarar
+    expect(scan).toHaveBeenCalledTimes(1);
+    for (let i = 0; i < 20; i += 1) presentation.poll();
+    expect(scan).toHaveBeenCalledTimes(1); // durum aynı: belge taranmadı
+
+    state.mode = 'gamepad';
+    state.padId = 'DualSense';
+    state.padConnected = true;
+    presentation.poll(); // değişiklik hemen yansır
+    expect(scan).toHaveBeenCalledTimes(2);
+    expect(glyph.querySelector('img')?.getAttribute('src')).toContain('/playstation/');
+
+    for (let i = 0; i < 40; i += 1) presentation.poll();
+    expect(scan.mock.calls.length).toBeGreaterThanOrEqual(3); // yerinde değişen bağlama için aralıklı tarama
+    expect(scan.mock.calls.length).toBeLessThan(5);
+    presentation.destroy();
+  });
+
+  it('kol çıkarılınca eski kontrolcü ailesi ekranda kalmaz', () => {
+    let pads: PadLike[] = [pad('DualSense')];
+    const presentation = new InputPresentationController({
+      initialMode: 'gamepad',
+      getGamepads: () => pads,
+    });
+    const element = presentation.createGlyph({ padName: 'faceDown', label: 'Onay' });
+    document.body.appendChild(element);
+    presentation.poll();
+    pads = [];
+    presentation.poll();
+    expect(element.hidden).toBe(true);
+    presentation.destroy();
+  });
+
+  it('Deck oturumunda başlangıç glifi kalır, fakat görülen kol ayrılınca gizlenir', () => {
+    let pads: readonly (PadLike | null)[] = [];
+    const presentation = new InputPresentationController({
+      initialMode: 'gamepad',
+      context: () => ({ steamDeckSession: true }),
+      getGamepads: () => pads,
+    });
+    const element = presentation.createGlyph({ padName: 'start', label: 'Duraklat' });
+    document.body.appendChild(element);
+    presentation.poll();
+    expect(element.hidden).toBe(false);
+    expect(element.querySelector('img')?.getAttribute('src')).toContain('/valve/');
+    pads = [pad('Xbox controller', true)];
+    presentation.poll();
+    expect(element.querySelector('img')?.getAttribute('src')).toContain('/xbox/');
+    pads = [null];
+    presentation.poll();
+    expect(element.hidden).toBe(true);
+    pads = [pad('DualSense', true)];
+    presentation.poll();
+    expect(element.hidden).toBe(false);
+    expect(element.querySelector('img')?.getAttribute('src')).toContain('/playstation/');
+    presentation.destroy();
+  });
+
+  it('sanal kol imleci hareketi klavye/fare kipine geçirmez', () => {
+    const presentation = new InputPresentationController({
+      initialMode: 'gamepad',
+      getGamepads: () => [pad('Steam Deck')],
+    });
+    presentation.start();
+    const move = new Event('pointermove', { bubbles: true });
+    Object.defineProperty(move, 'pointerType', { value: 'gamepad' });
+    document.dispatchEvent(move);
+    presentation.poll();
+    expect(presentation.mode).toBe('gamepad');
+    presentation.destroy();
+  });
+});

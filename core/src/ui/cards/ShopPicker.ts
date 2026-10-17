@@ -1,0 +1,563 @@
+import { CardPicker } from './CardPicker';
+import { CardTile } from './CardTile';
+import type {
+  LeavingTile,
+  OfferEntry,
+  ShopInventoryEntry,
+  ShopOffer,
+  ShopPickerLabels,
+  ShopPickerLockOptions,
+  ShopPickerOptions,
+  ShopPickerRerollOptions,
+  ShopPickerState,
+  ShopSection,
+} from './ShopPickerTypes';
+
+// Veri sözleşmesi ayrı dosyada yaşar (bkz. `ShopPickerTypes.ts`); tüketiciler
+// için bu modülden de görünür kalır, import yolları değişmez.
+export type {
+  ShopInventoryEntry,
+  ShopOffer,
+  ShopPickerLabels,
+  ShopPickerLockOptions,
+  ShopPickerOptions,
+  ShopPickerRerollOptions,
+  ShopPickerRerollState,
+  ShopPickerState,
+} from './ShopPickerTypes';
+
+const PURCHASE_FLASH_CLASS = 'vol-card--just-purchased';
+const LEAVING_CLASS = 'vol-card--leaving';
+/**
+ * `.vol-card--leaving`'in CSS süresiyle (`--vol-transition-medium`, 240ms)
+ * eşleşir — `animationend` bazı durumlarda (ör. `prefers-reduced-motion`
+ * animasyonu tamamen kapattığında) hiç ateşlenmeyebilir, bu yüzden gerçek
+ * temizlik bu zamanlayıcıya bağlı. Süre CSS'ten KISA OLAMAZ (bkz.
+ * `core/tests/ui/cssConstantSync.test.ts` deseni) — kısa olsaydı kart,
+ * çıkış animasyonu bitmeden DOM'dan koparılıp geçiş görsel olarak kesilirdi.
+ */
+export const LEAVE_ANIMATION_MS = 240;
+
+/**
+ * `.vol-card-picker--rerolling .vol-card-picker__grid` animasyon süresiyle
+ * (`vol-card-grid-reroll`, 0.24s) eşleşir.
+ *
+ * **Reroll'da ÇIKIŞ animasyonu bilinçli olarak yoktur.** Eski kartlar çıkış
+ * animasyonuyla süzülseydi yeni kartlar aynı hücreye ancak o süre bittikten
+ * sonra girebilirdi; iki animasyon üst üste gelince ızgara boş kalıyor ve
+ * reroll "yavaş" hissettiriyordu. Sert değişim, satın almanın aksine bir
+ * TAZELEME jestidir ve anlık olması gerekir. Bu bir eksik değil, karardır.
+ */
+export const REROLL_FLASH_MS = 240;
+
+/**
+ * `.vol-card--just-purchased` (`vol-card-purchase-flash`,
+ * `--vol-transition-medium`) süresiyle eşleşir. `LEAVE_ANIMATION_MS`'den
+ * ayrı tutulur; iki animasyonun süresi ayrışırsa vurgu erken silinebilir.
+ */
+export const PURCHASE_FLASH_MS = 240;
+
+/** `.vol-card-shop__balance--changed` vurgu süresi. */
+const BALANCE_FLASH_MS = 240;
+
+/**
+ * Dalga arası dükkan — teklif edilen kartlar fiyatlarıyla, sahip olunan
+ * kartlar satış butonuyla listelenir.
+ *
+ * Level-up seçiminden farkı: oyuncu SIFIR, BİR ya da İKİ kartı da alabilir,
+ * panel kendiliğinden kapanmaz ve envanterdeki kartlar geri satılabilir.
+ * Envanter iki bölüme ayrılır — pasifler (ne yaptıkları yazar) ve yetenekler
+ * (slota sürüklenebilirler); "elimde ne var, ne işe yarıyor" sorusu panelden
+ * çıkmadan yanıtlanır.
+ *
+ * **Render stratejisi DIFF'lidir:** yalnızca yeni kartlar oluşturulur,
+ * listeden çıkanlar çıkış animasyonuyla kaldırılır, var olanlar yerinde
+ * güncellenir ve konumları korunur.
+ */
+export class ShopPicker extends CardPicker {
+  /** Çağıranın kendi içeriğini koyabileceği alan (ör. yetenek slotları). */
+  readonly slotArea: HTMLDivElement;
+
+  private readonly labels: ShopPickerLabels;
+  private readonly onBuy: (cardId: string) => void;
+  private readonly onSell: (instanceId: string) => void;
+  private readonly onEquip?: (instanceId: string) => void;
+  private readonly onCloseCallback: () => void;
+  private readonly reroll?: ShopPickerRerollOptions;
+  private readonly lock?: ShopPickerLockOptions;
+  private readonly rerollRow: HTMLDivElement | null = null;
+  private readonly rerollButton: HTMLButtonElement | null = null;
+  private readonly balanceElement: HTMLDivElement;
+  private readonly abilitySection: ShopSection;
+  private readonly passiveSection: ShopSection;
+  private readonly closeButton: HTMLButtonElement;
+
+  /**
+   * Teklif kartları — kart ID'sine göre TEK kayıt.
+   *
+   * Tek kayıtta hem düğüm hem satın alma durumu tutulur; ayrı senkronizasyon
+   * hatası riski olmaz.
+   */
+  private readonly offers = new Map<string, OfferEntry>();
+  /** Çıkış animasyonu bekleyen teklifler — geri gelirse geri alınır. */
+  private readonly leavingOffers = new Map<string, LeavingTile>();
+  /** Envanter kartları — instanceId'ye göre (iki liste ayrı Map'te). */
+  private readonly abilityTiles = new Map<string, CardTile>();
+  private readonly passiveTiles = new Map<string, CardTile>();
+  /** Çıkış animasyonu bekleyen envanter kartları. */
+  private readonly leavingInventory = new Map<string, LeavingTile>();
+  /** Çıkış/vurgu zamanlayıcılar — destroy()'da iptal edilir. */
+  private readonly pendingTimeouts = new Set<ReturnType<typeof setTimeout>>();
+  private lastBalanceLabel = '';
+  private balanceTimeout: ReturnType<typeof setTimeout> | undefined;
+  /**
+   * Henüz giriş animasyonu almamış yeni kartlar. Kartlar `show()` veya
+   * görünür haldeki `render()` sonunda toplu olarak animate edilir; gizli
+   * katmanda oluşturulurken erken class atanması opacity:0 takılmasına yol açar.
+   */
+  private readonly pendingEnter = new Set<CardTile>();
+  /** Izgara reroll vurgusu — üst üste gelen reroll'larda yenilenir. */
+  private rerollTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  constructor(options: ShopPickerOptions) {
+    super({ className: 'vol-card-picker--shop', ...options });
+    this.labels = options.labels;
+    this.onBuy = options.onBuy;
+    this.onSell = options.onSell;
+    this.onEquip = options.onEquip;
+    this.onCloseCallback = options.onClose;
+    this.reroll = options.reroll;
+    this.lock = options.lock;
+
+    if (this.reroll) {
+      this.rerollRow = document.createElement('div');
+      this.rerollRow.className = 'vol-card-shop__reroll-row';
+
+      this.rerollButton = document.createElement('button');
+      this.rerollButton.type = 'button';
+      this.rerollButton.className = 'vol-card-shop__reroll';
+      this.rerollButton.textContent = this.reroll.label;
+      this.rerollButton.addEventListener('click', this.handleReroll);
+      this.rerollRow.appendChild(this.rerollButton);
+
+      this.element.insertBefore(this.rerollRow, this.grid);
+    }
+
+    this.slotArea = document.createElement('div');
+    this.slotArea.className = 'vol-card-shop__slots';
+    this.element.insertBefore(this.slotArea, this.footer);
+
+    this.abilitySection = this.buildSection(this.labels.abilitiesTitle, 'vol-card-shop__abilities');
+    this.element.insertBefore(this.abilitySection.section, this.footer);
+
+    this.passiveSection = this.buildSection(this.labels.passivesTitle, 'vol-card-shop__passives');
+    this.element.insertBefore(this.passiveSection.section, this.footer);
+
+    this.balanceElement = document.createElement('div');
+    this.balanceElement.className = 'vol-card-shop__balance';
+    this.footer.appendChild(this.balanceElement);
+
+    this.closeButton = document.createElement('button');
+    this.closeButton.type = 'button';
+    this.closeButton.className = 'vol-card-shop__close';
+    this.closeButton.textContent = this.labels.close;
+    this.closeButton.addEventListener('click', this.handleClose);
+    this.footer.appendChild(this.closeButton);
+  }
+
+  /** Dükkanı verilen durumla çizer ve açar; önceki durum bildirimi (`setNotice`) eskimiştir ve temizlenir. */
+  present(state: ShopPickerState): void {
+    this.setNotice(null);
+    this.render(state);
+    this.show();
+  }
+
+  override show(): void {
+    super.show();
+    this.flushEnterAnimations();
+  }
+
+  protected override handleModalBack(): void {
+    this.handleClose();
+  }
+
+  /**
+   * Paneli açık tutarak içeriği tazeler — satın alma/satış sonrası bakiye ve
+   * kart durumları değiştiğinde çağrılır. Yalnızca gerçekten DEĞİŞEN kartları
+   * dokunur (bkz. sınıf dokümantasyonu) — DOM'u ilgisiz kartlar için yeniden
+   * kurmaz, animasyonlarını yeniden tetiklemez.
+   */
+  render(state: ShopPickerState): void {
+    if (state.title !== undefined) this.setTitle(state.title);
+    if (state.hint !== undefined) this.setHint(state.hint);
+    const balanceChanged =
+      this.lastBalanceLabel !== '' && this.lastBalanceLabel !== state.balanceLabel;
+    this.lastBalanceLabel = state.balanceLabel;
+    this.balanceElement.textContent = state.balanceLabel;
+    if (balanceChanged) this.flashBalance(state.balanceChange);
+
+    if (this.rerollButton && this.reroll) {
+      this.rerollButton.textContent = state.reroll
+        ? `${this.reroll.label} — ${state.reroll.costLabel}`
+        : this.reroll.label;
+      this.rerollButton.disabled = state.reroll ? !state.reroll.affordable : false;
+    }
+
+    const isReroll = state.transition === 'reroll';
+
+    this.syncOffers(state.offers, isReroll);
+    this.syncInventory(this.abilitySection, this.abilityTiles, state.abilities, true);
+    this.syncInventory(this.passiveSection, this.passiveTiles, state.passives, false);
+
+    if (this.isVisible()) {
+      // Açık panelde teklifler yenilendiğinde ızgara kısa bir 'kapanıp açılma'
+      // vurgusu alır; bu, tek kart girişinin gözden kaçtığı durumlarda
+      // reroll'un hissedilmesini sağlar.
+      if (isReroll) this.playRerollFlash();
+
+      // Reroll/satın alma gibi görünür panel güncellemelerinde yeni kartları
+      // hemen animasyonla belirt; ilk açılış `show()`'da flush edilir.
+      this.flushEnterAnimations();
+    }
+  }
+
+  override destroy(): void {
+    for (const timeout of this.pendingTimeouts) clearTimeout(timeout);
+    this.pendingTimeouts.clear();
+    this.balanceTimeout = undefined;
+
+    this.rerollButton?.removeEventListener('click', this.handleReroll);
+    this.closeButton.removeEventListener('click', this.handleClose);
+
+    for (const { tile } of this.leavingOffers.values()) tile.destroy();
+    this.leavingOffers.clear();
+    for (const { tile } of this.leavingInventory.values()) tile.destroy();
+    this.leavingInventory.clear();
+
+    for (const { tile } of this.offers.values()) tile.destroy();
+    this.offers.clear();
+    this.pendingEnter.clear();
+
+    for (const tile of this.abilityTiles.values()) tile.destroy();
+    this.abilityTiles.clear();
+    for (const tile of this.passiveTiles.values()) tile.destroy();
+    this.passiveTiles.clear();
+
+    super.destroy();
+  }
+
+  private readonly handleReroll = (): void => {
+    if (this.rerollButton?.disabled) return;
+    this.reroll?.onReroll();
+  };
+
+  /**
+   * Oluşturulmuş ama henüz animasyon almamış kartlara `vol-card--entering`
+   * class'ını uygular. `requestAnimationFrame` çiftiyle DOM layout'unun
+   * bittiğinden emin olunur; aksi halde gizli katmandan açılan panelde
+   * opacity:0 karesi takılı kalabilir.
+   */
+  private flushEnterAnimations(): void {
+    if (this.pendingEnter.size === 0) return;
+    const tiles = [...this.pendingEnter];
+    this.pendingEnter.clear();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        for (const tile of tiles) tile.startEnterAnimation();
+      });
+    });
+  }
+
+  /** Izgaraya kısa 'yenilendi' vurgusu uygular. */
+  private playRerollFlash(): void {
+    this.element.classList.add('vol-card-picker--rerolling');
+    if (this.rerollTimeout !== undefined) {
+      this.pendingTimeouts.delete(this.rerollTimeout);
+      clearTimeout(this.rerollTimeout);
+    }
+    const timeout = setTimeout(() => {
+      this.pendingTimeouts.delete(timeout);
+      this.rerollTimeout = undefined;
+      this.element.classList.remove('vol-card-picker--rerolling');
+    }, REROLL_FLASH_MS);
+    this.rerollTimeout = timeout;
+    this.pendingTimeouts.add(timeout);
+  }
+
+  /** Bakiye değişimini satın alma/reroll sonrası okunur bir mikro-vurguyla bildirir. */
+  private flashBalance(change?: ShopPickerState['balanceChange']): void {
+    if (this.balanceTimeout !== undefined) {
+      this.pendingTimeouts.delete(this.balanceTimeout);
+      clearTimeout(this.balanceTimeout);
+    }
+    this.balanceElement.classList.remove(
+      'vol-card-shop__balance--changed',
+      'vol-card-shop__balance--increase',
+      'vol-card-shop__balance--decrease',
+    );
+    // Aynı düğüm üstünde peş peşe satın alma olursa animasyon yine başlasın.
+    void this.balanceElement.offsetWidth;
+    this.balanceElement.classList.add('vol-card-shop__balance--changed');
+    if (change) this.balanceElement.classList.add(`vol-card-shop__balance--${change}`);
+
+    const timeout = setTimeout(() => {
+      this.pendingTimeouts.delete(timeout);
+      this.balanceTimeout = undefined;
+      this.balanceElement.classList.remove(
+        'vol-card-shop__balance--changed',
+        'vol-card-shop__balance--increase',
+        'vol-card-shop__balance--decrease',
+      );
+    }, BALANCE_FLASH_MS);
+    this.balanceTimeout = timeout;
+    this.pendingTimeouts.add(timeout);
+  }
+
+  private buildSection(titleText: string, className: string): ShopSection {
+    const section = document.createElement('div');
+    section.className = `vol-card-shop__section ${className}`;
+
+    const title = document.createElement('div');
+    title.className = 'vol-card-shop__section-title';
+    title.textContent = titleText;
+    section.appendChild(title);
+
+    const list = document.createElement('div');
+    list.className = 'vol-card-shop__list';
+    section.appendChild(list);
+
+    const empty = document.createElement('div');
+    empty.className = 'vol-card-shop__empty';
+    empty.textContent = this.labels.empty;
+    list.appendChild(empty);
+
+    return { section, list, empty };
+  }
+
+  private syncOffers(offers: readonly ShopOffer[], isReroll: boolean): void {
+    const seen = new Set<string>();
+
+    for (const [index, offer] of offers.entries()) {
+      const id = offer.card.id;
+      seen.add(id);
+
+      const locked = offer.locked ?? false;
+      // Kilit yalnızca satın alınmamış tekliflerde anlamlıdır — bir kart
+      // alındıktan sonra artık reroll'da "korunacak" bir şey kalmaz.
+      const lockable = Boolean(this.lock) && !offer.purchased;
+      const status = offer.purchased
+        ? this.labels.owned
+        : offer.affordable
+          ? ''
+          : this.labels.tooExpensive;
+      const disabled = offer.purchased || !offer.affordable;
+
+      const existing = this.offers.get(id);
+      // Reroll'da kilitli OLMAYAN teklifler yeni düğüm olarak kurulur ki
+      // giriş animasyonunu alsınlar. Kilitli kartlar ve reroll dışı her
+      // güncelleme YERİNDE yapılır — konum, odak ve animasyon korunur.
+      const rebuild = isReroll && !locked;
+
+      if (existing && !rebuild) {
+        this.applyOfferState(existing.tile, offer, { status, disabled, locked, lockable });
+        this.insertAtIndex(this.grid, existing.tile, index);
+        this.flashIfJustPurchased(existing, offer.purchased);
+        continue;
+      }
+
+      if (existing) {
+        this.offers.delete(id);
+        // Eski kart anında yok edilir: 240 ms çıkış animasyonu tutsaydı yeni
+        // kart aynı ızgara hücresine giremez, geçiş kayardı.
+        this.removeWithAnimation(id, existing.tile, this.leavingOffers, true);
+      }
+
+      // Çıkış animasyonu bekleyen bir kart geri geldiyse yeni düğüm kurma.
+      const returning = this.cancelLeaving(id, this.leavingOffers);
+      const tile =
+        returning ??
+        new CardTile({
+          data: { ...offer.card, statusLabel: status },
+          actionLabel: this.labels.buy,
+          disabled,
+          onAction: (cardId) => this.onBuy(cardId),
+          className: locked ? 'vol-card--locked' : undefined,
+        });
+      if (!returning) this.pendingEnter.add(tile);
+
+      this.applyOfferState(tile, offer, { status, disabled, locked, lockable });
+      this.insertAtIndex(this.grid, tile, index);
+
+      const entry: OfferEntry = { tile, purchased: false };
+      this.offers.set(id, entry);
+      this.flashIfJustPurchased(entry, offer.purchased);
+    }
+
+    for (const [id, entry] of [...this.offers]) {
+      if (seen.has(id)) continue;
+      this.offers.delete(id);
+      this.removeWithAnimation(id, entry.tile, this.leavingOffers, true);
+    }
+  }
+
+  /**
+   * Bir teklif kartının tüm görsel durumunu TEK yerden uygular.
+   *
+   * Yeni ve var olan kartlar aynı yolla güncellenir; farklı kollar arasında
+   * davranış ayrışması riski oluşmaz.
+   */
+  private applyOfferState(
+    tile: CardTile,
+    offer: ShopOffer,
+    view: { status: string; disabled: boolean; locked: boolean; lockable: boolean },
+  ): void {
+    tile.update({ ...offer.card, statusLabel: view.status });
+    tile.setDisabled(view.disabled, view.status);
+    tile.setLocked(view.locked);
+    tile.setSecondaryAction(
+      view.lockable ? (view.locked ? this.lock?.unlockLabel : this.lock?.lockLabel) : undefined,
+      view.lockable ? (cardId) => this.lock?.onToggle(cardId) : undefined,
+    );
+  }
+
+  /** Bir teklif İLK KEZ satın alınmış duruma geçtiğinde kısa bir "başarı" vurgusu oynatır. */
+  private flashIfJustPurchased(entry: OfferEntry, purchased: boolean): void {
+    const wasPurchased = entry.purchased;
+    entry.purchased = purchased;
+    if (!purchased || wasPurchased) return;
+
+    const tile = entry.tile;
+    // Yeni satın alınan bir kart giriş animasyonu bitmeden vurgulanıyorsa
+    // çakışmasın; giriş class'ını kaldır.
+    tile.element.classList.remove('vol-card--entering');
+    this.pendingEnter.delete(tile);
+    tile.element.classList.add(PURCHASE_FLASH_CLASS);
+    const clear = (): void => tile.element.classList.remove(PURCHASE_FLASH_CLASS);
+    // `animationend` `prefers-reduced-motion: reduce` altında HİÇ ateşlenmez
+    // (animasyon zaten `none`) — class sonsuza dek takılı kalırdı. Zamanlayıcı
+    // ikisinden hangisi önce gelirse class'ı kaldırır (ikinci çağrı no-op).
+    tile.element.addEventListener('animationend', clear, { once: true });
+    const timeout = setTimeout(() => {
+      this.pendingTimeouts.delete(timeout);
+      clear();
+    }, PURCHASE_FLASH_MS);
+    this.pendingTimeouts.add(timeout);
+  }
+
+  private syncInventory(
+    target: ShopSection,
+    tiles: Map<string, CardTile>,
+    entries: readonly ShopInventoryEntry[],
+    draggable: boolean,
+  ): void {
+    const seen = new Set<string>();
+
+    for (const [index, entry] of entries.entries()) {
+      seen.add(entry.instanceId);
+      const existing = tiles.get(entry.instanceId);
+
+      if (existing) {
+        existing.update(entry.card);
+        existing.setActionLabel(entry.sellLabel);
+        existing.setSecondaryAction(
+          entry.equipLabel,
+          entry.equipLabel ? () => this.onEquip?.(entry.instanceId) : undefined,
+        );
+        existing.setDraggable(draggable ? entry.dragData : undefined);
+        this.insertAtIndex(target.list, existing, index);
+        continue;
+      }
+
+      const tile =
+        this.cancelLeaving(entry.instanceId, this.leavingInventory) ??
+        new CardTile({
+          data: entry.card,
+          compact: true,
+          actionLabel: entry.sellLabel,
+          onAction: () => this.onSell(entry.instanceId),
+          secondaryActionLabel: entry.equipLabel,
+          onSecondaryAction: entry.equipLabel ? () => this.onEquip?.(entry.instanceId) : undefined,
+          dragData: draggable ? entry.dragData : undefined,
+        });
+
+      // `cancelLeaving` döndürdüyse butonlar/eski durumlar kalmış olabilir;
+      // güncel envanter durumuna göre yeniden ayarla.
+      tile.update(entry.card);
+      tile.setActionLabel(entry.sellLabel);
+      tile.setSecondaryAction(
+        entry.equipLabel,
+        entry.equipLabel ? () => this.onEquip?.(entry.instanceId) : undefined,
+      );
+      tile.setDraggable(draggable ? entry.dragData : undefined);
+
+      tiles.set(entry.instanceId, tile);
+      this.insertAtIndex(target.list, tile, index);
+    }
+
+    for (const [instanceId, tile] of [...tiles]) {
+      if (seen.has(instanceId)) continue;
+      tiles.delete(instanceId);
+      this.removeWithAnimation(instanceId, tile, this.leavingInventory);
+    }
+
+    target.empty.hidden = entries.length > 0;
+  }
+
+  /**
+   * Kartı hemen DOM'dan silmek yerine kısa bir çıkış animasyonuyla kaldırır.
+   * `immediate` true verilirse animasyon beklemeden anında yok edilir — teklif
+   * ızgarasındaki reroll gibi eski kartla yeni kartın aynı hücreye girmediği
+   * durumlarda düzgün geçiş sağlar.
+   */
+  private removeWithAnimation(
+    id: string,
+    tile: CardTile,
+    leavingMap: Map<string, LeavingTile>,
+    immediate = false,
+  ): void {
+    // Giriş animasyonu ile çıkış animasyonu çakışmasın; giriş class'ını sil.
+    tile.element.classList.remove('vol-card--entering');
+    this.pendingEnter.delete(tile);
+
+    if (immediate) {
+      leavingMap.delete(id);
+      tile.destroy();
+      return;
+    }
+
+    tile.element.classList.add(LEAVING_CLASS);
+    const timeout = setTimeout(() => {
+      this.pendingTimeouts.delete(timeout);
+      leavingMap.delete(id);
+      tile.destroy();
+    }, LEAVE_ANIMATION_MS);
+    this.pendingTimeouts.add(timeout);
+    leavingMap.set(id, { tile, timeout });
+  }
+
+  /** Çıkış animasyonu bekleyen bir kartı, animasyon bitmeden geri getirir. */
+  private cancelLeaving(id: string, leavingMap: Map<string, LeavingTile>): CardTile | undefined {
+    const leaving = leavingMap.get(id);
+    if (!leaving) return undefined;
+
+    clearTimeout(leaving.timeout);
+    this.pendingTimeouts.delete(leaving.timeout);
+    leaving.tile.element.classList.remove(LEAVING_CLASS);
+    leavingMap.delete(id);
+    return leaving.tile;
+  }
+
+  /** Kartı ızgaradaki hedef indekse yerleştirir; zaten doğru yerdeyse dokunmaz. */
+  private insertAtIndex(container: HTMLDivElement, tile: CardTile, index: number): void {
+    if (container.children[index] === tile.element) return;
+    const ref = container.children[index] ?? null;
+    container.insertBefore(tile.element, ref);
+  }
+
+  private readonly handleClose = (): void => {
+    // Çıkış animasyonu sürerken ikinci tıklama ya da geri, `onClose`u ikinci kez çağırmaz.
+    if (!this.isVisible()) return;
+    this.hide();
+    this.onCloseCallback();
+  };
+}

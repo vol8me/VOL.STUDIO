@@ -1,0 +1,238 @@
+{
+  "channels": 1,
+  "description": "Palet: halka vuruşları, makara gümbürtüsü ve çakıl.",
+  "durationSeconds": 3.6,
+  "effects": [
+    {
+      "params": {
+        "frequency": 38,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 250,
+        "gainDb": 3,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 7,
+        "mix": 0.55,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 7000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "gainDb": -4.48,
+      "mechanism": "mechanical",
+      "name": "links",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 160,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "buckleDecay": 0.016,
+          "rate": 13,
+          "tension": 0.2
+        },
+        "primitive": "exciter.membrane",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -1.65,
+      "mechanism": "mechanical",
+      "name": "thud",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 220,
+            "mode": "lowpass",
+            "q": 0.9
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "buckleDecay": 0.04,
+          "rate": 6.5,
+          "tension": 0
+        },
+        "primitive": "exciter.membrane",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -3.21,
+      "mechanism": "noise",
+      "name": "rollers",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 160,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 900,
+            "mode": "lowpass",
+            "q": 0.7
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -29.13,
+      "mechanism": "scrape",
+      "name": "gravel",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 300,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "granularity": 3,
+          "material": "stone",
+          "pressure": 0.8,
+          "roughness": 0.8,
+          "speed": 1.4
+        },
+        "primitive": "source.friction",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -19.72,
+      "mechanism": "motor",
+      "name": "sprocket",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1400,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bearing": 0.1,
+          "count": 9,
+          "harmonics": 8,
+          "imbalance": 0.2,
+          "load": 0.6,
+          "mechanism": "gear",
+          "noise": 0.1,
+          "rpm": 780,
+          "tilt": 0.5
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -7.86,
+      "mechanism": "noise",
+      "name": "sub",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 85,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "loop": {
+      "crossfadeSeconds": 0.3
+    },
+    "normalize": "peak",
+    "peakDbfs": -9
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 730105
+}

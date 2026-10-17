@@ -1,6 +1,6 @@
 {
   "name": "@volstudio/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
@@ -10,31 +10,132 @@
       "import": "./src/index.ts",
       "types": "./src/index.ts"
     },
-    "./math/Vector2": {
-      "import": "./src/math/Vector2.ts",
-      "types": "./src/math/Vector2.ts"
+    "./math/interpolation": {
+      "import": "./src/math/interpolation.ts",
+      "types": "./src/math/interpolation.ts"
     },
-    "./ui/colors": {
-      "import": "./src/ui/colors.ts",
-      "types": "./src/ui/colors.ts"
+    "./math": {
+      "import": "./src/math/index.ts",
+      "types": "./src/math/index.ts"
+    },
+    "./grid": {
+      "import": "./src/grid/index.ts",
+      "types": "./src/grid/index.ts"
+    },
+    "./collections": {
+      "import": "./src/collections/index.ts",
+      "types": "./src/collections/index.ts"
+    },
+    "./input/gamepad": {
+      "import": "./src/input/gamepad.ts",
+      "types": "./src/input/gamepad.ts"
+    },
+    "./input/bindings": {
+      "import": "./src/input/bindingLabels.ts",
+      "types": "./src/input/bindingLabels.ts"
+    },
+    "./pool": {
+      "import": "./src/pool/index.ts",
+      "types": "./src/pool/index.ts"
+    },
+    "./rig/metadata": {
+      "import": "./src/rig/metadata.ts",
+      "types": "./src/rig/metadata.ts"
+    },
+    "./rig/locomotion": {
+      "import": "./src/rig/locomotion.ts",
+      "types": "./src/rig/locomotion.ts"
+    },
+    "./diagnostics": {
+      "import": "./src/diagnostics/index.ts",
+      "types": "./src/diagnostics/index.ts"
+    },
+    "./ui": {
+      "import": "./src/ui/index.ts",
+      "types": "./src/ui/index.ts"
+    },
+    "./ui/styles.css": "./src/ui/theme.css",
+    "./lifecycle": {
+      "import": "./src/lifecycle/index.ts",
+      "types": "./src/lifecycle/index.ts"
+    },
+    "./i18n": {
+      "import": "./src/i18n/index.ts",
+      "types": "./src/i18n/index.ts"
+    },
+    "./fonts": {
+      "import": "./src/fonts/index.ts",
+      "types": "./src/fonts/index.ts"
+    },
+    "./audio/music": {
+      "import": "./src/audio/music/index.ts",
+      "types": "./src/audio/music/index.ts"
+    },
+    "./audio/sfx": {
+      "import": "./src/audio/sfx/index.ts",
+      "types": "./src/audio/sfx/index.ts"
+    },
+    "./audio/ui": {
+      "import": "./src/audio/ui/index.ts",
+      "types": "./src/audio/ui/index.ts"
+    },
+    "./random": {
+      "import": "./src/random/index.ts",
+      "types": "./src/random/index.ts"
+    },
+    "./spatial": {
+      "import": "./src/spatial/SpatialIndex.ts",
+      "types": "./src/spatial/SpatialIndex.ts"
+    },
+    "./time": {
+      "import": "./src/time/index.ts",
+      "types": "./src/time/index.ts"
+    },
+    "./graphics": {
+      "import": "./src/graphics/index.ts",
+      "types": "./src/graphics/index.ts"
+    },
+    "./persistence": {
+      "import": "./src/persistence/index.ts",
+      "types": "./src/persistence/index.ts"
+    },
+    "./state": {
+      "import": "./src/state/index.ts",
+      "types": "./src/state/index.ts"
+    },
+    "./platform": {
+      "import": "./src/platform/index.ts",
+      "types": "./src/platform/index.ts"
+    },
+    "./physics": {
+      "import": "./src/physics/index.ts",
+      "types": "./src/physics/index.ts"
+    },
+    "./camera": {
+      "import": "./src/camera/index.ts",
+      "types": "./src/camera/index.ts"
     }
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
+    "benchmark": "tsx scripts/core-benchmark.ts",
     "download-fonts": "node scripts/download-fonts.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "peerDependencies": {
     "phaser": "^4.2.1"
   },
   "devDependencies": {
-    "jsdom": "25.0.1",
+    "@types/node": "^26.1.2",
+    "jsdom": "30.1.3",
     "phaser": "^4.2.1",
+    "tsx": "^4.23.11",
     "typescript": "^6.0.3",
-    "vitest": "3.0.5"
+    "vitest": "5.0.5"
   },
   "dependencies": {
-    "i18next": "^26.3.6"
+    "i18next": "26.3.6"
   }
 }

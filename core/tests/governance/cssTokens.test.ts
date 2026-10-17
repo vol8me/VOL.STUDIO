@@ -1,0 +1,88 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+/**
+ * Tanımsız CSS custom property bekçisi.
+ *
+ * `var(--vol-color-accent)` gibi var olmayan bir token HATA VERMEZ: tarayıcı
+ * onu sessizce boş bırakır, kural düşer ve kimse fark etmez. Stylelint bunu
+ * yakalamaz çünkü sözdizimi geçerlidir. Bu bekçi repodaki her `--vol-*`
+ * kullanımının bir yerde TANIMLANDIĞINI doğrular.
+ */
+const REPO_ROOT = resolve(import.meta.dirname, '../../..');
+const SKIP_DIRECTORIES = new Set([
+  'node_modules',
+  'dist',
+  'coverage',
+  '.git',
+  'target',
+  'gen',
+  'src-tauri',
+  'test-results',
+  'playwright-report',
+]);
+
+function collectFiles(directory: string, suffix: string, found: string[] = []): string[] {
+  let entries;
+  try {
+    entries = readdirSync(directory, { withFileTypes: true });
+  } catch {
+    return found;
+  }
+  for (const entry of entries) {
+    if (SKIP_DIRECTORIES.has(entry.name)) continue;
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      collectFiles(path, suffix, found);
+    } else if (entry.isFile() && entry.name.endsWith(suffix)) {
+      found.push(path);
+    }
+  }
+  return found;
+}
+
+describe('CSS token bütünlüğü', () => {
+  it('kullanılan her --vol-* / --studio-* tokeni tanımlıdır', () => {
+    const files = collectFiles(REPO_ROOT, '.css');
+    expect(files.length).toBeGreaterThan(0);
+
+    const defined = new Set<string>();
+    // Bazı tokenler CSS'te değil ÇALIŞMA ZAMANINDA atanır (ölçü, ilerleme,
+    // açı gibi canlı değerler). `setProperty` çağrısı da bir tanımdır.
+    for (const file of collectFiles(REPO_ROOT, '.ts')) {
+      const source = readFileSync(file, 'utf8');
+      for (const match of source.matchAll(/setProperty\([^)]*?(--(?:vol|studio)-[a-z0-9-]+)/g)) {
+        defined.add(match[1]);
+      }
+    }
+    const used = new Map<string, string[]>();
+    for (const file of files) {
+      const source = readFileSync(file, 'utf8');
+      for (const match of source.matchAll(/(--(?:vol|studio)-[a-z0-9-]+)\s*:/g)) {
+        defined.add(match[1]);
+      }
+      for (const match of source.matchAll(/var\(\s*(--(?:vol|studio)-[a-z0-9-]+)/g)) {
+        const token = match[1];
+        const sites = used.get(token) ?? [];
+        sites.push(relative(REPO_ROOT, file));
+        used.set(token, sites);
+      }
+    }
+
+    const missing = [...used.entries()]
+      .filter(([token]) => !defined.has(token))
+      /*
+       * YEDEĞİ OLAN KULLANIM DA MUAF DEĞİLDİR.
+       *
+       * `var(--vol-hit-taget-min, auto)` gibi yanlış yazılmış
+       * bir ad, yedeği yüzünden sayfada hiçbir belirti göstermez — kural sessizce
+       * yedeğe düşer. Tanımı ŞART koşmak o yazım hatasını burada yakalar; bir
+       * token'ın masaüstünde bilerek değersiz kalması (`--vol-hit-target-min`)
+       * tanımsız olmasını gerektirmez, yalnızca dar bir blokta tanımlanmasını.
+       */
+      .map(([token, sites]) => `${token} → ${[...new Set(sites)].join(', ')}`);
+
+    expect(missing, `Tanımsız CSS tokenleri:\n${missing.join('\n')}`).toEqual([]);
+  });
+});

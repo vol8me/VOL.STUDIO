@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "confirm"
+  ],
+  "durationSeconds": {
+    "max": 0.58,
+    "min": 0.176
+  },
+  "id": "ui-aurum-confirm-confirm-a",
+  "intent": "yaldızlı cam ve lake: confirm Varyant confirm-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum confirm — confirm-a"
+}

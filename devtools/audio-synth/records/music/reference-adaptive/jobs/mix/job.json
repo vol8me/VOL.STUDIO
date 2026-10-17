@@ -1,0 +1,63 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-72dae2d48e910b26": {
+        "hash": "sha256:48f92b91dfda96cd8c3607e6825fc3f6c887c0e1dc1b15b849942961433da465",
+        "path": "analyses/r-72dae2d48e910b26.json"
+      },
+      "r-9c2405246211186b": {
+        "hash": "sha256:e8ddc31b2ed61110ddc369bb9c3894a23ab8b0e448df24c75728d9a91c6c4203",
+        "path": "analyses/r-9c2405246211186b.json"
+      },
+      "r-fc6ed9b450b92995": {
+        "hash": "sha256:8c5c048914a51085a3fdb74fec958d238189d5f4610a28fcb0ad129f01438057",
+        "path": "analyses/r-fc6ed9b450b92995.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+      "hash": "sha256:a27272942dad867ed3d797eb59bfc5edc957284be34bd54ff3b44dde9781b738",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:c86d29812586ea9e8c457d303f8b5a3c59e409485943217469cb7abfabf44291",
+      "path": "devtools/audio-synth/reference/production/manifests/music/reference-adaptive/mix.json"
+    },
+    "renders": {
+      "r-72dae2d48e910b26": {
+        "hash": "sha256:25a60b3c47a4d91ffb380c1f78f065e76635cbbb4ca542ed78b03f3c28d59a7f",
+        "path": "renders/r-72dae2d48e910b26.json"
+      },
+      "r-9c2405246211186b": {
+        "hash": "sha256:1587eeb3994796fa85e83affb7ada16cc3ae71a4567d2e7a07662ebf395f4b02",
+        "path": "renders/r-9c2405246211186b.json"
+      },
+      "r-fc6ed9b450b92995": {
+        "hash": "sha256:2ea0c20f9016539f91b1a6d567802f3ed4d70e1235c20360bf242e4879ddaad8",
+        "path": "renders/r-fc6ed9b450b92995.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:19e347c81b5a6322f89b4d0df12b932388f2183e264d3f0cdc3a0c9747615930",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "mix",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 16,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/music/reference-adaptive/mix.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "reference-adaptive/mix"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

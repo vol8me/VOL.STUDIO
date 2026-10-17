@@ -1,0 +1,451 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "çelik donanım · equip",
+      "durationSeconds": 0.23,
+      "gestures": {
+        "thump-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              160
+            ],
+            [
+              0.05,
+              78
+            ],
+            [
+              0.14,
+              74.88
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0002,
+              "curve": "exponential",
+              "decay": 0.014,
+              "release": 0.004,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 5,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 3600,
+                "mode": "bandpass",
+                "q": 0.9
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 1260,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0015,
+              "curve": "exponential",
+              "decay": 0.14,
+              "release": 0.025,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 0,
+          "inserts": [
+            {
+              "params": {
+                "character": "asymmetric",
+                "driveDb": 15.400000000000002,
+                "mix": 1,
+                "outputDb": -3
+              },
+              "primitive": "effect.saturation",
+              "version": 1
+            }
+          ],
+          "mechanism": "mechanical",
+          "name": "thump",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 50,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 900,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "thump-pitch"
+              },
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0006,
+              "curve": "cosine",
+              "decay": 0.0816,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -3,
+          "mechanism": "mechanical",
+          "name": "ring",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.8,
+                "damping": 0.7,
+                "decay": 0.096,
+                "frequency": 1400,
+                "inharmonicity": 0.012,
+                "layout": "bar",
+                "modes": 5
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.1
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0006,
+              "curve": "cosine",
+              "decay": 0.07139999999999999,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -7,
+          "mechanism": "mechanical",
+          "name": "ring2",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.8,
+                "damping": 0.7,
+                "decay": 0.08399999999999999,
+                "frequency": 2100,
+                "inharmonicity": 0.012,
+                "layout": "bar",
+                "modes": 5
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.1
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.03
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0003,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9419
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui/steel",
+    "durationSeconds": {
+      "max": 0.58,
+      "min": 0.176
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "çelik donanım: equip",
+  "dimensions": [
+    {
+      "name": "bright",
+      "range": {
+        "max": 4392,
+        "min": 2808,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "click",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.1764,
+        "min": 0.1036,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "thump",
+        "param": "decay",
+        "primitive": "articulation.envelope",
+        "slot": "articulation"
+      }
+    },
+    {
+      "name": "pitch",
+      "range": {
+        "max": 1568,
+        "min": 1232,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "ring",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "pitch2",
+      "range": {
+        "max": 2352,
+        "min": 1848,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "ring2",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "warmth",
+      "range": {
+        "max": 1100,
+        "min": 720,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 1,
+        "kind": "node-param",
+        "layer": "thump",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    }
+  ],
+  "familyId": "ui-steel-equip",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "bright": {
+          "max": 3336,
+          "min": 2808
+        },
+        "decay": {
+          "max": 0.1764,
+          "min": 0.15213
+        },
+        "pitch": {
+          "max": 1344,
+          "min": 1232
+        },
+        "pitch2": {
+          "max": 2016,
+          "min": 1848
+        },
+        "warmth": {
+          "max": 846.66667,
+          "min": 720
+        }
+      },
+      "light": {
+        "bright": {
+          "max": 4392,
+          "min": 3864
+        },
+        "decay": {
+          "max": 0.12787,
+          "min": 0.1036
+        },
+        "pitch": {
+          "max": 1568,
+          "min": 1456
+        },
+        "pitch2": {
+          "max": 2352,
+          "min": 2184
+        },
+        "warmth": {
+          "max": 1100,
+          "min": 973.33333
+        }
+      },
+      "medium": {
+        "bright": {
+          "max": 3864,
+          "min": 3336
+        },
+        "decay": {
+          "max": 0.15213,
+          "min": 0.12787
+        },
+        "pitch": {
+          "max": 1456,
+          "min": 1344
+        },
+        "pitch2": {
+          "max": 2184,
+          "min": 2016
+        },
+        "warmth": {
+          "max": 973.33333,
+          "min": 846.66667
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9419,
+  "title": "UI steel equip",
+  "variants": [
+    {
+      "key": "equip-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "equip"
+      ]
+    },
+    {
+      "key": "equip-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "equip"
+      ]
+    },
+    {
+      "key": "equip-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "equip"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

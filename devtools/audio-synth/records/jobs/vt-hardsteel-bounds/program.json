@@ -1,0 +1,813 @@
+{
+  "channels": 1,
+  "description": "Sıçrayıcı sekmesi: dört pençenin ağır çift basışı, piston ve hidrolik.",
+  "durationSeconds": 3.9,
+  "effects": [
+    {
+      "params": {
+        "frequency": 36,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 280,
+        "gainDb": 2.8,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 7,
+        "mix": 0.5,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 7500,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "gainDb": -14.54,
+      "mechanism": "pressure",
+      "name": "b0-f-th",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.17,
+          "bodyHz": 87,
+          "decay": 1.4,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.2
+    },
+    {
+      "gainDb": -14.99,
+      "mechanism": "pressure",
+      "name": "b0-f-pu",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 200,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.2
+    },
+    {
+      "gainDb": -49.64,
+      "mechanism": "mechanical",
+      "name": "b0-f-ct",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.5,
+          "mass": 6.5,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.5,
+          "velocity": 1.8
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.203
+    },
+    {
+      "gainDb": -11.2,
+      "mechanism": "pressure",
+      "name": "b0-h-th",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.17,
+          "bodyHz": 71.33999999999999,
+          "decay": 1.4,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.35
+    },
+    {
+      "gainDb": -12.71,
+      "mechanism": "pressure",
+      "name": "b0-h-pu",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 164,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.35
+    },
+    {
+      "gainDb": -50.09,
+      "mechanism": "mechanical",
+      "name": "b0-h-ct",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.5,
+          "mass": 8.775,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.5,
+          "velocity": 1.8
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.353
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.003,
+          "curve": "exponential",
+          "decay": 0.12,
+          "release": 0.05,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.2,
+      "gainDb": -1.36,
+      "mechanism": "airflow",
+      "name": "b0-hiss",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1200,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 6500,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "aperture": 14,
+          "cavity": 1.5,
+          "cavityMix": 0.2,
+          "pressure": 0.7,
+          "sibilance": 0.35,
+          "tilt": 0.1,
+          "turbulence": 0.9
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      },
+      "startSeconds": 0.37
+    },
+    {
+      "gainDb": -14.54,
+      "mechanism": "pressure",
+      "name": "b1-f-th",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.17,
+          "bodyHz": 87,
+          "decay": 1.4,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 1.1
+    },
+    {
+      "gainDb": -14.99,
+      "mechanism": "pressure",
+      "name": "b1-f-pu",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 200,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 1.1
+    },
+    {
+      "gainDb": -51.65,
+      "mechanism": "mechanical",
+      "name": "b1-f-ct",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.5,
+          "mass": 6.5,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.5,
+          "velocity": 1.8
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 1.103
+    },
+    {
+      "gainDb": -11.2,
+      "mechanism": "pressure",
+      "name": "b1-h-th",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.17,
+          "bodyHz": 71.33999999999999,
+          "decay": 1.4,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 1.25
+    },
+    {
+      "gainDb": -12.71,
+      "mechanism": "pressure",
+      "name": "b1-h-pu",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 164,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 1.25
+    },
+    {
+      "gainDb": -50.64,
+      "mechanism": "mechanical",
+      "name": "b1-h-ct",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.5,
+          "mass": 8.775,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.5,
+          "velocity": 1.8
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 1.253
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.003,
+          "curve": "exponential",
+          "decay": 0.12,
+          "release": 0.05,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.2,
+      "gainDb": -1.94,
+      "mechanism": "airflow",
+      "name": "b1-hiss",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1200,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 6500,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "aperture": 14,
+          "cavity": 1.5,
+          "cavityMix": 0.2,
+          "pressure": 0.7,
+          "sibilance": 0.35,
+          "tilt": 0.1,
+          "turbulence": 0.9
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      },
+      "startSeconds": 1.27
+    },
+    {
+      "gainDb": -14.54,
+      "mechanism": "pressure",
+      "name": "b2-f-th",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.17,
+          "bodyHz": 87,
+          "decay": 1.4,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2
+    },
+    {
+      "gainDb": -14.99,
+      "mechanism": "pressure",
+      "name": "b2-f-pu",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 200,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2
+    },
+    {
+      "gainDb": -49.64,
+      "mechanism": "mechanical",
+      "name": "b2-f-ct",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.5,
+          "mass": 6.5,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.5,
+          "velocity": 1.8
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 2.003
+    },
+    {
+      "gainDb": -11.2,
+      "mechanism": "pressure",
+      "name": "b2-h-th",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.17,
+          "bodyHz": 71.33999999999999,
+          "decay": 1.4,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2.15
+    },
+    {
+      "gainDb": -12.71,
+      "mechanism": "pressure",
+      "name": "b2-h-pu",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 164,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2.15
+    },
+    {
+      "gainDb": -50.78,
+      "mechanism": "mechanical",
+      "name": "b2-h-ct",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.5,
+          "mass": 8.775,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.5,
+          "velocity": 1.8
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 2.153
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.003,
+          "curve": "exponential",
+          "decay": 0.12,
+          "release": 0.05,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.2,
+      "gainDb": -1.71,
+      "mechanism": "airflow",
+      "name": "b2-hiss",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1200,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 6500,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "aperture": 14,
+          "cavity": 1.5,
+          "cavityMix": 0.2,
+          "pressure": 0.7,
+          "sibilance": 0.35,
+          "tilt": 0.1,
+          "turbulence": 0.9
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      },
+      "startSeconds": 2.17
+    },
+    {
+      "gainDb": -14.54,
+      "mechanism": "pressure",
+      "name": "b3-f-th",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.17,
+          "bodyHz": 87,
+          "decay": 1.4,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2.9000000000000004
+    },
+    {
+      "gainDb": -14.99,
+      "mechanism": "pressure",
+      "name": "b3-f-pu",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 200,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2.9000000000000004
+    },
+    {
+      "gainDb": -50.3,
+      "mechanism": "mechanical",
+      "name": "b3-f-ct",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.5,
+          "mass": 6.5,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.5,
+          "velocity": 1.8
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 2.9030000000000005
+    },
+    {
+      "gainDb": -11.2,
+      "mechanism": "pressure",
+      "name": "b3-h-th",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.17,
+          "bodyHz": 71.33999999999999,
+          "decay": 1.4,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 3.0500000000000003
+    },
+    {
+      "gainDb": -12.71,
+      "mechanism": "pressure",
+      "name": "b3-h-pu",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 164,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 3.0500000000000003
+    },
+    {
+      "gainDb": -50.18,
+      "mechanism": "mechanical",
+      "name": "b3-h-ct",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.5,
+          "mass": 8.775,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.5,
+          "velocity": 1.8
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 3.0530000000000004
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.003,
+          "curve": "exponential",
+          "decay": 0.12,
+          "release": 0.05,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.2,
+      "gainDb": -1.91,
+      "mechanism": "airflow",
+      "name": "b3-hiss",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1200,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 6500,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "aperture": 14,
+          "cavity": 1.5,
+          "cavityMix": 0.2,
+          "pressure": 0.7,
+          "sibilance": 0.35,
+          "tilt": 0.1,
+          "turbulence": 0.9
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      },
+      "startSeconds": 3.0700000000000003
+    },
+    {
+      "gainDb": -19.86,
+      "mechanism": "motor",
+      "name": "actuators",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1400,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bearing": 0.1,
+          "count": 15,
+          "harmonics": 8,
+          "imbalance": 0.2,
+          "load": 0.6,
+          "mechanism": "gear",
+          "noise": 0.12,
+          "rpm": 1300,
+          "tilt": 0.5
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -13.96,
+      "mechanism": "noise",
+      "name": "hydraulic",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 180,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1500,
+            "mode": "lowpass",
+            "q": 0.6
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -13.25,
+      "mechanism": "noise",
+      "name": "sub",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 80,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "loop": {
+      "crossfadeSeconds": 0.3
+    },
+    "normalize": "peak",
+    "peakDbfs": -7
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 730301
+}

@@ -1,0 +1,383 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -0.000043993770511918826,
+          0.000048484165854367273
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0,
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 2,
+        "durationSeconds": 1.8,
+        "frames": 86400,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -2.9419765795210377,
+          -3.0020693379450956
+        ],
+        "channelRmsDbfs": [
+          -19.674899975597505,
+          -20.60400119380101
+        ],
+        "crestFactorDb": 17.17267551146864,
+        "integratedLufs": -18.031879230389094,
+        "maxMomentaryLufs": -13.463723023649314,
+        "rmsDbfs": -20.11465209098968,
+        "samplePeakDbfs": -2.9419765795210377,
+        "truePeakDbtp": -2.9419765795210377
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -92.42210161827046,
+          "high": -60.106681868539326,
+          "low": -39.14785888497476,
+          "mid": -39.65808642435289,
+          "sub": -20.64813724843903
+        },
+        "centroidHz": 90.88747565936927,
+        "flatness": 2.0244492832829252e-9,
+        "peakHz": 70.3125,
+        "rolloff85Hz": 93.75
+      },
+      "stereo": {
+        "correlation": 0.7988788128938971,
+        "width": 0.3385588132243335
+      },
+      "temporal": {
+        "activeSeconds": 1.79,
+        "attackSeconds": 0.05,
+        "decay40Seconds": 1.42,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.05,
+        "temporalCentroidSeconds": 0.09149404045200953,
+        "trailingSilenceSeconds": 0.020000000000000018
+      }
+    },
+    "sourceRecordHash": "sha256:c5f12a36d087f62166612bb2e83c65ca5155f927cd1eaf2f8c3120f92165dd72"
+  },
+  "asset": {
+    "bytes": 26710,
+    "encodedHash": "sha256:96433204d96970042c3e44871299475a25ffd7ab4cbd6068eb28e02058942a9c",
+    "format": "ogg-vorbis",
+    "path": "devtools/audio-synth/reference/production/assets/sfx/reference-hybrid.ogg"
+  },
+  "assetId": "reference-hybrid",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 2,
+      "durationSeconds": {
+        "max": 4,
+        "min": 0.5
+      },
+      "id": "reference-hybrid",
+      "intent": "Kayıttan metal transient, prosedürel basınç ve materyal gövdesi, oda IR konvolüsyonu kuyruğu.",
+      "kind": "acoustic",
+      "material": "metal",
+      "mechanisms": [
+        "sampled",
+        "impact",
+        "pressure",
+        "space"
+      ],
+      "placement": "screen",
+      "provenance": {
+        "author": "agent",
+        "by": "claude-code"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "Referans hybrid darbe"
+    },
+    "hash": "sha256:9665731c3046194ef04ffc5c07e4828ba21504c221523f2576c782ea85f47165",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:2c220e6f68c3b8f4736b9fb422417a26024962a362a130901806972c024a3157",
+      "nodes": [
+        {
+          "hash": "sha256:7230bd1c6133ea2a8f1ee5cca2426b166d90cd7f7d437ab73335ba8255e52432",
+          "id": "effect.convolution",
+          "version": 1
+        },
+        {
+          "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722",
+          "id": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:120526b0267fdae5963c04e9a06513ae45c6a2f96215f243c43f4d5f6b0dfdd4",
+          "id": "resonator.material",
+          "version": 1
+        },
+        {
+          "hash": "sha256:2356f7e48539c60b39edfbd3ca1287f94e8902e6d4bbda072d5476c6ca7e02a3",
+          "id": "source.pressure-wave",
+          "version": 1
+        },
+        {
+          "hash": "sha256:3e3fcb5f8802be7e509fca11d28bbc49b9f13173de30f9c307454b197bf9934f",
+          "id": "source.sample",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/audio-synth",
+    "runtimeDeclaration": null,
+    "runtimeKey": null,
+    "targetKind": "reference"
+  },
+  "job": {
+    "jobId": "reference-hybrid",
+    "path": "devtools/audio-synth/records/jobs/reference-hybrid",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 2,
+    "image": {
+      "correlation": 0.799,
+      "dualMono": false,
+      "method": "stereo-image-v1",
+      "monoFoldLossDb": 1.413,
+      "sideDb": -9.407
+    },
+    "placement": "screen",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "buses": {
+        "space": {
+          "effects": [
+            {
+              "params": {
+                "gainDb": 0,
+                "ir": "room",
+                "mix": 1
+              },
+              "primitive": "effect.convolution",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 120,
+                "response": "highpass"
+              },
+              "primitive": "effect.eq-pass",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "channels": 2,
+      "description": "Hybrid: kayıttan transient (HPSS) + prosedürel basınç gövdesi + materyal gövdesi + IR konvolüsyon kuyruğu.",
+      "durationSeconds": 1.8,
+      "layers": [
+        {
+          "gainDb": -2,
+          "mechanism": "sampled",
+          "name": "transient",
+          "role": "transient",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -14
+            }
+          ],
+          "source": {
+            "params": {
+              "component": "transient",
+              "sample": "hit"
+            },
+            "primitive": "source.sample",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -4,
+          "mechanism": "pressure",
+          "name": "body",
+          "role": "body",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -18
+            }
+          ],
+          "source": {
+            "params": {
+              "body": 0.6,
+              "bodyDecay": 0.5,
+              "bodyHz": 70,
+              "positive": 0.012
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -10,
+          "mechanism": "impact",
+          "name": "ring",
+          "pan": 0.2,
+          "resonators": [
+            {
+              "params": {
+                "material": "metal",
+                "size": 0.5
+              },
+              "primitive": "resonator.material",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "source": {
+            "params": {
+              "contactTime": 0.0004
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.05,
+        "limiter": {
+          "ceilingDbtp": -1.5
+        },
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "samples": {
+        "hit": {
+          "channels": 1,
+          "frames": 38400,
+          "hash": "sha256:5145cd48f17951758d793191afc393b0ad0d4267120548e35688025e73941736",
+          "id": "metal-hit",
+          "sampleRate": 48000
+        },
+        "room": {
+          "channels": 2,
+          "frames": 48000,
+          "hash": "sha256:2bc9a6ebb52b68b51586b95f14538dc2ca4595c9c508abf227608cae80b654ed",
+          "id": "room-ir",
+          "sampleRate": 48000
+        }
+      },
+      "schema": "AcousticProgramV1",
+      "seed": 11
+    },
+    "hash": "sha256:16a43718925890ab9c2f83f527635738769d87f6c16db01a385aa469be0d463d",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 2,
+      "format": "f32le-interleaved-clamped",
+      "frames": 86400,
+      "hash": "sha256:145e9da41a2adc2f7e2d48a808ff73cc30ddf2d76cfd000af434cd67bab0fe7d",
+      "sampleRate": 48000
+    },
+    "renderId": "r-e1c9be3a8ae28135",
+    "rendererVersion": 2,
+    "seed": 11
+  },
+  "schema": "AudioAssetManifestV1",
+  "sources": {
+    "samples": [
+      {
+        "channels": 1,
+        "frames": 38400,
+        "hash": "sha256:5145cd48f17951758d793191afc393b0ad0d4267120548e35688025e73941736",
+        "id": "metal-hit",
+        "name": "hit",
+        "origin": "synthetic-fixture",
+        "sampleRate": 48000
+      },
+      {
+        "channels": 2,
+        "frames": 48000,
+        "hash": "sha256:2bc9a6ebb52b68b51586b95f14538dc2ca4595c9c508abf227608cae80b654ed",
+        "id": "room-ir",
+        "name": "room",
+        "origin": "synthetic-fixture",
+        "sampleRate": 48000
+      }
+    ],
+    "selections": []
+  }
+}

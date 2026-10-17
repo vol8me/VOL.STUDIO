@@ -1,0 +1,61 @@
+{
+  "adaptive": {
+    "states": [
+      {
+        "id": "calm",
+        "intensity": 0
+      },
+      {
+        "id": "active",
+        "intensity": 0.5
+      },
+      {
+        "id": "peak",
+        "intensity": 1
+      }
+    ]
+  },
+  "affect": {
+    "arousal": 0.6,
+    "tags": ["katmanlı", "yoğunluk", "loop"],
+    "valence": -0.1
+  },
+  "assetClass": "music",
+  "channels": 2,
+  "form": {
+    "sections": ["body"]
+  },
+  "id": "reference-adaptive",
+  "intent": "Yoğunluğa tepki veren bir yatak: sakin durumda yalnız zemin duyulmalı, yoğunluk arttıkça nabız ve ezgi katmanları girmeli. Katman girişleri parçayı yeniden başlatmadan, yalnız seviye değişimiyle olmalı.",
+  "kind": "music",
+  "length": {
+    "bars": {
+      "max": 8,
+      "min": 4
+    }
+  },
+  "melodicSalience": 0.47,
+  "meter": [4, 4],
+  "playback": "adaptiveLoop",
+  "provenance": {
+    "author": "agent",
+    "by": "wave-6-reference"
+  },
+  "rhythmicDensity": "moderate",
+  "schema": "AudioBriefV1",
+  "tempo": {
+    "bpm": {
+      "max": 124,
+      "min": 100
+    }
+  },
+  "themeBook": {
+    "id": "reference-theme"
+  },
+  "title": "Referans adaptive loop",
+  "tonal": {
+    "roots": ["A2"],
+    "systems": ["minor"]
+  },
+  "usage": "interactive"
+}

@@ -1,0 +1,313 @@
+{
+  "buses": {
+    "space": {
+      "effects": [
+        {
+          "params": {
+            "amount": 0.45,
+            "damp": 0.6,
+            "decay": 1.6,
+            "preDelay": 0.012,
+            "roomSize": 0.8
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 110,
+            "order": 2,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ]
+    }
+  },
+  "channels": 1,
+  "description": "Yakın patlama: kocaman şok dalgası, ateş topu ve uzun gümbürdeyen kuyruk.",
+  "durationSeconds": 1.1,
+  "effects": [
+    {
+      "params": {
+        "frequency": 34,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "edge": "low",
+        "frequency": 100,
+        "gainDb": -2
+      },
+      "primitive": "effect.eq-shelf",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 300,
+        "gainDb": 2.5,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 1700,
+        "gainDb": 3,
+        "q": 0.7
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 5,
+        "mix": 0.75,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "edge": "high",
+        "frequency": 4500,
+        "gainDb": 2.5
+      },
+      "primitive": "effect.eq-shelf",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 11000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "gainDb": -11.11,
+      "mechanism": "pressure",
+      "name": "shock",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -8
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 1,
+          "bodyDecay": 0.8,
+          "bodyHz": 44,
+          "decay": 2.6,
+          "positive": 0.018,
+          "rise": 0.0015
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.004
+    },
+    {
+      "gainDb": -15.71,
+      "mechanism": "pressure",
+      "name": "punch",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -10
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.28,
+          "bodyHz": 130,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.004
+    },
+    {
+      "gainDb": 8.13,
+      "mechanism": "explosion",
+      "name": "fireball",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -10
+        }
+      ],
+      "source": {
+        "params": {
+          "brightness": 0.3,
+          "color": "pink",
+          "crackle": 0.25,
+          "darkening": 0.8,
+          "decay": 0.5
+        },
+        "primitive": "source.blast",
+        "version": 1
+      },
+      "startSeconds": 0.004
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0008,
+          "curve": "exponential",
+          "decay": 0.4,
+          "release": 0.01,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -5.74,
+      "mechanism": "noise",
+      "name": "dust",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 2003.56,
+            "mode": "bandpass",
+            "q": 0.5
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 250,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      },
+      "startSeconds": 0.01
+    },
+    {
+      "gainDb": 3.51,
+      "mechanism": "explosion",
+      "name": "rumble",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -8
+        }
+      ],
+      "source": {
+        "params": {
+          "brightness": 0.1,
+          "color": "pink",
+          "crackle": 0.05,
+          "darkening": 0.9,
+          "decay": 1.05
+        },
+        "primitive": "source.blast",
+        "version": 1
+      },
+      "startSeconds": 0.08
+    },
+    {
+      "gainDb": -40.09,
+      "mechanism": "impact",
+      "name": "metal",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.5,
+            "damping": 0.7,
+            "decay": 0.587324,
+            "frequency": 285.545,
+            "inharmonicity": 0.002,
+            "layout": "bar",
+            "modes": 8
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -18
+        }
+      ],
+      "source": {
+        "params": {
+          "contactTime": 0.0008,
+          "roughness": 0.2
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      },
+      "startSeconds": 0.01
+    },
+    {
+      "gainDb": -49.2,
+      "mechanism": "mechanical",
+      "name": "debris",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.8,
+          "mass": 1.4,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.3,
+          "velocity": 1.8
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.35
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "fadeInSeconds": 0.0005,
+    "fadeOutSeconds": 0.2,
+    "normalize": "peak",
+    "peakDbfs": -4
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8402
+}

@@ -1,0 +1,99 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "vt-hardsteel-brake",
+    "hash": "sha256:76f8e37938897870d159e0c59fa9cbf14c5dc39b2ab959202fd922e33d515808",
+    "path": "devtools/audio-synth/records/families/vt-hardsteel-brake/family.json",
+    "seed": 8305,
+    "variationPolicy": "role-subrange-v1",
+    "version": 4
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/vol-test",
+  "quality": {
+    "hash": "sha256:d9be3ba58bb9448f8bfb966fe9d425d5875f56c86e9914bcb876f4056ca6dc25",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/vt-hardsteel-brake/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 8067,
+        "encodedHash": "sha256:e5c68e666b4d383f1346472e5aa762282b8a2c6ecbacbac3d64d33d83537b90b",
+        "path": "public/assets/audio/sfx/steel/families/brake/brake-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.3,
+        "centroidHz": 1182.6304631186554,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.49733333333333335,
+      "key": "brake-a",
+      "loudness": {
+        "integratedLufs": -21.288799646422834,
+        "maxMomentaryLufs": -21.288799646422834,
+        "truePeakDbtp": -3.7541113532342103
+      },
+      "manifest": {
+        "hash": "sha256:c3a15220489d332f38bc803f1fa5ba8da24e8546d23adbf723adbc7e5637748c",
+        "path": "audio-manifests/sfx/steel/families/brake/brake-a.json"
+      },
+      "pcmHash": "sha256:5b597174d707d5e9223752c8636a692e7a93151efe2b6ccfa963597c52c769dd",
+      "programHash": "sha256:c52a83c327ac53c425530ed7e84482fc4349b4d170bc092d4fb523a344d4a7f1",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "brake"
+      ],
+      "variantId": "v-c90a3ea0f712f05e"
+    },
+    {
+      "asset": {
+        "bytes": 7793,
+        "encodedHash": "sha256:c2d15201ae230f86916c60d43309d51707945716fedacd250ee4b5d15c77f4c8",
+        "path": "public/assets/audio/sfx/steel/families/brake/brake-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.31,
+        "centroidHz": 489.1119737070015,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.49733333333333335,
+      "key": "brake-b",
+      "loudness": {
+        "integratedLufs": -20.754086180946704,
+        "maxMomentaryLufs": -20.754086180946704,
+        "truePeakDbtp": -4.14218990541343
+      },
+      "manifest": {
+        "hash": "sha256:c67883eec6e61ed7e79ba273e5c698e773711977d40c437832ff5f2e3d166cda",
+        "path": "audio-manifests/sfx/steel/families/brake/brake-b.json"
+      },
+      "pcmHash": "sha256:27792767f14c6f9045106c55ee0697130b89562093071cfd6c88590f206dddf4",
+      "programHash": "sha256:f07d5e7882e663d427bf4baedc6f7bb4cf58fd29dfc7c55a74d72be1c0e59634",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "brake"
+      ],
+      "variantId": "v-8111d50cd1837c71"
+    }
+  ]
+}

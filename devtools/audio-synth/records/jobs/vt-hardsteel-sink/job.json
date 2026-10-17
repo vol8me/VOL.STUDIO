@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-d691a01933581a04": {
+        "hash": "sha256:60a08edb0c337c50626baafca6957d870449776975ef240a6f7618a6bff82a81",
+        "path": "analyses/r-d691a01933581a04.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:619e576eb8c9ed08723bbcc9081268522db681e9ed8ad58ea7c9e72bbd392fb2",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:619e576eb8c9ed08723bbcc9081268522db681e9ed8ad58ea7c9e72bbd392fb2",
+      "hash": "sha256:d6841d8a2adbb3612e9fc09eddb97f9c45196181a4a7cc38f789ad08a520a0df",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:4c585d8bf2ca2a747bf43f0cf0b18c1ac28ad6928f855c7ac31809ca0f324f30",
+      "path": "games/vol-test/audio-manifests/sfx/steel/sink.json"
+    },
+    "renders": {
+      "r-d691a01933581a04": {
+        "hash": "sha256:1613a28cc179a4c45f8a0e6ec45241e007d6ccf7bb72f450d9e76e6132c517ca",
+        "path": "renders/r-d691a01933581a04.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:e80821a0592c9d4b4929a209ee710058e4d45ef2444edf44502497987d3425d1",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-sink",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 52,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/sink.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

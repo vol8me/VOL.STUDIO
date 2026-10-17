@@ -1,0 +1,20 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 4.625,
+    "min": 2.96
+  },
+  "id": "vt-hardsteel-engine-drive",
+  "intent": "Ağır savaş aracı motoru: dolgun alçak ateşleme serisi, egzoz ve dişli kutusu. Tonlu, yük altında doygun; ince ya da tıkırtılı değil.",
+  "kind": "acoustic",
+  "loop": true,
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — Yükte dizel"
+}

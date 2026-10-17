@@ -1,0 +1,8 @@
+{
+  "analysisHash": "sha256:8c5c048914a51085a3fdb74fec958d238189d5f4610a28fcb0ad129f01438057",
+  "pcmHash": "sha256:c0d37d78c61fed2f269a6a27157817de17c950342e6a905621db2ac0f2d480f7",
+  "reason": "müzik stem’i: programın tek render adayı",
+  "renderHash": "sha256:2ea0c20f9016539f91b1a6d567802f3ed4d70e1235c20360bf242e4879ddaad8",
+  "renderId": "r-fc6ed9b450b92995",
+  "schema": "AudioSelectionV1"
+}

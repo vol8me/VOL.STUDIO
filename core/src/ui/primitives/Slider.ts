@@ -1,6 +1,10 @@
+import { emitUiIntent, type UiIntentSource } from '../feedback/uiIntent';
 import { UI_SIZE } from '../../constants';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export type SliderOrientation = 'horizontal' | 'vertical';
+
+let sliderInstanceCounter = 0;
 
 export interface SliderOptions {
   min?: number;
@@ -8,12 +12,20 @@ export interface SliderOptions {
   step?: number;
   value?: number;
   label?: string;
+  /** Görünür etiket yokken (ör. dışarıdan çizilen sütun başlığı) erişilebilir ad; çevrilmiş metin. */
+  ariaLabel?: string;
   orientation?: SliderOrientation;
   /** Dikey slider için sabit yükseklik (piksel). Varsayılan 160. */
   length?: number;
   /** Değerin yanında gösterilecek metni biçimlendirir. Varsayılan: ham sayı. */
   formatValue?: (value: number) => string;
-  onChange?: (value: number) => void;
+  disabled?: boolean;
+  /** Salt okunur: odaklanır ve okunur; kullanıcı değeri değiştiremez. */
+  readOnly?: boolean;
+  /** Doğrulama hatası: `aria-invalid`. Hata metni `aria-describedby` ile tüketicide bağlanır. */
+  invalid?: boolean;
+  onInput?: (value: number) => void;
+  onCommit?: (value: number) => void;
 }
 
 /**
@@ -33,8 +45,12 @@ export class Slider {
   private readonly max: number;
   private readonly orientation: SliderOrientation;
   private readonly formatValue: (value: number) => string;
-  private onChangeHandler?: (value: number) => void;
-  private boundInput: () => void;
+  private onInputHandler?: (value: number) => void;
+  private onCommitHandler?: (value: number) => void;
+  private readonly scope = new DisposableScope();
+  private committedValue: number;
+  private gestureStartValue: number | null = null;
+  private readOnly = false;
 
   constructor(options: SliderOptions = {}) {
     const {
@@ -43,17 +59,24 @@ export class Slider {
       step = 1,
       value = min,
       label,
+      ariaLabel,
       orientation = 'horizontal',
-      length = UI_SIZE.SLIDER_DEFAULT_LENGTH,
+      length = UI_SIZE.SLIDER_DEFAULT_LENGTH_PX,
       formatValue = (v) => String(v),
-      onChange,
+      disabled = false,
+      readOnly = false,
+      invalid = false,
+      onInput,
+      onCommit,
     } = options;
 
     this.min = min;
     this.max = max;
     this.orientation = orientation;
     this.formatValue = formatValue;
-    this.onChangeHandler = onChange;
+    this.onInputHandler = onInput;
+    this.onCommitHandler = onCommit;
+    this.committedValue = value;
 
     this.element = document.createElement('div');
     this.element.className = `vol-slider vol-slider--${orientation}`;
@@ -67,6 +90,7 @@ export class Slider {
 
       const labelText = document.createElement('span');
       labelText.className = 'vol-slider__label';
+      labelText.id = `vol-slider-label-${++sliderInstanceCounter}`;
       labelText.textContent = label;
       labelRow.appendChild(labelText);
       this.labelText = labelText;
@@ -103,35 +127,118 @@ export class Slider {
     this.input.step = String(step > 0 ? step : 1);
     this.input.value = String(value);
     if (orientation === 'vertical') {
+      // `orient` yalnız eski Gecko içindir; erişilebilirlik ağacı yönü `aria-orientation`dan okur.
       this.input.setAttribute('orient', 'vertical');
+      this.input.setAttribute('aria-orientation', 'vertical');
     }
+    this.setInvalid(invalid);
+    // Erişilebilir ad: görünür etiket varsa ona bağlanır (dil değişimiyle birlikte güncellenir), yoksa verilen ad.
+    if (this.labelText) this.input.setAttribute('aria-labelledby', this.labelText.id);
+    else if (ariaLabel) this.input.setAttribute('aria-label', ariaLabel);
     track.appendChild(this.input);
 
     this.element.appendChild(track);
 
-    this.boundInput = () => {
-      const value = Number(this.input.value);
-      this.render(value);
-      this.onChangeHandler?.(value);
+    // Yerel `input` olayı sürüklemeyi klavyeden ayırmaz; basılı işaretçi kaynağı bildirir.
+    let dragSource: UiIntentSource | null = null;
+    const boundPointerDown = (event: PointerEvent): void => {
+      dragSource = event.pointerType === 'mouse' ? 'pointer' : 'touch';
     };
-    this.input.addEventListener('input', this.boundInput);
+    const boundPointerRelease = (): void => {
+      dragSource = null;
+    };
+    const boundInput = (event: Event): void => {
+      if (this.readOnly) {
+        // Salt okunur kaydırıcı yerel olarak hareket eder; değer, niyet ve geri çağrım olmadan eski yerine döner.
+        this.input.value = String(this.committedValue);
+        this.render(this.getValue());
+        return;
+      }
+      const value = Number(this.input.value);
+      this.gestureStartValue ??= this.committedValue;
+      this.render(value);
+      emitUiIntent({
+        kind: 'valuePreview',
+        origin: 'Slider',
+        target: this.input,
+        event,
+        persistent: false,
+        ...(dragSource && { source: dragSource }),
+      });
+      this.onInputHandler?.(value);
+    };
+    const boundChange = (event: Event): void => {
+      const value = this.getValue();
+      this.gestureStartValue = null;
+      if (value === this.committedValue) return;
+      this.committedValue = value;
+      emitUiIntent({ kind: 'valueCommit', origin: 'Slider', target: this.input, event });
+      this.onCommitHandler?.(value);
+    };
+    const boundKeydown = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape' || this.gestureStartValue === null) return;
+      event.preventDefault();
+      this.cancelGesture();
+    };
+    const boundPointerCancel = (): void => this.cancelGesture();
+    this.scope.addListener(this.input, 'input', boundInput);
+    this.scope.addListener(this.input, 'change', boundChange);
+    this.scope.addListener(this.input, 'keydown', boundKeydown as EventListener);
+    this.scope.addListener(this.input, 'pointercancel', boundPointerCancel);
+    this.scope.addListener(this.input, 'pointerdown', boundPointerDown as EventListener);
+    this.scope.addListener(this.input, 'pointerup', boundPointerRelease);
+    this.scope.addListener(this.input, 'pointercancel', boundPointerRelease);
+    this.scope.addListener(this.input, 'lostpointercapture', boundPointerRelease);
 
     this.render(value);
+    this.committedValue = this.getValue();
+    this.setDisabled(disabled);
+    this.setReadOnly(readOnly);
   }
 
   getValue(): number {
     return Number(this.input.value);
   }
 
+  /**
+   * Değeri programatik olarak ayarlar. Kullanıcı callback'leri TETİKLENMEZ —
+   * etkileşimi ile kod kaynaklı değişikliği ayırmak geri besleme döngüsünü
+   * baştan imkânsız kılar.
+   * Bildirim gerekiyorsa `setValueAndNotify()` kullan.
+   */
   setValue(value: number): void {
     const clamped = this.clamp(value);
     this.input.value = String(clamped);
-    this.render(clamped);
-    this.onChangeHandler?.(clamped);
+    // Native input step'e yuvarlayabilir; görünen değer her zaman gerçek değerdir.
+    this.render(this.getValue());
+    this.committedValue = this.getValue();
+    this.gestureStartValue = null;
+  }
+
+  /** Değeri ayarlar ve tam kullanıcı gesture'ını taklit eder. */
+  setValueAndNotify(value: number): void {
+    this.setValue(value);
+    const current = this.getValue();
+    this.onInputHandler?.(current);
+    this.onCommitHandler?.(current);
   }
 
   setDisabled(disabled: boolean): void {
+    // Sürükleme sürerken devre dışı kalan kaydırıcı önizlemede takılı kalmaz (kalıcı değişiklik yok).
+    if (disabled) this.cancelGesture();
     this.input.disabled = disabled;
+  }
+
+  setReadOnly(readOnly: boolean): void {
+    if (readOnly) this.cancelGesture();
+    this.readOnly = readOnly;
+    if (readOnly) this.input.setAttribute('aria-readonly', 'true');
+    else this.input.removeAttribute('aria-readonly');
+  }
+
+  setInvalid(invalid: boolean): void {
+    if (invalid) this.input.setAttribute('aria-invalid', 'true');
+    else this.input.removeAttribute('aria-invalid');
   }
 
   /** Label metnini günceller — dil değişiminde kullanılır. */
@@ -140,12 +247,22 @@ export class Slider {
   }
 
   destroy(): void {
-    this.input.removeEventListener('input', this.boundInput);
+    this.scope.dispose();
     this.element.remove();
   }
 
   private clamp(value: number): number {
+    if (!Number.isFinite(value)) return this.min;
     return Math.min(this.max, Math.max(this.min, value));
+  }
+
+  private cancelGesture(): void {
+    if (this.gestureStartValue === null) return;
+    const start = this.gestureStartValue;
+    this.gestureStartValue = null;
+    this.input.value = String(start);
+    this.render(this.getValue());
+    this.onInputHandler?.(this.getValue());
   }
 
   private render(value: number): void {
@@ -160,6 +277,8 @@ export class Slider {
       this.handle.style.left = `${percent}%`;
     }
 
+    // Ekran okuyucu biçimlenmiş değeri okur ("%70"), ham sayıyı değil.
+    this.input.setAttribute('aria-valuetext', this.formatValue(value));
     if (this.valueLabel) {
       this.valueLabel.textContent = this.formatValue(value);
     }

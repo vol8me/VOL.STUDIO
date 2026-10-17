@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:5e5c9e4feda8cb16272159559206757f282f70ff809fceb0620db166b35e099f",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:c31348d910d5cad6867b87e42556c4996a0a4570e89cb52a06eee3013046fe31",
+    "familyId": "ui-aurum-equip",
+    "kind": "family-variant",
+    "variantId": "v-026dce3a79b3edd7",
+    "variantKey": "equip-a"
+  }
+}

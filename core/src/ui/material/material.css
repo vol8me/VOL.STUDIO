@@ -1,0 +1,998 @@
+/*
+ * MALZEME DİLİ (UI-01.7). Düz kutu yerine tek ışık yönünden (üstten) aydınlanan yüzeyler:
+ * ton + üst rim ışığı + alt kenar gölgesi + ince grain. Renkler tema tokenlarından gelir
+ * (`--vol-ui-plate`, `--vol-ui-plate-top-light`, `--vol-ui-frame-*`, `--vol-ui-glow-*`);
+ * bu dosya yalnız RENK DIŞI malzeme parametrelerini taşır ve her skin kendi değerini verir.
+ *
+ * Bütçe kuralı: gölge katmanı en çok iki iç + bir sert dış gölgedir; BULANIK dış gölge yok
+ * (blur 0), grain tek küçük döşemedir ve sabit boyutta tekrar eder. Hareket azaltılmışta
+ * anlam korunur: yüzey durumları renk ve kenar değişimiyle ayrışır, kaldırma/bastırma
+ * `prefers-reduced-motion` altında çeviri olmadan yalnız gölgeyle gösterilir.
+ */
+:root {
+  /* Üst bant parlaklığı (0–1): yüzeyin üst kısmındaki yumuşak ışık. */
+  --vol-mat-gloss: 0.06;
+
+  /* Grain opaklığı (0–1) ve döşeme boyutu. */
+  --vol-mat-grain-alpha: 0.4;
+  --vol-mat-grain-size: 96px;
+
+  /* Alt kenar (yüzeyin kalınlığı) gölgesi ve sert dış gölge. */
+  --vol-mat-edge-dark: #00000080;
+  --vol-mat-drop: #0000008c;
+
+  /* Kaldırma ve bastırma yolu hareket ilkellerinden gelir (`MOTION_JUICE`). */
+  --vol-mat-lift: var(--vol-motion-juice-hover-lift);
+  --vol-mat-press: var(--vol-motion-juice-press-drop);
+
+  /* Çerçeve iç çizgisi (keyline): panel kenarından 4 px içeride ikinci bir ince hat; plaka çerçevesi hissi. */
+  --vol-mat-keyline: var(--vol-ui-frame-divider);
+
+  /* Yüzey köşesi ve çentik (HUD barı segmenti) aralığı. */
+  --vol-mat-radius: var(--vol-radius-sm);
+  --vol-mat-notch: 10px;
+
+  /* Basma yolu: bastırılınca yüzey hafif küçülür (squash), bırakınca geri gelir. */
+  --vol-mat-squash: var(--vol-motion-juice-press-squash);
+
+  /* Alt kenar karartması; üst bant ışığı kullanım yerinde yazılır ki skin/varyant `--vol-mat-gloss` değerini değiştirebilsin. */
+  --vol-mat-bottom: linear-gradient(0deg, rgb(0 0 0 / 18%) 0, transparent 30%);
+
+  /* Tek döşemelik gürültü: SVG `feTurbulence`, tek renkli, kendi içinde sıfırlanır. */
+  --vol-mat-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='96' height='96' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Çelik donanım: fırçalı, mat; ışık kısık, grain belirgin. */
+[data-vol-theme='default'],
+:root[data-vol-theme='default'] {
+  --vol-mat-gloss: 0.05;
+  --vol-mat-grain-alpha: 0.45;
+}
+
+/* Yaldızlı lake: cilalı, parlak üst bant; grain ince. */
+[data-vol-theme='aurum'],
+:root[data-vol-theme='aurum'] {
+  --vol-mat-gloss: 0.16;
+  --vol-mat-grain-alpha: 0.2;
+  --vol-mat-keyline: color-mix(
+    in srgb,
+    var(--vol-ui-brand-solid) 46%,
+    var(--vol-ui-frame-hairline)
+  );
+  --vol-mat-edge-dark: #0000009e;
+}
+
+/*
+ * Yüzey katmanları. `--vol-mat-base` yüzeyin tonudur; bileşen yalnız onu değiştirir
+ * (varyant, hover, basılı), katman düzeni tek yerdedir.
+ */
+.vol-mat {
+  --vol-mat-base: var(--vol-ui-plate);
+
+  background-color: var(--vol-mat-base);
+  background-image:
+    linear-gradient(180deg, rgb(255 255 255 / var(--vol-mat-gloss)) 0, transparent 30%),
+    var(--vol-mat-bottom), var(--vol-mat-grain);
+  background-size:
+    auto,
+    auto,
+    var(--vol-mat-grain-size) var(--vol-mat-grain-size);
+  background-blend-mode: normal, normal, soft-light;
+  border: 1px solid var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+/* Girinti: oyuk yüzey (kuyu, alan, girdi). Işık yukarıdan, iç gölge üstte. */
+.vol-mat--well {
+  --vol-mat-base: var(--vol-ui-well);
+
+  background-image:
+    linear-gradient(180deg, rgb(0 0 0 / 28%) 0, transparent 40%), var(--vol-mat-grain);
+  background-size:
+    auto,
+    var(--vol-mat-grain-size) var(--vol-mat-grain-size);
+  background-blend-mode: normal, soft-light;
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+/* Panel: büyük yüzey; plakadan daha az parlak, çerçeveye uygun. */
+.vol-mat--panel {
+  --vol-mat-base: var(--vol-ui-panel);
+  --vol-mat-gloss: 0.035;
+
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -1px 0 var(--vol-mat-edge-dark),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+/* Basılı/çökmüş: ışık kaybolur, iç gölge üste geçer, yüzey aşağı iner. */
+.vol-mat--pressed {
+  background-image:
+    linear-gradient(180deg, rgb(0 0 0 / 26%) 0, transparent 52%), var(--vol-mat-grain);
+  background-size:
+    auto,
+    var(--vol-mat-grain-size) var(--vol-mat-grain-size);
+  background-blend-mode: normal, soft-light;
+  box-shadow:
+    inset 0 2px 0 var(--vol-mat-edge-dark),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+/*
+ * Çerçeve: köşe aksanları (altın/turuncu), başlık şeridi ve ayraç. Köşeler `::after` üzerinde
+ * çizilir ki başlık şeridinin altında kalmasın; SVG dokuz-dilim gerekmez.
+ */
+.vol-frame {
+  position: relative;
+  border: 1px solid var(--vol-ui-frame-hairline);
+}
+
+.vol-frame::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--vol-ui-frame-corner), var(--vol-ui-frame-corner)),
+    linear-gradient(var(--vol-ui-frame-corner), var(--vol-ui-frame-corner)),
+    linear-gradient(var(--vol-ui-frame-corner), var(--vol-ui-frame-corner)),
+    linear-gradient(var(--vol-ui-frame-corner), var(--vol-ui-frame-corner)),
+    linear-gradient(var(--vol-ui-frame-corner), var(--vol-ui-frame-corner)),
+    linear-gradient(var(--vol-ui-frame-corner), var(--vol-ui-frame-corner)),
+    linear-gradient(var(--vol-ui-frame-corner), var(--vol-ui-frame-corner)),
+    linear-gradient(var(--vol-ui-frame-corner), var(--vol-ui-frame-corner));
+  background-size:
+    16px 3px,
+    3px 16px,
+    16px 3px,
+    3px 16px,
+    16px 3px,
+    3px 16px,
+    16px 3px,
+    3px 16px;
+  background-position:
+    left top,
+    left top,
+    right top,
+    right top,
+    left bottom,
+    left bottom,
+    right bottom,
+    right bottom;
+  background-repeat: no-repeat;
+}
+
+.vol-frame__header {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  background: var(--vol-ui-frame-header);
+  border-bottom: 1px solid var(--vol-ui-frame-divider);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -1px 0 rgb(0 0 0 / 38%);
+}
+
+/* Başlık dili: ekran yazısı (display ailesi), geniş aralıklı büyük harf, parlak metin rengi. */
+.vol-frame__header,
+.vol-frame__header .vol-text {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  font-weight: 700;
+}
+
+/* Başlık işareti: marka renginde elmas; metne binmez, flex öğesidir. */
+.vol-frame__header .vol-text {
+  text-align: left;
+}
+
+.vol-frame__header::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--vol-ui-brand-solid);
+  box-shadow: 0 0 0 2px var(--vol-ui-frame-header);
+  transform: rotate(45deg);
+}
+
+.vol-frame__divider {
+  height: 1px;
+  background: var(--vol-ui-frame-divider);
+  box-shadow: 0 1px 0 var(--vol-ui-plate-top-light);
+  border: 0;
+}
+
+/*
+ * Basılabilir yüzey: Button ve IconButton. Varyant yalnız `--vol-btn-*` değerlerini değiştirir;
+ * katman düzeni, kaldırma, bastırma ve odak tek yerdedir. Hover'da yüzey 1 px kalkar ve parlar,
+ * basılınca 1 px iner, hafif küçülür ve ışık iç gölgeye döner (basma yolu).
+ *
+ * Işık dokusu GÖRSEL KATMAN DEĞİL, bulanıksız iç gölgedir (üst bant parıltısı ve alt kenar karartması; bulanık gölge WebKit'te ilk gösterim gecikmesini 2 kat artırıyordu): düğmenin
+ * arka planı düz renk kalır, böylece metin kontrastı axe ve gözle aynı zeminde ölçülür (gradyan ya da
+ * `::before` bindirmesi kontrastı "belirlenemez" yapıyordu). Grain yalnız metinsiz yüzeylerdedir.
+ */
+.vol-button,
+.vol-icon-button,
+.vol-osk__key,
+.vol-dialogue__choice,
+.vol-dialogue__control,
+.vol-wizard__nav-button,
+.vol-card__action,
+.vol-card-shop__reroll {
+  --vol-btn-base: var(--vol-ui-plate);
+  --vol-btn-hover: var(--vol-ui-surface-3);
+  --vol-btn-pressed: var(--vol-ui-surface-1);
+  --vol-btn-border: var(--vol-ui-frame-hairline);
+  --vol-btn-text: var(--vol-ui-text);
+  --vol-btn-glow: transparent;
+  --vol-btn-raised:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 7px 0 rgb(255 255 255 / var(--vol-mat-gloss)), inset 0 -8px 0 rgb(0 0 0 / 14%),
+    inset 0 -2px 0 var(--vol-mat-edge-dark);
+
+  color: var(--vol-btn-text);
+  background-color: var(--vol-btn-base);
+  border: 1px solid var(--vol-btn-border);
+  box-shadow:
+    var(--vol-btn-raised),
+    0 2px 0 var(--vol-mat-drop);
+  transition:
+    transform var(--vol-motion-duration-fast, 120ms) var(--vol-motion-ease-standard, ease),
+    background-color var(--vol-motion-duration-fast, 120ms) var(--vol-motion-ease-standard, ease),
+    border-color var(--vol-motion-duration-fast, 120ms) var(--vol-motion-ease-standard, ease),
+    box-shadow var(--vol-motion-duration-fast, 120ms) var(--vol-motion-ease-standard, ease);
+}
+
+/* Düğme içi ikon: tamsayı piksel ölçeği (theme.css `--vol-icon-*`), düğme boyutunu izler. */
+.vol-button,
+.vol-icon-button {
+  --vol-icon-box: var(--vol-icon-md);
+}
+
+.vol-button--sm,
+.vol-icon-button--sm {
+  --vol-icon-box: var(--vol-icon-sm);
+}
+
+.vol-button--lg,
+.vol-icon-button--lg {
+  --vol-icon-box: var(--vol-icon-lg);
+}
+
+.vol-button__icon,
+.vol-icon-button__icon {
+  width: var(--vol-icon-box);
+  height: var(--vol-icon-box);
+}
+
+.vol-button:hover,
+.vol-button.vol-gamepad-hover,
+.vol-icon-button:hover,
+.vol-icon-button.vol-gamepad-hover,
+.vol-osk__key:hover,
+.vol-osk__key.vol-gamepad-hover,
+.vol-dialogue__choice:hover,
+.vol-dialogue__control:hover,
+.vol-wizard__nav-button:hover,
+.vol-card__action:hover,
+.vol-card-shop__reroll:hover {
+  background-color: var(--vol-btn-hover);
+  transform: translateY(calc(var(--vol-mat-lift) * -1));
+  box-shadow:
+    var(--vol-btn-raised),
+    0 3px 0 var(--vol-mat-drop),
+    0 0 0 1px var(--vol-btn-glow);
+}
+
+.vol-button:active,
+.vol-icon-button:active,
+.vol-osk__key:active,
+.vol-dialogue__choice:active,
+.vol-dialogue__control:active,
+.vol-wizard__nav-button:active,
+.vol-card__action:active,
+.vol-card-shop__reroll:active {
+  background-color: var(--vol-btn-pressed);
+  transform: translateY(var(--vol-mat-press)) scale(var(--vol-mat-squash));
+  box-shadow:
+    inset 0 2px 0 var(--vol-mat-edge-dark),
+    inset 0 10px 0 rgb(0 0 0 / 18%),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-button:disabled,
+.vol-icon-button:disabled,
+.vol-osk__key:disabled,
+.vol-dialogue__choice:disabled,
+.vol-wizard__nav-button:disabled,
+.vol-card__action:disabled,
+.vol-card-shop__reroll:disabled {
+  cursor: var(--vol-cursor-default, default);
+  color: var(--vol-ui-disabled-text);
+  background-color: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+  box-shadow: none;
+  transform: none;
+}
+
+/* Hata durumu: handler hata fırlatınca danger kenarı ve parıltısı; renk tek taşıyıcı değil (shake + data-state). */
+.vol-button--error,
+.vol-icon-button--error {
+  --vol-btn-border: var(--vol-ui-danger-border);
+  --vol-btn-glow: var(--vol-ui-glow-danger);
+
+  box-shadow:
+    var(--vol-btn-raised),
+    0 2px 0 var(--vol-mat-drop),
+    0 0 0 2px var(--vol-btn-glow);
+}
+
+/* Varyantlar. */
+.vol-button--primary,
+.vol-icon-button--primary,
+.vol-wizard__nav-button--next {
+  --vol-btn-base: var(--vol-ui-brand-solid);
+  --vol-btn-hover: var(--vol-ui-brand-fill-hover);
+  --vol-btn-pressed: var(--vol-ui-brand-pressed);
+  --vol-btn-border: var(--vol-ui-brand-border);
+  --vol-btn-text: var(--vol-ui-on-brand);
+  --vol-btn-glow: var(--vol-ui-glow-brand);
+  --vol-mat-gloss: 0.04;
+}
+
+.vol-button--danger,
+.vol-icon-button--danger {
+  --vol-btn-base: var(--vol-ui-danger-solid);
+  --vol-btn-hover: var(--vol-ui-danger-border);
+  --vol-btn-pressed: var(--vol-ui-danger-subtle);
+  --vol-btn-border: var(--vol-ui-danger-border);
+  --vol-btn-text: var(--vol-ui-on-danger);
+  --vol-btn-glow: var(--vol-ui-glow-danger);
+  --vol-mat-gloss: 0.04;
+}
+
+.vol-icon-button--success {
+  --vol-btn-base: var(--vol-ui-success-solid);
+  --vol-btn-hover: var(--vol-ui-success-border);
+  --vol-btn-pressed: var(--vol-ui-success-subtle);
+  --vol-btn-border: var(--vol-ui-success-border);
+  --vol-btn-text: var(--vol-ui-on-success);
+  --vol-btn-glow: var(--vol-ui-glow-success);
+  --vol-mat-gloss: 0.04;
+}
+
+/*
+ * Oyun kontrolleri (basılı tut, uzun bas, şarj, duraklat/sürdür, yön tuşu): aynı yüzey malzemesi.
+ * Şekilleri (daire/kare) ve ilerleme halkaları kendi dosyalarındadır; burada yalnız yüzey, kenar ve
+ * basılı durum verilir. Basılı durum marka rengine döner ve içeri gömülür.
+ */
+.vol-hold-button,
+.vol-long-press-button,
+.vol-charge-button,
+.vol-pause-resume-button,
+.vol-direction-button {
+  background-color: var(--vol-ui-plate);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -8px 0 rgb(0 0 0 / 14%),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop);
+}
+
+.vol-hold-button--pressed,
+.vol-long-press-button--pressed,
+.vol-charge-button--charging,
+.vol-pause-resume-button--pressed,
+.vol-direction-button--pressed {
+  background-color: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  box-shadow:
+    inset 0 2px 0 var(--vol-mat-edge-dark),
+    inset 0 10px 0 rgb(0 0 0 / 18%),
+    0 0 0 3px var(--vol-ui-glow-brand);
+}
+
+.vol-long-press-button--long-pressed {
+  background-color: var(--vol-ui-warning-solid);
+  border-color: var(--vol-ui-warning-border);
+}
+
+.vol-hold-button:disabled,
+.vol-long-press-button:disabled,
+.vol-charge-button:disabled,
+.vol-pause-resume-button:disabled,
+.vol-direction-button:disabled {
+  background-color: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+  box-shadow: none;
+}
+
+/*
+ * Girinti yüzeyleri: girdi, metin alanı, seçici, kaydırıcı rayı, anahtar yuvası, segment çubuğu.
+ * Oyuk kuyu: üstten iç gölge, altta ince ışık çizgisi. Arka plan düz renk kalır (kontrast ölçülebilir).
+ */
+.vol-input,
+.vol-textarea__input,
+.vol-select,
+.vol-slider__track,
+.vol-checkbox__track,
+.vol-segmented {
+  background-color: var(--vol-ui-well);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+/* Dolgu ve seçili parça: kabartma (üst bant ışığı, alt kenar). */
+.vol-slider__fill {
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 26%),
+    inset 0 -2px 0 rgb(0 0 0 / 28%);
+}
+
+.vol-segmented__thumb {
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 6px 0 rgb(255 255 255 / 8%),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 1px 0 var(--vol-mat-drop);
+}
+
+/*
+ * Plaka ve panel yüzeyleri: kart, kalıcı panel içerikleri, modal, çekmece, açılır pencere.
+ * Işık üstten: rim çizgisi + üst bant + alt kenar; dış gölge sert.
+ */
+.vol-card {
+  /* Nadirlik tonu üst ışığa karışır; ton yoksa nötr ışık. */
+  --vol-card-accent: var(--vol-ui-plate-top-light);
+  --vol-card-bg: var(--vol-ui-plate);
+
+  background-color: var(--vol-card-bg);
+  box-shadow:
+    inset 0 2px 0 var(--vol-card-accent),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    inset 0 0 0 4px var(--vol-card-bg),
+    inset 0 0 0 5px var(--vol-mat-keyline),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-card--rare {
+  --vol-card-accent: color-mix(in srgb, var(--vol-ui-rarity-rare-solid) 70%, transparent);
+}
+
+.vol-card--epic {
+  --vol-card-accent: color-mix(in srgb, var(--vol-ui-rarity-epic-solid) 70%, transparent);
+}
+
+.vol-card--legendary {
+  --vol-card-accent: color-mix(in srgb, var(--vol-ui-warning-solid) 80%, transparent);
+}
+
+.vol-modal__content,
+.vol-popup {
+  background-color: var(--vol-ui-panel);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    inset 0 0 0 4px var(--vol-ui-panel),
+    inset 0 0 0 5px var(--vol-mat-keyline),
+    0 4px 0 var(--vol-mat-drop);
+}
+
+/*
+ * Sekmeler: sidebar ve üst şerit aynı dili konuşur. Seçili sekme "plaka" olur (üst ışık + marka
+ * çubuğu), üzerine gelinen sekme hafif kalkar; metin ile zemin düz renk kalır (kontrast ölçülebilir).
+ */
+.vol-tabs__list {
+  background-color: var(--vol-ui-panel);
+  border-bottom-color: var(--vol-ui-frame-divider);
+  box-shadow: inset 0 -1px 0 rgb(0 0 0 / 40%);
+}
+
+.vol-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.vol-tabs__tab:hover {
+  background-color: var(--vol-ui-surface-1);
+}
+
+.vol-tabs__tab[aria-selected='true'] {
+  background-color: var(--vol-ui-plate);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -3px 0 var(--vol-ui-brand-solid);
+}
+
+.vol-tabs--vertical .vol-tabs__list {
+  box-shadow: none;
+  background-color: transparent;
+}
+
+.vol-tabs--vertical .vol-tabs__sidebar {
+  background-color: var(--vol-ui-panel);
+  border-right-color: var(--vol-ui-frame-divider);
+  box-shadow: inset -1px 0 0 rgb(0 0 0 / 40%);
+}
+
+.vol-tabs--vertical .vol-tabs__tab[aria-selected='true'] {
+  background-color: var(--vol-ui-plate);
+  border-right-color: transparent;
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -1px 0 rgb(0 0 0 / 40%),
+    inset 4px 0 0 var(--vol-ui-brand-solid);
+}
+
+/*
+ * HUD barı: oyuk kuyu + dolu hissi veren dolgu. Dolgu: parlak üst bant, segment çentikleri
+ * (`--vol-mat-notch` aralıklı koyu çizgiler), kenarda ışık çizgisi.
+ */
+.vol-bar {
+  background-color: var(--vol-ui-well);
+  border: 1px solid var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-bar__fill {
+  position: relative;
+  z-index: 1;
+  background-image:
+    linear-gradient(180deg, rgb(255 255 255 / 34%) 0, rgb(255 255 255 / 6%) 46%, transparent 52%),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent calc(var(--vol-mat-notch) - 1px),
+      rgb(0 0 0 / 32%) calc(var(--vol-mat-notch) - 1px),
+      rgb(0 0 0 / 32%) var(--vol-mat-notch)
+    );
+  box-shadow: 1px 0 0 rgb(255 255 255 / 50%);
+}
+
+.vol-bar--vertical .vol-bar__fill {
+  background-image:
+    linear-gradient(90deg, rgb(255 255 255 / 34%) 0, rgb(255 255 255 / 6%) 46%, transparent 52%),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent calc(var(--vol-mat-notch) - 1px),
+      rgb(0 0 0 / 32%) calc(var(--vol-mat-notch) - 1px),
+      rgb(0 0 0 / 32%) var(--vol-mat-notch)
+    );
+  box-shadow: 0 -1px 0 rgb(255 255 255 / 50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-button,
+  .vol-icon-button,
+  .vol-osk__key,
+  .vol-dialogue__choice,
+  .vol-dialogue__control,
+  .vol-wizard__nav-button,
+  .vol-card__action,
+  .vol-card-shop__reroll {
+    transition: none;
+  }
+
+  .vol-button:hover,
+  .vol-button.vol-gamepad-hover,
+  .vol-button:active,
+  .vol-icon-button:hover,
+  .vol-icon-button.vol-gamepad-hover,
+  .vol-icon-button:active,
+  .vol-osk__key:hover,
+  .vol-osk__key:active,
+  .vol-dialogue__choice:hover,
+  .vol-dialogue__choice:active,
+  .vol-dialogue__control:hover,
+  .vol-wizard__nav-button:hover,
+  .vol-card__action:hover,
+  .vol-card-shop__reroll:hover,
+  .vol-dialogue__control:active,
+  .vol-wizard__nav-button:active,
+  .vol-card__action:active,
+  .vol-card-shop__reroll:active {
+    transform: none;
+  }
+}
+
+/* Odak nabzı: klavye/kol odağı iki kez parlar; halka kalıcıdır, nabız yalnız dikkat çeker. */
+.vol-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-icon-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-osk__key:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-dialogue__choice:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-dialogue__control:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-wizard__nav-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-card__action:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-card-shop__reroll:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  animation: vol-juice-focus var(--vol-motion-juice-focus-pulse) ease-in-out 2;
+}
+
+@keyframes vol-juice-focus {
+  50% {
+    box-shadow:
+      inset 0 1px 0 var(--vol-ui-plate-top-light),
+      inset 0 -2px 0 var(--vol-mat-edge-dark),
+      0 0 0 4px var(--vol-ui-focus-halo);
+  }
+}
+
+/*
+ * Juice sınıfları (`playJuice`): sayı patlaması, vuruş flaşı, sınırlı sarsıntı, panel girişi.
+ * Hareket azaltılmışta ölçek ve sarsıntı yoktur; anlam flaş ve renkle kalır.
+ */
+.vol-juice--pop {
+  animation: vol-juice-pop var(--vol-motion-juice-number-pop-duration)
+    var(--vol-motion-ease-decelerate);
+}
+
+.vol-juice--flash {
+  animation: vol-juice-flash var(--vol-motion-juice-hit-flash) var(--vol-motion-ease-decelerate);
+}
+
+.vol-juice--shake {
+  animation: vol-juice-shake var(--vol-motion-juice-shake-duration) var(--vol-motion-ease-standard);
+}
+
+.vol-juice--enter {
+  animation: vol-juice-enter var(--vol-motion-preset-dialog-in) var(--vol-motion-ease-decelerate)
+    backwards;
+}
+
+@keyframes vol-juice-pop {
+  40% {
+    transform: scale(var(--vol-motion-juice-number-pop-scale));
+  }
+}
+
+@keyframes vol-juice-flash {
+  0% {
+    filter: brightness(1.8);
+  }
+}
+
+@keyframes vol-juice-shake {
+  20% {
+    transform: translateX(calc(var(--vol-motion-juice-shake-distance) * -1));
+  }
+
+  40% {
+    transform: translateX(var(--vol-motion-juice-shake-distance));
+  }
+
+  60% {
+    transform: translateX(calc(var(--vol-motion-juice-shake-distance) * -0.5));
+  }
+
+  80% {
+    transform: translateX(calc(var(--vol-motion-juice-shake-distance) * 0.5));
+  }
+}
+
+@keyframes vol-juice-enter {
+  from {
+    opacity: 0;
+    transform: scale(var(--vol-motion-juice-panel-in-scale));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-icon-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-osk__key:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-dialogue__choice:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-dialogue__control:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-wizard__nav-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-card__action:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-card-shop__reroll:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-juice--pop,
+  .vol-juice--enter {
+    animation: none;
+  }
+
+  .vol-juice--shake {
+    animation: vol-juice-flash var(--vol-motion-juice-hit-flash) var(--vol-motion-ease-decelerate);
+  }
+}
+
+/* Hasar gecikme şeridi: dolgunun arkasında; düşüşte eski seviye kısa süre kalır, sonra erir. */
+.vol-bar__trail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 0;
+  background-color: var(--vol-ui-danger-solid);
+  opacity: 0.7;
+  transition: width var(--vol-motion-juice-trail-duration) var(--vol-motion-ease-standard)
+    var(--vol-motion-juice-trail-delay);
+}
+
+.vol-bar--vertical .vol-bar__trail {
+  inset: auto 0 0;
+  width: 100%;
+  transition-property: height;
+}
+
+.vol-bar__trail--instant {
+  transition-duration: 0s;
+  transition-delay: 0s;
+}
+
+.vol-bar__label {
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-bar__trail {
+    transition: none;
+  }
+}
+
+/*
+ * Hata (`Bar.setStatus('error')`): tehlike rengi VE çapraz şerit — renk körü ve soluk ekranda da ayırt edilir.
+ * Dolgu son değerde kalır (hatanın nerede oluştuğu okunur).
+ */
+.vol-bar--error .vol-bar__fill {
+  background-color: var(--vol-ui-danger-solid);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0,
+    transparent 6px,
+    rgb(0 0 0 / 40%) 6px,
+    rgb(0 0 0 / 40%) 12px
+  );
+}
+
+/*
+ * Düşük uyarısı rengin yanında DESENLE de söylenir (renk tek başına taşıyıcı olmaz): dolgunun üstünde 45° ince şerit.
+ * Hata şeridinden (135°, kalın, dolguyu değiştirir) açısı ve kalınlığıyla ayrılır; okuyucu metni "düşük" der.
+ */
+.vol-bar--low .vol-bar__fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 4px,
+    rgb(0 0 0 / 32%) 4px,
+    rgb(0 0 0 / 32%) 6px
+  );
+  pointer-events: none;
+}
+
+/*
+ * Belirsiz ilerleme (`Bar.setStatus('busy')`): dolgu kuyuda kayan dar bir banttır (yalnız transform). Hasar şeridi
+ * saklıdır; değer gösterilmez. Hareket azaltılmışta bant kaymaz: kuyu boyunca sönük dolgu kalır, anlamı `aria-busy` taşır.
+ */
+.vol-bar--busy .vol-bar__trail {
+  display: none;
+}
+
+.vol-bar--busy .vol-bar__fill {
+  width: 34%;
+  height: 100%;
+  animation: vol-bar-sweep calc(var(--vol-motion-duration-cinematic) * 3)
+    var(--vol-motion-ease-standard, ease-in-out) infinite;
+}
+
+.vol-bar--vertical.vol-bar--busy .vol-bar__fill {
+  width: 100%;
+  height: 34%;
+  animation-name: vol-bar-sweep-vertical;
+}
+
+@keyframes vol-bar-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(300%);
+  }
+}
+
+@keyframes vol-bar-sweep-vertical {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(-300%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-bar--busy .vol-bar__fill,
+  .vol-bar--vertical.vol-bar--busy .vol-bar__fill {
+    width: 100%;
+    height: 100%;
+    animation: none;
+    opacity: 0.35;
+  }
+}
+
+/*
+ * Kaydırıcı: çubuk bir KUYU (oyuk), dolgu kesikli enerji şeridi, tutamaç çelik bir plaka;
+ * ortasındaki marka çizgisi değer yönünü gösterir. Hepsi düz renk + sert iç gölge (blur yok).
+ */
+.vol-slider__track {
+  background-color: var(--vol-ui-well);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-slider--horizontal .vol-slider__fill {
+  background-image: repeating-linear-gradient(90deg, transparent 0 9px, rgb(0 0 0 / 30%) 9px 10px);
+}
+
+.vol-slider--vertical .vol-slider__fill {
+  background-image: repeating-linear-gradient(0deg, transparent 0 9px, rgb(0 0 0 / 30%) 9px 10px);
+}
+
+.vol-slider__handle {
+  background-color: color-mix(in srgb, var(--vol-ui-plate) 62%, var(--vol-ui-text));
+  border: 1px solid var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 55%),
+    inset 0 -2px 0 rgb(0 0 0 / 32%),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-slider--horizontal .vol-slider__handle {
+  background-image: linear-gradient(
+    90deg,
+    transparent calc(50% - 1px),
+    var(--vol-ui-brand-solid) calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+
+.vol-slider--vertical .vol-slider__handle {
+  background-image: linear-gradient(
+    0deg,
+    transparent calc(50% - 1px),
+    var(--vol-ui-brand-solid) calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+
+/*
+ * Veri yüzeyleri: ağaç bir kuyu, tablo başlığı bir çerçeve şeridi, satırlar dönüşümlü iki düz ton,
+ * ipucu kutusu panel + keyline. Zebra ve seçili işareti düz renk/sert gölgedir (blur yok).
+ */
+.vol-tree {
+  background-color: var(--vol-ui-well);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-tree__row--selected {
+  box-shadow: inset 3px 0 0 var(--vol-ui-brand-solid);
+}
+
+.vol-datatable {
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow: 0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-datatable__header-cell {
+  background-color: var(--vol-ui-frame-header);
+  border-bottom-color: var(--vol-ui-frame-divider);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -1px 0 rgb(0 0 0 / 38%);
+}
+
+.vol-datatable__row:nth-child(even) .vol-datatable__cell {
+  background-color: color-mix(in srgb, var(--vol-ui-well) 22%, transparent);
+}
+
+.vol-rich-tooltip {
+  background-color: var(--vol-ui-panel);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 0 0 3px var(--vol-ui-panel),
+    inset 0 0 0 4px var(--vol-mat-keyline),
+    0 4px 0 var(--vol-mat-drop);
+}
+
+/* Aralık kaydırıcı: tek kaydırıcıyla aynı dil (kuyu çubuk, kesikli dolgu, çelik tutamaç + marka çizgisi). */
+.vol-range-slider__track {
+  background-color: var(--vol-ui-well);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-range-slider__fill {
+  background-image: repeating-linear-gradient(90deg, transparent 0 9px, rgb(0 0 0 / 30%) 9px 10px);
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 26%),
+    inset 0 -2px 0 rgb(0 0 0 / 28%);
+}
+
+.vol-range-slider__handle {
+  background-color: color-mix(in srgb, var(--vol-ui-plate) 62%, var(--vol-ui-text));
+  background-image: linear-gradient(
+    90deg,
+    transparent calc(50% - 1px),
+    var(--vol-ui-brand-solid) calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+  border: 1px solid var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 55%),
+    inset 0 -2px 0 rgb(0 0 0 / 32%),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-range-slider--disabled .vol-range-slider__handle {
+  background-image: none;
+  background-color: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+  box-shadow: none;
+}
+
+/* Sekmeler ikon taşır: düğme yatay hizalanır (ikon + ad); `.vol-tabs__tab` ilk kuralda. */
+.vol-tabs--vertical .vol-tabs__tab {
+  display: flex;
+}
+
+/*
+ * Sessiz ikon düğmesi (kapat, küçük eylemler): ham plaka yerine yalnız ikon görünür, üzerine gelince
+ * plaka belirir. Kapat düğmesi içeriğin üstüne bastırıp dikkat çalmasın diye varsayılan budur.
+ */
+.vol-sheet__close,
+.vol-icon-button--quiet {
+  --vol-btn-base: transparent;
+  --vol-btn-raised: none;
+  --vol-btn-border: transparent;
+  --vol-btn-text: var(--vol-ui-text-secondary);
+
+  width: var(--vol-hit-target-min, 36px);
+  height: var(--vol-hit-target-min, 36px);
+  min-width: var(--vol-hit-target-min, 36px);
+  min-height: var(--vol-hit-target-min, 36px);
+  box-shadow: none;
+}
+
+.vol-sheet__close:hover,
+.vol-icon-button--quiet:hover {
+  --vol-btn-base: var(--vol-ui-plate);
+  --vol-btn-hover: var(--vol-ui-plate);
+  --vol-btn-border: var(--vol-ui-frame-hairline);
+  --vol-btn-text: var(--vol-ui-text);
+  --vol-btn-raised:
+    inset 0 1px 0 var(--vol-ui-plate-top-light), inset 0 -2px 0 var(--vol-mat-edge-dark);
+}

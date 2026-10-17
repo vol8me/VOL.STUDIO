@@ -1,0 +1,74 @@
+/*
+ * Tema sekmesi. Önizleme kutusu (`.vol-theme-scope`) kendi kaplama ve yoğunluk niteliklerini taşıyabilir
+ * (`data-vol-theme` / `data-vol-density`); renk ve boşluk YALNIZ tokenlardan gelir, bu yüzden kutu kendi
+ * kaplamasını giyer. Kutuda `transform`/`filter`/`contain` YOKTUR: kutuya bağlanan katmanlar (`position: fixed`)
+ * görünüm penceresine göre konumlanmayı sürdürür.
+ */
+.vol-theme-lab__body {
+  display: grid;
+  gap: var(--vol-space-md);
+}
+
+.vol-theme-lab__readout,
+.vol-theme-lab__session {
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+
+/* Üç kapsam yan yana sığmazsa alta sarar; kart ve kutu içerik genişliğine göre taşmaz küçülür. */
+.vol-theme-lab__scopes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--vol-space-lg);
+  align-items: start;
+}
+
+.vol-theme-lab__scopes > *,
+.vol-theme-scope {
+  min-width: 0;
+}
+
+.vol-theme-scope {
+  box-sizing: border-box;
+  display: grid;
+  width: 100%;
+  gap: var(--vol-space-md);
+  padding: var(--vol-space-md);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-bg);
+  color: var(--vol-ui-text);
+  text-align: start;
+}
+
+.vol-theme-scope__header,
+.vol-theme-scope__sample {
+  display: grid;
+  gap: var(--vol-space-sm);
+
+  /* Kutunun KENDİSİ değil bu sarmalayıcılar kapsayıcıdır: katmanlar kutuya bağlanır ve `position: fixed` kalmalıdır. */
+  container-type: inline-size;
+}
+
+.vol-theme-scope__controls {
+  display: grid;
+  gap: var(--vol-space-sm);
+}
+
+/*
+ * Üç kapsam yan yana iken kutu iç genişliği ≈ 192 px'tir; +%30 uzun çeviride iki segment bu genişliğe sığmaz ve taşardı.
+ * Kapsayıcı dar olunca segment dolgusu yarıya iner (yalnız burada; çekirdek bileşen aynı kalır).
+ */
+@container (width <= 260px) {
+  .vol-theme-scope__controls .vol-segmented__item {
+    padding-inline: var(--vol-space-sm);
+  }
+}
+
+.vol-theme-scope__buttons,
+.vol-theme-scope__canvases {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--vol-space-sm);
+}

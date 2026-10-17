@@ -1,0 +1,45 @@
+import { describe, expect, it } from 'vitest';
+import { LocalStorageAdapter, ScopedSaveManager } from '@volstudio/core';
+import { GameSettings } from '@/app/GameSettings';
+import { ScenarioPanel } from '@/hud/ScenarioPanel';
+
+describe('ScenarioPanel', () => {
+  it('CORE seçim/tohum girdisi tercihleri kaydeder, bozuk tohumu önceki değere döndürür', async () => {
+    localStorage.clear();
+    const settings = new GameSettings(
+      new ScopedSaveManager({
+        synced: new LocalStorageAdapter(),
+        device: new LocalStorageAdapter(),
+      }),
+      'Linux',
+    );
+    await settings.load();
+    const panel = new ScenarioPanel(settings);
+    document.body.append(...panel.elements);
+    const picker = document.querySelector<HTMLButtonElement>('[data-testid=dev-scenario]')!;
+    const seed = document.querySelector<HTMLInputElement>('[data-testid=dev-seed]')!;
+    picker.click();
+    document.querySelector<HTMLButtonElement>('[data-value=targets]')?.click();
+    await settings.update({ scenario: 'targets' });
+    expect(picker.textContent).toContain('Hedef atış');
+    seed.value = '17';
+    seed.dispatchEvent(new Event('change'));
+    expect(settings.get().seed).toBe(17);
+    seed.value = '-1';
+    seed.dispatchEvent(new Event('change'));
+    expect(settings.get().seed).toBe(17);
+    expect(seed.value).toBe('17');
+    const chaos = document.querySelector<HTMLInputElement>('[data-testid=dev-chaos] input')!;
+    chaos.value = '2';
+    chaos.dispatchEvent(new Event('input'));
+    expect(settings.get().chaos).toBe(2);
+    await settings.update({ chaos: 1.25 });
+    expect(chaos.value).toBe('1.25');
+    await settings.update({ scenario: 'empty', seed: 123 });
+    expect(seed.value).toBe('123');
+    expect(picker.textContent).toContain('Boş dünya');
+    panel.destroy();
+    settings.dispose();
+    expect(document.querySelector('[data-testid=dev-scenario]')).toBeNull();
+  });
+});

@@ -1,0 +1,348 @@
+{
+  "buses": {
+    "space": {
+      "effects": [
+        {
+          "params": {
+            "amount": 0.38,
+            "damp": 0.55,
+            "decay": 0.9,
+            "preDelay": 0.012,
+            "roomSize": 0.7
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 110,
+            "order": 2,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ]
+    }
+  },
+  "channels": 1,
+  "description": "Elektromanyetik ray atışı: boşalma, keskin çatlak ve alçak itki.",
+  "durationSeconds": 0.95,
+  "effects": [
+    {
+      "params": {
+        "frequency": 34,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "edge": "low",
+        "frequency": 100,
+        "gainDb": -2
+      },
+      "primitive": "effect.eq-shelf",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 300,
+        "gainDb": 2.5,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 1700,
+        "gainDb": 3,
+        "q": 0.7
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 5.5,
+        "mix": 0.75,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "edge": "high",
+        "frequency": 4500,
+        "gainDb": 2.5
+      },
+      "primitive": "effect.eq-shelf",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 11000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "whine-f": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          1500
+        ],
+        [
+          0.22,
+          180
+        ],
+        [
+          0.5,
+          180
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "gainDb": -13.22,
+      "mechanism": "pressure",
+      "name": "thump",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -12
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.3,
+          "bodyHz": 70,
+          "decay": 2.2,
+          "positive": 0.006,
+          "rise": 0.0004
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -12.06,
+      "mechanism": "pressure",
+      "name": "punch",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.14,
+          "bodyHz": 180,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0008,
+          "curve": "exponential",
+          "decay": 0.01,
+          "release": 0.01,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 5.26,
+      "mechanism": "noise",
+      "name": "crack",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 3200,
+            "mode": "bandpass",
+            "q": 0.9
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1600,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -20
+        }
+      ],
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "exponential",
+          "decay": 0.2,
+          "release": 0.05,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.42,
+      "gainDb": 1.1,
+      "mechanism": "discharge",
+      "name": "discharge",
+      "role": "transient",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -18
+        }
+      ],
+      "source": {
+        "params": {
+          "arcs": 0.9,
+          "buzz": 0.5,
+          "charge": -0.4,
+          "hum": 0.25,
+          "instability": 0.3,
+          "mains": 120,
+          "ring": 0.35,
+          "ringHz": 1500
+        },
+        "primitive": "source.electrical",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -33.6,
+      "mechanism": "impact",
+      "name": "rail",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.6,
+            "damping": 0.7,
+            "decay": 0.4,
+            "frequency": 1150,
+            "inharmonicity": 0.002,
+            "layout": "bar",
+            "modes": 6
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -16
+        }
+      ],
+      "source": {
+        "params": {
+          "contactTime": 0.0008,
+          "roughness": 0.2
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      },
+      "startSeconds": 0.003
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.5,
+          "release": 0.05,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -14.75,
+      "mechanism": "tonal",
+      "name": "whine",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1400,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -22
+        }
+      ],
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "whine-f"
+          },
+          "waveform": "sawtooth"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "fadeInSeconds": 0.0005,
+    "fadeOutSeconds": 0.1,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "normalize": "peak",
+    "peakDbfs": -4
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 720101
+}

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-65d67c9ba12314ca": {
+        "hash": "sha256:08a758ebdd6c63cba8b43653f4cecdc32f6d056bbb4289b278e44d1527eece08",
+        "path": "analyses/r-65d67c9ba12314ca.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:bed5059502e44dab2c512580c6d696f79ce264d8ee2295f541d9b89cf1084ab3",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:bed5059502e44dab2c512580c6d696f79ce264d8ee2295f541d9b89cf1084ab3",
+      "hash": "sha256:d3ef2d2a4931b484a78ffc8552e0e1bdf312cbe5337acfdebb6498336c714f30",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:ffcf0f36599bc6feccc0f7bcef5c6036959d7b66700b71c1dae94133441ed845",
+      "path": "games/vol-test/audio-manifests/sfx/steel/shot-lance.json"
+    },
+    "renders": {
+      "r-65d67c9ba12314ca": {
+        "hash": "sha256:680f5f5cdc84e9f2f94f0287c9e7df52086328c792d725a86738dca15ae61f9e",
+        "path": "renders/r-65d67c9ba12314ca.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:00de91fd14130f91682d8c2ff52dd879a1567a8084776a789cad076089f4c156",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-shot-lance",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 74,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/shot-lance.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

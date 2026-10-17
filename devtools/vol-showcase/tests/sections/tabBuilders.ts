@@ -1,0 +1,104 @@
+import { readdirSync } from 'node:fs';
+import { LocalStorageAdapter, ScopedSaveManager } from '@volstudio/core/persistence';
+import { ThemeController } from '@volstudio/core/ui';
+import { PlatformServices } from '../../src/platform';
+import { resolve } from 'node:path';
+import { buildAdvancedTab } from '../../src/sections/advancedTab';
+import { buildButtonsTab } from '../../src/sections/buttonsTab';
+import { buildCardsTab } from '../../src/sections/cardsTab';
+import { buildFormsTab } from '../../src/sections/formsTab';
+import { buildHudTab } from '../../src/sections/hudTab';
+import { buildKimlikTab } from '../../src/sections/kimlikTab';
+import { buildLoadingTab } from '../../src/sections/loadingTab';
+import { buildPaletteTab } from '../../src/sections/paletteTab';
+import { buildPanelsTab } from '../../src/sections/panelsTab';
+import { buildScrollTab } from '../../src/sections/scrollTab';
+import { buildSesTab } from '../../src/sections/sesTab';
+import { buildTextTab } from '../../src/sections/textTab';
+import { buildThemeTab } from '../../src/sections/themeTab';
+import { buildTouchTab } from '../../src/sections/touchTab';
+import { buildWorkbenchTab } from '../../src/sections/workbenchTab';
+
+/** Tarayıcı kabuğu: web oturumu, localStorage deposu, native pencere ve titreşim sürücüsü yok. */
+export function webPlatform(): PlatformServices {
+  return PlatformServices.create(
+    'web',
+    'web',
+    new ScopedSaveManager({ synced: new LocalStorageAdapter(), device: new LocalStorageAdapter() }),
+    { observeHaptics: [] },
+  );
+}
+
+export interface TabBuild {
+  element: HTMLElement;
+  /**
+   * Zorunlu: her sekme builder'ı kendi temizliğini döndürür. Opsiyonel
+   * yazılırsa testlerdeki `destroy()` çağrıları tipten düşer ve gerçekte var
+   * olan sözleşme zayıflatılmış olur.
+   */
+  destroy: () => void;
+}
+
+export interface TabBuilder {
+  name: string;
+  build: () => TabBuild;
+}
+
+/**
+ * Showcase sekmelerinin TEK listesi.
+ *
+ * Kurulum (`sections.test.ts`) ve etkileşim (`interaction.test.ts`) testleri
+ * bu listeyi PAYLAŞIR, kendi kopyalarını tutmaz: ayrı listelerde yeni bir
+ * sekme ikisine de eklenmeyi unutulabilir ve hiç sürülmeden, içindeki hata
+ * testlerden görünmez geçerek kalır. `missingTabModules()` sekme modülü
+ * eklenip listeye girmediğinde bunu yakalar.
+ */
+/**
+ * @param getRoot Overlay kökünü ÇAĞRI ANINDA veren fonksiyon. Kök `beforeEach`
+ * içinde kurulduğu için doğrudan eleman almak, describe gövdesindeki
+ * `undefined` değeri yakalardı.
+ */
+export function tabBuilders(getRoot: () => HTMLElement): TabBuilder[] {
+  const root = (): HTMLElement => getRoot();
+  return [
+    { name: 'buttons', build: () => buildButtonsTab(root()) },
+    { name: 'text', build: () => buildTextTab() },
+    { name: 'panels', build: () => buildPanelsTab(root()) },
+    { name: 'hud', build: () => buildHudTab() },
+    { name: 'cards', build: () => buildCardsTab(root()) },
+    { name: 'forms', build: () => buildFormsTab(root(), webPlatform()) },
+    { name: 'workbench', build: () => buildWorkbenchTab() },
+    { name: 'palette', build: () => buildPaletteTab() },
+    {
+      name: 'theme',
+      build: () => {
+        // Küresel denetleyiciyi kabuk sahiplenir; burada sekmeyle birlikte kurulur ve sökülür.
+        const theme = new ThemeController();
+        const tab = buildThemeTab({ theme, platform: webPlatform() });
+        return {
+          element: tab.element,
+          destroy: () => {
+            tab.destroy();
+            theme.dispose();
+          },
+        };
+      },
+    },
+    { name: 'advanced', build: () => buildAdvancedTab(root()) },
+    { name: 'scroll', build: () => buildScrollTab() },
+    { name: 'touch', build: () => buildTouchTab() },
+    { name: 'loading', build: () => buildLoadingTab() },
+    { name: 'ses', build: () => buildSesTab() },
+    { name: 'kimlik', build: () => buildKimlikTab() },
+  ];
+}
+
+/** `src/sections` altındaki her `*Tab.ts` dosyasının listede olduğunu doğrular. */
+export function missingTabModules(): string[] {
+  const directory = resolve(import.meta.dirname, '../../src/sections');
+  const covered = new Set(tabBuilders(() => document.createElement('div')).map((tab) => tab.name));
+  return readdirSync(directory)
+    .filter((file) => file.endsWith('Tab.ts'))
+    .map((file) => file.replace(/Tab\.ts$/, ''))
+    .filter((name) => !covered.has(name));
+}

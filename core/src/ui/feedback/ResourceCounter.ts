@@ -1,4 +1,4 @@
-import { Counter, type CounterOptions } from './Counter';
+import { Counter, type CounterOptions, type CounterSetValueOptions } from './Counter';
 
 export interface ResourceCounterOptions extends CounterOptions {
   /** SVG veya metin/emoji ikon; sayının sol tarafına yerleşir. */
@@ -21,6 +21,8 @@ export class ResourceCounter {
 
     this.element = document.createElement('span');
     this.element.className = 'vol-resource-counter';
+    // `aria-label` yalnız rolü olan öğede geçerlidir; ad kaynağı gruba, değer duyurusu da adı taşır.
+    this.element.setAttribute('role', 'group');
     this.element.setAttribute('aria-label', label);
 
     const iconWrapper = document.createElement('span');
@@ -33,11 +35,11 @@ export class ResourceCounter {
     }
     this.element.appendChild(iconWrapper);
 
-    this.counter = new Counter(counterOptions);
+    this.counter = new Counter({ ...counterOptions, announcePrefix: label });
     this.element.appendChild(this.counter.element);
   }
 
-  setValue(value: number, options: { pulse?: boolean } = {}): void {
+  setValue(value: number, options: CounterSetValueOptions = {}): void {
     this.counter.setValue(value, options);
   }
 

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-bee7dacdc9bb32c8": {
+        "hash": "sha256:1b609d822eb340194eda0c1ffb6988b7537da248f2a614a70a3e8176295652b8",
+        "path": "analyses/r-bee7dacdc9bb32c8.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:6a1de71f3b95b3739359a501696878c546b7ad2e7a065530fd20bde1835f1af0",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:6a1de71f3b95b3739359a501696878c546b7ad2e7a065530fd20bde1835f1af0",
+      "hash": "sha256:1bfbd9d297b036c7064f84d71bf33a49fe5aceb89c2c7a1a4e9edd8617005692",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:778c2ff9e9a0281d144ad092d184b67f342f61ee27b2156978ae3b8d90bbef8d",
+      "path": "core/audio-manifests/ui/aurum/tab-switch-b.json"
+    },
+    "renders": {
+      "r-bee7dacdc9bb32c8": {
+        "hash": "sha256:3d1391bd5a68a9fb951b2f07c11fa17a4f56ed88eaf06126542cb53790827f9e",
+        "path": "renders/r-bee7dacdc9bb32c8.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:0835a9a4bc5ee98a991da90547fc5140fd833d750325c46bb47afb53985cbeac",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "tab-switch-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/tab-switch-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-tab-switch/tab-switch-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

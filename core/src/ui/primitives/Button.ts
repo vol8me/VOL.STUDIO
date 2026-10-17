@@ -1,6 +1,12 @@
+import { playJuice } from '../motion/juice';
+import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { emitUiIntent } from '../feedback/uiIntent';
+import type { HapticFeedback } from './hapticFeedback';
+
 export type ButtonVariant = 'default' | 'primary' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
-export type ButtonClickHandler = () => void | Promise<void>;
+export type { ButtonClickHandler };
 
 export interface ButtonOptions {
   variant?: ButtonVariant;
@@ -13,6 +19,8 @@ export interface ButtonOptions {
   iconLeft?: string | Node;
   /** Sağdaki ikon (SVG/metin/emoji). */
   iconRight?: string | Node;
+  /** Kullanıcı aktivasyonundaki semantik titreşim; varsayılan `tap`. */
+  haptic?: HapticFeedback;
 }
 
 export class Button {
@@ -20,8 +28,12 @@ export class Button {
   private readonly labelElement: HTMLSpanElement;
   private readonly spinnerElement: HTMLSpanElement;
   private onClickHandler?: ButtonClickHandler;
-  private boundHandleClick: () => void;
+  private boundHandleClick: (event: Event) => void;
+  private readonly scope = new DisposableScope();
   private loading = false;
+  /** Sahibin (çağıranın) istediği devre dışı durumu; yükleme bunu ezmez, bitince geri verir. */
+  private ownerDisabled: boolean;
+  private errored = false;
 
   constructor(label: string, options: ButtonOptions = {}) {
     const {
@@ -36,6 +48,7 @@ export class Button {
     this.element.type = 'button';
     this.element.className = this.buildClassName(variant, size, fullWidth);
     this.element.disabled = disabled;
+    this.ownerDisabled = disabled;
 
     if (options.iconLeft) {
       this.element.appendChild(this.buildIcon(options.iconLeft));
@@ -54,10 +67,18 @@ export class Button {
     this.spinnerElement.className = 'vol-button__spinner';
     this.spinnerElement.hidden = true;
 
-    this.boundHandleClick = () => {
+    this.boundHandleClick = (event: Event) => {
+      emitUiIntent({
+        kind: 'press',
+        origin: 'Button',
+        target: this.element,
+        event,
+        haptic: options.haptic,
+        defaultHaptic: 'tap',
+      });
       void this.handleClick();
     };
-    this.element.addEventListener('click', this.boundHandleClick);
+    this.scope.addListener(this.element, 'click', this.boundHandleClick);
 
     if (onClick) {
       this.onClick(onClick);
@@ -73,38 +94,54 @@ export class Button {
   }
 
   setDisabled(disabled: boolean): void {
-    this.element.disabled = disabled;
+    this.ownerDisabled = disabled;
+    this.element.disabled = disabled || this.loading;
   }
 
   setLoading(loading: boolean): void {
     this.loading = loading;
     this.element.classList.toggle('vol-button--loading', loading);
-    this.element.disabled = loading;
+    // Yükleme biterken dışarıdan verilmiş `disabled` korunur (async handler sırasında devre dışı bırakılan düğme açılmaz).
+    this.element.disabled = loading || this.ownerDisabled;
+    // `disabled` görsel/etkileşim durumunu anlatır ama "meşgul"ü anlatmaz:
+    // ekran okuyucu, işlemin sürdüğünü yalnızca aria-busy ile bildirir.
+    this.element.setAttribute('aria-busy', String(loading));
     this.spinnerElement.hidden = !loading;
     if (loading && !this.spinnerElement.isConnected) {
       this.element.appendChild(this.spinnerElement);
     }
   }
 
+  /** Hata durumu: handler hata fırlatınca görünür ve tekrar denenebilir; sonraki tıklamada temizlenir. */
+  get hasError(): boolean {
+    return this.errored;
+  }
+
+  setError(error: boolean): void {
+    this.errored = error;
+    this.element.classList.toggle('vol-button--error', error);
+    if (error) {
+      this.element.dataset.state = 'error';
+      playJuice(this.element, 'shake');
+    } else delete this.element.dataset.state;
+  }
+
   destroy(): void {
-    this.element.removeEventListener('click', this.boundHandleClick);
+    this.scope.dispose();
     this.element.remove();
   }
 
-  private async handleClick(): Promise<void> {
-    if (!this.onClickHandler || this.loading) {
-      return;
-    }
-
-    const result = this.onClickHandler();
-    if (result instanceof Promise) {
-      this.setLoading(true);
-      try {
-        await result;
-      } finally {
-        this.setLoading(false);
-      }
-    }
+  private handleClick(): Promise<void> {
+    return runButtonClick(
+      {
+        setLoading: (loading) => this.setLoading(loading),
+        setError: (error) => this.setError(error),
+        isLoading: () => this.loading,
+        logLabel: 'Button',
+        element: this.element,
+      },
+      this.onClickHandler,
+    );
   }
 
   private buildIcon(icon: string | Node): HTMLSpanElement {

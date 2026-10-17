@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "key-tap"
+  ],
+  "durationSeconds": {
+    "max": 0.2,
+    "min": 0.04
+  },
+  "id": "ui-steel-key-tap-key-tap-a",
+  "intent": "çelik donanım: key-tap Varyant key-tap-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel key-tap — key-tap-a"
+}

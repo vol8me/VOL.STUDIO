@@ -1,0 +1,26 @@
+{
+  "musicId": "reference-cue",
+  "parity": {
+    "ok": true,
+    "residualDbfs": -200
+  },
+  "schema": "MusicAdaptiveQaV1",
+  "states": [
+    {
+      "gains": {
+        "main": 1
+      },
+      "integratedLufs": -18.076,
+      "intensity": 1,
+      "ok": true,
+      "problems": [],
+      "samplePeak": 0.802855,
+      "state": "fixed",
+      "truePeakDbtp": -1.907
+    }
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

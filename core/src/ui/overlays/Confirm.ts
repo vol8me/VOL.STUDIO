@@ -1,7 +1,7 @@
 import { Button } from '../primitives/Button';
 import { Modal } from './Modal';
 import { Text } from '../primitives/Text';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 export interface ConfirmOptions {
   title: string;
@@ -13,10 +13,19 @@ export interface ConfirmOptions {
   container?: HTMLElement;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /**
+   * Sahne/panel kapanırken bekleyen onayı false ile sonlandırır. İptal,
+   * modal yığını ile gövde kaydırma kilidinin ekran ömrünü aşmasını önler.
+   */
+  signal?: AbortSignal;
 }
 
-/** theme.css'teki .vol-modal geçiş süresiyle eşleşmelidir (--vol-transition-medium). */
-const MODAL_TRANSITION_MS = 240;
+/**
+ * .vol-modal'ın CSS geçiş süresi (--vol-transition-medium) kadar beklenir.
+ * Bu süreden KISA olamaz — modal animasyon bitmeden DOM'dan silinir.
+ * cssConstantSync.test.ts bu ilişkiyi doğrular.
+ */
+export const MODAL_TRANSITION_MS = 240;
 
 /**
  * Modal tabanlı Evet/Hayır onay akışı. Tek seferlik: `show()` kendi Modal'ını
@@ -28,7 +37,11 @@ const MODAL_TRANSITION_MS = 240;
  * modal'ı DOM'da sıkışmış bırakır.
  */
 export function showConfirm(options: ConfirmOptions): Promise<boolean> {
-  const { title, variant = 'primary', container = document.body, className } = options;
+  const { title, variant = 'primary', container = document.body, className, signal } = options;
+  if (signal?.aborted) {
+    return Promise.resolve(false);
+  }
+
   const confirmLabelIsI18n = options.confirmLabel === undefined;
   const cancelLabelIsI18n = options.cancelLabel === undefined;
   const confirmLabel = options.confirmLabel ?? i18next.t('core:confirm.yes');
@@ -39,13 +52,16 @@ export function showConfirm(options: ConfirmOptions): Promise<boolean> {
     const finish = (result: boolean): void => {
       if (resolved) return;
       resolved = true;
+      signal?.removeEventListener('abort', onAbort);
       resolve(result);
       modal.close();
-      setTimeout(() => {
-        i18next.off('languageChanged', onLanguageChanged);
-        modal.destroy();
-      }, MODAL_TRANSITION_MS);
+      // Dil dinleyicisi hemen çözülür; DOM temizliği gecis bitince yapılır.
+      // Böylece timeout atesmeden once sayfa değişse bile listener sızmaz.
+      i18next.off('languageChanged', onLanguageChanged);
+      window.setTimeout(() => modal.destroy(), MODAL_TRANSITION_MS);
     };
+
+    const onAbort = (): void => finish(false);
 
     const onLanguageChanged = (): void => {
       if (confirmLabelIsI18n) confirmButton.setLabel(i18next.t('core:confirm.yes'));
@@ -66,6 +82,7 @@ export function showConfirm(options: ConfirmOptions): Promise<boolean> {
     const confirmButton = new Button(confirmLabel, {
       variant,
       fullWidth: false,
+      haptic: variant === 'danger' ? 'warning' : 'success',
       onClick: () => finish(true),
     });
 
@@ -80,5 +97,6 @@ export function showConfirm(options: ConfirmOptions): Promise<boolean> {
     modal.open();
 
     i18next.on('languageChanged', onLanguageChanged);
+    signal?.addEventListener('abort', onAbort, { once: true });
   });
 }

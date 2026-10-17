@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-5e9c5251603b0d0b": {
+        "hash": "sha256:3d5e869c23801e26f3c377ab36495968863f04bc4d309aa2373c7ea2a059842b",
+        "path": "analyses/r-5e9c5251603b0d0b.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:a36b8368453ffd48075f0d38da465c1fa62060d3d3a76a7600c04b007a188f60",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:a36b8368453ffd48075f0d38da465c1fa62060d3d3a76a7600c04b007a188f60",
+      "hash": "sha256:20b49fe97e279aba594586a522988fc617a395897ce455ee8b6cde100f72bda5",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:91dc13fc1acdc1451e164f0188532c38e1792942afab07899d4cfc498d2ff83d",
+      "path": "games/vol-test/audio-manifests/sfx/steel/boost.json"
+    },
+    "renders": {
+      "r-5e9c5251603b0d0b": {
+        "hash": "sha256:34a51aad1867e310cefded0b2035a528f4bd165bd078435680705928fd42517f",
+        "path": "renders/r-5e9c5251603b0d0b.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:9ab33ee49e54d5db836c3473c1b032728873acc627e076782aadb57bf0c0ab04",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-boost",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 64,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/boost.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

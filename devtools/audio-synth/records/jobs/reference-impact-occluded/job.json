@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-7bded6aa6f3bb681": {
+        "hash": "sha256:84b9e565154468859e686244c2623b00e7dc0bd538b16de8655e0dfe84ef5d41",
+        "path": "analyses/r-7bded6aa6f3bb681.json"
+      },
+      "r-87fd48663b419793": {
+        "hash": "sha256:2a957412d36ebd1137d1a1f7acac5247165fdf37877a5dd1328cbe32c375e01d",
+        "path": "analyses/r-87fd48663b419793.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:6a1b3335436defabd1db1546bcaeeb93815570687cc8ce68ec88df9e99ca4828",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:6a1b3335436defabd1db1546bcaeeb93815570687cc8ce68ec88df9e99ca4828",
+      "hash": "sha256:0dbf238042e068c30c045d53cb7fbed0874ad70fdf7f3fec74922e57f3dd24dd",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:7faac2fe6e00acb4675f140c6dd7011bde334f1c7da03fd1977a0b8e2e3a3476",
+      "path": "devtools/audio-synth/reference/production/manifests/sfx/delivery/reference-impact-occluded.json"
+    },
+    "renders": {
+      "r-7bded6aa6f3bb681": {
+        "hash": "sha256:3e1ca994498c9101c28ea19a9608ecd228d870994ba86eba0b942c8128890905",
+        "path": "renders/r-7bded6aa6f3bb681.json"
+      },
+      "r-87fd48663b419793": {
+        "hash": "sha256:d1c7962af41641c2cbd9ab9173aea115e24860ddd62b312d585919c0881f35e5",
+        "path": "renders/r-87fd48663b419793.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:8b748854f77df07a50fef43f0c3b1ba1e40ba393dbcec3329d3b99e206fd2bdb",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "reference-impact-occluded",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 11,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/sfx/delivery/reference-impact-occluded.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "reference/impact/occluded"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

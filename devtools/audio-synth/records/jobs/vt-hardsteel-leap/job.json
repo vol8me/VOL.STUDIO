@@ -1,0 +1,103 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-0ac1062a34504f7e": {
+        "hash": "sha256:b5079cd1d64c71bfe2385f37ae150568293b3af1772026b3b9decd142e0935b8",
+        "path": "analyses/r-0ac1062a34504f7e.json"
+      },
+      "r-0d5ced94f239a520": {
+        "hash": "sha256:4d3b9e7c766bf06c62c7ca34cb0d9c007b462cf6ec23ac098e54fa6607ca6c5d",
+        "path": "analyses/r-0d5ced94f239a520.json"
+      },
+      "r-25c204aeb73d6c51": {
+        "hash": "sha256:e93b94892121ea3123ed7a2c0f2d62f7abb4a457c1fa4617e37c1bf09f3c24ae",
+        "path": "analyses/r-25c204aeb73d6c51.json"
+      },
+      "r-4494869bbfc9c429": {
+        "hash": "sha256:60672f6013009ee84a4c01b737da4fb629e7329598085ddb6d0ad3a12b212278",
+        "path": "analyses/r-4494869bbfc9c429.json"
+      },
+      "r-6983fd0d9faacadc": {
+        "hash": "sha256:24ce00d32072a8c6e16d02a0e53db5d4bfd0df52359c893c49b4d5de7fc2403f",
+        "path": "analyses/r-6983fd0d9faacadc.json"
+      },
+      "r-863c34ceaa20d580": {
+        "hash": "sha256:1eb32525aad431b8cdc7faf0687ae539ed24441746b5f22c3fd46a86e7711238",
+        "path": "analyses/r-863c34ceaa20d580.json"
+      },
+      "r-d4a90d2a95cfdd38": {
+        "hash": "sha256:7e2ec61f472e91a84bbf36428842e7dc9d049bd109f2a04bb55dfbe02e8c8457",
+        "path": "analyses/r-d4a90d2a95cfdd38.json"
+      },
+      "r-feacea509485d9cf": {
+        "hash": "sha256:3e024bba66f35162a60fac45f63570be8d9e3e9df286f359f4a8195f91cc31df",
+        "path": "analyses/r-feacea509485d9cf.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:5387d5d6fb4a70ef3e08f3adc72eb1669f3321beceae1ac3f7258bacda707a1f",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:5387d5d6fb4a70ef3e08f3adc72eb1669f3321beceae1ac3f7258bacda707a1f",
+      "hash": "sha256:07ae2314b4531a5063d2a8d7d6bca62dcf472433a1cede9146f9b9f3b080bff8",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:04a8fbd248ce94adaa88c9fbc5074a7164126795e5299af939279e7ac3c4f7c9",
+      "path": "games/vol-test/audio-manifests/sfx/steel/leap.json"
+    },
+    "renders": {
+      "r-0ac1062a34504f7e": {
+        "hash": "sha256:28dbd02e6dc75656af42854b7fe178158766d51ba6629664bf75dea2c5f1d017",
+        "path": "renders/r-0ac1062a34504f7e.json"
+      },
+      "r-0d5ced94f239a520": {
+        "hash": "sha256:33992b7fdd92479d9796c7cd42ecbb13d9939c66da7b9eff011f8ca5257e5d8b",
+        "path": "renders/r-0d5ced94f239a520.json"
+      },
+      "r-25c204aeb73d6c51": {
+        "hash": "sha256:acebc190b73565081441b1cf86ce85b831aadcda193a5745680da5372e9128fc",
+        "path": "renders/r-25c204aeb73d6c51.json"
+      },
+      "r-4494869bbfc9c429": {
+        "hash": "sha256:5d4dca5a6a862616676b53adbcfebf6d0dc57f5d86a6624f5a40f9c1729a88e9",
+        "path": "renders/r-4494869bbfc9c429.json"
+      },
+      "r-6983fd0d9faacadc": {
+        "hash": "sha256:9f1fe8df2918b96eff81fc37cb2b8a00f859d453f562d95aaf2894afca7eb31f",
+        "path": "renders/r-6983fd0d9faacadc.json"
+      },
+      "r-863c34ceaa20d580": {
+        "hash": "sha256:e54fcb44c1a07e80ded2428ab29f6b1dffcfee21f455f9cac946a1453ac1a310",
+        "path": "renders/r-863c34ceaa20d580.json"
+      },
+      "r-d4a90d2a95cfdd38": {
+        "hash": "sha256:3c5d6628e4714897c577b3c9c5bcd2c61008a917a1b97430896cd64ebc6ea8d3",
+        "path": "renders/r-d4a90d2a95cfdd38.json"
+      },
+      "r-feacea509485d9cf": {
+        "hash": "sha256:5324a88d921ff20f676e4cf266c86f46d9becff943419d38529923a2c55ae0f9",
+        "path": "renders/r-feacea509485d9cf.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:a14af80a1e3419748e4162cf8991655c97988bc85d1d25a3ba58771d5e0779c4",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-leap",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 38,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/leap.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

@@ -1,0 +1,946 @@
+.vol-toast-container {
+  pointer-events: none;
+  bottom: var(--vol-space-xl);
+  align-items: center;
+  gap: var(--vol-space-sm);
+  z-index: var(--vol-z-toast);
+  flex-direction: column;
+  display: flex;
+  position: fixed;
+  left: 50%;
+  transform: translate(-50%);
+}
+
+.vol-toast {
+  pointer-events: auto;
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-sm) var(--vol-space-lg);
+  color: var(--vol-ui-text);
+  opacity: 0;
+  transition:
+    opacity var(--vol-transition-medium),
+    transform var(--vol-transition-medium);
+  font-size: var(--vol-text-body);
+  font-weight: 600;
+  transform: translateY(8px);
+}
+
+.vol-toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.vol-toast--success {
+  border-color: var(--vol-ui-success-border);
+  color: var(--vol-ui-on-success);
+  background: var(--vol-ui-success-solid);
+}
+
+.vol-toast--warning {
+  border-color: var(--vol-ui-warning-border);
+  color: var(--vol-ui-on-warning);
+  background: var(--vol-ui-warning-solid);
+}
+
+.vol-toast--danger {
+  border-color: var(--vol-ui-danger-border);
+  color: var(--vol-ui-on-danger);
+  background: var(--vol-ui-danger-solid);
+}
+
+.vol-modal {
+  z-index: var(--vol-z-dialog);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--vol-transition-medium);
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: fixed;
+  inset: 0;
+}
+
+.vol-modal--visible {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.vol-modal__body-locked {
+  overflow: hidden;
+}
+
+.vol-modal__scrim {
+  background: var(--vol-ui-scrim);
+  position: absolute;
+  inset: 0;
+}
+
+.vol-modal__content {
+  gap: var(--vol-space-lg);
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  width: 420px;
+  max-width: 90vw;
+  max-height: 85vh;
+  padding: 40px var(--vol-space-xl);
+  flex-direction: column;
+  display: flex;
+  position: relative;
+  overflow: auto;
+}
+
+.vol-sheet {
+  isolation: isolate;
+  align-items: stretch;
+  justify-content: flex-end;
+}
+
+.vol-sheet .vol-modal__scrim {
+  background: var(--vol-ui-scrim);
+  z-index: 0;
+}
+
+.vol-sheet .vol-modal__content {
+  align-self: stretch;
+  width: max(50vw, 420px);
+  max-width: calc(100vw - var(--vol-safe-left));
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100%;
+  max-height: none;
+  margin: 0 0 0 auto;
+  padding: max(var(--vol-safe-top), var(--vol-space-sm))
+    max(var(--vol-safe-right), var(--vol-space-md)) max(var(--vol-safe-bottom), var(--vol-space-md))
+    var(--vol-space-lg);
+  border-radius: var(--vol-radius-md) 0 0 var(--vol-radius-md);
+  gap: 0;
+  overflow: hidden;
+  transform: translateX(24px);
+  transition: transform var(--vol-transition-medium);
+  z-index: 1;
+}
+
+.vol-sheet.vol-modal--visible .vol-modal__content {
+  transform: translateX(0);
+}
+
+.vol-sheet__header {
+  min-height: 40px;
+  padding: 0 0 var(--vol-space-md);
+  border-bottom: 1px solid var(--vol-ui-border-strong);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vol-space-md);
+  display: flex;
+}
+
+.vol-sheet__title {
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: clamp(var(--vol-text-title), 5vw, var(--vol-text-display));
+  line-height: 1.2;
+  margin: 0;
+}
+
+.vol-sheet__body {
+  min-height: 0;
+  flex: 1;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+@media (width <= 480px) {
+  .vol-sheet .vol-modal__content {
+    width: 100vw;
+    max-width: 100vw;
+  }
+}
+
+.vol-confirm__actions {
+  justify-content: center;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-tooltip {
+  pointer-events: none;
+  z-index: var(--vol-z-dialog-content);
+  background: var(--vol-ui-inverse-surface);
+  max-width: 240px;
+  color: var(--vol-ui-inverse-text);
+  font-family: var(--vol-font-family);
+  letter-spacing: 0.02em;
+  padding: var(--vol-space-xs) var(--vol-space-sm);
+  border-radius: var(--vol-radius-sm);
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--vol-transition-fast),
+    transform var(--vol-transition-fast),
+    visibility 0s linear var(--vol-transition-fast);
+  font-size: var(--vol-text-body);
+  font-weight: 600;
+  position: fixed;
+  transform: translateY(4px);
+}
+
+.vol-tooltip--visible {
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+.vol-dialogue {
+  pointer-events: auto;
+  left: 50%;
+  bottom: var(--vol-space-xl);
+  align-items: flex-start;
+  gap: var(--vol-space-lg);
+  background: linear-gradient(180deg, var(--vol-ui-surface-2) 0%, var(--vol-ui-bg-subtle) 100%);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  width: min(720px, 90vw);
+  padding: var(--vol-space-lg) var(--vol-space-xl);
+  cursor: var(--vol-cursor-link, pointer);
+  opacity: 0;
+  box-shadow: 0 12px 32px var(--vol-ui-scrim);
+  transition:
+    opacity var(--vol-transition-medium),
+    transform var(--vol-transition-medium);
+  display: flex;
+  position: absolute;
+  transform: translate(-50%, 12px);
+}
+
+.vol-dialogue--visible {
+  opacity: 1;
+  transform: translate(-50%);
+}
+
+.vol-dialogue__portrait {
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-brand-subtle);
+  border: 2px solid var(--vol-ui-brand-border);
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  overflow: hidden;
+}
+
+.vol-dialogue__portrait img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.vol-dialogue__portrait--placeholder {
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-brand-hover);
+  font-size: var(--vol-text-display);
+  font-weight: 700;
+}
+
+.vol-dialogue__body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.vol-dialogue__speaker {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vol-ui-brand-hover);
+  margin-bottom: var(--vol-space-sm);
+  border-bottom: 2px solid var(--vol-ui-brand-border);
+  padding-bottom: 4px;
+  font-size: var(--vol-text-body);
+  font-weight: 700;
+  display: inline-block;
+}
+
+.vol-dialogue__text {
+  color: var(--vol-ui-text);
+  min-height: 3.4em;
+  font-size: var(--vol-text-lead);
+  line-height: 1.6;
+}
+
+.vol-dialogue__continue {
+  right: var(--vol-space-lg);
+  bottom: var(--vol-space-md);
+  background: var(--vol-ui-brand-solid);
+  width: 22px;
+  height: 22px;
+  color: var(--vol-ui-on-brand);
+  opacity: 0;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  font-size: var(--vol-text-micro);
+  display: flex;
+  position: absolute;
+}
+
+/*
+ * Zıplama YALNIZ görünürken oynar: saydam okta bile sonsuz animasyon her karede kompozit işi üretir
+ * (kapalı, kök düzeyde bağlı bir diyalog vitrinde boştaki CPU'nun büyük payıydı — UI-06.4 boşta ölçümü).
+ */
+.vol-dialogue__continue--visible {
+  opacity: 1;
+  animation: 1s ease-in-out infinite vol-dialogue-bounce;
+}
+
+.vol-dialogue__controls {
+  top: var(--vol-space-sm);
+  right: var(--vol-space-sm);
+  gap: 4px;
+  display: flex;
+  position: absolute;
+}
+
+.vol-dialogue__control {
+  pointer-events: auto;
+  cursor: var(--vol-cursor-link, pointer);
+  width: 34px;
+  height: 34px;
+  color: var(--vol-ui-icon);
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  transition:
+    background-color var(--vol-transition-fast),
+    color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-dialogue__control-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.vol-dialogue__control:hover {
+  background: var(--vol-ui-hover-fill);
+  color: var(--vol-ui-text);
+}
+
+.vol-dialogue__control--active {
+  color: var(--vol-ui-brand-hover);
+  border-color: var(--vol-ui-brand-border);
+  background: var(--vol-ui-brand-subtle);
+}
+
+.vol-dialogue__control:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+@keyframes vol-dialogue-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+.vol-dialogue__choices {
+  gap: var(--vol-space-xs);
+  margin-top: var(--vol-space-md);
+  flex-direction: column;
+  display: flex;
+}
+
+.vol-dialogue__choice {
+  pointer-events: auto;
+  cursor: var(--vol-cursor-link, pointer);
+  text-align: left;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-sm) var(--vol-space-md);
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  font-size: var(--vol-text-body);
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-dialogue__choice::before {
+  content: '\25B8 ';
+  color: var(--vol-ui-brand-hover);
+}
+
+.vol-dialogue__choice:hover {
+  background: var(--vol-ui-hover-fill);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-dialogue__choice:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-command-palette {
+  z-index: var(--vol-z-dialog);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--vol-transition-fast);
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 15vh;
+  display: flex;
+  position: fixed;
+  inset: 0;
+}
+
+.vol-command-palette--visible {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.vol-command-palette__scrim {
+  background: var(--vol-ui-scrim);
+  position: absolute;
+  inset: 0;
+}
+
+.vol-command-palette__panel {
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  width: 560px;
+  max-width: 90vw;
+  max-height: 60vh;
+  box-shadow: 0 20px 48px var(--vol-ui-scrim);
+  flex-direction: column;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.vol-command-palette__input-row {
+  align-items: center;
+  gap: var(--vol-space-sm);
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  padding: 0 var(--vol-space-lg);
+  display: flex;
+}
+
+.vol-command-palette__search-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--vol-ui-icon);
+  flex-shrink: 0;
+}
+
+.vol-command-palette__input {
+  pointer-events: auto;
+  width: 100%;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  padding: var(--vol-space-lg) 0;
+  background: 0 0;
+  border: none;
+  font-size: var(--vol-text-lead);
+}
+
+.vol-command-palette__input::placeholder {
+  color: var(--vol-ui-text-disabled);
+}
+
+.vol-command-palette__input:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: none;
+}
+
+.vol-command-palette__results {
+  padding: var(--vol-space-xs);
+  overflow-y: auto;
+}
+
+.vol-command-palette__group-header {
+  padding: var(--vol-space-sm) var(--vol-space-md) 4px;
+  font-family: var(--vol-font-family);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vol-ui-text-disabled);
+  font-size: var(--vol-text-label);
+  font-weight: 700;
+}
+
+.vol-command-palette__item {
+  pointer-events: auto;
+  cursor: var(--vol-cursor-link, pointer);
+  align-items: center;
+  gap: var(--vol-space-sm);
+  padding: var(--vol-space-sm) var(--vol-space-md);
+  border-radius: var(--vol-radius-sm);
+  transition: background-color var(--vol-transition-fast);
+  display: flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-command-palette__item[aria-selected='true'] {
+  background: var(--vol-ui-hover-fill);
+}
+
+.vol-command-palette__item-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--vol-ui-icon);
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.vol-command-palette__item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-command-palette__item-text {
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.vol-command-palette__item-label {
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  font-size: var(--vol-text-body);
+}
+
+.vol-command-palette__highlight {
+  color: var(--vol-ui-brand-hover);
+  background: 0 0;
+  font-weight: 700;
+}
+
+.vol-command-palette__item-description {
+  color: var(--vol-ui-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--vol-text-label);
+  overflow: hidden;
+}
+
+.vol-command-palette__item-shortcut {
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text-muted);
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: 4px;
+  flex-shrink: 0;
+  padding: 2px 6px;
+  font-size: var(--vol-text-label);
+}
+
+.vol-command-palette__empty {
+  padding: var(--vol-space-xl);
+  text-align: center;
+  color: var(--vol-ui-text-muted);
+}
+
+.vol-popup {
+  z-index: var(--vol-z-dialog-content);
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  min-width: 160px;
+  max-height: 60vh;
+  padding: var(--vol-space-xs);
+  transition:
+    opacity var(--vol-transition-fast),
+    transform var(--vol-transition-fast),
+    visibility 0s linear var(--vol-transition-fast);
+  flex-direction: column;
+  display: flex;
+  position: fixed;
+  overflow: auto;
+  transform: translateY(-4px);
+}
+
+.vol-popup--visible {
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0s;
+  transform: translateY(0);
+}
+
+.vol-context-menu__item {
+  pointer-events: auto;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  text-align: left;
+  width: 100%;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-sm) var(--vol-space-md);
+  cursor: var(--vol-cursor-link, pointer);
+  background: 0 0;
+  border: none;
+  font-size: var(--vol-text-body);
+  display: flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-context-menu__item:hover {
+  background: var(--vol-ui-hover-fill);
+}
+
+.vol-context-menu__item:disabled {
+  cursor: var(--vol-cursor-default, default);
+  color: var(--vol-ui-disabled-text);
+  background: 0 0;
+}
+
+.vol-context-menu__item--danger {
+  color: var(--vol-ui-danger-border);
+}
+
+.vol-context-menu__item--danger:hover {
+  background: var(--vol-ui-danger-subtle);
+}
+
+.vol-context-menu__item-icon {
+  width: 1.1em;
+  height: 1.1em;
+  color: var(--vol-ui-icon);
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.vol-context-menu__item--danger .vol-context-menu__item-icon {
+  color: var(--vol-ui-danger-border);
+}
+
+.vol-context-menu__item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-context-menu__separator {
+  height: 1px;
+  margin: var(--vol-space-xs) 0;
+  background: var(--vol-ui-border-soft);
+}
+
+.vol-rich-tooltip {
+  font-family: var(--vol-font-family);
+  z-index: var(--vol-z-dialog-content);
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  min-width: 180px;
+  max-width: 280px;
+  padding: var(--vol-space-sm) var(--vol-space-md);
+  box-shadow: 0 12px 32px var(--vol-ui-scrim);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--vol-transition-fast),
+    visibility 0s linear var(--vol-transition-fast);
+  flex-direction: column;
+  gap: 6px;
+  display: flex;
+  position: fixed;
+}
+
+.vol-rich-tooltip--visible {
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+/* Dokunmatikte hover yoktur ve balon (uzun basış / odak / reddedilen basış) hedefin yanında, çoğu kez bir komşu denetimin
+   ÜSTÜNDE açılır: dokunuşu yutarsa altındaki denetime ulaşılamaz (cihazda ölçüldü: ActionBar'ın nedeni, hemen üstündeki Mana
+   seçicisini örter). Balon dokunuşu geçirir; o dokunuş "dışarı basış" olarak balonu da kapatır. Fare için balonun üstüne geçmek
+   (WCAG 1.4.13 "hoverable") aynen kalır. */
+@media (pointer: coarse) {
+  .vol-tooltip--visible,
+  .vol-rich-tooltip--visible {
+    pointer-events: none;
+  }
+}
+
+.vol-rich-tooltip__title {
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  font-size: var(--vol-text-body);
+  font-weight: 700;
+}
+
+.vol-rich-tooltip__description {
+  color: var(--vol-ui-text-muted);
+  font-size: var(--vol-text-label);
+  line-height: 1.4;
+}
+
+/* Neden notu: uyarı tonu YALNIZ renk değil, sol çizgi ile de ayrılır. */
+.vol-rich-tooltip__note {
+  color: var(--vol-ui-text);
+  border-inline-start: 3px solid var(--vol-ui-warning-solid);
+  padding-inline-start: var(--vol-space-sm);
+  font-size: var(--vol-text-label);
+  line-height: 1.4;
+}
+
+.vol-rich-tooltip__stats {
+  border-top: 1px solid var(--vol-ui-border-soft);
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 4px;
+  display: flex;
+}
+
+.vol-rich-tooltip__stat-row {
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--vol-space-md);
+  font-size: var(--vol-text-label);
+  display: flex;
+}
+
+.vol-rich-tooltip__stat-label {
+  color: var(--vol-ui-text-muted);
+}
+
+.vol-rich-tooltip__stat-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--vol-ui-text);
+  font-weight: 600;
+}
+
+.vol-rich-tooltip__stat-value--success {
+  color: var(--vol-ui-success-border);
+}
+
+.vol-rich-tooltip__stat-value--warning {
+  color: var(--vol-ui-warning-border);
+}
+
+.vol-rich-tooltip__stat-value--danger {
+  color: var(--vol-ui-danger-border);
+}
+
+.vol-fatal-startup {
+  position: fixed;
+  inset: 0;
+  z-index: var(--vol-z-dialog);
+  display: grid;
+
+  /* `safe`: içerik ekrandan uzunsa üst kenardan kesilmez, kaydırılır (uzun hata ayrıntısı). */
+  place-content: safe center;
+  gap: var(--vol-space-sm);
+  padding: var(--vol-space-lg);
+  background: var(--vol-ui-bg);
+  color: var(--vol-ui-text);
+  text-align: center;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.vol-fatal-startup:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -4px;
+}
+
+.vol-fatal-startup__title {
+  margin: 0;
+  color: var(--vol-ui-danger-solid);
+  font-size: var(--vol-text-title);
+}
+
+.vol-fatal-startup__detail {
+  margin: 0;
+  color: var(--vol-ui-text-secondary);
+  font-family: var(--vol-font-family-mono);
+  font-size: var(--vol-text-body);
+  overflow-wrap: anywhere;
+}
+
+.vol-radial-menu {
+  z-index: var(--vol-z-float);
+  pointer-events: none;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  transition:
+    opacity var(--vol-transition-fast),
+    transform var(--vol-transition-fast) cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: fixed;
+  transform: scale(0.7);
+}
+
+.vol-radial-menu--visible {
+  pointer-events: auto;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.vol-radial-menu__center {
+  background: var(--vol-ui-overlay-panel);
+  border: 2px solid var(--vol-ui-border-strong);
+  width: 56px;
+  height: 56px;
+  color: var(--vol-ui-icon);
+  pointer-events: none;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+
+.vol-radial-menu__center-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+}
+
+.vol-radial-menu__center-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-radial-menu__item {
+  pointer-events: auto;
+  cursor: var(--vol-cursor-link, pointer);
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-strong);
+  width: 64px;
+  height: 64px;
+  color: var(--vol-ui-text-secondary);
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast),
+    color var(--vol-transition-fast);
+  border-radius: 50%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  margin: -32px 0 0 -32px;
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.vol-radial-menu__item:disabled {
+  cursor: var(--vol-cursor-default, default);
+  opacity: 0.4;
+}
+
+.vol-radial-menu__item--hovered {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  color: var(--vol-ui-on-brand);
+  z-index: 1;
+  transform: scale(1.12);
+}
+
+.vol-radial-menu__item-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+}
+
+.vol-radial-menu__item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-radial-menu__item-label {
+  text-align: center;
+  font-size: var(--vol-text-micro);
+  font-weight: 600;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.vol-popover {
+  box-sizing: border-box;
+  gap: var(--vol-space-sm);
+  min-width: 200px;
+  padding: var(--vol-space-sm);
+  font-family: var(--vol-font-family-body);
+}
+
+/*
+ * Hareket azaltma: katmanlar kayma/ölçek yerine yalnız belirir (geçişin kendisi `--vol-transition-*`
+ * ile kalır; yön ve ölçek ofseti kalkar). Sonsuz "devam" oku durur; durum okunur kalır (UI-09.1).
+ */
+@media (prefers-reduced-motion: reduce) {
+  .vol-toast,
+  .vol-toast--visible,
+  .vol-tooltip,
+  .vol-tooltip--visible,
+  .vol-popup,
+  .vol-popup--visible,
+  .vol-sheet .vol-modal__content,
+  .vol-sheet.vol-modal--visible .vol-modal__content {
+    transform: none;
+  }
+
+  .vol-dialogue,
+  .vol-dialogue--visible {
+    transform: translate(-50%);
+  }
+
+  .vol-dialogue__continue--visible {
+    animation: none;
+  }
+
+  .vol-radial-menu,
+  .vol-radial-menu--visible {
+    transform: none;
+    transition: opacity var(--vol-transition-fast);
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-708e7b8cebe5a2fb": {
+        "hash": "sha256:5c265b1d8a0562df2145fd78f286ec641008deca998524dd8cd051c4df2bc3f3",
+        "path": "analyses/r-708e7b8cebe5a2fb.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:3a489176f6ab89f443735baa984a0bc4f3ec359ca990a0f7cb1a659163579e86",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:3a489176f6ab89f443735baa984a0bc4f3ec359ca990a0f7cb1a659163579e86",
+      "hash": "sha256:b858a6274e13ea56c381df8d7afb18151e6843b1f7305aa781010cbd3c020a66",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:8d73eea78b14a8abfded057cf5a4d47cdbd08487fd09704c42aa5ec86ace3cad",
+      "path": "core/audio-manifests/ui/steel/denied-c.json"
+    },
+    "renders": {
+      "r-708e7b8cebe5a2fb": {
+        "hash": "sha256:f9de9b278e09db25df1f8c718ff5b8ec162cfda8164bee48f22a7feba1ecc449",
+        "path": "renders/r-708e7b8cebe5a2fb.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:4f69b45f41a4e188c8923720ba35bd01682981fe9f2221e747a9a4b3212bf766",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "denied-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/denied-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-denied/denied-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

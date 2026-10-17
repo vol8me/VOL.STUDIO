@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-b5136060479b7c02": {
+        "hash": "sha256:266ec6fc576b28730dbb7cecbc372cd75ee1183cf37b2b7e26be1b4ae102b297",
+        "path": "analyses/r-b5136060479b7c02.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:e2e69ab5709751725a38e05f945b5ba34f5b03e0b9cfebc6ce1aa9dbcc23db18",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:e2e69ab5709751725a38e05f945b5ba34f5b03e0b9cfebc6ce1aa9dbcc23db18",
+      "hash": "sha256:662598542e4b6df59b0d715db4420a5743a1ba343065ae9a06fdf922f575f7cb",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:8758ec1a994cb34ae8d2f2c6dfa1d08b6c983ec029e40035c36639e8c9044df7",
+      "path": "core/audio-manifests/ui/aurum/key-delete-a.json"
+    },
+    "renders": {
+      "r-b5136060479b7c02": {
+        "hash": "sha256:240f63a1f8f1d43eff0d0f6eb3df847d8b7d330610f0069f3188619de311a69f",
+        "path": "renders/r-b5136060479b7c02.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:06f479e7208d1b7ca4264281dd9a7eadb4d2792d5fb241a77c521ea905e9a279",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "key-delete-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/key-delete-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-key-delete/key-delete-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

@@ -1,0 +1,316 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "reference-shell-hits",
+    "hash": "sha256:6fe51b9f108c6018a7272857e6d144e8e456cb42ff71960ed2adcba3b1d6fa18",
+    "path": "devtools/audio-synth/records/families/reference-shell-hits/family.json",
+    "seed": 20260923,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/audio-synth",
+  "quality": {
+    "hash": "sha256:2d3512c5839641792fbaf765dbb9a8ff4b35aea66079c2dc8e0c2083ae180317",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/reference-shell-hits/quality.json"
+  },
+  "roleAxes": {
+    "intensity": [
+      "hard",
+      "medium",
+      "soft"
+    ],
+    "rarity": [
+      "alternate",
+      "common"
+    ],
+    "weight": [
+      "heavy",
+      "light"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 7006,
+        "encodedHash": "sha256:025e6ddfa1fc9ba0e1b74e19e3a47d75da0ae60f9b2549b001ff4c40c7dbc034",
+        "path": "reference/production/assets/sfx/families/reference-shell-hits/hard-heavy.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.89,
+        "centroidHz": 283.33929255808926,
+        "pitchHz": 273.54235509498164
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "hard-heavy",
+      "loudness": {
+        "integratedLufs": -18.539233247812145,
+        "maxMomentaryLufs": -15.082763847768705,
+        "truePeakDbtp": -2.9011109843391707
+      },
+      "manifest": {
+        "hash": "sha256:bf88732ac1750f7d629e69b8a71452f38a3e62c63bcbd27a3157bddd39d70097",
+        "path": "reference/production/manifests/sfx/families/reference-shell-hits/hard-heavy.json"
+      },
+      "pcmHash": "sha256:fe9806b9c5a529d95d808de66ac1c2b09ceee1cdbc82f27de7c80944d3b12eb2",
+      "programHash": "sha256:d1355430a5ee5adb3729ed2dba223fb6397b03fa4653182ab36c351523c0b9a7",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "common",
+        "weight": "heavy"
+      },
+      "tags": [
+        "strike"
+      ],
+      "variantId": "v-1901e1170db570cb"
+    },
+    {
+      "asset": {
+        "bytes": 7120,
+        "encodedHash": "sha256:c31f5dd225bb39652cf7ab52980c7dcb5099afd6aaf322413d7363b287494fe5",
+        "path": "reference/production/assets/sfx/families/reference-shell-hits/hard-heavy-alt.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.89,
+        "centroidHz": 397.09323407935665,
+        "pitchHz": 314.42707099027047
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "hard-heavy-alt",
+      "loudness": {
+        "integratedLufs": -25.712089876464045,
+        "maxMomentaryLufs": -21.794506882803873,
+        "truePeakDbtp": -2.8806930675578584
+      },
+      "manifest": {
+        "hash": "sha256:f872a4f034b28f948cdafab1b7c63bbb316ee845468aa0e8614edfb4b845b03e",
+        "path": "reference/production/manifests/sfx/families/reference-shell-hits/hard-heavy-alt.json"
+      },
+      "pcmHash": "sha256:ba4e83348596cc0230ee2ef2a68d5ea8f87f7db8354103cdc164f234296dc2a6",
+      "programHash": "sha256:4cb5ef8015d9426326f7bd1a962ba1b21dde828764b06f45f55e9838678c22e8",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "alternate",
+        "weight": "heavy"
+      },
+      "tags": [
+        "strike"
+      ],
+      "variantId": "v-f86ea6cbbed28315"
+    },
+    {
+      "asset": {
+        "bytes": 6184,
+        "encodedHash": "sha256:7a1b08fadd5acc11d844d2000abe237e6496b3526116fa5b4f912c21cff81650",
+        "path": "reference/production/assets/sfx/families/reference-shell-hits/hard-light.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.9,
+        "centroidHz": 541.5267963388005,
+        "pitchHz": 541.5816527000551
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "hard-light",
+      "loudness": {
+        "integratedLufs": -17.642105540461667,
+        "maxMomentaryLufs": -13.242796020144015,
+        "truePeakDbtp": -2.8995029228092015
+      },
+      "manifest": {
+        "hash": "sha256:e67380c25f35b38938b29b9a231ff0623f61386b9f292780138bd6ca4f408f4f",
+        "path": "reference/production/manifests/sfx/families/reference-shell-hits/hard-light.json"
+      },
+      "pcmHash": "sha256:7f7a5ff3a75549274a619a8fcee8117d5f39048b5b5a1179960310a8e1b56f5e",
+      "programHash": "sha256:b3080a6c85950e11b8fd241973fb09e75fd2f6e8a6538f59f7d74719f730d57f",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "common",
+        "weight": "light"
+      },
+      "tags": [
+        "strike"
+      ],
+      "variantId": "v-3ccc243e3d87c297"
+    },
+    {
+      "asset": {
+        "bytes": 5853,
+        "encodedHash": "sha256:3674f15a7ff4f071df89dba113d3dcb36036785c90237287d1b7dd4e2afcfba1",
+        "path": "reference/production/assets/sfx/families/reference-shell-hits/medium-heavy.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.9,
+        "centroidHz": 338.0921560800526,
+        "pitchHz": 337.8113808775504
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "medium-heavy",
+      "loudness": {
+        "integratedLufs": -18.080814064219723,
+        "maxMomentaryLufs": -13.643156446527481,
+        "truePeakDbtp": -2.929036771206524
+      },
+      "manifest": {
+        "hash": "sha256:7922fc51c4953923912cf7c1949e73098e870fca799e7f3b09279106ee8544e0",
+        "path": "reference/production/manifests/sfx/families/reference-shell-hits/medium-heavy.json"
+      },
+      "pcmHash": "sha256:1723aa13950e3dde3cde569a439618b43dbaa89a7fa651dfd6a2144b350ac867",
+      "programHash": "sha256:b8c10e077a8a8694110dba36819a6a47b676d16b560e6122ea397ece365543b1",
+      "roles": {
+        "intensity": "medium",
+        "rarity": "common",
+        "weight": "heavy"
+      },
+      "tags": [
+        "knock"
+      ],
+      "variantId": "v-37852be1c8ece189"
+    },
+    {
+      "asset": {
+        "bytes": 6621,
+        "encodedHash": "sha256:9b3f73b34e6e681c545f5d6ae9340539e99a0836e52308234cb0dd1debb38f62",
+        "path": "reference/production/assets/sfx/families/reference-shell-hits/medium-light.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.9,
+        "centroidHz": 612.8417579302121,
+        "pitchHz": 613.0279562924458
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "medium-light",
+      "loudness": {
+        "integratedLufs": -18.774298680178436,
+        "maxMomentaryLufs": -14.387472664311407,
+        "truePeakDbtp": -2.9905335109537807
+      },
+      "manifest": {
+        "hash": "sha256:8d792dce941b4b2353d87c1c98c9b523f21ba0de8eba8159e141e586516f6a67",
+        "path": "reference/production/manifests/sfx/families/reference-shell-hits/medium-light.json"
+      },
+      "pcmHash": "sha256:cecea4e00ef96ff7e334fa0fc17eb3ac7a024f3717dac50f68f6924df305f065",
+      "programHash": "sha256:818a6090bde47ac3b455b8461c35fb26a9b76abe0cf6020a5b3d14e14a0b7bab",
+      "roles": {
+        "intensity": "medium",
+        "rarity": "common",
+        "weight": "light"
+      },
+      "tags": [
+        "knock"
+      ],
+      "variantId": "v-5511d54a949c34a2"
+    },
+    {
+      "asset": {
+        "bytes": 7113,
+        "encodedHash": "sha256:d82c61609c192cd7c49b87e0df7a90e81021fb2f7923f86d28c0d15cbf2b23f8",
+        "path": "reference/production/assets/sfx/families/reference-shell-hits/medium-light-alt.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.9,
+        "centroidHz": 583.1836835523744,
+        "pitchHz": 576.6793915385865
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "medium-light-alt",
+      "loudness": {
+        "integratedLufs": -21.976644149220668,
+        "maxMomentaryLufs": -17.808023128465916,
+        "truePeakDbtp": -3.0037123800967933
+      },
+      "manifest": {
+        "hash": "sha256:2b260a020d0da2706194b67d896559e924ade7f9dadf903bc73407ff6b2e256f",
+        "path": "reference/production/manifests/sfx/families/reference-shell-hits/medium-light-alt.json"
+      },
+      "pcmHash": "sha256:2d882099d5ce3cb34af05f3470dd0f0b1efd48ab518b53b2b60c218ca03b0089",
+      "programHash": "sha256:c1810f3abdc6ca58b02b6c345cdeceb28fb04670189fd0a73db236e6e76800e0",
+      "roles": {
+        "intensity": "medium",
+        "rarity": "alternate",
+        "weight": "light"
+      },
+      "tags": [
+        "knock"
+      ],
+      "variantId": "v-a414c70e56d4894e"
+    },
+    {
+      "asset": {
+        "bytes": 6494,
+        "encodedHash": "sha256:9ea1de91ec151b5169ad635d492b5477617ba80c723af54ce307790765337635",
+        "path": "reference/production/assets/sfx/families/reference-shell-hits/soft-heavy.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.9,
+        "centroidHz": 311.9899820540844,
+        "pitchHz": 312.08906667282156
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "soft-heavy",
+      "loudness": {
+        "integratedLufs": -17.61766206196444,
+        "maxMomentaryLufs": -13.399477434884039,
+        "truePeakDbtp": -2.9165719544705153
+      },
+      "manifest": {
+        "hash": "sha256:c2257cff2141df1ff1edceab119e3dd0f850aab528ad70025ea746e513e8b91d",
+        "path": "reference/production/manifests/sfx/families/reference-shell-hits/soft-heavy.json"
+      },
+      "pcmHash": "sha256:955368fa9765fabd5106004a2dba6f872bb308ebb353956bd431c0afda40296a",
+      "programHash": "sha256:a42c07d87c0127c219adea7e2987fadf8366934a2c93be5df9db38cfb41417a4",
+      "roles": {
+        "intensity": "soft",
+        "rarity": "common",
+        "weight": "heavy"
+      },
+      "tags": [
+        "tap"
+      ],
+      "variantId": "v-fdf10242486ebcff"
+    },
+    {
+      "asset": {
+        "bytes": 6707,
+        "encodedHash": "sha256:be2d15c3ab1f31251ff8df269a36b250deb344bab1a3cb0bbbfaf84485e0157f",
+        "path": "reference/production/assets/sfx/families/reference-shell-hits/soft-light.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.89,
+        "centroidHz": 606.0848470878215,
+        "pitchHz": 608.0275588716671
+      },
+      "durationSeconds": 0.8973333333333333,
+      "key": "soft-light",
+      "loudness": {
+        "integratedLufs": -28.186202730841305,
+        "maxMomentaryLufs": -24.533045279669555,
+        "truePeakDbtp": -3.015079554695319
+      },
+      "manifest": {
+        "hash": "sha256:aff2e17c3ce5008a2cc7f785a80a22342b28678e976f4ee51558794f145d1b18",
+        "path": "reference/production/manifests/sfx/families/reference-shell-hits/soft-light.json"
+      },
+      "pcmHash": "sha256:57a19f2d5d4ad885c73678a6c5e90b224c2db9166eec08b66abeb67f3ed04ea1",
+      "programHash": "sha256:e8286bc694e806e0b0a273476960b352c41d8ed3603a8d754a6079f87c274fb2",
+      "roles": {
+        "intensity": "soft",
+        "rarity": "common",
+        "weight": "light"
+      },
+      "tags": [
+        "tap"
+      ],
+      "variantId": "v-290d824416c28475"
+    }
+  ]
+}

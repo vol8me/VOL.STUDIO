@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:f307f9665fab50d08a558d1cc3b3a0b0edc77a29771c178baa60398fad1cc3b6",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:2803282a33cfa4f3d2e0a1dfa9aa238ffa414bb6cd38d6667684edd69cbd4cd6",
+    "familyId": "ui-steel-reward",
+    "kind": "family-variant",
+    "variantId": "v-931654f7c68c7fd8",
+    "variantKey": "reward-a"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "pcmHash": "sha256:7f5785ba2124a1abd59e00ba227bbb790d7b2926d89c6bf7037a020321afa97c",
+  "renderHash": "sha256:fb2599101602afe4ce3745a962abf1062f7f044decbf9de5a5caa93e705e8446",
+  "renderId": "r-f958ab95d0459175",
+  "report": {
+    "analyzerVersion": 1,
+    "dc": {
+      "channelOffset": [
+        2.7043908851382554e-14,
+        5.328508707156634e-13
+      ]
+    },
+    "defects": {
+      "clicks": {
+        "count": 0,
+        "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+      },
+      "clips": {
+        "channelSamples": 0,
+        "frames": 0,
+        "perChannel": [
+          0,
+          0
+        ]
+      }
+    },
+    "format": {
+      "channels": 2,
+      "durationSeconds": 8.571428571428571,
+      "frames": 378000,
+      "sampleRate": 44100
+    },
+    "level": {
+      "channelPeakDbfs": [
+        -12.749990010800598,
+        -11.169307598148466
+      ],
+      "channelRmsDbfs": [
+        -28.919278952411737,
+        -27.338597403989574
+      ],
+      "crestFactorDb": 16.888109878573573,
+      "integratedLufs": -20.586507552426387,
+      "maxMomentaryLufs": -17.923858427234546,
+      "rmsDbfs": -28.05741747672204,
+      "samplePeakDbfs": -11.169307598148466,
+      "truePeakDbtp": -11.16110811081301
+    },
+    "measuredFrom": "source-pcm",
+    "schema": "AudioAnalysisReportV1",
+    "spectral": {
+      "bandsDb": {
+        "air": -111.5672318203367,
+        "high": -69.66989984753516,
+        "low": -28.881048297927858,
+        "mid": -45.35558156143814,
+        "sub": -36.31371609412832
+      },
+      "centroidHz": 211.87049636307322,
+      "flatness": 3.816386318521387e-8,
+      "peakHz": 129.19921875,
+      "rolloff85Hz": 279.931640625
+    },
+    "stereo": {
+      "correlation": 0.9999999999999211,
+      "width": 0.09074105446181438
+    },
+    "temporal": {
+      "activeSeconds": 2.01,
+      "attackSeconds": 0.01,
+      "decay40Seconds": 0.24,
+      "leadingSilenceSeconds": 1.07,
+      "peakTimeSeconds": 5.63,
+      "temporalCentroidSeconds": 3.7784055210249607,
+      "trailingSilenceSeconds": 2.251428571428571
+    }
+  },
+  "schema": "AudioAnalysisRecordV1"
+}

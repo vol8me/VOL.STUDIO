@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-115a3ee5a130c716": {
+        "hash": "sha256:ffafa8c5e1b51fb8545299c70afad844a2ba93ec5dbbfa1705cfad0452cde54a",
+        "path": "analyses/r-115a3ee5a130c716.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:ef0248e69de3cc072d044f02dc8fd8f74c7c9ece7da029bb519d57b10b1879d7",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:ef0248e69de3cc072d044f02dc8fd8f74c7c9ece7da029bb519d57b10b1879d7",
+      "hash": "sha256:32d85cf82d24b07d4c927b0d940baf6df1d6b5fe00bea43804f6bb0a5a80a98f",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:2360b97e54dcb2c58e39347dc7aa2e4d260a860f7d5e1bbe3d22ff30c1b4909b",
+      "path": "games/vol-test/audio-manifests/sfx/steel/engine-drive.json"
+    },
+    "renders": {
+      "r-115a3ee5a130c716": {
+        "hash": "sha256:9fd17af89f4c341d4777344407bf691e744a8ec887085d984394a982f073044b",
+        "path": "renders/r-115a3ee5a130c716.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:711e9e5b508fbb5d9d04f0b53e516715d2d1912611ca41841b5045a04c07c535",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-engine-drive",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 42,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/engine-drive.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

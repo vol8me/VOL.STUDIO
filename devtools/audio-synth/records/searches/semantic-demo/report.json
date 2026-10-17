@@ -1,0 +1,243 @@
+{
+  "base": {
+    "hash": "sha256:267219e09dabd50bac7e94836cd1895053b08df3aa3afd1d490953d2d832bae1",
+    "kind": "program"
+  },
+  "candidates": [
+    {
+      "candidateId": "c-7c7fbe701d9d50bd",
+      "checks": [],
+      "cost": {
+        "analysisWorkUnits": 792000,
+        "peakBytes": 115440,
+        "renderWorkUnits": 561600,
+        "samples": 14400
+      },
+      "descriptors": {
+        "activeSeconds": 0.3,
+        "attackSeconds": 0,
+        "centroidHz": 320.5695372154343,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 14.218894437430901,
+        "decay40Seconds": 0.21,
+        "durationSeconds": 0.3,
+        "flatness": 9.463832372447473e-12,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -22.26249271136257,
+        "onsetsPerSecond": 3.3333333333333335,
+        "pitchConfidence": 0.9974195233052526,
+        "pitchHz": 320.7077051656706,
+        "rolloff85Hz": 328.125,
+        "spectralPeakHz": 328.125,
+        "truePeakDbtp": -5.999434458466357
+      },
+      "ordinal": 0,
+      "point": [
+        0.3652229309082031
+      ],
+      "programHash": "sha256:c9a1c74d84882153c4d6900d09736a8aa7d238da4bc877259e476820301eae44",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 14400,
+        "pcmHash": "sha256:b2124a97dde432e4aecf77ff7e05a307367c194ae27d9973a0847110ae28828b",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "frequency": 320.568
+      }
+    },
+    {
+      "candidateId": "c-a6c5eb76b6e58321",
+      "checks": [],
+      "cost": {
+        "analysisWorkUnits": 792000,
+        "peakBytes": 115440,
+        "renderWorkUnits": 561600,
+        "samples": 14400
+      },
+      "descriptors": {
+        "activeSeconds": 0.27,
+        "attackSeconds": 0,
+        "centroidHz": 903.6812947789302,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 25.12285280031108,
+        "decay40Seconds": 0.17,
+        "durationSeconds": 0.3,
+        "flatness": 1.0758745980310672e-8,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -33.13028232277763,
+        "onsetsPerSecond": 3.3333333333333335,
+        "pitchConfidence": 0.9333238077828736,
+        "pitchHz": 907.4032267596189,
+        "rolloff85Hz": 914.0625,
+        "spectralPeakHz": 914.0625,
+        "truePeakDbtp": -5.99742329539938
+      },
+      "ordinal": 1,
+      "point": [
+        0.8652229309082031
+      ],
+      "programHash": "sha256:6e531ce9e645c863b556700e7d8f10f18f152d8501e350322b933938e21be1ad",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 14400,
+        "pcmHash": "sha256:94b68688ad206402878ae2b1f7b3a9acb5bd523eb9e6e307642e26d8fca102f1",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "frequency": 906.704
+      }
+    },
+    {
+      "candidateId": "c-14d4d52c185e53bd",
+      "checks": [],
+      "cost": {
+        "analysisWorkUnits": 792000,
+        "peakBytes": 115440,
+        "renderWorkUnits": 561600,
+        "samples": 14400
+      },
+      "descriptors": {
+        "activeSeconds": 0.3,
+        "attackSeconds": 0,
+        "centroidHz": 247.9274808482091,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 14.237348711263387,
+        "decay40Seconds": 0.21,
+        "durationSeconds": 0.3,
+        "flatness": 4.378466576481899e-12,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -22.378504914023896,
+        "onsetsPerSecond": 3.3333333333333335,
+        "pitchConfidence": 0.995451881153306,
+        "pitchHz": 247.26537385306355,
+        "rolloff85Hz": 257.8125,
+        "spectralPeakHz": 257.8125,
+        "truePeakDbtp": -5.999715352502854
+      },
+      "ordinal": 2,
+      "point": [
+        0.24022293090820312
+      ],
+      "programHash": "sha256:a763891d99ededeb21e6dfbeed7d8d03abbd2db2aa2ad36f3bf76bacc622ce50",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 14400,
+        "pcmHash": "sha256:7ec9ff7ec845427c8ed505f330dff7136eaabf7fcf017f313fab107907f9f231",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "frequency": 247.192
+      }
+    },
+    {
+      "candidateId": "c-c5fe6ffdf7259624",
+      "checks": [],
+      "cost": {
+        "analysisWorkUnits": 792000,
+        "peakBytes": 115440,
+        "renderWorkUnits": 561600,
+        "samples": 14400
+      },
+      "descriptors": {
+        "activeSeconds": 0.29,
+        "attackSeconds": 0,
+        "centroidHz": 698.7636350393622,
+        "clicks": 0,
+        "clippedSamples": 0,
+        "crestFactorDb": 18.565122012189644,
+        "decay40Seconds": 0.2,
+        "durationSeconds": 0.3,
+        "flatness": 4.239612794125785e-10,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.388133925376863,
+        "onsetsPerSecond": 3.3333333333333335,
+        "pitchConfidence": 0.9989577733343197,
+        "pitchHz": 699.7410771139655,
+        "rolloff85Hz": 703.125,
+        "spectralPeakHz": 703.125,
+        "truePeakDbtp": -6.0000004906757844
+      },
+      "ordinal": 3,
+      "point": [
+        0.7402229309082031
+      ],
+      "programHash": "sha256:5119266d9e629a000cf5a3778e0c3265dcaa5263d6a86d6f0d2d822556d76598",
+      "rejection": null,
+      "render": {
+        "channels": 1,
+        "frames": 14400,
+        "pcmHash": "sha256:ffb2f37fe87d34ed6c492a00204bb93b68dfb39b01a8239977aee37187763852",
+        "sampleRate": 48000
+      },
+      "risks": [],
+      "state": "passed",
+      "values": {
+        "frequency": 699.164
+      }
+    }
+  ],
+  "dimensions": [
+    "frequency"
+  ],
+  "engine": {
+    "analyzerVersion": 1,
+    "checksVersion": 1,
+    "descriptorMethods": {
+      "onsets": "energy-jump-v1",
+      "pitch": "yin-v1"
+    },
+    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "rendererVersion": 2,
+    "substreamScheme": "substream-v1"
+  },
+  "preflight": {
+    "budget": {
+      "maxEstimatedSeconds": 300,
+      "maxItemPeakBytes": 1610612736,
+      "maxItems": 64,
+      "maxTotalWorkUnits": 30000000000
+    },
+    "estimate": {
+      "estimatedSeconds": 0.054144,
+      "items": 4,
+      "maxItemPeakBytes": 115440,
+      "totalWorkUnits": 5414400
+    },
+    "invalid": 0,
+    "requested": 4,
+    "valid": 4,
+    "verdict": {
+      "estimate": null,
+      "limit": null,
+      "resource": null,
+      "withinBudget": true
+    }
+  },
+  "schema": "AcousticSearchReportV1",
+  "searchId": "semantic-demo",
+  "seed": 11,
+  "specHash": "sha256:316c0dfcc065328b2ebb606cbb653386564fe1b18138552a8b780a645d22459f",
+  "strategy": {
+    "id": "scrambled-halton",
+    "version": 1
+  },
+  "summary": {
+    "error": 0,
+    "filtered": 0,
+    "invalid": 0,
+    "passed": 4
+  }
+}

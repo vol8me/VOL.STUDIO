@@ -1,36 +1,38 @@
 [package]
 name = "volstudio-tauri"
-version = "0.1.0"
-description = "VOL.STUDIO native wrapper for desktop and mobile"
+version.workspace = true
+description = "VOL.STUDIO shared Tauri runtime — consumed by each game's own app crate"
 authors = ["VOL.STUDIO"]
 edition = "2021"
 
+# Yalnız KÜTÜPHANE. `staticlib`/`cdylib` mobil giriş noktası üreten uygulama
+# crate'lerinin işidir; paylaşılan kabuk onların içine `rlib` olarak girer.
 [lib]
 name = "volstudio_tauri_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+crate-type = ["rlib"]
 
-[build-dependencies]
-tauri-build = { version = "2", features = [] }
+# `tauri-build` YOKTUR ve build.rs de yoktur: o adım `generate_context!()`
+# çağıran UYGULAMA crate'lerinin işidir ve bir `tauri.conf.json` arar. Bu crate
+# bir uygulama olmadığı için kendi config'ini taşımaz.
 
 [dependencies]
-tauri = { version = "2", features = ["protocol-asset", "rustls-tls"] }
-tauri-plugin-shell = "2"
-tauri-plugin-dialog = "2"
-tauri-plugin-log = "2"
-tauri-plugin-store = "2"
-tauri-plugin-sql = { version = "2", features = ["sqlite"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+tauri = { version = "2.11", features = ["rustls-tls"] }
+tauri-plugin-log = "2.9"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 log = "0.4"
 rustls = { version = "0.23", default-features = false, features = ["ring"] }
+
+# Pencerenin gerçek tam ekran durumu Linux'ta GDK'dan okunur
+# (`window_fullscreen_state`). Sürüm Tauri'nin zaten kullandığı gtk'dır;
+# yeni bir kütüphane değil, ona doğrudan erişimdir.
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18"
+libc = "0.2"
+signal-hook = "0.3"
+# logind uyku kilidi (PrepareForSleep); sürüm Tauri ağacındaki dbus'tır.
+dbus = "0.9"
 
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-
-[profile.release]
-codegen-units = 1
-lto = true
-opt-level = 3
-panic = "abort"
-strip = true

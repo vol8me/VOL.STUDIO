@@ -1,0 +1,261 @@
+import Phaser from 'phaser';
+import { TECH } from '../constants';
+
+export type ScaleStrategy = 'fit' | 'envelop' | 'resize';
+
+/**
+ * Canlı okunabilen ölçek ayarı. Fonksiyon verilirse HER ölçümde yeniden
+ * sorulur; kalite ayarı çalışma anında değiştiğinde viewport onu takip eder.
+ */
+export type ViewportScaleSetting = number | (() => number | undefined);
+
+/**
+ * `renderScale` için güvenli aralık. 0 veya negatif değer canvas'ı yok eder;
+ * 1'in üstü ise "kalite ayarı" olmaktan çıkıp süper-örnekleme olur ve DPR
+ * kelepçesinin anlamını bozar.
+ */
+const MIN_RENDER_SCALE = 0.25;
+const MAX_RENDER_SCALE = 1;
+
+export interface ViewportConfig {
+  /**
+   * `strategy: 'resize'` iken opsiyoneldir (verilmezse `window.innerWidth` kullanılır).
+   * 'fit'/'envelop' için zorunludur (sabit iç çözünürlük).
+   */
+  width?: number;
+  height?: number;
+  strategy?: ScaleStrategy;
+  parent?: string | HTMLElement;
+  backgroundColor?: string;
+  /**
+   * Yüksek DPR ekranlarda piksel fill-rate'i sınırlamak için maksimum DPR.
+   * Verilmezse `window.devicePixelRatio` olduğu gibi kullanılır.
+   */
+  maxDpr?: ViewportScaleSetting;
+  /**
+   * Rasterleme çözünürlüğü çarpanı (`0.25`–`1`). DPR'den BAĞIMSIZDIR.
+   *
+   * `0.75` verildiğinde GPU %56 kadar piksel işler ama oyun dünyası ve
+   * ekrandaki boyut AYNI kalır — fark yalnızca netliktir. Bunun mümkün olması
+   * için kamera, rasterleme çarpanı kadar yakınlaştırılır (bkz.
+   * `applyToScene`); dünya birimleri böylece CSS pikseline sabitlenir.
+   *
+   * Yalnızca `strategy: 'resize'` için anlamlıdır; 'fit'/'envelop' zaten sabit
+   * iç çözünürlükle çalışır.
+   */
+  renderScale?: ViewportScaleSetting;
+  /**
+   * Canvas backing store'unun piksel sayısı tavanı (genişlik × yükseklik, cihaz pikseli).
+   *
+   * `maxDpr` yalnız yoğunluğu kısar: 2560×1440 CSS piksel tam ekranda DPR 2 ile 14,7 milyon piksel eder ve
+   * orta sınıf GPU'da kare hızını yarıya indirir. Tavan aşılırsa çarpan, görüntü boyutu ve dünya
+   * AYNI kalacak biçimde `sqrt(tavan / alan)` oranında kısılır (`renderScale` ile birlikte uygulanır,
+   * alt sınır 0,25). Tam ekrana geçiş ve pencere boyutu değişimi `resize` ile tavanı yeniden okur.
+   */
+  maxPixels?: ViewportScaleSetting;
+}
+
+export interface ViewportResult {
+  parent: string | HTMLElement;
+  width: number;
+  height: number;
+  backgroundColor?: string;
+  zoom?: number;
+  scale: {
+    mode: Phaser.Scale.ScaleModeType;
+    autoCenter: Phaser.Scale.CenterType;
+  };
+}
+
+/**
+ * Phaser GameConfig için ölçekleme ayarlarını üretir.
+ * - 'fit'/'envelop': sabit iç çözünürlük, canvas CSS ile ekrana sığdırılır (letterbox oluşabilir).
+ * - 'resize': letterbox'sız, devicePixelRatio'ya göre keskin render (Phaser'ın RESIZE modu
+ *   DPR'yi ele almadığı için `Scale.NONE` + manuel zoom/boyut kullanılır, bkz. phaserjs/phaser#5581).
+ */
+export class ViewportManager {
+  private readonly config: ViewportConfig;
+
+  constructor(config: ViewportConfig) {
+    this.config = config;
+  }
+
+  getConfig(): ViewportResult {
+    const parent = this.config.parent ?? 'game-container';
+
+    if (this.config.strategy === 'resize') {
+      const quality = this.resolveRenderQuality();
+      const { width, height } = this.getWorldSize();
+      return {
+        parent,
+        width: Math.max(1, width * quality),
+        height: Math.max(1, height * quality),
+        ...(this.config.backgroundColor === undefined
+          ? {}
+          : { backgroundColor: this.config.backgroundColor }),
+        zoom: 1 / quality,
+        scale: {
+          mode: Phaser.Scale.NONE,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+        },
+      };
+    }
+
+    if (this.config.width === undefined || this.config.height === undefined) {
+      throw new Error(
+        `ViewportManager: 'width'/'height' yalnızca strategy: 'resize' iken opsiyoneldir (mevcut strategy: '${
+          this.config.strategy ?? 'fit'
+        }').`,
+      );
+    }
+
+    return {
+      parent,
+      width: this.config.width,
+      height: this.config.height,
+      ...(this.config.backgroundColor === undefined
+        ? {}
+        : { backgroundColor: this.config.backgroundColor }),
+      scale: {
+        mode: this.config.strategy === 'envelop' ? Phaser.Scale.ENVELOP : Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+      },
+    };
+  }
+
+  /**
+   * Dünyanın CSS piksel cinsinden boyutu — rasterleme çözünürlüğünden BAĞIMSIZ.
+   *
+   * Oyun mantığı (saha sınırı, hız, yarıçap) bu birimde yaşar ve her cihazda
+   * AYNIDIR. Dünya cihaz pikseli olsaydı 2x bir ekranda arena iki kat geniş
+   * olur, dünya birimi/saniye cinsinden sabit oyuncu hızı ekranda yarıya
+   * düşerdi: DPR ve kalite ayarı sessizce oynanışı değiştirirdi.
+   */
+  getWorldSize(): { width: number; height: number } {
+    if (this.config.strategy === 'resize') {
+      return {
+        width: Math.max(1, this.config.width ?? window.innerWidth),
+        height: Math.max(1, this.config.height ?? window.innerHeight),
+      };
+    }
+    return {
+      width: Math.max(1, this.config.width ?? 1),
+      height: Math.max(1, this.config.height ?? 1),
+    };
+  }
+
+  /**
+   * Dünya birimi başına rasterlenen cihaz pikseli.
+   *
+   * `min(devicePixelRatio, maxDpr) * renderScale`. Canvas'ın backing store'u
+   * bu çarpanla büyür, kamera aynı çarpanla yakınlaştırılır — net sonuç:
+   * daha az piksel, AYNI dünya, AYNI ekran boyutu.
+   */
+  resolveRenderQuality(): number {
+    const clampedDpr = this.resolveDpr();
+    const scale = resolveSetting(this.config.renderScale);
+    const renderScale =
+      scale !== undefined && Number.isFinite(scale)
+        ? Math.min(MAX_RENDER_SCALE, Math.max(MIN_RENDER_SCALE, scale))
+        : 1;
+    const quality = Math.max(MIN_RENDER_SCALE, clampedDpr * renderScale);
+    return this.capPixels(quality);
+  }
+
+  /** Backing store piksel tavanını aşan çarpanı, alanı tavana oturacak kadar kısar. */
+  private capPixels(quality: number): number {
+    const limit = resolveSetting(this.config.maxPixels);
+    if (limit === undefined || !Number.isFinite(limit) || limit <= 0) return quality;
+    const world = this.getWorldSize();
+    const pixels = world.width * world.height * quality * quality;
+    if (pixels <= limit) return quality;
+    return Math.max(MIN_RENDER_SCALE, Math.sqrt(limit / (world.width * world.height)));
+  }
+
+  /**
+   * Sahnenin kamerasını geçerli rasterleme çarpanına göre kurar.
+   *
+   * Varsayılan olarak kamera yakınlaştırması çarpana eşitlenir ve dünya merkezine
+   * odaklanır. Serbest/gözlem kameraları (pan/zoom gezen sahneler) için
+   * `options.preserveCameraState` veya `camera.data.get('preserveCameraState')`
+   * bayrağı verildiğinde viewport backing güncellenir fakat kullanıcının kamera
+   * konumu ve zoom seviyesi dünya merkezine sıfırlanmaz.
+   */
+  applyToScene(scene: Phaser.Scene, options?: { preserveCameraState?: boolean }): void {
+    if (this.config.strategy !== 'resize') return;
+    const quality = this.resolveRenderQuality();
+    const world = this.getWorldSize();
+    const camera = scene.cameras?.main;
+    if (!camera) return;
+
+    camera.setViewport(0, 0, world.width * quality, world.height * quality);
+
+    const cameraData = (camera as unknown as { data?: { get(key: string): unknown } }).data;
+    if (options?.preserveCameraState || cameraData?.get('preserveCameraState') === true) {
+      return;
+    }
+
+    camera.setZoom(quality);
+    camera.centerOn(world.width / 2, world.height / 2);
+  }
+
+  /** getConfig() ve attachResize() aynı DPR'yi görmeli — `zoom` bu değere göre hesaplanır. */
+  private resolveDpr(): number {
+    const rawDpr =
+      typeof window !== 'undefined' &&
+      Number.isFinite(window.devicePixelRatio) &&
+      window.devicePixelRatio > 0
+        ? window.devicePixelRatio
+        : TECH.DPR_FALLBACK;
+
+    const configuredMaxDpr = resolveSetting(this.config.maxDpr);
+    const maxDpr =
+      configuredMaxDpr !== undefined && Number.isFinite(configuredMaxDpr) && configuredMaxDpr > 0
+        ? configuredMaxDpr
+        : undefined;
+    return maxDpr ? Math.min(rawDpr, maxDpr) : rawDpr;
+  }
+
+  /**
+   * Yalnızca strategy: 'resize' oyunlarında çağrılmalıdır. Pencere boyutu değiştikçe
+   * canvas ve kamera viewport'larını günceller. Dönen fonksiyon dinleyiciyi kaldırır.
+   *
+   * Örnek metodudur (statik değil): `maxDpr` kelepçesi getConfig()'in kurduğu
+   * `zoom` ile aynı olmak zorunda. Ham devicePixelRatio kullanılırsa canvas'ın
+   * CSS boyutu `rawDpr / maxDpr` oranında pencereyi taşar.
+   *
+   * `resize()` yeni backing boyutunu ÖNCE kurar, `setZoom()` ardından Phaser'ın
+   * `Scale.NONE` CSS boyutunu ve input `canvasBounds` hesabını tazeler. Ters
+   * sırada `setZoom()` eski genişlik/yüksekliği inline style'a yazar; zoom 1 ise
+   * sonraki `resize()` bu style'ı yenilemez ve yön değişiminde canvas eski en-boy
+   * oranına sıkışır.
+   */
+  attachResize(game: Phaser.Game): () => void {
+    const handler = (): void => this.refresh(game);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }
+
+  /**
+   * Canvas ve kamera viewport'unu geçerli ölçülerle yeniden kurar (`resize` olayı, ya da `renderScale`/
+   * `maxPixels` sağlayıcısının değeri pencere değişmeden değiştiğinde: uyarlanır çözünürlük).
+   */
+  refresh(game: Phaser.Game): void {
+    const quality = this.resolveRenderQuality();
+    const world = this.getWorldSize();
+    const width = Math.max(1, world.width * quality);
+    const height = Math.max(1, world.height * quality);
+
+    game.scale.resize(width, height);
+    game.scale.setZoom(1 / quality);
+
+    for (const scene of game.scene.getScenes(true)) {
+      this.applyToScene(scene);
+    }
+  }
+}
+
+/** Sabit ya da fonksiyon olarak verilmiş ölçek ayarını okur. */
+function resolveSetting(setting: ViewportScaleSetting | undefined): number | undefined {
+  return typeof setting === 'function' ? setting() : setting;
+}

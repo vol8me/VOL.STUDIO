@@ -1,4 +1,6 @@
+import { i18next } from '../../i18n/I18n';
 import { Easing, animateValue } from '../animation';
+import { prefersReducedMotion } from '../motion/reducedMotion';
 import { UI_TIMING } from '../../constants';
 
 export interface TimerBarOptions {
@@ -7,6 +9,8 @@ export interface TimerBarOptions {
   mode?: 'fill' | 'drain';
   /** Sabit metin veya `(remainingSeconds, totalSeconds) => string` formatter. */
   label?: string | ((remainingSeconds: number, totalSeconds: number) => string);
+  /** Erişilebilir ad; verilmezse ortak `core:timerBar.ariaLabel`. */
+  ariaLabel?: string;
   /** true ise constructor'da hemen başlar. Varsayılan false. */
   autoStart?: boolean;
   /** true ise süre dolunca otomatik sıfırlanıp yeniden başlar. Varsayılan false. */
@@ -14,7 +18,14 @@ export interface TimerBarOptions {
   onComplete?: () => void;
 }
 
-/** Otomatik dolan/boşalan, sıfırlanabilen zamanlayıcı çubuğu (rAF tabanlı). `mode` yönü belirler, `loop` döngüyü otomatik yeniden başlatır. */
+/**
+ * Otomatik dolan/boşalan, sıfırlanabilen zamanlayıcı çubuğu (rAF tabanlı). `mode` yönü belirler, `loop` döngüyü otomatik
+ * yeniden başlatır.
+ *
+ * Çubuğun ilerlemesi İŞLEVSEL ZAMANDIR, süs hareketi değil: hareket azaltma açıkken de akar, hareket bütçesinden
+ * (`MotionController`) hak istemez ve süre dolunca `onComplete` aynı anda çağrılır. Hareket azaltmanın değiştirdiği tek
+ * şey `reset()` geri sarma geçişidir (çubuk doğrudan sıfıra döner).
+ */
 export class TimerBar {
   readonly element: HTMLDivElement;
   private readonly fillElement: HTMLDivElement;
@@ -34,21 +45,25 @@ export class TimerBar {
       durationSeconds,
       mode = 'fill',
       label,
+      ariaLabel,
       autoStart = false,
       loop = false,
       onComplete,
     } = options;
-    this.durationSeconds = durationSeconds;
+    // Geçersiz süre (NaN, sonsuz, negatif) boş çubuktur: 0 sn'lik zamanlayıcı hemen biter ve döngüye girmez.
+    this.durationSeconds =
+      Number.isFinite(durationSeconds) && durationSeconds > 0 ? durationSeconds : 0;
     this.mode = mode;
     this.label = label;
-    this.loop = loop;
+    this.loop = loop && this.durationSeconds > 0;
     this.onCompleteHandler = onComplete;
 
     this.element = document.createElement('div');
     this.element.className = 'vol-timer-bar';
     this.element.setAttribute('role', 'progressbar');
+    this.element.setAttribute('aria-label', ariaLabel ?? i18next.t('core:timerBar.ariaLabel'));
     this.element.setAttribute('aria-valuemin', '0');
-    this.element.setAttribute('aria-valuemax', String(durationSeconds));
+    this.element.setAttribute('aria-valuemax', String(this.durationSeconds));
 
     this.fillElement = document.createElement('div');
     this.fillElement.className = 'vol-timer-bar__fill';
@@ -96,7 +111,7 @@ export class TimerBar {
     this.cancelAnimation = animateValue({
       from,
       to: 0,
-      durationMs: UI_TIMING.TIMER_RESET,
+      durationMs: prefersReducedMotion() ? 0 : UI_TIMING.TIMER_RESET_MS,
       easing: Easing.easeOutCubic,
       onUpdate: (value) => {
         this.elapsedSeconds = value;
@@ -144,10 +159,14 @@ export class TimerBar {
             this.render(0);
             this.running = true;
             this.runFrom(0);
-          }, UI_TIMING.TIMER_LOOP_DELAY);
+          }, UI_TIMING.TIMER_LOOP_DELAY_MS);
         }
       },
     });
+  }
+
+  private writeAttribute(name: string, value: string): void {
+    if (this.element.getAttribute(name) !== value) this.element.setAttribute(name, value);
   }
 
   private render(elapsedSeconds: number): void {
@@ -159,16 +178,22 @@ export class TimerBar {
     this.fillElement.style.width = `${fillRatio * 100}%`;
 
     const remaining = Math.max(0, this.durationSeconds - elapsedSeconds);
-    this.element.setAttribute(
+    // Öznitelikler yalnız tam saniye değişince yazılır (kare başına yazmak okuyucuyu boğar ve DOM'u gereksiz kirletir).
+    // Okunan metin görünür etiketle aynı yönde yuvarlanır (kalan süre yukarı: 0,2 sn kala "1 sn kaldı").
+    this.writeAttribute(
       'aria-valuenow',
       String(Math.round(this.mode === 'fill' ? elapsedSeconds : remaining)),
+    );
+    this.writeAttribute(
+      'aria-valuetext',
+      i18next.t('core:timerBar.valueText', { seconds: Math.ceil(remaining) }),
     );
 
     if (this.labelElement) {
       this.labelElement.textContent =
         typeof this.label === 'function'
           ? this.label(Math.ceil(remaining), this.durationSeconds)
-          : this.label ?? '';
+          : (this.label ?? '');
     }
   }
 }

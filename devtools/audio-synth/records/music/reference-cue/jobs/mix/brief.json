@@ -1,0 +1,45 @@
+{
+  "affect": {
+    "arousal": 0.7,
+    "tags": ["yükselen", "kısa", "kapanışlı"],
+    "valence": 0.25
+  },
+  "assetClass": "music",
+  "channels": 2,
+  "form": {
+    "sections": ["intro", "peak", "outro"]
+  },
+  "id": "reference-cue",
+  "intent": "Bir kez çalıp biten kısa sinematik cue: yükselip kapanmalı, dönmemeli. Playlist içinde başka bir parçaya yer bırakacak şekilde sonu sönümlenir.",
+  "kind": "music",
+  "length": {
+    "bars": {
+      "max": 8,
+      "min": 3
+    }
+  },
+  "melodicSalience": 0.31,
+  "meter": [4, 4],
+  "playback": "playlistOneShot",
+  "provenance": {
+    "author": "agent",
+    "by": "wave-6-reference"
+  },
+  "rhythmicDensity": "moderate",
+  "schema": "AudioBriefV1",
+  "tempo": {
+    "bpm": {
+      "max": 132,
+      "min": 108
+    }
+  },
+  "themeBook": {
+    "id": "reference-theme"
+  },
+  "title": "Referans tek seferlik cue",
+  "tonal": {
+    "roots": ["D2"],
+    "systems": ["dorian", "minor"]
+  },
+  "usage": "cue"
+}

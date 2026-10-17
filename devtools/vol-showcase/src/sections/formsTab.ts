@@ -1,0 +1,835 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
+import {
+  LocalStorageAdapter,
+  ScopedSaveManager,
+  type ScopedKey,
+} from '@volstudio/core/persistence';
+import { displayCapabilitiesForSession } from '@volstudio/core/platform';
+import type { RuntimePlatform, SessionKind } from '@volstudio/tauri-v2';
+import { DEFAULT_UI_AUDIO_SETTINGS, type UiAudioSettings } from '@volstudio/core/audio/ui';
+import {
+  Button,
+  Checkbox,
+  ColorPicker,
+  CurveEditor,
+  createAudioSettingsRows,
+  Input,
+  NumberStepper,
+  OnScreenKeyboard,
+  PropertyField,
+  RadioGroup,
+  RangeSlider,
+  SegmentedControl,
+  Select,
+  SettingsForm,
+  SettingsModel,
+  SettingsRow,
+  Slider,
+  Text,
+  TextArea,
+  TimerBar,
+  Toolbar,
+} from '@volstudio/core/ui';
+import { i18next } from '@volstudio/core/i18n';
+import { getAppSoundKit } from '../appSound';
+import { DEFAULT_DISPLAY, DISPLAY_RESOLUTIONS, type PlatformView } from '../platform';
+import { card, cardGrid } from './shared';
+
+function buildSettingsFormDemo(disposables: DisposableScope): HTMLElement {
+  const language = new Select({
+    options: [
+      { value: 'tr', label: i18next.t('volui:forms.turkish') },
+      { value: 'en', label: i18next.t('volui:forms.english') },
+    ],
+    value: 'tr',
+  });
+  const orientation = new SegmentedControl({
+    options: [
+      { value: 'portrait', label: i18next.t('volui:forms.portrait') },
+      { value: 'landscape', label: i18next.t('volui:forms.landscape') },
+    ],
+    value: 'portrait',
+  });
+  const fps = new Checkbox({ label: i18next.t('volui:forms.showFps'), checked: true });
+  const languageRow = new SettingsRow({
+    label: i18next.t('volui:forms.language'),
+    control: language,
+    stackOnNarrow: true,
+  });
+  const orientationRow = new SettingsRow({
+    label: i18next.t('volui:forms.orientation'),
+    control: orientation,
+    stackOnNarrow: true,
+  });
+  const fpsRow = new SettingsRow({ control: fps });
+  const form = new SettingsForm().add(languageRow).add(orientationRow).add(fpsRow);
+  disposables.addDestroyables(
+    language,
+    orientation,
+    fps,
+    languageRow,
+    orientationRow,
+    fpsRow,
+    form,
+  );
+  return form.element;
+}
+
+/**
+ * Model + tarif: durum `SettingsModel`de (taslak, hata, kapsam başına atomik yazım), form onu çizer. Kalite ve
+ * FPS `device`, dil ve ad `synced` kapsamındadır; Uygula her kapsama TEK yazım yapar, Geri al taslakları atar.
+ */
+function buildSettingsModelDemo(disposables: DisposableScope): HTMLElement {
+  const stores = new ScopedSaveManager({
+    synced: new LocalStorageAdapter(),
+    device: new LocalStorageAdapter(),
+  });
+  const model = new SettingsModel({
+    store: stores,
+    keys: { device: 'device.volui:settings-demo', synced: 'synced.volui:settings-demo' },
+    fields: {
+      quality: { scope: 'device', defaultValue: 'high' },
+      fps: { scope: 'device', defaultValue: true },
+      language: { scope: 'synced', defaultValue: 'tr' },
+      name: {
+        scope: 'synced',
+        defaultValue: 'Aldric',
+        validate: (value) =>
+          String(value).trim() === '' ? i18next.t('volui:forms.nameRequired') : null,
+      },
+    },
+  });
+  void model.load();
+
+  const form = new SettingsForm({ className: 'vol-settings-model-demo', model });
+  form.addField<string>({
+    key: 'quality',
+    label: i18next.t('volui:forms.displayQuality'),
+    stackOnNarrow: true,
+    create: ({ value, onChange }) => {
+      const select = new Select({
+        options: [
+          { value: 'low', label: i18next.t('volui:forms.low') },
+          { value: 'high', label: i18next.t('volui:forms.high') },
+        ],
+        value,
+        onCommit: onChange,
+      });
+      return {
+        element: select.element,
+        setValue: (next) => select.setValue(next),
+        destroy: () => select.destroy(),
+      };
+    },
+  });
+  form.addField<string>({
+    key: 'language',
+    label: i18next.t('volui:forms.language'),
+    stackOnNarrow: true,
+    create: ({ value, onChange }) => {
+      const control = new SegmentedControl({
+        options: [
+          { value: 'tr', label: i18next.t('volui:forms.turkish') },
+          { value: 'en', label: i18next.t('volui:forms.english') },
+        ],
+        value,
+        onCommit: onChange,
+      });
+      return {
+        element: control.element,
+        setValue: (next) => control.setValue(next),
+        destroy: () => control.destroy(),
+      };
+    },
+  });
+  form.addField<string>({
+    key: 'name',
+    label: i18next.t('volui:forms.playerName'),
+    stackOnNarrow: true,
+    create: ({ value, onChange }) => {
+      const input = new Input({ value, onInput: onChange });
+      return {
+        element: input.element,
+        setValue: (next) => input.setValue(next),
+        destroy: () => input.destroy(),
+      };
+    },
+  });
+  form.addField<boolean>({
+    key: 'fps',
+    create: ({ value, onChange }) => {
+      const checkbox = new Checkbox({
+        label: i18next.t('volui:forms.showFps'),
+        checked: value,
+        variant: 'switch',
+        onCommit: onChange,
+      });
+      return {
+        element: checkbox.element,
+        setValue: (next) => checkbox.setChecked(next),
+        destroy: () => checkbox.destroy(),
+      };
+    },
+  });
+  disposables.addDestroyables(form);
+  return form.element;
+}
+
+/**
+ * Ses ayar satırları ses sistemine DOĞRUDAN bağlıdır: kaydırıcı kazancı anında değiştirir (uygulama kiti
+ * varsa onu, yoksa yerel bir yüzü). Taslak/uygula yoktur; ses ayarı canlı duyulur.
+ */
+function buildAudioSettingsDemo(disposables: DisposableScope): HTMLElement {
+  let local: UiAudioSettings = { ...DEFAULT_UI_AUDIO_SETTINGS };
+  const port = {
+    get settings(): UiAudioSettings {
+      return getAppSoundKit()?.settings ?? local;
+    },
+    setSettings(patch: Partial<UiAudioSettings>): UiAudioSettings {
+      const kit = getAppSoundKit();
+      if (kit) return kit.setSettings(patch);
+      local = { ...local, ...patch };
+      return local;
+    },
+  };
+  const audio = createAudioSettingsRows(port);
+  const form = new SettingsForm({ className: 'vol-audio-settings-demo' });
+  for (const row of audio.rows) form.add(row);
+  disposables.addDestroyables(audio, form);
+  return form.element;
+}
+
+/**
+ * Altı haneli değerler: sayı gösteren denetimler en geniş gerçekçi değerle (999 999) kırpılmadan çizilir.
+ * Sınama `formAcceptance.spec.ts`: değer metni ve adım girdisi 1280/360/320 px'te taşmaz.
+ */
+function buildSixDigitDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-six-digits';
+  const gold = i18next.t('volui:forms.gold');
+  const stepper = new NumberStepper({ label: gold, min: 0, max: 999_999, step: 1, value: 999_999 });
+  const slider = new Slider({ label: gold, min: 0, max: 999_999, step: 1000, value: 999_999 });
+  const range = new RangeSlider({
+    label: gold,
+    min: 0,
+    max: 999_999,
+    step: 1000,
+    value: { min: 100_000, max: 999_999 },
+  });
+  disposables.addDestroyables(stepper, slider, range);
+  wrap.append(stepper.element, slider.element, range.element);
+  return wrap;
+}
+
+/**
+ * D5c vitrini — oturum → görüntü yeteneği → görünen satırlar zinciri.
+ *
+ * **Native kabukta GERÇEK**: oturum sınıfı kabuktan okunur (seçilemez), pencere kipi ve çözünürlük
+ * `DisplayModeController` ile Tauri penceresini sürer, F11/pencere yöneticisi değişimi satıra yansır.
+ * **Web'de (`pnpm dev`, tarayıcı) SİMÜLASYON**: oturum seçici `displayCapabilitiesForSession` tablosunun
+ * davranışını gösterir, kip/çözünürlük hiçbir pencereye dokunmaz. Kalite her yerde `device` kapsamına
+ * kaydeder (ekran başına tercih); pencere kipi ve çözünürlük satırları gamescope'ta sunulmaz.
+ */
+function buildDisplaySettingsDemo(
+  disposables: DisposableScope,
+  platform: PlatformView,
+): HTMLElement {
+  const stores = platform.stores;
+  const QUALITY_KEY: ScopedKey = 'device.volui:display-quality';
+  const live = platform.display !== null;
+
+  const quality = new Select({
+    options: [
+      { value: 'low', label: i18next.t('volui:forms.low') },
+      { value: 'high', label: i18next.t('volui:forms.high') },
+    ],
+    value: 'high',
+    onCommit: (value) => {
+      void stores.save(QUALITY_KEY, value);
+    },
+  });
+  void stores.load<string>(QUALITY_KEY, 'high').then((value) => quality.setValue(value));
+
+  const session = new Select({
+    options: [
+      { value: 'web', label: i18next.t('volui:forms.sessionWeb') },
+      { value: 'desktop', label: i18next.t('volui:forms.sessionDesktop') },
+      { value: 'gamescope', label: i18next.t('volui:forms.sessionGamescope') },
+      { value: 'bigpicture', label: i18next.t('volui:forms.sessionBigPicture') },
+    ],
+    value: platform.session,
+    // Native kabukta oturum bildirilir, seçilmez; web'de simülasyon seçicisidir.
+    disabled: platform.native,
+    onCommit: applySession,
+  });
+  const preferences = platform.displayPreferences;
+  const mode = new Select({
+    options: [
+      { value: 'windowed', label: i18next.t('volui:forms.displayWindowed') },
+      { value: 'fullscreen', label: i18next.t('volui:forms.displayFullscreen') },
+    ],
+    value: live ? preferences.mode : 'fullscreen',
+    onCommit: (value) => {
+      if (live && (value === 'windowed' || value === 'fullscreen')) {
+        void platform.update({ mode: value });
+      }
+    },
+  });
+  const resolution = new Select({
+    options: DISPLAY_RESOLUTIONS.map((value) => ({ value, label: value.replace('x', '×') })),
+    value: live ? preferences.resolution : DEFAULT_DISPLAY.resolution,
+    onCommit: (value) => {
+      if (live) void platform.update({ resolution: value });
+    },
+  });
+
+  const sessionRow = new SettingsRow({
+    label: i18next.t(
+      platform.native ? 'volui:forms.displaySessionReal' : 'volui:forms.displaySession',
+    ),
+    control: session,
+  });
+  const modeRow = new SettingsRow({
+    label: i18next.t('volui:forms.displayMode'),
+    control: mode,
+  });
+  const resolutionRow = new SettingsRow({
+    label: i18next.t('volui:forms.displayResolution'),
+    control: resolution,
+  });
+  const qualityRow = new SettingsRow({
+    label: i18next.t('volui:forms.displayQuality'),
+    control: quality,
+  });
+  const form = new SettingsForm({ className: 'vol-display-settings' });
+  form.add(sessionRow).add(modeRow).add(resolutionRow).add(qualityRow);
+
+  // Gerçek kabuk bilgisi görünür kalır: simülasyon seçimi gerçek oturumu örtmez.
+  const runtimeLabels: Record<RuntimePlatform, string> = {
+    web: i18next.t('volui:forms.runtimeWeb'),
+    desktop: i18next.t('volui:forms.runtimeDesktop'),
+    android: i18next.t('volui:forms.runtimeAndroid'),
+  };
+  const sessionLabels: Record<SessionKind, string> = {
+    web: i18next.t('volui:forms.sessionWeb'),
+    desktop: i18next.t('volui:forms.sessionDesktop'),
+    gamescope: i18next.t('volui:forms.sessionGamescope'),
+    bigpicture: i18next.t('volui:forms.sessionBigPicture'),
+  };
+  const summary = new Text(
+    i18next.t('volui:forms.platformSummary', {
+      runtime: runtimeLabels[platform.platform],
+      session: sessionLabels[platform.session],
+    }),
+    { variant: 'muted', tag: 'p' },
+  );
+  summary.element.classList.add('vol-display-settings__summary');
+  summary.element.dataset.volPlatform = platform.platform;
+  summary.element.dataset.volSession = platform.session;
+  form.element.append(summary.element);
+
+  disposables.addDestroyables(
+    session,
+    mode,
+    resolution,
+    quality,
+    sessionRow,
+    modeRow,
+    resolutionRow,
+    qualityRow,
+    summary,
+    form,
+  );
+
+  // Oturum değişimi yetenek tablosuna bağlanır: anlamsız satır gizlenir
+  // (devre dışı bırakılmaz — "seçilemeyen" değil "sunulmayan" kontroldür).
+  function applySession(kind: string): void {
+    // Native kabukta gerçek çalışma ortamı da hesaba girer (Android oturumu `desktop` bildirir ama pencere kipi yoktur);
+    // web'deki simülasyon seçicisi yalnız oturum sınıfını değiştirir.
+    const caps = displayCapabilitiesForSession(
+      kind,
+      platform.native ? platform.platform : undefined,
+    );
+    modeRow.element.hidden = !caps.windowMode;
+    resolutionRow.element.hidden = !caps.resolution;
+  }
+  applySession(platform.session);
+
+  // F11, pencere yöneticisi ve başka sekme tercihi değiştirince satırlar gerçeği gösterir.
+  if (live) {
+    disposables.addSubscription(
+      platform.subscribe(() => {
+        const current = platform.displayPreferences;
+        mode.setValue(current.mode);
+        resolution.setValue(current.resolution);
+      }),
+    );
+  }
+  return form.element;
+}
+
+/**
+ * Pasif SegmentedControl: seçim okunur kalır ama değiştirilemez. Platformun
+ * uygulayamadığı bir ayarın o anki gerçek değerini göstermenin desenidir.
+ */
+function buildPassiveSegmentedDemo(disposables: DisposableScope): HTMLElement {
+  const control = new SegmentedControl({
+    options: [
+      { value: 'portrait', label: i18next.t('volui:forms.portrait') },
+      { value: 'landscape', label: i18next.t('volui:forms.landscape') },
+    ],
+    value: 'landscape',
+    disabled: true,
+    ariaLabel: i18next.t('volui:forms.orientation'),
+  });
+  disposables.addDestroyables(control);
+  return control.element;
+}
+
+/** Checkbox'ı ayar listesi içinde gösterir. */
+function buildCheckboxGroupDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-checkbox-group';
+
+  const music = new Checkbox({ label: i18next.t('volui:forms.musicOn'), checked: true });
+  const screenShake = new Checkbox({ label: i18next.t('volui:forms.screenShake'), checked: true });
+  const autoAim = new Checkbox({ label: i18next.t('volui:forms.autoAim'), checked: false });
+  disposables.addDestroyables(music, screenShake, autoAim);
+
+  wrap.appendChild(music.element);
+  wrap.appendChild(screenShake.element);
+  wrap.appendChild(autoAim.element);
+
+  return wrap;
+}
+
+function buildVerticalSliderDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-vertical-sliders';
+
+  const channels = [
+    i18next.t('volui:forms.music'),
+    i18next.t('volui:forms.effects'),
+    i18next.t('volui:forms.sound'),
+  ];
+  for (const channel of channels) {
+    const column = document.createElement('div');
+    column.className = 'vol-showcase-vertical-sliders__column';
+
+    const slider = new Slider({
+      orientation: 'vertical',
+      ariaLabel: channel,
+      min: 0,
+      max: 100,
+      value: 60,
+      length: 160, // vol-showcase-panel-stage'in 200px yükseklik ritmine yakın
+      formatValue: (v) => `${Math.round(v)}`,
+    });
+    column.appendChild(slider.element);
+
+    const label = new Text(channel, { variant: 'muted', tag: 'span' });
+    column.appendChild(label.element);
+    disposables.addDestroyables(slider, label);
+
+    wrap.appendChild(column);
+  }
+
+  return wrap;
+}
+
+/** RangeSlider demosu: düşman seviye aralığı filtresi. */
+function buildRangeSliderDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const hint = new Text(i18next.t('volui:forms.enemyLevelHint'), {
+    variant: 'muted',
+  });
+  disposables.addDestroyables(hint);
+
+  const range = new RangeSlider({
+    label: i18next.t('volui:forms.enemyLevelRange'),
+    min: 1,
+    max: 50,
+    value: { min: 5, max: 30 },
+    formatValue: (v) => i18next.t('volui:forms.enemyLevelValue', { value: v }),
+  });
+  disposables.addDestroyables(range);
+
+  wrap.appendChild(range.element);
+  wrap.appendChild(hint.element);
+
+  return wrap;
+}
+
+/** Otomatik (autoStart + loop) TimerBar varyasyonları: bekleme, buff, yükleme. */
+function buildTimerBarVariationsDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-timer-variations';
+
+  const cooldown = new TimerBar({
+    durationSeconds: 4,
+    mode: 'drain',
+    label: (remaining) => i18next.t('volui:forms.abilityCooldown', { n: remaining }),
+    autoStart: true,
+    loop: true,
+  });
+  disposables.addDestroyables(cooldown);
+
+  const buff = new TimerBar({
+    durationSeconds: 6,
+    mode: 'fill',
+    label: i18next.t('volui:forms.buffDuration'),
+    autoStart: true,
+    loop: true,
+  });
+  disposables.addDestroyables(buff);
+
+  const loading = new TimerBar({
+    durationSeconds: 2.5,
+    mode: 'fill',
+    autoStart: true,
+    loop: true,
+  });
+  disposables.addDestroyables(loading);
+  loading.element.classList.add('vol-timer-bar--thin');
+
+  for (const [caption, timer] of [
+    [i18next.t('volui:forms.cooldownCountdown'), cooldown],
+    [i18next.t('volui:forms.buffFilling'), buff],
+    [i18next.t('volui:forms.loadingThin'), loading],
+  ] as const) {
+    const column = document.createElement('div');
+    column.className = 'vol-showcase-timer-variations__column';
+
+    const label = new Text(caption, { variant: 'muted', tag: 'span' });
+    disposables.addDestroyables(label);
+    column.appendChild(label.element);
+    column.appendChild(timer.element);
+    wrap.appendChild(column);
+  }
+
+  return wrap;
+}
+
+/** TimerBar: sıfırlanabilir dol/boşalt zamanlayıcı. */
+function buildTimerBarDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const timer = new TimerBar({
+    durationSeconds: 8,
+    mode: 'fill',
+    label: (remaining) => i18next.t('volui:forms.abilityReady', { n: remaining }),
+    loop: false,
+  });
+  disposables.addDestroyables(timer);
+  wrap.appendChild(timer.element);
+
+  const controls = document.createElement('div');
+  controls.className = 'vol-showcase-panel-demo__controls';
+
+  const startButton = new Button(i18next.t('volui:forms.start'), {
+    variant: 'primary',
+    onClick: () => timer.start(),
+  });
+  const pauseButton = new Button(i18next.t('volui:forms.pause'), {
+    onClick: () => timer.pause(),
+  });
+  const resetButton = new Button(i18next.t('volui:forms.reset'), {
+    onClick: () => timer.reset(),
+  });
+  disposables.addDestroyables(startButton, pauseButton, resetButton);
+
+  controls.appendChild(startButton.element);
+  controls.appendChild(pauseButton.element);
+  controls.appendChild(resetButton.element);
+  wrap.appendChild(controls);
+
+  return wrap;
+}
+
+/** Palet düzenlemenin iki ucu: kutucuk + hex + hazır renkler. */
+function buildColorPickerDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
+
+  const readout = new Text('#b85518', { variant: 'muted' });
+  const picker = new ColorPicker({
+    label: i18next.t('volui:forms.colorPickerLabel'),
+    value: '#b85518',
+    swatches: ['#b85518', '#246a79', '#565dbe', '#307a57', '#d2a03c', '#b94a4a'],
+    onInput: (value) => readout.setContent(value),
+  });
+  disposables.addDestroyables(picker, readout);
+
+  wrap.appendChild(picker.element);
+  wrap.appendChild(readout.element);
+  return wrap;
+}
+
+/** Aktarım eğrisi: noktaları sürükle, çift tıkla ekle, Alt+tık ile sil. */
+function buildCurveEditorDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
+
+  const readout = new Text('f(0.5) = 0.50', { variant: 'muted' });
+  const curve = new CurveEditor({
+    label: i18next.t('volui:forms.curveEditorLabel'),
+    points: [
+      [0, 0],
+      [0.5, 0.85],
+      [1, 1],
+    ],
+    onInput: () => readout.setContent(`f(0.5) = ${curve.sample(0.5).toFixed(2)}`),
+  });
+  disposables.addDestroyables(curve, readout);
+  readout.setContent(`f(0.5) = ${curve.sample(0.5).toFixed(2)}`);
+
+  wrap.appendChild(curve.element);
+  wrap.appendChild(readout.element);
+  return wrap;
+}
+
+/** Inspector form örneği: etiket + input + açıklama + reset. */
+function buildPropertyFieldDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const defaultValue = i18next.t('volui:forms.playerNameValue');
+  const state = new Text(i18next.t('volui:forms.propertyFieldNoCommit'), { variant: 'muted' });
+  const input = new Input({
+    value: defaultValue,
+    onCommit: (value) => state.setContent(i18next.t('volui:forms.propertyFieldCommit', { value })),
+  });
+  const field = new PropertyField({
+    label: i18next.t('volui:forms.playerName'),
+    control: input,
+    description: i18next.t('volui:forms.propertyFieldDescription'),
+    resetLabel: i18next.t('volui:forms.reset'),
+    onReset: () => {
+      input.setValue(defaultValue);
+      state.setContent(i18next.t('volui:forms.propertyFieldNoCommit'));
+    },
+  });
+  disposables.addDestroyables(input, field, state);
+
+  wrap.appendChild(field.element);
+  wrap.appendChild(state.element);
+  return wrap;
+}
+
+/** Tek/çoklu seçim ve aksiyon düğmesi destekli araç çubuğu. */
+function buildToolbarDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
+
+  const toolLabels: Record<string, string> = {
+    pencil: i18next.t('volui:forms.pencil'),
+    eraser: i18next.t('volui:forms.eraser'),
+    eyedropper: i18next.t('volui:forms.eyedropper'),
+    trash: i18next.t('volui:forms.trash'),
+  };
+
+  const state = new Text(i18next.t('volui:forms.toolbarSelected', { value: toolLabels.pencil }), {
+    variant: 'muted',
+  });
+  const toolbar = new Toolbar({
+    ariaLabel: i18next.t('volui:forms.toolbar'),
+    selectionMode: 'single',
+    value: 'pencil',
+    items: [
+      { id: 'pencil', icon: 'pencil', label: toolLabels.pencil },
+      { id: 'eraser', icon: 'eraser', label: toolLabels.eraser },
+      { id: 'eyedropper', icon: 'eyedropper', label: toolLabels.eyedropper },
+      {
+        id: 'trash',
+        icon: 'trash',
+        label: toolLabels.trash,
+        toggle: false,
+        onPress: () =>
+          state.setContent(i18next.t('volui:forms.toolbarAction', { action: toolLabels.trash })),
+      },
+    ],
+    onChange: (value) => {
+      if (value === undefined || typeof value !== 'string') {
+        state.setContent(i18next.t('volui:forms.toolbarIdle'));
+      } else {
+        state.setContent(
+          i18next.t('volui:forms.toolbarSelected', { value: toolLabels[value] ?? value }),
+        );
+      }
+    },
+  });
+  disposables.addDestroyables(toolbar, state);
+
+  wrap.appendChild(toolbar.element);
+  wrap.appendChild(state.element);
+  return wrap;
+}
+
+/** Kol kipinde metin alanının açtığı ekran klavyesi; sonuç ve iptal ayrı gösterilir. */
+function buildOnScreenKeyboardDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
+
+  let value = i18next.t('volui:forms.playerNameValue');
+  const state = new Text(i18next.t('volui:forms.onScreenKeyboardValue', { value }), {
+    variant: 'muted',
+  });
+  const open = new Button(i18next.t('volui:forms.onScreenKeyboardOpen'), {
+    onClick: () => {
+      void OnScreenKeyboard.open({ value, maxLength: 16 }).then((result) => {
+        if (result.canceled) {
+          state.setContent(i18next.t('volui:forms.onScreenKeyboardCanceled', { value }));
+          return;
+        }
+        value = result.value;
+        state.setContent(i18next.t('volui:forms.onScreenKeyboardValue', { value }));
+      });
+    },
+  });
+  disposables.addDestroyables(open, state);
+
+  wrap.appendChild(open.element);
+  wrap.appendChild(state.element);
+  return wrap;
+}
+
+/** Düzenleme menüsü (UI-11.2): normal, salt okunur ve parola alanı; menü kuralları alan durumuna göre değişir. */
+function buildEditMenuDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const hint = new Text(i18next.t('volui:forms.editMenuHint'), { variant: 'muted' });
+  const normal = new Input({
+    value: i18next.t('volui:forms.editMenuNormalValue'),
+    ariaLabel: i18next.t('volui:forms.editMenuNormal'),
+  });
+  const readOnly = new Input({
+    value: i18next.t('volui:forms.editMenuReadOnlyValue'),
+    ariaLabel: i18next.t('volui:forms.editMenuReadOnly'),
+    readOnly: true,
+  });
+  const password = new Input({
+    value: 'secret-123',
+    type: 'password',
+    ariaLabel: i18next.t('volui:forms.editMenuPassword'),
+  });
+  disposables.addDestroyables(hint, normal, readOnly, password);
+
+  wrap.append(hint.element, normal.element, readOnly.element, password.element);
+  return wrap;
+}
+
+export function buildFormsTab(
+  uiRootElement: HTMLElement,
+  platform: PlatformView,
+): {
+  element: HTMLElement;
+  destroy: () => void;
+} {
+  const container = document.createElement('div');
+  container.className = 'vol-showcase-section';
+  const disposables = new DisposableScope();
+
+  const nameInput = new Input({ placeholder: i18next.t('volui:forms.playerNamePlaceholder') });
+  disposables.addDestroyables(nameInput);
+
+  const volumeSlider = new Slider({
+    label: i18next.t('volui:forms.volumeLabel'),
+    min: 0,
+    max: 100,
+    value: 70,
+    formatValue: (v) => `${Math.round(v)}%`,
+  });
+  disposables.addDestroyables(volumeSlider);
+
+  const difficultySelect = new Select({
+    options: [
+      { value: 'easy', label: i18next.t('volui:forms.easy') },
+      { value: 'normal', label: i18next.t('volui:forms.normal') },
+      { value: 'hard', label: i18next.t('volui:forms.hard') },
+      { value: 'nightmare', label: i18next.t('volui:forms.nightmare'), tone: 'danger' },
+    ],
+    value: 'normal',
+    placeholder: i18next.t('volui:forms.difficultyPlaceholder'),
+    container: uiRootElement,
+  });
+  disposables.addDestroyables(difficultySelect);
+
+  const gameModeRadio = new RadioGroup({
+    options: [
+      { value: 'campaign', label: i18next.t('volui:forms.campaign') },
+      { value: 'endless', label: i18next.t('volui:forms.endlessWave') },
+      { value: 'coop', label: i18next.t('volui:forms.coop') },
+    ],
+    value: 'campaign',
+  });
+  disposables.addDestroyables(gameModeRadio);
+
+  const qualitySegmented = new SegmentedControl({
+    options: [
+      { value: 'low', label: i18next.t('volui:forms.low') },
+      { value: 'medium', label: i18next.t('volui:forms.medium') },
+      { value: 'high', label: i18next.t('volui:forms.high') },
+    ],
+    value: 'medium',
+  });
+  disposables.addDestroyables(qualitySegmented);
+
+  const unitStepper = new NumberStepper({
+    label: i18next.t('volui:forms.productionQuantity'),
+    min: 1,
+    max: 20,
+    value: 5,
+  });
+  disposables.addDestroyables(unitStepper);
+
+  const noteTextArea = new TextArea({
+    placeholder: i18next.t('volui:forms.serverModPlaceholder'),
+    rows: 4,
+    maxLength: 200,
+  });
+  disposables.addDestroyables(noteTextArea);
+
+  const cards = [
+    card(i18next.t('volui:forms.input'), nameInput.element),
+    card(i18next.t('volui:forms.textArea'), noteTextArea.element),
+    card(i18next.t('volui:forms.slider'), volumeSlider.element),
+    card(i18next.t('volui:forms.sliderVertical'), buildVerticalSliderDemo(disposables)),
+    card(i18next.t('volui:forms.checkbox'), buildCheckboxGroupDemo(disposables)),
+    card(i18next.t('volui:forms.select'), difficultySelect.element),
+    card(i18next.t('volui:forms.radioGroup'), gameModeRadio.element),
+    card(i18next.t('volui:forms.segmentedControl'), qualitySegmented.element),
+    card(i18next.t('volui:forms.segmentedControlPassive'), buildPassiveSegmentedDemo(disposables)),
+    card(i18next.t('volui:forms.settingsForm'), buildSettingsFormDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:forms.settingsModel'), buildSettingsModelDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:forms.audioSettings'), buildAudioSettingsDemo(disposables), { span: 2 }),
+    card(
+      i18next.t('volui:forms.displaySettings'),
+      buildDisplaySettingsDemo(disposables, platform),
+      {
+        span: 2,
+      },
+    ),
+    card(i18next.t('volui:forms.numberStepper'), unitStepper.element, { center: true }),
+    card(i18next.t('volui:forms.sixDigits'), buildSixDigitDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:forms.timerBarVariations'), buildTimerBarVariationsDemo(disposables)),
+    card(i18next.t('volui:forms.timerBar'), buildTimerBarDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:forms.rangeSlider'), buildRangeSliderDemo(disposables), { span: 4 }),
+    card(i18next.t('volui:forms.colorPicker'), buildColorPickerDemo(disposables), { center: true }),
+    card(i18next.t('volui:forms.curveEditor'), buildCurveEditorDemo(disposables), { center: true }),
+    card(i18next.t('volui:forms.propertyField'), buildPropertyFieldDemo(disposables)),
+    card(i18next.t('volui:forms.toolbar'), buildToolbarDemo(disposables)),
+    card(i18next.t('volui:forms.onScreenKeyboard'), buildOnScreenKeyboardDemo(disposables)),
+    card(i18next.t('volui:forms.editMenu'), buildEditMenuDemo(disposables)),
+  ];
+
+  container.appendChild(cardGrid(cards));
+
+  return {
+    element: container,
+    destroy: () => disposables.dispose(),
+  };
+}

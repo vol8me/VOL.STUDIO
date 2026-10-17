@@ -1,0 +1,447 @@
+import { describe, it, expect } from 'vitest';
+import { LegGait, type LegGaitLeg } from '../../src/rig/LegGait';
+
+const CONFIG = {
+  stepTriggerPx: 30,
+  stepDurationMs: 120,
+  stepLeadSeconds: 0.12,
+};
+
+/** Dört bacak, iki alternating grup. */
+const LEGS: LegGaitLeg[] = [
+  { homeX: 60, homeY: -40, group: 0 },
+  { homeX: 60, homeY: 40, group: 1 },
+  { homeX: -60, homeY: -40, group: 1 },
+  { homeX: -60, homeY: 40, group: 0 },
+];
+
+const DT = 16;
+
+function driveForward(gait: LegGait, frames: number, speedPxPerSec = 200) {
+  let x = 0;
+  for (let i = 0; i < frames; i++) {
+    x += (speedPxPerSec * DT) / 1000;
+    gait.update(x, 0, 0, speedPxPerSec, 0, DT);
+  }
+  return x;
+}
+
+describe('LegGait', () => {
+  it('prototipteki bacak geometrisi kaybolmaz; sonradan giriş mutasyonu iç durumu değiştirmez', () => {
+    const inherited = LEGS.map((leg) => Object.create(leg) as LegGaitLeg);
+    const gait = new LegGait(inherited, CONFIG);
+    inherited[0].homeX = 999;
+    gait.update(0, 0, 0, 0, 0, DT);
+    expect(gait.homeX(0)).toBe(LEGS[0].homeX);
+    expect(gait.footY(0)).toBe(LEGS[0].homeY);
+  });
+
+  it.each(['homeX', 'homeY', 'group'] as const)(
+    'sonlu olmayan %s ilk adım beklenmeden reddedilir',
+    (key) => {
+      for (const value of [NaN, Infinity, -Infinity])
+        expect(() => new LegGait([{ ...LEGS[0], [key]: value }], CONFIG)).toThrow(key);
+    },
+  );
+  it('prototipteki yapılandırma aynı ayak/adım davranışını üretir', () => {
+    const a = new LegGait(LEGS, Object.create(CONFIG) as typeof CONFIG);
+    const b = new LegGait(LEGS, CONFIG);
+    for (let i = 0; i < 40; i++) {
+      a.update(i * 4, 0, 0, 250, 0, DT);
+      b.update(i * 4, 0, 0, 250, 0, DT);
+      for (let leg = 0; leg < LEGS.length; leg++) {
+        expect(a.footX(leg)).toBe(b.footX(leg));
+        expect(a.isStepping(leg)).toBe(b.isStepping(leg));
+      }
+    }
+  });
+  it('geçersiz bacak indeksi tüm okumalarda RangeError verir ve yürüyüşü bozmaz', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    const read = [
+      (index: number) => gait.footX(index),
+      (index: number) => gait.footY(index),
+      (index: number) => gait.lift(index),
+      (index: number) => gait.isStepping(index),
+      (index: number) => gait.justPlanted(index),
+      (index: number) => gait.homeX(index),
+      (index: number) => gait.homeY(index),
+      (index: number) => gait.strain(index),
+    ];
+    for (const index of [-1, LEGS.length, 0.5, NaN, Infinity]) {
+      for (const getter of read) expect(() => getter(index)).toThrow(RangeError);
+    }
+    gait.update(0, 0, 0, 0, 0, DT);
+    expect(gait.footX(0)).toBe(LEGS[0].homeX);
+    expect(gait.footY(0)).toBe(LEGS[0].homeY);
+  });
+
+  it('bacaksız kurulum reddedilir', () => {
+    expect(() => new LegGait([], CONFIG)).toThrow(/en az bir bacak/);
+  });
+
+  it('gövde durduğunda ayaklar SABİT kalır, adım atılmaz', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    gait.update(0, 0, 0, 0, 0, DT);
+    const before = LEGS.map((_, i) => [gait.footX(i), gait.footY(i)]);
+
+    for (let i = 0; i < 120; i++) gait.update(0, 0, 0, 0, 0, DT);
+
+    LEGS.forEach((_, i) => {
+      expect(gait.footX(i)).toBeCloseTo(before[i][0], 6);
+      expect(gait.footY(i)).toBeCloseTo(before[i][1], 6);
+      expect(gait.isStepping(i)).toBe(false);
+    });
+  });
+
+  it('gövde hareket ederken ayak DÜNYADA sabit kalır, sonra adım atar', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    gait.update(0, 0, 0, 0, 0, DT);
+    const plantedX = gait.footX(0);
+
+    // Adım eşiğinin altında kalacak kadar kısa bir hareket: ayak kaymamalı.
+    gait.update(10, 0, 0, 200, 0, DT);
+    expect(gait.footX(0)).toBeCloseTo(plantedX, 6);
+
+    // Eşiği aşacak kadar ilerle: adım başlamalı ve ayak İLERİ taşınmalı.
+    driveForward(gait, 40);
+    expect(gait.footX(0)).toBeGreaterThan(plantedX);
+  });
+
+  it('karşı gruplar aynı anda adım atmaz — her an yerde ayak kalır', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    gait.update(0, 0, 0, 0, 0, DT);
+
+    let x = 0;
+    for (let frame = 0; frame < 400; frame++) {
+      x += (220 * DT) / 1000;
+      gait.update(x, 0, 0, 220, 0, DT);
+
+      const groupsStepping = new Set<number>();
+      LEGS.forEach((leg, i) => {
+        if (gait.isStepping(i)) groupsStepping.add(leg.group);
+      });
+      expect(groupsStepping.size).toBeLessThanOrEqual(1);
+
+      const planted = LEGS.filter((_, i) => !gait.isStepping(i)).length;
+      expect(planted).toBeGreaterThan(0);
+    }
+  });
+
+  it('adım ortasında ayak kalkar, adım bitince yere iner', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    gait.update(0, 0, 0, 0, 0, DT);
+
+    let sawLift = false;
+    let x = 0;
+    for (let frame = 0; frame < 200; frame++) {
+      x += (220 * DT) / 1000;
+      gait.update(x, 0, 0, 220, 0, DT);
+      for (let i = 0; i < LEGS.length; i++) {
+        if (gait.isStepping(i) && gait.lift(i) > 0.5) sawLift = true;
+        if (!gait.isStepping(i)) expect(gait.lift(i)).toBe(0);
+      }
+    }
+    expect(sawLift).toBe(true);
+  });
+
+  it('adım hedefi hız yönünde İLERİ konur — ayak gideceği yere basar', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    gait.update(0, 0, 0, 0, 0, DT);
+    const x = driveForward(gait, 200, 240);
+
+    // Yürüyüş sonunda her ayak gövdeyle birlikte taşınmış olmalı.
+    for (let i = 0; i < LEGS.length; i++) {
+      expect(gait.footX(i)).toBeGreaterThan(x - 150);
+      expect(gait.footX(i)).toBeLessThan(x + 150);
+    }
+  });
+
+  it('reset ayakları gövdenin altına adımsız yerleştirir', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    driveForward(gait, 100);
+    gait.reset(500, 300, 0);
+
+    for (let i = 0; i < LEGS.length; i++) {
+      expect(gait.isStepping(i)).toBe(false);
+      expect(gait.footX(i)).toBeCloseTo(500 + LEGS[i].homeX, 6);
+      expect(gait.footY(i)).toBeCloseTo(300 + LEGS[i].homeY, 6);
+    }
+  });
+
+  it('gövde dönünce ev konumları da döner', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    gait.reset(0, 0, Math.PI / 2);
+    // homeX=60,homeY=-40 → 90° dönüşte (40, 60)
+    expect(gait.footX(0)).toBeCloseTo(40, 4);
+    expect(gait.footY(0)).toBeCloseTo(60, 4);
+  });
+
+  it('canlı tempo ayarı basılı ayakları sıfırlamadan adımı hızlandırır', () => {
+    const normal = new LegGait(LEGS, CONFIG);
+    const fast = new LegGait(LEGS, CONFIG);
+    normal.reset(0, 0, 0);
+    fast.reset(0, 0, 0);
+    fast.setStepTuning({ stepTriggerPx: 30, stepDurationMs: 60 });
+
+    normal.update(40, 0, 0, 200, 0, 40);
+    fast.update(40, 0, 0, 200, 0, 40);
+    const plantedBefore = fast.footX(0);
+
+    normal.update(48, 0, 0, 200, 0, 40);
+    fast.update(48, 0, 0, 200, 0, 40);
+
+    expect(fast.footX(0)).toBeGreaterThan(plantedBefore);
+    expect(fast.footX(0)).toBeGreaterThan(normal.footX(0));
+  });
+
+  it('geçersiz canlı tempo ayarını reddeder', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    expect(() => gait.setStepTuning({ stepTriggerPx: 0, stepDurationMs: 100 })).toThrow(/pozitif/);
+    expect(() => gait.setStepTuning({ stepTriggerPx: 30, stepDurationMs: NaN })).toThrow(/sonlu/);
+  });
+});
+
+describe('LegGait — sıra disiplini ve canlı duruş', () => {
+  /** Bir grup kilidi süresiz tutamaz: bekleyen grup her zaman en gergindir. */
+  it('gruplar SIRAYLA adım atar, hiçbir grup açlığa düşmez', () => {
+    const legs: LegGaitLeg[] = [
+      { homeX: 60, homeY: -40, group: 0 },
+      { homeX: 20, homeY: -40, group: 0 },
+      { homeX: -60, homeY: -40, group: 1 },
+      { homeX: -20, homeY: -40, group: 1 },
+    ];
+    const gait = new LegGait(legs, CONFIG);
+    gait.reset(0, 0, 0);
+
+    const steppedInGroup = [0, 0];
+    let x = 0;
+    for (let frame = 0; frame < 600; frame++) {
+      x += (220 * DT) / 1000;
+      gait.update(x, 0, 0, 220, 0, DT);
+      // Aynı anda YALNIZ bir grup havada olabilir.
+      const airborne = legs.map((_, i) => gait.isStepping(i));
+      const groups = new Set(legs.filter((_, i) => airborne[i]).map((leg) => leg.group));
+      expect(groups.size).toBeLessThanOrEqual(1);
+      for (let i = 0; i < legs.length; i++) {
+        if (gait.justPlanted(i)) steppedInGroup[legs[i].group]++;
+      }
+    }
+
+    expect(steppedInGroup[0]).toBeGreaterThan(4);
+    expect(steppedInGroup[1]).toBeGreaterThan(4);
+    // Sıra dönüşümlü olduğu için iki grup birbirine yakın sayıda adım atar.
+    expect(Math.abs(steppedInGroup[0] - steppedInGroup[1])).toBeLessThanOrEqual(4);
+  });
+
+  it('acil eşik, sırasını bekleyen ama aşırı gerilmiş bacağı serbest bırakır', () => {
+    const legs: LegGaitLeg[] = [
+      { homeX: 60, homeY: 0, group: 0 },
+      { homeX: -60, homeY: 0, group: 1 },
+    ];
+    const patient = new LegGait(legs, { ...CONFIG, stepDurationMs: 4000 });
+    const urgent = new LegGait(legs, { ...CONFIG, stepDurationMs: 4000, maxStrainPx: 60 });
+    patient.reset(0, 0, 0);
+    urgent.reset(0, 0, 0);
+
+    let x = 0;
+    for (let frame = 0; frame < 40; frame++) {
+      x += (900 * DT) / 1000;
+      patient.update(x, 0, 0, 900, 0, DT);
+      urgent.update(x, 0, 0, 900, 0, DT);
+    }
+
+    // Sıra sahibi 4 sn'lik adımını sürdürürken diğeri yerde SÜRÜKLENİR;
+    // acil eşik onu kaldırır.
+    expect(patient.steppingCount).toBe(1);
+    expect(urgent.steppingCount).toBe(2);
+  });
+
+  it('canlı tempo ayarı acil eşiği de indirir: gevşek eşikte beklenen bacak sıkı eşikte adım atar', () => {
+    const legs: LegGaitLeg[] = [
+      { homeX: 60, homeY: 0, group: 0 },
+      { homeX: -60, homeY: 0, group: 1 },
+    ];
+    const loose = new LegGait(legs, { ...CONFIG, stepDurationMs: 4000, maxStrainPx: 5000 });
+    const tight = new LegGait(legs, { ...CONFIG, stepDurationMs: 4000, maxStrainPx: 5000 });
+    loose.reset(0, 0, 0);
+    tight.reset(0, 0, 0);
+    tight.setStepTuning({
+      stepTriggerPx: CONFIG.stepTriggerPx,
+      stepDurationMs: 4000,
+      maxStrainPx: 60,
+    });
+
+    let x = 0;
+    for (let frame = 0; frame < 40; frame++) {
+      x += (900 * DT) / 1000;
+      loose.update(x, 0, 0, 900, 0, DT);
+      tight.update(x, 0, 0, 900, 0, DT);
+    }
+
+    expect(loose.steppingCount).toBe(1);
+    expect(tight.steppingCount).toBe(2);
+    expect(() =>
+      tight.setStepTuning({ stepTriggerPx: 30, stepDurationMs: 60, maxStrainPx: NaN }),
+    ).toThrow(/sonlu/);
+  });
+
+  it('setLegHome duruşu canlı değiştirir ama BASILI ayağı kaydırmaz', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    gait.reset(0, 0, 0);
+    const plantedX = gait.footX(0);
+    const plantedY = gait.footY(0);
+
+    gait.setLegHome(0, 10, -10);
+    gait.update(0, 0, 0, 0, 0, DT);
+
+    expect(gait.footX(0)).toBe(plantedX);
+    expect(gait.footY(0)).toBe(plantedY);
+    // Ev yaklaştığı için gerginlik artar; eşiği aşınca adım tetiklenir.
+    expect(gait.strain(0)).toBeGreaterThan(0);
+    expect(() => gait.setLegHome(99, 0, 0)).toThrow(/geçersiz bacak indeksi/);
+  });
+
+  it('justPlanted yalnız adımın bittiği KAREDE doğrudur', () => {
+    const gait = new LegGait(LEGS, CONFIG);
+    gait.reset(0, 0, 0);
+
+    let plantedFrames = 0;
+    let x = 0;
+    for (let frame = 0; frame < 200; frame++) {
+      x += (200 * DT) / 1000;
+      gait.update(x, 0, 0, 200, 0, DT);
+      for (let i = 0; i < gait.legCount; i++) {
+        if (gait.justPlanted(i)) {
+          plantedFrames++;
+          // Basan ayak o karede havada DEĞİLDİR.
+          expect(gait.isStepping(i)).toBe(false);
+          expect(gait.lift(i)).toBe(0);
+        }
+      }
+    }
+
+    expect(plantedFrames).toBeGreaterThan(3);
+  });
+
+  it('kısa adımlı bacak KENDİ eşiğiyle tetiklenir, uzun bacağınkiyle değil', () => {
+    const legs: LegGaitLeg[] = [
+      { homeX: 60, homeY: 0, group: 0 },
+      { homeX: -60, homeY: 0, group: 0, strideScale: 0.4 },
+    ];
+    const gait = new LegGait(legs, CONFIG);
+    gait.reset(0, 0, 0);
+
+    // Eşiğin %50'si kadar ilerle: uzun bacak beklemeli, kısa bacak (eşiği
+    // 12 px) çoktan adımını atmış olmalı.
+    let x = 0;
+    const target = CONFIG.stepTriggerPx * 0.5;
+    while (x < target) {
+      x = Math.min(target, x + 1);
+      gait.update(x, 0, 0, 60, 0, DT);
+    }
+
+    expect(gait.isStepping(0)).toBe(false);
+    expect(gait.isStepping(1)).toBe(true);
+  });
+
+  it('acil eşik adım ölçeğiyle ÇARPILMAZ — kısa bacak sırayı delmez', () => {
+    const legs: LegGaitLeg[] = [
+      { homeX: 60, homeY: 0, group: 0 },
+      { homeX: -60, homeY: 0, group: 1, strideScale: 0.3 },
+    ];
+    const gait = new LegGait(legs, { ...CONFIG, stepDurationMs: 4000, maxStrainPx: 60 });
+    gait.reset(0, 0, 0);
+
+    // Uzun bacağın evini uzağa taşıyıp sırayı ONA verdir; adımı 4 sn sürer.
+    gait.setLegHome(0, 260, 0);
+    gait.update(0, 0, 0, 0, 0, DT);
+    expect(gait.isStepping(0)).toBe(true);
+
+    // ~40 px ilerlenir: kısa bacağın gerginliği ölçekli eşiği (60 × 0.3 = 18)
+    // aşar ama ölçeksiz eşiğin (60) altında kalır.
+    let x = 0;
+    for (let i = 0; i < 13; i++) {
+      x += (200 * DT) / 1000;
+      gait.update(x, 0, 0, 200, 0, DT);
+    }
+
+    expect(gait.strain(1)).toBeGreaterThan(18);
+    expect(gait.strain(1)).toBeLessThan(60);
+    // Ölçeklenseydi kısa bacak sırayı deler ve gövde desteksiz kalırdı.
+    expect(gait.isStepping(1)).toBe(false);
+    expect(gait.steppingCount).toBe(1);
+  });
+
+  it('geçersiz adım ölçeği reddedilir', () => {
+    expect(() => new LegGait([{ homeX: 0, homeY: 0, group: 0, strideScale: 0 }], CONFIG)).toThrow(
+      /strideScale/,
+    );
+    expect(
+      () => new LegGait([{ homeX: 0, homeY: 0, group: 0, strideScale: Number.NaN }], CONFIG),
+    ).toThrow(/strideScale/);
+  });
+
+  it('bacak listesini kopyalar: çağıranın dizisini değiştirmek gaiti bozmaz', () => {
+    const source: LegGaitLeg[] = [{ homeX: 30, homeY: 0, group: 0 }];
+    const gait = new LegGait(source, CONFIG);
+    gait.reset(0, 0, 0);
+
+    source[0].homeX = 5000;
+    gait.update(0, 0, 0, 0, 0, DT);
+
+    expect(gait.strain(0)).toBeLessThan(1);
+  });
+  describe('turnWindow', () => {
+    /** Her grupta bir yakın, bir uzak bacak: yavaş dönüşte eşik anları adım süresinden sık dizilir. */
+    const RING: LegGaitLeg[] = [
+      { homeX: 60, homeY: 0, group: 0 },
+      { homeX: 0, homeY: 80, group: 0 },
+      { homeX: -60, homeY: 0, group: 1 },
+      { homeX: 0, homeY: -80, group: 1 },
+    ];
+    const RING_CONFIG = {
+      stepTriggerPx: 10,
+      stepDurationMs: 200,
+      stepLeadSeconds: 0,
+      maxStrainPx: 40,
+    };
+
+    /** Gövdeyi yerinde `rate` rad/s döndürür; en büyük bekleme gerginliğini ve acil kare sayısını döner. */
+    function spin(config: typeof RING_CONFIG & { turnWindow?: number }, rate: number) {
+      const gait = new LegGait(RING, config);
+      gait.reset(0, 0, 0);
+      let angle = 0;
+      let worstStrain = 0;
+      let emergencyFrames = 0;
+      const stepsPerGroup = [0, 0];
+      for (let frame = 0; frame < 600; frame++) {
+        angle += (rate * DT) / 1000;
+        gait.update(0, 0, angle, 0, 0, DT);
+        if (gait.emergencySteppingCount > 0) emergencyFrames++;
+        RING.forEach((leg, i) => {
+          worstStrain = Math.max(worstStrain, gait.strain(i));
+          if (gait.justPlanted(i)) stepsPerGroup[leg.group]++;
+        });
+      }
+      return { worstStrain, emergencyFrames, stepsPerGroup };
+    }
+
+    it('turnWindow olmadan yavaş dönüş zincirlenir: karşı grup aç kalır ve acil rejime düşer', () => {
+      const result = spin(RING_CONFIG, 0.6);
+      expect(result.emergencyFrames).toBeGreaterThan(0);
+    });
+
+    it('turnWindow ile sıra devredilir: iki grup dönüşümlü adım atar, acil rejim gerekmez', () => {
+      const result = spin({ ...RING_CONFIG, turnWindow: 0.4 }, 0.6);
+      expect(result.emergencyFrames).toBe(0);
+      expect(result.stepsPerGroup[0]).toBeGreaterThan(5);
+      expect(result.stepsPerGroup[1]).toBeGreaterThan(5);
+      expect(result.worstStrain).toBeLessThan(RING_CONFIG.maxStrainPx);
+    });
+
+    it('geçersiz pencere reddedilir', () => {
+      expect(() => new LegGait(LEGS, { ...CONFIG, turnWindow: 0 })).toThrow(RangeError);
+      expect(() => new LegGait(LEGS, { ...CONFIG, turnWindow: 1.5 })).toThrow(RangeError);
+    });
+  });
+});

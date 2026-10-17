@@ -1,4 +1,6 @@
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
+import { isComposingKey, setEnterKeyHint } from '../textEntry/ime';
+import { signalOverlay } from './overlaySignal';
 
 export interface CommandItem {
   id: string;
@@ -104,6 +106,8 @@ export class CommandPalette {
     this.input.setAttribute('role', 'combobox');
     this.input.setAttribute('aria-expanded', 'true');
     this.input.setAttribute('aria-autocomplete', 'list');
+    // Enter seçili komutu çalıştırır: Android klavyesi "Git" göstermeli (ipucu yoksa "Sonraki" çıkar ve Enter gelmez).
+    setEnterKeyHint(this.input, 'go');
     inputRow.appendChild(this.input);
 
     this.panel.appendChild(inputRow);
@@ -126,7 +130,8 @@ export class CommandPalette {
 
     // Odak input'tan kayarsa diye Escape'i document seviyesinde de yakalar.
     this.boundGlobalEscape = (event) => {
-      if (event.key === 'Escape' && this.isOpen()) this.close();
+      // IME kompozisyonunda Escape adayı iptal eder; paleti kapatmaz.
+      if (event.key === 'Escape' && !isComposingKey(event) && this.isOpen()) this.close();
     };
 
     i18next.on('languageChanged', this.onLanguageChanged);
@@ -147,6 +152,7 @@ export class CommandPalette {
   }
 
   open(): void {
+    if (this.isOpen()) return;
     this.previouslyFocused = document.activeElement as HTMLElement | null;
     this.element.classList.add('vol-command-palette--visible');
     this.element.inert = false;
@@ -155,12 +161,15 @@ export class CommandPalette {
     this.applyFilter();
     document.addEventListener('keydown', this.boundGlobalEscape);
     this.input.focus();
+    signalOverlay('open', 'CommandPalette', this.previouslyFocused);
   }
 
-  close(): void {
+  close(silent = false): void {
+    const wasOpen = this.isOpen();
     this.element.classList.remove('vol-command-palette--visible');
     this.element.inert = true;
     document.removeEventListener('keydown', this.boundGlobalEscape);
+    if (wasOpen && !silent) signalOverlay('close', 'CommandPalette', this.previouslyFocused);
     this.previouslyFocused?.focus();
     this.onCloseHandler?.();
   }
@@ -178,6 +187,8 @@ export class CommandPalette {
   }
 
   private handleKeydown(event: KeyboardEvent): void {
+    // Kompozisyon sürerken Enter/Escape/oklar IME'nindir (aday seçme/iptal/gezinme); komut çalıştırmaz, paleti kapatmaz.
+    if (isComposingKey(event)) return;
     if (event.key === 'Escape') {
       event.preventDefault();
       this.close();
@@ -246,9 +257,10 @@ export class CommandPalette {
 
     if (this.filtered.length === 0) {
       const query = this.input.value.trim();
-      const text = this.noMatchText !== undefined
-        ? this.noMatchText.replace('{query}', query)
-        : i18next.t('core:commandPalette.noMatch', { query });
+      const text =
+        this.noMatchText !== undefined
+          ? this.noMatchText.replace('{query}', query)
+          : i18next.t('core:commandPalette.noMatch', { query });
       this.renderEmptyState(text);
       return;
     }
@@ -376,7 +388,8 @@ export class CommandPalette {
   }
 
   private selectItem(item: CommandItem): void {
-    this.close();
+    // Seçilen komutun kendi sesi vardır (satır tıklaması); kapanış sesi çiftlenmez.
+    this.close(true);
     item.onSelect();
   }
 }

@@ -1,0 +1,6 @@
+import type resources from './tr.json';
+declare module 'i18next' {
+  interface ResourceNamespaceMap {
+    {{NAMESPACE}}: typeof resources;
+  }
+}

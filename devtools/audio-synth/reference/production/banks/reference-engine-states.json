@@ -1,0 +1,226 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "reference-engine-states",
+    "hash": "sha256:3f6908b78d2f6300c3e48b22eddaa469800066415a26e1e2c6761d8ca4332647",
+    "path": "devtools/audio-synth/records/families/reference-engine-states/family.json",
+    "seed": 7,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/audio-synth",
+  "quality": {
+    "hash": "sha256:c9e5c7473726571f7e2e7e5a7c9f68a2e8d514a33b72ed60e99b994077ac8379",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/reference-engine-states/quality.json"
+  },
+  "roleAxes": {
+    "energy": [
+      "high",
+      "idle",
+      "normal"
+    ],
+    "integrity": [
+      "damaged",
+      "intact"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 29011,
+        "encodedHash": "sha256:78093ff6ada1c8ccbfd87d3853f721ff6923ce3cc19e5c7f5ea9bbc9836e85fe",
+        "path": "reference/production/assets/sfx/families/reference-engine-states/high.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 2,
+        "centroidHz": 433.1745014849429,
+        "pitchHz": 109.99964958568468
+      },
+      "durationSeconds": 2,
+      "key": "high",
+      "loudness": {
+        "integratedLufs": -13.627485324093852,
+        "maxMomentaryLufs": -13.53509150292251,
+        "truePeakDbtp": -2.9165331518144866
+      },
+      "manifest": {
+        "hash": "sha256:7fe6655cf0b191cd04a0031978493ef621a9fe45fef725a287359dd9f9ee8356",
+        "path": "reference/production/manifests/sfx/families/reference-engine-states/high.json"
+      },
+      "pcmHash": "sha256:a1800c1794e3b8761a79c2ab72154df35dd5cb84963c1838a3d646a732acb8ab",
+      "programHash": "sha256:68e65609eb65ebc056d85574e4574df52b03ceac5fb010d1f1ada7484a32b028",
+      "roles": {
+        "energy": "high",
+        "integrity": "intact"
+      },
+      "tags": [],
+      "variantId": "v-257ce56c1f7c802e"
+    },
+    {
+      "asset": {
+        "bytes": 29852,
+        "encodedHash": "sha256:cffa2d446746f403bbfcf7a4040ff515d73ad9718855ccc2b26e4de577a3f7e3",
+        "path": "reference/production/assets/sfx/families/reference-engine-states/high-damaged.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 2,
+        "centroidHz": 410.76106540936905,
+        "pitchHz": 53.54962475534254
+      },
+      "durationSeconds": 2,
+      "key": "high-damaged",
+      "loudness": {
+        "integratedLufs": -14.339311980196372,
+        "maxMomentaryLufs": -14.206396493030786,
+        "truePeakDbtp": -3.018373489443909
+      },
+      "manifest": {
+        "hash": "sha256:293c87bfe060ce3aa1ed2f46608d901b93558b5636198ae328c16b0b683fb089",
+        "path": "reference/production/manifests/sfx/families/reference-engine-states/high-damaged.json"
+      },
+      "pcmHash": "sha256:30b35562d595dda8c4d6ea5dcb57a9619a5f43ee27ee35d65cacb9763c69878e",
+      "programHash": "sha256:ca7f7c5839b419ac15bd98eefacd2946ceb4287416177e2d866a6c456adc8556",
+      "roles": {
+        "energy": "high",
+        "integrity": "damaged"
+      },
+      "tags": [],
+      "variantId": "v-e541ccc9c378c7a2"
+    },
+    {
+      "asset": {
+        "bytes": 28458,
+        "encodedHash": "sha256:14d4b86ad55a40a366d55fdae590cb59aad2b84fa88749e8dbebb9221019bb59",
+        "path": "reference/production/assets/sfx/families/reference-engine-states/idle.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 2,
+        "centroidHz": 99.96595511506081,
+        "pitchHz": null
+      },
+      "durationSeconds": 2,
+      "key": "idle",
+      "loudness": {
+        "integratedLufs": -16.967604360437893,
+        "maxMomentaryLufs": -16.644345437973083,
+        "truePeakDbtp": -2.865951454567451
+      },
+      "manifest": {
+        "hash": "sha256:3595cf9c99c74c090efc08f8f77614e60848ba76ef512e7536bad0607f2640e2",
+        "path": "reference/production/manifests/sfx/families/reference-engine-states/idle.json"
+      },
+      "pcmHash": "sha256:1473ce38dbf3aa1e0cfb57d65d22da56ac46f2940b9ab1e0582cee86dd90ee74",
+      "programHash": "sha256:fdadd2f90968817233096b526b567741d934105df34928f779da39f1ffea8dac",
+      "roles": {
+        "energy": "idle",
+        "integrity": "intact"
+      },
+      "tags": [],
+      "variantId": "v-664c0dbf17c14484"
+    },
+    {
+      "asset": {
+        "bytes": 63756,
+        "encodedHash": "sha256:6ad002e9e6031b371b5ec046055884a160c59e7201cb773517d8c7918a0f769e",
+        "path": "reference/production/assets/sfx/families/reference-engine-states/idle-damaged.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 2,
+        "centroidHz": 165.82898456713627,
+        "pitchHz": null
+      },
+      "durationSeconds": 2,
+      "key": "idle-damaged",
+      "loudness": {
+        "integratedLufs": -18.102704176415113,
+        "maxMomentaryLufs": -17.852443136384483,
+        "truePeakDbtp": -2.8942392705461244
+      },
+      "manifest": {
+        "hash": "sha256:8bbf4427df3c0c161ffb51c9637d02ec84bb9f9339ec557a4bead486038e8f6c",
+        "path": "reference/production/manifests/sfx/families/reference-engine-states/idle-damaged.json"
+      },
+      "pcmHash": "sha256:2118689bfb7ebfd87575cdff4c6146b951575c2eb25d28a94e561e4c6cd2ea98",
+      "programHash": "sha256:21880b63cc6da249f6d7cbcf5db33fe6a4da5c66ecb4024302f4a493b9e09265",
+      "roles": {
+        "energy": "idle",
+        "integrity": "damaged"
+      },
+      "tags": [],
+      "variantId": "v-46a09cbc710bdd8d"
+    },
+    {
+      "asset": {
+        "bytes": 30695,
+        "encodedHash": "sha256:3d15db688982c12ead0a76e3602bbb16d728b7adb62f587512c330135b6febc5",
+        "path": "reference/production/assets/sfx/families/reference-engine-states/normal.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 2,
+        "centroidHz": 219.20592365449394,
+        "pitchHz": 63.30645351011714
+      },
+      "durationSeconds": 2,
+      "key": "normal",
+      "loudness": {
+        "integratedLufs": -14.442759180372146,
+        "maxMomentaryLufs": -14.264949687759035,
+        "truePeakDbtp": -2.8520656910378173
+      },
+      "manifest": {
+        "hash": "sha256:8a444c0a45e6c1fc8f76b5c9e618dd5ee518f03a4c6f773dc8a7966720f3da42",
+        "path": "reference/production/manifests/sfx/families/reference-engine-states/normal.json"
+      },
+      "pcmHash": "sha256:cba7fba2342e105bafd4a9cf973cf7c069c41179dec54565256db903e65d8426",
+      "programHash": "sha256:20e6197aed881fae369f685cfb49a0873d03e24068b0570ba26f357898713708",
+      "roles": {
+        "energy": "normal",
+        "integrity": "intact"
+      },
+      "tags": [],
+      "variantId": "v-19e3bd39ceacbe5e"
+    },
+    {
+      "asset": {
+        "bytes": 73603,
+        "encodedHash": "sha256:3dba43471da636da067d9d863971c2c1b1fbf327ea6819810a864fe42af1aa41",
+        "path": "reference/production/assets/sfx/families/reference-engine-states/normal-damaged.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 2,
+        "centroidHz": 237.79963289821134,
+        "pitchHz": 56.88756326274806
+      },
+      "durationSeconds": 2,
+      "key": "normal-damaged",
+      "loudness": {
+        "integratedLufs": -16.01871132030161,
+        "maxMomentaryLufs": -15.859811522447744,
+        "truePeakDbtp": -2.9770225690546597
+      },
+      "manifest": {
+        "hash": "sha256:2498fd936c89a57f6d899712a223bd2a40dd850adbef03d1265e080c398a6cc7",
+        "path": "reference/production/manifests/sfx/families/reference-engine-states/normal-damaged.json"
+      },
+      "pcmHash": "sha256:90c86a6d211cb72822914d2230d4236f9d08a090f2f07754e1e4b41010682420",
+      "programHash": "sha256:b0ea2cb385927da40c4314307bebe8c70563ac11a6cbefba9592331af9902579",
+      "roles": {
+        "energy": "normal",
+        "integrity": "damaged"
+      },
+      "tags": [],
+      "variantId": "v-07b05d7655a10c7b"
+    }
+  ]
+}

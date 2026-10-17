@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 0.473,
+    "min": 0.302
+  },
+  "id": "vt-hardsteel-shot-needle",
+  "intent": "İğne atıcı: kuru çatlak ve gövdeli kısa vuruş.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — shot-needle"
+}

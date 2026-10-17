@@ -1,5 +1,18 @@
+import { requiredAt } from '../../collections/requiredAt';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { inlineSign } from '../direction';
 import { UI_THRESHOLD } from '../../constants';
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
+
+import {
+  adjustIndexForSameColumn,
+  cardMatchesSearch,
+  isColumnFull,
+  locateCard,
+  modelIndexFromVisibleIndex,
+  moveCard,
+  visibleCards,
+} from './kanbanModel';
 
 export type KanbanPriority = 'low' | 'medium' | 'high';
 
@@ -90,9 +103,26 @@ export class Kanban {
   ) => void;
   private readonly onWipLimitExceededHandler?: (columnId: string, cardId: string) => void;
   private readonly onCardClickHandler?: (card: KanbanCard, columnId: string) => void;
-  private readonly cleanups: (() => void)[] = [];
-  /** Kart listener temizlikleri, sütun bazında — tek düz listede biriktirilirse eskiler hiç kaldırılmaz ve bellek sınırsız büyür. */
-  private readonly cardCleanups = new Map<string, (() => void)[]>();
+  /**
+   * Bu bileşenin ömrüne bağlı kaynaklar.
+   *
+   * Elle yönetilen bir `(() => void)[]` dizisiydi. `DisposableScope`in üç
+   * farkı var ve üçü de davranışsal: kapatma TERS sırada yapılır (kaynaklar
+   * arası bağımlılık genelde bu yönde kurulur), ikinci `dispose()` no-op'tur
+   * ve bir kaynağın kapatılması FIRLATIRSA geri kalanlar yine kapatılır —
+   * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
+   */
+  private readonly scope = new DisposableScope();
+  /**
+   * Kart listener temizlikleri, sütun bazında — tek düz listede biriktirilirse
+   * eskiler hiç kaldırılmaz ve bellek sınırsız büyür.
+   *
+   * Her sütun KENDİ `DisposableScope`una sahip: sütun yeniden çizildiğinde o
+   * scope kapatılıp yenisi açılır. Ana `scope` bileşenin tamamının ömrünü,
+   * bunlar sütunun çizim ömrünü temsil eder — iç içe scope, ana scope'a düz
+   * bir dizi asmaktan daha doğru bir ömür modeli.
+   */
+  private readonly cardScopes = new Map<string, DisposableScope>();
   /** Sürükleme sırasında hedef sütunda kartın tam olarak nereye bırakılacağını gösteren ince çizgi. */
   private readonly dropIndicator: HTMLDivElement;
   /** flashCard() için işgal edilen timeout. */
@@ -156,40 +186,42 @@ export class Kanban {
     document.removeEventListener('pointermove', this.boundPointerMove);
     document.removeEventListener('pointerup', this.boundPointerUp);
     document.removeEventListener('pointercancel', this.boundPointerUp);
+    // Uçuştaki sürükleme, `element.remove()` ile TOPLANMAZ: hayalet
+    // `dragContainer`a (varsayılan `document.body`) eklenir, yani bu bileşenin
+    // ağacının dışına.
+    this.cancelDrag();
     for (const rafId of this.columnScrollRaf.values()) cancelAnimationFrame(rafId);
     this.columnScrollRaf.clear();
     if (this.highlightTimeout !== null) window.clearTimeout(this.highlightTimeout);
-    for (const cleanup of this.cleanups) cleanup();
-    for (const columnId of [...this.cardCleanups.keys()]) this.clearCardCleanups(columnId);
+    this.scope.dispose();
+    for (const columnId of [...this.cardScopes.keys()]) this.clearCardCleanups(columnId);
     this.element.remove();
   }
 
   private trackCardCleanup(columnId: string, cleanup: () => void): void {
-    const existing = this.cardCleanups.get(columnId);
-    if (existing) {
-      existing.push(cleanup);
-      return;
+    let scope = this.cardScopes.get(columnId);
+    if (!scope) {
+      scope = new DisposableScope();
+      this.cardScopes.set(columnId, scope);
     }
-    this.cardCleanups.set(columnId, [cleanup]);
+    scope.add({ dispose: cleanup });
   }
 
   private clearCardCleanups(columnId: string): void {
-    const cleanups = this.cardCleanups.get(columnId);
-    if (!cleanups) return;
-    for (const cleanup of cleanups) cleanup();
-    cleanups.length = 0;
+    // Scope `dispose()` sonrası yeniden kullanılamaz (ikinci dispose no-op'tur
+    // ve geç eklenen kaynak anında kapatılır), bu yüzden kaydı silinir: bir
+    // sonraki `trackCardCleanup` taze bir scope açar.
+    this.cardScopes.get(columnId)?.dispose();
+    this.cardScopes.delete(columnId);
   }
 
-  private isColumnFull(column: KanbanColumn): boolean {
-    return column.wipLimit !== undefined && column.cards.length >= column.wipLimit;
+  /** Arama/karşılaştırma yerel ayarı — kurallar `kanbanModel`de, dil burada. */
+  private get locale(): string {
+    return i18next.language ?? 'tr';
   }
 
   private cardMatchesSearch(card: KanbanCard): boolean {
-    if (!this.searchQuery) return true;
-    const haystack = [card.title, card.description ?? '', ...(card.tags ?? [])]
-      .join(' ')
-      .toLocaleLowerCase(i18next.language ?? 'tr');
-    return haystack.includes(this.searchQuery);
+    return cardMatchesSearch(card, this.searchQuery, this.locale);
   }
 
   private buildSearchBar(): HTMLDivElement {
@@ -207,7 +239,7 @@ export class Kanban {
       }
     };
     input.addEventListener('input', onInput);
-    this.cleanups.push(() => input.removeEventListener('input', onInput));
+    this.scope.add({ dispose: () => input.removeEventListener('input', onInput) });
     bar.appendChild(input);
 
     return bar;
@@ -255,7 +287,7 @@ export class Kanban {
 
       const onScroll = (): void => this.scheduleColumnWindowRender(column.id);
       body.addEventListener('scroll', onScroll);
-      this.cleanups.push(() => body.removeEventListener('scroll', onScroll));
+      this.scope.add({ dispose: () => body.removeEventListener('scroll', onScroll) });
     } else {
       this.columnViewports.set(column.id, body);
     }
@@ -268,8 +300,13 @@ export class Kanban {
   private initials(name: string): string {
     const parts = name.trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return '';
-    if (parts.length === 1) return parts[0].slice(0, 2).toLocaleUpperCase(i18next.language ?? 'tr');
-    return (parts[0][0] + parts[parts.length - 1][0]).toLocaleUpperCase(i18next.language ?? 'tr');
+    if (parts.length === 1)
+      return requiredAt(parts, 0)
+        .slice(0, 2)
+        .toLocaleUpperCase(i18next.language ?? 'tr');
+    return (
+      requiredAt(parts, 0).charAt(0) + requiredAt(parts, parts.length - 1).charAt(0)
+    ).toLocaleUpperCase(i18next.language ?? 'tr');
   }
 
   private buildCard(card: KanbanCard, columnId: string): HTMLDivElement {
@@ -348,7 +385,7 @@ export class Kanban {
     return cardEl;
   }
 
-  /** Sürüklemeyi başlatır: imleci takip eden bir "ghost" kopya document.body'ye eklenir. Eşik (UI_THRESHOLD.DRAG_START) aşılana kadar hareket "tıklama" sayılır, böylece kart hem tıklanabilir hem sürüklenebilir kalır. */
+  /** Sürüklemeyi başlatır: imleci takip eden bir "ghost" kopya document.body'ye eklenir. Eşik (UI_THRESHOLD.DRAG_START_PX) aşılana kadar hareket "tıklama" sayılır, böylece kart hem tıklanabilir hem sürüklenebilir kalır. */
   private beginDrag(
     event: PointerEvent,
     card: KanbanCard,
@@ -386,7 +423,7 @@ export class Kanban {
     const dy = event.clientY - drag.startY;
 
     if (!drag.moved) {
-      if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START) return;
+      if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START_PX) return;
       // Eşik aşıldı: gerçek kart yarı saydam bırakılır, ghost imleci takip etmeye başlar.
       drag.moved = true;
       drag.cardEl.classList.add('vol-kanban__card--dragging');
@@ -401,6 +438,23 @@ export class Kanban {
     this.updateDropTarget(event.clientX, event.clientY, drag.fromColumnId);
   }
 
+  /**
+   * Uçuştaki sürüklemenin GÖRSEL izlerini toplar; taşımayı uygulamaz.
+   *
+   * `handlePointerUp` normal bitişi yönetir ama bir sürükleme ortasında
+   * bileşen yok edilirse o hiç çağrılmaz. Hayalet bileşenin ağacının dışında
+   * yaşadığı için `element.remove()` de onu götürmez: ekranda sahipsiz,
+   * imleci takip etmeyen bir kart asılı kalırdı.
+   */
+  private cancelDrag(): void {
+    const drag = this.drag;
+    if (!drag) return;
+    this.drag = null;
+    drag.cardEl.classList.remove('vol-kanban__card--dragging');
+    drag.ghostEl.remove();
+    this.clearDropTargetVisuals();
+  }
+
   private handlePointerUp(event: PointerEvent): void {
     const drag = this.drag;
     if (!drag || event.pointerId !== drag.pointerId) return;
@@ -408,6 +462,12 @@ export class Kanban {
     document.removeEventListener('pointermove', this.boundPointerMove);
     document.removeEventListener('pointerup', this.boundPointerUp);
     document.removeEventListener('pointercancel', this.boundPointerUp);
+
+    // Sistem iptali (kesilen dokunma, çağrı, hareket tanıyıcı) bir bırakma değildir: ne tıklama ne taşıma sayılır.
+    if (event.type === 'pointercancel') {
+      this.cancelDrag();
+      return;
+    }
 
     if (!drag.moved) {
       // Eşik aşılmadı — tıklamaydı, sürükleme değil.
@@ -443,7 +503,7 @@ export class Kanban {
     const column = this.columns.find((c) => c.id === target.columnId);
     if (!columnEl || !column) return;
 
-    const full = target.columnId !== fromColumnId && this.isColumnFull(column);
+    const full = target.columnId !== fromColumnId && isColumnFull(column);
     columnEl.classList.toggle('vol-kanban__column--drag-over', !full);
     columnEl.classList.toggle('vol-kanban__column--drag-rejected', full);
 
@@ -475,7 +535,7 @@ export class Kanban {
       } else if (localIndex >= cardEls.length) {
         viewport.appendChild(this.dropIndicator);
       } else {
-        viewport.insertBefore(this.dropIndicator, cardEls[localIndex]);
+        viewport.insertBefore(this.dropIndicator, requiredAt(cardEls, localIndex));
       }
       return;
     }
@@ -483,7 +543,7 @@ export class Kanban {
     if (visibleIndex >= cardEls.length) {
       viewport.appendChild(this.dropIndicator);
     } else {
-      viewport.insertBefore(this.dropIndicator, cardEls[visibleIndex]);
+      viewport.insertBefore(this.dropIndicator, requiredAt(cardEls, visibleIndex));
     }
   }
 
@@ -524,11 +584,11 @@ export class Kanban {
     const located = this.locateCard(cardId);
     if (!located) return;
 
-    // `toIndex`, sürüklenen kart hâlâ dizide dururken hesaplandı. Aynı sütun
-    // içinde kartı eski yerinden çıkarmak sonraki index'leri bir kaydırır,
-    // bu yüzden hedef eski konumdan sonraysa index bir azaltılır.
-    const sameColumn = toColumnId === fromColumnId;
-    const targetIndex = sameColumn && toIndex > located.index ? toIndex - 1 : toIndex;
+    const targetIndex = adjustIndexForSameColumn(
+      toIndex,
+      located.index,
+      toColumnId === fromColumnId,
+    );
 
     this.applyMove(cardId, fromColumnId, toColumnId, targetIndex);
   }
@@ -540,23 +600,13 @@ export class Kanban {
     toColumnId: string,
     targetIndex: number,
   ): boolean {
-    const fromColumn = this.columns.find((c) => c.id === fromColumnId);
-    const toColumn = this.columns.find((c) => c.id === toColumnId);
-    if (!fromColumn || !toColumn) return false;
-
-    // Aynı sütun içinde yeniden sıralama WIP limitini artırmaz; yalnızca farklı sütuna taşınırken limit kontrol edilir.
-    if (toColumnId !== fromColumnId && this.isColumnFull(toColumn)) {
-      this.onWipLimitExceededHandler?.(toColumnId, cardId);
+    const result = moveCard(this.columns, cardId, fromColumnId, toColumnId, targetIndex);
+    if (!result.moved) {
+      // WIP reddi tüketiciye BİLDİRİLİR; eksik sütun/kart sessiz bir no-op'tur.
+      if (result.reason === 'wip-limit') this.onWipLimitExceededHandler?.(toColumnId, cardId);
       return false;
     }
-
-    const cardIndex = fromColumn.cards.findIndex((c) => c.id === cardId);
-    if (cardIndex === -1) return false;
-
-    const [card] = fromColumn.cards.splice(cardIndex, 1);
-
-    const clampedIndex = Math.max(0, Math.min(targetIndex, toColumn.cards.length));
-    toColumn.cards.splice(clampedIndex, 0, card);
+    const clampedIndex = result.toIndex;
 
     this.rerenderColumn(fromColumnId);
     if (toColumnId !== fromColumnId) this.rerenderColumn(toColumnId);
@@ -585,11 +635,7 @@ export class Kanban {
   }
 
   private locateCard(cardId: string): { column: KanbanColumn; index: number } | null {
-    for (const column of this.columns) {
-      const index = column.cards.findIndex((c) => c.id === cardId);
-      if (index !== -1) return { column, index };
-    }
-    return null;
+    return locateCard(this.columns, cardId);
   }
 
   private cardAriaLabel(card: KanbanCard, columnId: string): string {
@@ -597,7 +643,8 @@ export class Kanban {
     const index = column ? column.cards.findIndex((c) => c.id === card.id) + 1 : 0;
     const total = column?.cards.length ?? 0;
     const position = column ? `, ${column.title}, ${index}/${total}` : '';
-    const hint = this.keyboardMove?.cardId === card.id ? ', ' + i18next.t('core:kanban.moving') : '';
+    const hint =
+      this.keyboardMove?.cardId === card.id ? ', ' + i18next.t('core:kanban.moving') : '';
     return `${card.title}${position}${hint}`;
   }
 
@@ -617,9 +664,7 @@ export class Kanban {
       this.keyboardMove = { cardId, originColumnId: located.column.id, originIndex: located.index };
       this.rerenderColumn(located.column.id);
       this.focusCard(cardId);
-      this.announce(
-        i18next.t('core:kanban.grabbed', { card: this.cardTitle(cardId) }),
-      );
+      this.announce(i18next.t('core:kanban.grabbed', { card: this.cardTitle(cardId) }));
       return;
     }
 
@@ -660,7 +705,9 @@ export class Kanban {
 
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       const columnIndex = this.columns.indexOf(located.column);
-      const nextColumn = this.columns[columnIndex + (event.key === 'ArrowLeft' ? -1 : 1)];
+      // Sütunlar okuma yönünde dizilir: RTL'de sol ok bir sonraki sütundur.
+      const step = (event.key === 'ArrowLeft' ? -1 : 1) * inlineSign(this.element);
+      const nextColumn = this.columns[columnIndex + step];
       if (!nextColumn) return;
       event.preventDefault();
       // Sütun değişiminde kart, geldiği sıradaki konuma en yakın yere yerleştirilir.
@@ -726,23 +773,19 @@ export class Kanban {
       body.querySelectorAll<HTMLDivElement>('.vol-kanban__card:not(.vol-kanban__card--ghost)'),
     );
     for (let i = 0; i < cardEls.length; i++) {
-      const rect = cardEls[i].getBoundingClientRect();
+      const rect = requiredAt(cardEls, i).getBoundingClientRect();
       if (clientY < rect.top + rect.height / 2) return i;
     }
     return cardEls.length;
   }
 
-  private visibleCards(column: KanbanColumn): KanbanCard[] {
-    if (!this.searchQuery) return column.cards;
-    return column.cards.filter((card) => this.cardMatchesSearch(card));
+  private visibleCards(column: KanbanColumn): readonly KanbanCard[] {
+    return visibleCards(column, this.searchQuery, this.locale);
   }
 
   /** Görünür kartlar arasındaki sırayı gerçek model index'ine çevirir — arama filtresi etkinken ikisi ayrışır. */
   private modelIndexFromVisibleIndex(column: KanbanColumn, visibleIndex: number): number {
-    if (!this.searchQuery) return visibleIndex;
-    const visible = this.visibleCards(column);
-    if (visibleIndex >= visible.length) return column.cards.length;
-    return column.cards.indexOf(visible[visibleIndex]);
+    return modelIndexFromVisibleIndex(column, visibleIndex, this.searchQuery, this.locale);
   }
 
   private rerenderColumn(columnId: string): void {
@@ -779,7 +822,7 @@ export class Kanban {
 
     viewport.style.transform = `translateY(${start * cardHeight}px)`;
     for (let i = start; i < end; i++) {
-      const cardEl = this.buildCard(visible[i], columnId);
+      const cardEl = this.buildCard(requiredAt(visible, i), columnId);
       cardEl.style.height = `${cardHeight}px`;
       viewport.appendChild(cardEl);
     }
@@ -808,6 +851,6 @@ export class Kanban {
           ? `${column.cards.length} / ${column.wipLimit}`
           : String(column.cards.length);
     }
-    columnEl.classList.toggle('vol-kanban__column--full', this.isColumnFull(column));
+    columnEl.classList.toggle('vol-kanban__column--full', isColumnFull(column));
   }
 }

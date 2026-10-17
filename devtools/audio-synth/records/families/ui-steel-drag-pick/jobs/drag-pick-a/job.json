@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-8b8a9fe21bd557ae": {
+        "hash": "sha256:180e0037d8247261bed48d0d0e343efeecffbb8b3911dc7551f2a5d3fc353161",
+        "path": "analyses/r-8b8a9fe21bd557ae.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:20442cad6814239bc6bde5310a6e303511d828e00c9103391aa5b87294bd5c8e",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:20442cad6814239bc6bde5310a6e303511d828e00c9103391aa5b87294bd5c8e",
+      "hash": "sha256:8951c7221fe9642c9ca53d367692178cb79ac31eb6afc380369e2c6810640e0a",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:4518732e10e39e8d482453af08d1c7b764aa560eba47a7c58771cdce03531d2c",
+      "path": "core/audio-manifests/ui/steel/drag-pick-a.json"
+    },
+    "renders": {
+      "r-8b8a9fe21bd557ae": {
+        "hash": "sha256:7f01f0a152427b809e9373cb89af27248fc4d46091d27f9432539af61b64b62f",
+        "path": "renders/r-8b8a9fe21bd557ae.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:6e232f7995b4806306320bd3a98725bb16cdb1347a806747d8e05b93cd367cde",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "drag-pick-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/drag-pick-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-drag-pick/drag-pick-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

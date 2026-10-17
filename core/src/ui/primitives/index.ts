@@ -1,3 +1,5 @@
+export { runButtonClick, type ButtonBehaviorHost } from './buttonBehavior';
+export type { HapticFeedback } from './hapticFeedback';
 export {
   Button,
   type ButtonVariant,
@@ -24,6 +26,8 @@ export { NumberStepper, type NumberStepperOptions } from './NumberStepper';
 export { Slider, type SliderOptions } from './Slider';
 export { RangeSlider, type RangeSliderValue, type RangeSliderOptions } from './RangeSlider';
 export { Checkbox, type CheckboxOptions } from './Checkbox';
+export { ColorPicker, type ColorPickerOptions } from './ColorPicker';
+export { CurveEditor, type CurveEditorOptions, type CurvePoint } from './CurveEditor';
 export { RadioGroup, type RadioOption, type RadioGroupOptions } from './RadioGroup';
 export {
   SegmentedControl,
@@ -31,3 +35,20 @@ export {
   type SegmentedControlOptions,
 } from './SegmentedControl';
 export { Select, type SelectOption, type SelectOptionTone, type SelectOptions } from './Select';
+export {
+  Icon,
+  VOL_ICONS,
+  type IconName,
+  type LegacyIconName,
+  type IconDefinition,
+  type IconOptions,
+} from './Icon';
+export {
+  Toolbar,
+  ToolButton,
+  type ToolbarOrientation,
+  type ToolbarSelectionMode,
+  type ToolbarOptions,
+  type ToolButtonOptions,
+} from './Toolbar';
+export { PropertyField, type PropertyFieldOptions } from './PropertyField';

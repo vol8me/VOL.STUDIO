@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "denied"
+  ],
+  "durationSeconds": {
+    "max": 0.4,
+    "min": 0.112
+  },
+  "id": "ui-steel-denied-denied-b",
+  "intent": "çelik donanım: denied Varyant denied-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel denied — denied-b"
+}

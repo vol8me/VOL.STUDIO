@@ -1,0 +1,54 @@
+{
+  "channels": 1,
+  "format": "wav-pcm16",
+  "frames": 57600,
+  "hash": "sha256:50108ff9753f9bb4c84c509165828360eb80c5ebe1cc43c5a6131eb2e268e2b4",
+  "id": "tone-c4-hard",
+  "notes": "Sampler velocity katmanı fixture’ı: kısa temas, parlak.",
+  "origin": {
+    "kind": "synthetic-fixture",
+    "program": {
+      "channels": 1,
+      "durationSeconds": 1.2,
+      "layers": [
+        {
+          "name": "note",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.7,
+                "damping": 1.2,
+                "decay": 1.4,
+                "frequency": 261.63,
+                "inharmonicity": 0.0004,
+                "layout": "string",
+                "modes": 16
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "source": {
+            "params": {
+              "contactTime": 0.0006,
+              "roughness": 0.15
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -1
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 17
+    }
+  },
+  "sampleRate": 48000,
+  "schema": "SampleAssetV1",
+  "title": "Tonal nota C4 (sert vuruş)"
+}

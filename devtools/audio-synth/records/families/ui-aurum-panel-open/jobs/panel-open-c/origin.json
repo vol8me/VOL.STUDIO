@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:0865a71b1a299fc45160857d444e36204ff702b6fb47ee6322ff574f6a14ac77",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:f26f4b008c3fd7f913e9470b166044d26ddfb9a385fb5b164dda1bf353aeaaf1",
+    "familyId": "ui-aurum-panel-open",
+    "kind": "family-variant",
+    "variantId": "v-d69318b1ed321bc0",
+    "variantKey": "panel-open-c"
+  }
+}

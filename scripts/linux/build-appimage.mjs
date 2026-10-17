@@ -1,0 +1,275 @@
+import { execFileSync } from 'node:child_process';
+import {
+  accessSync,
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+} from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
+import { basename, dirname, join, resolve } from 'node:path';
+import {
+  oggDecodePipeline,
+  buildGStreamerScannerCandidates,
+  extractGStreamerPluginFilename,
+  OPTIONAL_GSTREAMER_ELEMENTS,
+  REQUIRED_GSTREAMER_ELEMENTS,
+} from './appimage-media.mjs';
+import { loadRepoLifecycle } from '../quality/workspaceLifecycle.mjs';
+import { cargoTargetDir } from './targets.mjs';
+
+const root = resolve(import.meta.dirname, '../..');
+
+/**
+ * Kullanım: node scripts/linux/build-appimage.mjs <workspace-yolu>
+ * Örn:      node scripts/linux/build-appimage.mjs devtools/deck
+ *
+ * Manuel teslim aracıdır, kapı değildir: Tauri'nin AppDir'ini alıp WebKit
+ * medya çalışma zamanını bağlayıp yeniden paketler. Hedef workspace
+ * `tauri.conf.json`dan `productName`/`version` türetilir — ürün adı hiçbir
+ * yerde hard-code edilmez.
+ */
+const workspace = process.argv[2];
+if (!workspace) {
+  console.error('Kullanım: node scripts/linux/build-appimage.mjs <workspace-yolu>');
+  process.exit(2);
+}
+
+const manifestPath = join(root, workspace, 'src-tauri', 'tauri.conf.json');
+if (!existsSync(manifestPath)) {
+  console.error(
+    `${workspace}: src-tauri/tauri.conf.json yok — bu workspace bir Tauri uygulaması değil.`,
+  );
+  process.exit(2);
+}
+const { productName, version } = JSON.parse(readFileSync(manifestPath, 'utf8'));
+if (!productName || !version) {
+  console.error(`${workspace}: tauri.conf.json içinde productName/version eksik.`);
+  process.exit(2);
+}
+
+// Frozen ürünün ağacı değiştirilemez — tarihsel kanıt freezeTag'dedir.
+// Yeniden paketleme gerekiyorsa etiketten worktree açılır, HEAD'de değil.
+const record = loadRepoLifecycle(root)?.workspaces.find((w) => w.path === workspace);
+if (record?.status === 'frozen') {
+  console.error(
+    `${workspace} frozen (${record.freezeTag}). Frozen ürün HEAD'de paketlenmez; ` +
+      "yeniden paketleme freezeTag worktree'sindedir.",
+  );
+  process.exit(2);
+}
+
+const shell = join(root, workspace, 'src-tauri');
+const targetDir = cargoTargetDir(root);
+const bundleDir = join(targetDir, 'release/bundle/appimage');
+const appDir = join(bundleDir, `${productName}.AppDir`);
+const binary = join(targetDir, 'release', productName);
+const deploy =
+  process.env.LINUXDEPLOY ?? join(homedir(), '.cache/tauri/linuxdeploy-x86_64.AppImage');
+const canonical = join(bundleDir, `${productName}_${version}_amd64.AppImage`);
+const legacyGenerated = join(bundleDir, `${productName}-x86_64.AppImage`);
+const launcher = join(shell, 'linux.AppRun');
+
+function run(command, args, options = {}) {
+  execFileSync(command, args, { stdio: 'inherit', ...options });
+}
+
+function commandText(command, args) {
+  return execFileSync(command, args, {
+    encoding: 'utf8',
+    env: { ...process.env, LC_ALL: 'C' },
+  }).trim();
+}
+
+function optionalCommandText(command, args) {
+  try {
+    return commandText(command, args);
+  } catch {
+    return undefined;
+  }
+}
+
+function resolveGStreamerPlugin(element, required) {
+  try {
+    const inspectOutput = commandText('gst-inspect-1.0', [element]);
+    const filename = extractGStreamerPluginFilename(inspectOutput);
+    if (!filename) throw new Error('Filename alanı bulunamadı');
+    accessSync(filename);
+    return filename;
+  } catch (error) {
+    if (!required) {
+      console.warn(`Opsiyonel GStreamer elementi paketlenemedi: ${element}`);
+      return null;
+    }
+    throw new Error(
+      `Zorunlu GStreamer elementi paketlenemedi: ${element}. ` +
+        'Linux build bağımlılıklarını ve gst-inspect-1.0 kurulumunu denetleyin.',
+      { cause: error },
+    );
+  }
+}
+
+function bundleGStreamerRuntime() {
+  const pluginDir = join(appDir, 'usr/lib/gstreamer-1.0');
+  rmSync(pluginDir, { recursive: true, force: true });
+  mkdirSync(pluginDir, { recursive: true });
+
+  const pluginFiles = new Set();
+  for (const element of REQUIRED_GSTREAMER_ELEMENTS) {
+    pluginFiles.add(resolveGStreamerPlugin(element, true));
+  }
+  for (const element of OPTIONAL_GSTREAMER_ELEMENTS) {
+    const filename = resolveGStreamerPlugin(element, false);
+    if (filename) pluginFiles.add(filename);
+  }
+
+  for (const filename of pluginFiles) {
+    copyFileSync(filename, join(pluginDir, basename(filename)));
+  }
+
+  const scannerSource = buildGStreamerScannerCandidates({
+    envOverride: process.env.GST_PLUGIN_SCANNER_1_0,
+    pluginScannerDir: optionalCommandText('pkg-config', [
+      '--variable=pluginscannerdir',
+      'gstreamer-1.0',
+    ]),
+    libexecDir: optionalCommandText('pkg-config', ['--variable=libexecdir', 'gstreamer-1.0']),
+  }).find((candidate) => existsSync(candidate));
+  if (!scannerSource) {
+    throw new Error(
+      'GStreamer plugin scanner bulunamadı. GST_PLUGIN_SCANNER_1_0 ile yolu belirtin.',
+    );
+  }
+  const scannerTarget = join(appDir, 'usr/libexec/gstreamer-1.0/gst-plugin-scanner');
+  mkdirSync(dirname(scannerTarget), { recursive: true });
+  copyFileSync(scannerSource, scannerTarget);
+  chmodSync(scannerTarget, 0o755);
+
+  console.log(`${pluginFiles.size} GStreamer plugin'i ve plugin scanner paketlendi.`);
+  return { pluginDir, scannerTarget };
+}
+
+/** Decode zincirini sınamak için paketin asset'lerinden herhangi bir OGG yeter. */
+function findProbeAudio(dir) {
+  if (!existsSync(dir)) return null;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      const found = findProbeAudio(path);
+      if (found) return found;
+    } else if (entry.name.endsWith('.ogg')) {
+      return path;
+    }
+  }
+  return null;
+}
+
+function verifyGStreamerRuntime({ pluginDir, scannerTarget }) {
+  const registryDir = mkdtempSync(join(tmpdir(), 'vol-gstreamer-registry-'));
+  const libraryPath = [join(appDir, 'usr/lib'), join(appDir, 'usr/lib64')].join(':');
+  const env = {
+    ...process.env,
+    LC_ALL: 'C',
+    LD_LIBRARY_PATH: libraryPath,
+    GST_PLUGIN_PATH_1_0: '',
+    GST_PLUGIN_SYSTEM_PATH_1_0: pluginDir,
+    GST_PLUGIN_SCANNER_1_0: scannerTarget,
+    GST_REGISTRY_1_0: join(registryDir, 'registry.bin'),
+  };
+
+  try {
+    for (const element of REQUIRED_GSTREAMER_ELEMENTS) {
+      execFileSync('gst-inspect-1.0', [element], { env, stdio: 'ignore' });
+    }
+
+    const probeAudio = findProbeAudio(join(root, workspace, 'public/assets/audio'));
+    if (probeAudio === null) {
+      console.warn("Pakette OGG asset'i yok; decode zinciri sondası atlandı.");
+    } else {
+      run('gst-launch-1.0', oggDecodePipeline(probeAudio), { env, timeout: 15_000 });
+    }
+  } finally {
+    rmSync(registryDir, { recursive: true, force: true });
+  }
+
+  console.log(
+    'Paketlenmiş GStreamer elementleri ve WebKit uyumlu stereo OGG/Vorbis decode zinciri doğrulandı.',
+  );
+}
+
+accessSync(deploy);
+accessSync(appDir);
+accessSync(binary);
+accessSync(launcher);
+
+// Tauri'nin AppImage bundling adımı linuxdeploy sonlandırmasında düşerse
+// AppDir kalır. Yeniden çalıştırmada eski binary'nin sessizce paketlenmemesi
+// için güncel release binary'si her zaman açıkça kopyalanır.
+copyFileSync(binary, join(appDir, `usr/bin/${productName}`));
+chmodSync(join(appDir, `usr/bin/${productName}`), 0o755);
+
+// Tauri'nin media framework kopyalama adımı Fedora'nın `/usr/lib64` düzeninde
+// pluginleri AppDir'e taşımıyor. Boş plugin yolu WebKitGTK sesini tamamen
+// susturduğu için gereken elementler gerçek GStreamer registry'sinden çözülür.
+const gStreamerRuntime = bundleGStreamerRuntime();
+
+// Fedora'da linuxdeploy'nin strip adımı .relr.dyn bölümlerinde kırılabiliyor.
+// İlk çağrı AppDir bağımlılıklarını dağıtır; paket adı ve mimariyi sabit tutar.
+run(deploy, ['--appdir', appDir, '--output', 'appimage'], {
+  cwd: bundleDir,
+  env: { ...process.env, NO_STRIP: '1', ARCH: 'x86_64', APPIMAGE_EXTRACT_AND_RUN: '1' },
+});
+
+verifyGStreamerRuntime(gStreamerRuntime);
+
+// GPU yığınına bağlı kütüphaneler host'tan gelmelidir. linuxdeploy bunların bir kısmını (wayland,
+// xcb-render/shm) paketleyen sistemden kopyalar; Mesa'nın EGL/GBM katmanı host sürümünü bekler ve
+// karışık yığında WebKitWebProcess "Could not create default EGL display: EGL_BAD_PARAMETER"
+// ile düşer (SteamOS Deck'te boş pencere olarak ölçüldü). GTK zaten host'ta wayland ister.
+const HOST_GRAPHICS_LIBS = [
+  /^libwayland-(client|server|cursor|egl)\.so/,
+  /^libxcb-(render|shm)\.so/,
+];
+for (const libDir of ['usr/lib', 'usr/lib64', 'usr/lib/x86_64-linux-gnu']) {
+  const absolute = join(appDir, libDir);
+  if (!existsSync(absolute)) continue;
+  for (const entry of readdirSync(absolute)) {
+    if (HOST_GRAPHICS_LIBS.some((pattern) => pattern.test(entry))) {
+      rmSync(join(absolute, entry), { force: true });
+      console.log(`Host GPU yığınına bırakıldı (pakete girmez): ${libDir}/${entry}`);
+    }
+  }
+}
+
+// linuxdeploy AppRun'ı otomatik ürettiği için VOL launcher'ını bundan sonra
+// yerleştiriyoruz. appimagetool aynı AppDir'ı yeniden paketler.
+copyFileSync(launcher, join(appDir, 'AppRun'));
+chmodSync(join(appDir, 'AppRun'), 0o755);
+
+const toolDir = mkdtempSync(join(tmpdir(), 'vol-appimagetool-'));
+try {
+  run(deploy, ['--appimage-extract'], {
+    cwd: toolDir,
+    env: { ...process.env, APPIMAGE_EXTRACT_AND_RUN: '1' },
+  });
+
+  const appimageToolLauncher = join(
+    toolDir,
+    'squashfs-root/plugins/linuxdeploy-plugin-appimage/appimagetool-prefix/AppRun',
+  );
+  accessSync(appimageToolLauncher);
+  rmSync(canonical, { force: true });
+  run(appimageToolLauncher, [appDir, canonical], {
+    cwd: dirname(canonical),
+    env: { ...process.env, ARCH: 'x86_64' },
+  });
+  chmodSync(canonical, 0o755);
+} finally {
+  rmSync(toolDir, { recursive: true, force: true });
+  rmSync(legacyGenerated, { force: true });
+}
+console.log(`AppImage hazır: ${canonical}`);

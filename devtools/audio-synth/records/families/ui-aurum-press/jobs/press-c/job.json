@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-d81d652476ebeca9": {
+        "hash": "sha256:433a6d484c22d69717ba91b07dbb1c3b235a2037f80bfccbd5c061b08083fdc5",
+        "path": "analyses/r-d81d652476ebeca9.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:03c311056978e065662d8da94d99c13504795b75fb799e3666f7d5b242d1c91f",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:03c311056978e065662d8da94d99c13504795b75fb799e3666f7d5b242d1c91f",
+      "hash": "sha256:360fe833d98b8ee430fd7b86028c04edd279f1400b4b7571c02794e60286242c",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:baf070767c877050e89eaf5009a1a9c4168b7eb5c29347cb9e55aca108d05c93",
+      "path": "core/audio-manifests/ui/aurum/press-c.json"
+    },
+    "renders": {
+      "r-d81d652476ebeca9": {
+        "hash": "sha256:b9eceb290b2045ab681dfb0cdc02503fda02973238d06222097e1aad5e75b04d",
+        "path": "renders/r-d81d652476ebeca9.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:13e42f166b65415617d20c542b4b3b7e48528a251ae1be16f42999c1bb42d439",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "press-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/press-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-press/press-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

@@ -1,0 +1,154 @@
+import { requiredNumberAt } from '../collections/requiredAt';
+import { MinHeap } from '../collections/MinHeap';
+import { ORTHOGONAL_NEIGHBOURS, type GridPoint } from './Grid';
+
+export interface FlowFieldOptions {
+  /** Hücre geçilebilir mi? Verilmezse hepsi geçilebilir. */
+  isWalkable?: (point: GridPoint) => boolean;
+  /** Hücreye girme maliyeti (varsayılan 1). Pozitif olmalı. */
+  cost?: (point: GridPoint) => number;
+  /** Komşuluk tanımı; varsayılan dört yön. */
+  neighbours?: readonly GridPoint[];
+}
+
+/**
+ * Akış alanı — TEK hedefe giden çok sayıda birim için.
+ *
+ * `findPath` bir başlangıçtan bir hedefe yol arar; N birim N arama demektir.
+ * `FlowField` hedeften geriye tek bir Dijkstra taraması yapar ve her hücre için
+ * "buradan hangi komşuya" bilgisini üretir. Maliyet birim sayısından
+ * bağımsızdır, ızgara boyutuna bağlıdır.
+ *
+ * `compute()` her çağrıda tüm ızgarayı baştan tarar; kısmi/dirty yeniden hesap
+ * yoktur. Hedef sık değişiyorsa ya da birim sayısı azsa A* daha ucuzdur.
+ *
+ * Ulaşılamayan hücrelerde `getCost` `Infinity`, `getNext` `null` döner — "yol
+ * yok" sessizce sıfır maliyetli bir hücreye dönüşmez.
+ */
+export class FlowField {
+  private readonly costs: Float64Array;
+  /** Her hücre için hedefe doğru bir sonraki hücre indeksi; -1 = yok. */
+  private readonly next: Int32Array;
+
+  constructor(
+    readonly cols: number,
+    readonly rows: number,
+  ) {
+    if (!Number.isInteger(cols) || !Number.isInteger(rows) || cols <= 0 || rows <= 0) {
+      throw new Error(`FlowField: cols/rows pozitif tam sayı olmalı (gelen: ${cols}x${rows})`);
+    }
+    this.costs = new Float64Array(cols * rows).fill(Infinity);
+    this.next = new Int32Array(cols * rows).fill(-1);
+  }
+
+  /**
+   * Alanı verilen hedeflerden geriye doğru hesaplar.
+   *
+   * Birden fazla hedef verilebilir (birden çok çıkış, birden çok toplanma
+   * noktası); her hücre EN YAKIN hedefe yönlenir.
+   */
+  compute(goals: readonly GridPoint[], options: FlowFieldOptions = {}): void {
+    const { cols } = this;
+    const neighbours = options.neighbours ?? ORTHOGONAL_NEIGHBOURS;
+    const isWalkable = options.isWalkable ?? (() => true);
+    const costOf = options.cost ?? (() => 1);
+
+    this.costs.fill(Infinity);
+    this.next.fill(-1);
+
+    // Dijkstra dalgası: maliyete göre sıralı işlenir. Tüm kenar maliyetleri
+    // eşitse bu bir BFS'e indirgenir; farklıysa sıralama şart, aksi halde
+    // pahalı bir kenardan erken ulaşılan hücre yanlış maliyetle kilitlenir.
+    // MinHeap O(n log n); önceki lineer min-search O(n²) idi ve büyük
+    // ızgaralarda (binlerce hücre) darboğaz oluşturuyordu.
+    const queue = new MinHeap();
+    for (const goal of goals) {
+      if (!this.inBounds(goal.col, goal.row) || !isWalkable(goal)) continue;
+      const index = goal.row * cols + goal.col;
+      this.costs[index] = 0;
+      queue.push(index, 0);
+    }
+
+    while (queue.size > 0) {
+      // Gevşek silme (lazy deletion): maliyeti iyileşen düğüm yığına TEKRAR
+      // eklenir, eskisi içeride kalır. Anahtarı güncel maliyetten büyük olan
+      // giriş eskimiştir; atlanmazsa aynı düğüm defalarca genişletilir.
+      // Sonuç yine doğrudur (gevşetme canlı `costs` okur) ama iş boşa gider.
+      const staleKey = queue.peekKey()!;
+      const current = queue.pop()!;
+      const currentCost = requiredNumberAt(this.costs, current);
+      if (staleKey > currentCost) continue;
+      const col = current % cols;
+      const row = Math.floor(current / cols);
+      // Ters taramada kenar, komşudan mevcut hücreye girişin maliyetini taşır.
+      const step = costOf({ col, row });
+      if (!(step > 0) || !Number.isFinite(step)) continue;
+
+      for (const offset of neighbours) {
+        const nc = col - offset.col;
+        const nr = row - offset.row;
+        if (!this.inBounds(nc, nr)) continue;
+
+        const point = { col: nc, row: nr };
+        if (!isWalkable(point)) continue;
+
+        const diagonal = offset.col !== 0 && offset.row !== 0;
+        const candidate = currentCost + step * (diagonal ? Math.SQRT2 : 1);
+        const nextIndex = nr * cols + nc;
+
+        if (candidate < requiredNumberAt(this.costs, nextIndex)) {
+          this.costs[nextIndex] = candidate;
+          // Alan hedeften geriye kuruluyor: komşunun "sonrakisi" biziz.
+          this.next[nextIndex] = current;
+          queue.push(nextIndex, candidate);
+        }
+      }
+    }
+  }
+
+  /** Hücrenin hedefe toplam maliyeti; ulaşılamıyorsa `Infinity`. */
+  getCost(col: number, row: number): number {
+    if (!this.inBounds(col, row)) return Infinity;
+    return requiredNumberAt(this.costs, row * this.cols + col);
+  }
+
+  /** Hedefe doğru bir sonraki hücre; hedefteyse ya da ulaşılamıyorsa `null`. */
+  getNext(col: number, row: number): GridPoint | null {
+    if (!this.inBounds(col, row)) return null;
+    const index = requiredNumberAt(this.next, row * this.cols + col);
+    if (index < 0) return null;
+    return { col: index % this.cols, row: Math.floor(index / this.cols) };
+  }
+
+  /**
+   * Verilen hücreden hedefe kadar adım adım yol — alan zaten hesaplanmış
+   * olduğu için maliyeti yalnızca yolun uzunluğu kadardır.
+   *
+   * Alan bozuksa (döngü) sonsuz döngüye girmemek için hücre sayısıyla
+   * sınırlıdır.
+   */
+  traceFrom(col: number, row: number): GridPoint[] {
+    const path: GridPoint[] = [];
+    if (this.getCost(col, row) === Infinity) return path;
+
+    let current: GridPoint | null = { col, row };
+    const limit = this.cols * this.rows;
+
+    while (current && path.length < limit) {
+      path.push(current);
+      current = this.getNext(current.col, current.row);
+    }
+    return path;
+  }
+
+  private inBounds(col: number, row: number): boolean {
+    return (
+      Number.isInteger(col) &&
+      Number.isInteger(row) &&
+      col >= 0 &&
+      row >= 0 &&
+      col < this.cols &&
+      row < this.rows
+    );
+  }
+}

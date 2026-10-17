@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Panel } from '../../src/ui/layout/Panel';
 import { ScrollView } from '../../src/ui/layout/ScrollView';
-import { Joystick } from '../../src/ui/controls/Joystick';
-import { PinchZoomController } from '../../src/ui/controls/PinchZoomController';
+import { Joystick } from '../../src/ui/touch/Joystick';
+import { PinchZoomController } from '../../src/ui/camera/PinchZoomController';
 import { ActionBar } from '../../src/ui/hud/ActionBar';
 
 const tracked: Array<{ destroy(): void }> = [];
@@ -27,6 +27,17 @@ afterEach(() => {
 });
 
 describe('Panel', () => {
+  it('boş Panel görünürlük değişiminde çocuk veya odak tuzağı üretmez', () => {
+    const panel = track(new Panel());
+    const emptyChildren = 0;
+    panel.show();
+    expect(panel.element.childElementCount).toBe(emptyChildren);
+    expect(panel.element.inert).toBe(false);
+    panel.hide();
+    expect(panel.element.childElementCount).toBe(0);
+    expect(panel.element.inert).toBe(true);
+  });
+
   it('oluşturulur, gösterilir, gizlenir ve yok edilir', () => {
     const panel = track(new Panel());
     expect(panel.element.classList.contains('vol-panel')).toBe(true);
@@ -61,6 +72,20 @@ describe('Panel', () => {
 });
 
 describe('ScrollView', () => {
+  it('boş ScrollView temizliği odağa erişimi korur ve eski içeriği siler', () => {
+    const scroll = track(new ScrollView());
+    document.body.append(scroll.element);
+    const child = document.createElement('button');
+    scroll.add({ element: child });
+    scroll.clear();
+    const emptyContent = scroll.element.querySelector('.vol-scroll-view__content');
+    expect(emptyContent?.childElementCount).toBe(0);
+    expect(child.isConnected).toBe(false);
+    scroll.element.focus();
+    expect(document.activeElement).toBe(scroll.element);
+    scroll.element.remove();
+  });
+
   it('oluşturulur, yön sınıfını taşır, çocuk eklenir ve temizlenir', () => {
     const vertical = track(new ScrollView({ direction: 'vertical' }));
     expect(vertical.element.classList.contains('vol-scroll-view--vertical')).toBe(true);
@@ -235,9 +260,24 @@ describe('Joystick', () => {
     expect(onMove).toHaveBeenCalled();
   });
 
-  it('destroy tüm pointer listenerlarını temizler', () => {
+  it('destroy sürükleme ortasında çağrılırsa tüm pointer listenerlarını temizler', () => {
     const joystick = track(new Joystick());
     const base = joystick.element.querySelector<HTMLDivElement>('.vol-joystick__base')!;
+
+    // Global (window) listener'lar yalnızca aktif bir sürükleme sırasında
+    // bağlıdır (bkz. "Y6" testleri yukarıda) — destroy()'un onları gerçekten
+    // kaldırdığını görmek için önce bir sürükleme başlatılmalı; aksi halde
+    // hiç bağlanmamış bir listener'ın "kaldırıldığını" doğrulamak anlamsız.
+    base.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        pointerId: 1,
+        clientX: 0,
+        clientY: 0,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
     const removeBase = vi.spyOn(base, 'removeEventListener');
     const removeWindow = vi.spyOn(window, 'removeEventListener');
 
@@ -276,6 +316,37 @@ describe('PinchZoomController', () => {
     expect(controller.getZoom()).toBe(1);
   });
 
+  it('tekerlek zoomunda imlecin altındaki içerik noktası kaçmaz', () => {
+    const controller = track(new PinchZoomController({ content: document.createElement('div') }));
+    const viewport = controller.element.querySelector<HTMLDivElement>('.vol-pinch-zoom__viewport')!;
+    const canvas = controller.element.querySelector<HTMLDivElement>('.vol-pinch-zoom__canvas')!;
+    canvas.style.transformOrigin = '0px 0px';
+    vi.spyOn(viewport, 'getBoundingClientRect').mockReturnValue({
+      left: 10,
+      top: 20,
+      width: 200,
+      height: 100,
+      right: 210,
+      bottom: 120,
+      x: 10,
+      y: 20,
+      toJSON: () => ({}),
+    });
+
+    viewport.dispatchEvent(
+      new WheelEvent('wheel', {
+        deltaY: -100,
+        clientX: 60,
+        clientY: 45,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(controller.getZoom()).toBe(1.1);
+    expect(controller.getPan()[0]).toBeCloseTo(-5);
+    expect(controller.getPan()[1]).toBeCloseTo(-2.5);
+  });
+
   it('tek pointer ile pan hareketi durumu değiştirir', () => {
     const onTransform = vi.fn();
     const controller = track(
@@ -307,6 +378,8 @@ describe('PinchZoomController', () => {
     );
     expect(controller.getZoom()).toBe(1);
     expect(onTransform).toHaveBeenLastCalledWith(1, 7, 3);
+    expect(controller.getPan()).toEqual([7, 3]);
+    expect(controller.element.classList.contains('vol-pinch-zoom--dragging')).toBe(true);
 
     viewport.dispatchEvent(
       new PointerEvent('pointerup', {
@@ -316,6 +389,7 @@ describe('PinchZoomController', () => {
       }),
     );
     expect(controller.getZoom()).toBe(1);
+    expect(controller.element.classList.contains('vol-pinch-zoom--dragging')).toBe(false);
   });
 
   it('iki parmak ile pinch zoom yapar', () => {

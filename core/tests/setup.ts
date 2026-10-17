@@ -1,5 +1,5 @@
 import { vi, beforeAll } from 'vitest';
-import { i18n, i18next } from '../src/systems/I18n';
+import { i18n, i18next } from '../src/i18n/I18n';
 
 // jsdom, HTMLCanvasElement.getContext'i implemente etmez ('canvas' npm
 // paketi kurulu değilse). Phaser modülü import edilir edilmez (sınıf
@@ -14,8 +14,19 @@ import { i18n, i18next } from '../src/systems/I18n';
 const noopCtx2d = {
   fillStyle: '',
   strokeStyle: '',
+  lineWidth: 1,
   fillRect: vi.fn(),
   clearRect: vi.fn(),
+  // Yol çizimi `CurveEditor` için gerekli: bileşen bağlamsız ortamda çizimi
+  // atlar ama bağlam VARSA onu gerçekten kullanır, dolayısıyla stub'ın
+  // kullanılan yüzeyi karşılaması gerekir.
+  beginPath: vi.fn(),
+  closePath: vi.fn(),
+  moveTo: vi.fn(),
+  lineTo: vi.fn(),
+  arc: vi.fn(),
+  stroke: vi.fn(),
+  fill: vi.fn(),
   getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4) })),
   putImageData: vi.fn(),
   createImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4) })),
@@ -38,11 +49,26 @@ if (typeof HTMLCanvasElement !== 'undefined') {
 if (typeof globalThis.PointerEvent === 'undefined') {
   globalThis.PointerEvent = class PointerEvent extends MouseEvent {
     public readonly pointerId: number;
+    // Testlerde bir işaretçi varsayılan olarak birincildir (tarayıcıda ilk fare/parmak öyledir).
+    public readonly isPrimary: boolean;
+    public readonly pointerType: string;
     constructor(type: string, eventInitDict?: PointerEventInit) {
       super(type, eventInitDict);
       this.pointerId = eventInitDict?.pointerId ?? 0;
+      this.isPrimary = eventInitDict?.isPrimary ?? true;
+      this.pointerType = eventInitDict?.pointerType ?? '';
     }
   } as unknown as typeof PointerEvent;
+}
+
+if (typeof globalThis.AnimationEvent === 'undefined') {
+  globalThis.AnimationEvent = class AnimationEvent extends Event {
+    public readonly animationName: string;
+    constructor(type: string, eventInitDict?: { animationName?: string } & EventInit) {
+      super(type, eventInitDict);
+      this.animationName = eventInitDict?.animationName ?? '';
+    }
+  } as unknown as typeof AnimationEvent;
 }
 
 if (typeof globalThis.ResizeObserver === 'undefined') {
@@ -74,11 +100,11 @@ if (typeof globalThis.matchMedia === 'undefined') {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
-  })) as unknown as typeof matchMedia;
+  }));
 }
 
 // jsdom, CSS Font Loading API'sini (FontFace, document.fonts) implemente
-// etmez. FontManager (bkz. src/systems/FontManager.ts) `new FontFace(...)`
+// etmez. FontManager (bkz. src/fonts/FontManager.ts) `new FontFace(...)`
 // ve `document.fonts.add/delete` kullanır — bu stub olmadan FontManager'a
 // dokunan HERHANGİ bir test import/çalışma aşamasında çöker.
 if (typeof globalThis.FontFace === 'undefined') {
@@ -105,32 +131,38 @@ if (typeof globalThis.FontFace === 'undefined') {
   } as unknown as typeof FontFace;
 }
 
+// document.fonts stub'i KOŞULSUZ kurulur. Yeni jsdom surumleri native bir
+// `document.fonts` sağlıyor ama `ready` promise'i hiçbir zaman resolve
+// olmuyor: Game.ts'teki `Promise.race([document.fonts.ready, timeout])` her
+// createVolGame çağrısında tam TECH.FONT_READY_FALLBACK_MS (5 sn) bekliyor,
+// vitest'in 5 sn test timeout'una carpiyor ve yarıda kalan promise zinciri
+// bir sonraki teste sızıyordu. Koşullu stub (`if (!('fonts' in document))`)
+// native implementasyon varken devreye girmediği için sorunu çözmüyor.
 if (typeof document !== 'undefined') {
-  if (!('fonts' in document)) {
-    const fontSet = new Set<FontFace>();
-    (
-      document as unknown as {
-        fonts: {
-          ready: Promise<FontFaceSet>;
-          check: () => boolean;
-          add: (f: FontFace) => void;
-          delete: (f: FontFace) => void;
-        } & Iterable<FontFace>;
-      }
-    ).fonts = {
+  const fontSet = new Set<FontFace>();
+  Object.defineProperty(document, 'fonts', {
+    configurable: true,
+    writable: true,
+    value: {
       ready: Promise.resolve(undefined as unknown as FontFaceSet),
       check: () => true,
       add: (f: FontFace) => fontSet.add(f),
       delete: (f: FontFace) => fontSet.delete(f),
       [Symbol.iterator]: () => fontSet[Symbol.iterator](),
-    };
-  }
+    },
+  });
 }
 
 beforeAll(async () => {
   await i18n.init();
   await i18next.changeLanguage('tr');
 });
+
+// jsdom Pointer Capture API'sini implemente etmez. Stub'lar ortak bir küme
+// üzerinden tutarlı davranır: `hasPointerCapture` koşulsuz `false` dönseydi
+// `if (el.hasPointerCapture(id)) el.releasePointerCapture(id)` yazan üretim
+// kodu testte hiç release etmez, gerçek akış testte ölü kalırdı.
+const capturedPointers = new WeakMap<Element, Set<number>>();
 
 for (const ctor of [HTMLElement, Element]) {
   const proto = ctor.prototype as unknown as {
@@ -139,12 +171,32 @@ for (const ctor of [HTMLElement, Element]) {
     hasPointerCapture?: (pointerId: number) => boolean;
   };
   if (typeof proto.setPointerCapture !== 'function') {
-    proto.setPointerCapture = vi.fn();
+    proto.setPointerCapture = vi.fn(function (this: Element, pointerId: number) {
+      let set = capturedPointers.get(this);
+      if (!set) {
+        set = new Set<number>();
+        capturedPointers.set(this, set);
+      }
+      set.add(pointerId);
+    });
   }
   if (typeof proto.releasePointerCapture !== 'function') {
-    proto.releasePointerCapture = vi.fn();
+    proto.releasePointerCapture = vi.fn(function (this: Element, pointerId: number) {
+      capturedPointers.get(this)?.delete(pointerId);
+    });
   }
   if (typeof proto.hasPointerCapture !== 'function') {
-    proto.hasPointerCapture = vi.fn(() => false);
+    proto.hasPointerCapture = vi.fn(function (this: Element, pointerId: number) {
+      return capturedPointers.get(this)?.has(pointerId) ?? false;
+    });
   }
+}
+
+// jsdom `HTMLMediaElement.prototype.play`/`pause`/`load`'u implemente etmez
+// ve reddedilen promise / console gürültüsü basar. LoadingScreen video
+// arkaplan testlerinde bu gürültüyü önlemek için no-op mock.
+if (typeof HTMLMediaElement !== 'undefined') {
+  HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
+  HTMLMediaElement.prototype.pause = vi.fn();
+  HTMLMediaElement.prototype.load = vi.fn();
 }

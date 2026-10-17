@@ -1,0 +1,327 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
+import {
+  Button,
+  CanvasViewportController,
+  VOL_ICONS,
+  Checkbox,
+  Input,
+  KeyedVirtualList,
+  Icon,
+  PropertyField,
+  Slider,
+  SplitPane,
+  Text,
+} from '@volstudio/core/ui';
+import { CommandHistory, type CommandHistorySnapshot } from '@volstudio/core/state';
+import { GraphicsQuality } from '@volstudio/core/graphics';
+import { i18next } from '@volstudio/core/i18n';
+import { card, cardGrid3 } from './shared';
+
+function buildPropertyDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-workbench-fields';
+  const commitState = new Text(i18next.t('volui:workbench.noCommit'), { variant: 'muted' });
+  const input = new Input({
+    value: i18next.t('volui:workbench.nameValue'),
+    onCommit: (value) =>
+      commitState.setContent(i18next.t('volui:workbench.commitState', { value, at: new Date() })),
+  });
+  const nameField = new PropertyField({
+    label: i18next.t('volui:workbench.name'),
+    control: input,
+    description: i18next.t('volui:workbench.nameDescription'),
+    resetLabel: i18next.t('volui:workbench.reset'),
+    onReset: () => input.setValue(i18next.t('volui:workbench.nameValue')),
+  });
+  const opacity = new Slider({
+    min: 0,
+    max: 100,
+    value: 82,
+    step: 1,
+    ariaLabel: i18next.t('volui:workbench.opacity'),
+  });
+  const opacityField = new PropertyField({
+    label: i18next.t('volui:workbench.opacity'),
+    control: opacity,
+    resetLabel: i18next.t('volui:workbench.reset'),
+    onReset: () => opacity.setValue(100),
+  });
+  const visible = new Checkbox({ label: i18next.t('volui:workbench.visible'), checked: true });
+
+  wrap.append(nameField.element, opacityField.element, visible.element, commitState.element);
+  disposables.addDestroyables(input, nameField, opacity, opacityField, visible, commitState);
+  return wrap;
+}
+
+function buildHistoryDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-workbench-history';
+  let value = 0;
+  const state = new Text('', { variant: 'muted' });
+  // `undo`/`redo` aşağıda kurulur. `CommandHistory` yapıcısı `onChange`
+  // çağırmaz; `render` ilk kez ikisi de hazır olduktan sonra koşar.
+  const render = (snapshot: CommandHistorySnapshot): void => {
+    state.setContent(
+      i18next.t('volui:workbench.historyState', {
+        value,
+        undo: snapshot.undoCount,
+        redo: snapshot.redoCount,
+      }),
+    );
+    undo.setDisabled(!snapshot.canUndo);
+    redo.setDisabled(!snapshot.canRedo);
+  };
+  const history = new CommandHistory({ maxBytes: 1024, onChange: render });
+  const apply = new Button(i18next.t('volui:workbench.applyChange'), {
+    variant: 'primary',
+    onClick: () => {
+      const before = value;
+      history.execute({
+        label: i18next.t('volui:workbench.applyChange'),
+        byteCost: 8,
+        apply: () => {
+          value = before + 1;
+        },
+        revert: () => {
+          value = before;
+        },
+      });
+    },
+  });
+  const undo = new Button(i18next.t('volui:workbench.undo'), {
+    onClick: () => void history.undo(),
+  });
+  const redo = new Button(i18next.t('volui:workbench.redo'), {
+    onClick: () => void history.redo(),
+  });
+  render(history.getSnapshot());
+  const actions = document.createElement('div');
+  actions.className = 'vol-showcase-row__group';
+  actions.append(apply.element, undo.element, redo.element);
+  wrap.append(actions, state.element);
+  disposables.addDestroyables(apply, undo, redo, state);
+  return wrap;
+}
+
+function buildSplitViewportDemo(disposables: DisposableScope): HTMLElement {
+  const assets = Array.from({ length: 240 }, (_, index) => ({
+    id: `asset-${index + 1}`,
+    label: i18next.t('volui:workbench.assetRow', { index: index + 1 }),
+  }));
+  const list = new KeyedVirtualList({
+    items: assets,
+    getKey: (item) => item.id,
+    itemHeight: 38,
+    height: '100%',
+    ariaLabel: i18next.t('volui:workbench.assetList'),
+    renderItem: (item) => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'vol-showcase-workbench-asset';
+      row.textContent = item.label;
+      return row;
+    },
+  });
+
+  const viewport = document.createElement('div');
+  viewport.className = 'vol-showcase-workbench-viewport';
+  viewport.tabIndex = 0;
+  viewport.setAttribute('role', 'region');
+  viewport.setAttribute('aria-label', i18next.t('volui:workbench.viewport'));
+  const artwork = document.createElement('div');
+  artwork.className = 'vol-showcase-workbench-artwork';
+  for (const tone of ['brand', 'support', 'accent', 'warning']) {
+    const block = document.createElement('span');
+    block.className = `vol-showcase-workbench-artwork__block vol-showcase-workbench-artwork__block--${tone}`;
+    artwork.appendChild(block);
+  }
+  viewport.appendChild(artwork);
+
+  const zoomState = new Text('', { variant: 'muted', tag: 'span' });
+  const controller = new CanvasViewportController(viewport, {
+    documentWidth: 256,
+    documentHeight: 256,
+    minZoom: 0.25,
+    maxZoom: 8,
+    // Tekerlek ve Space+sürükleme tek yol değildir (UI-10.4): görünüm odaktayken `+`/`-`/oklar/`0`/`Home` de çalışır.
+    keyboard: true,
+    onChange: (transform) => {
+      artwork.style.transform = `translate(${transform.offsetX}px, ${transform.offsetY}px) scale(${transform.zoom})`;
+      zoomState.setContent(i18next.t('volui:workbench.zoomState', { zoom: transform.zoom }));
+    },
+  });
+  controller.actualSize();
+  const fit = new Button(i18next.t('volui:workbench.fit'), {
+    size: 'sm',
+    onClick: () => controller.fit(),
+  });
+  const actual = new Button(i18next.t('volui:workbench.actualSize'), {
+    size: 'sm',
+    onClick: () => controller.actualSize(),
+  });
+  const zoomOut = new Button(i18next.t('volui:workbench.zoomOut'), {
+    size: 'sm',
+    onClick: () => controller.zoomBy(1 / 1.25),
+  });
+  const zoomIn = new Button(i18next.t('volui:workbench.zoomIn'), {
+    size: 'sm',
+    onClick: () => controller.zoomBy(1.25),
+  });
+  const viewportWrap = document.createElement('div');
+  viewportWrap.className = 'vol-showcase-workbench-viewport-wrap';
+  const viewportBar = document.createElement('div');
+  viewportBar.className = 'vol-showcase-workbench-viewport-bar';
+  const hint = new Text(i18next.t('volui:workbench.viewportHint'), {
+    variant: 'muted',
+    tag: 'span',
+  });
+  viewportBar.append(
+    hint.element,
+    zoomState.element,
+    zoomOut.element,
+    zoomIn.element,
+    fit.element,
+    actual.element,
+  );
+  viewportWrap.append(viewportBar, viewport);
+
+  const split = new SplitPane({
+    primary: list,
+    secondary: viewportWrap,
+    initialSize: 220,
+    // En küçükler yerleşimde de geçerlidir (kap dar kalırsa dış panel kayar); tablet dikeyinde (≈470 px kart) tutamağın
+    // sürülecek payı kalsın diye ikisi de küçük tutulur: 473 − 44 (tutamak) − 200 = 229 üst sınır, 120 alt sınır.
+    minPrimary: 120,
+    minSecondary: 200,
+    separatorLabel: i18next.t('volui:workbench.splitPane'),
+  });
+  split.element.classList.add('vol-showcase-workbench-split');
+  disposables.addDestroyables(
+    list,
+    controller,
+    zoomState,
+    hint,
+    zoomOut,
+    zoomIn,
+    fit,
+    actual,
+    split,
+  );
+  return split.element;
+}
+
+/**
+ * CORE ikon kaydının TAMAMI.
+ *
+ * Liste elle yazılmaz, `VOL_ICONS` üzerinde gezilir: kayda yeni bir ikon
+ * eklendiğinde showcase'e ayrıca eklenmesi gerekmez ve hiçbir ikon görsel
+ * denetimden kaçamaz.
+ */
+function buildIconRegistry(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-workbench-icons';
+  for (const name of Object.keys(VOL_ICONS) as (keyof typeof VOL_ICONS)[]) {
+    const cell = document.createElement('div');
+    cell.className = 'vol-showcase-workbench-icons__cell';
+    const instance = new Icon({ name, label: name, size: 36 });
+    disposables.addDestroyables(instance);
+    const caption = document.createElement('span');
+    caption.textContent = name;
+    cell.append(instance.element, caption);
+    wrap.appendChild(cell);
+  }
+  return wrap;
+}
+
+/**
+ * `GraphicsQuality` — kalite kademelerinin jenerik kaydı.
+ *
+ * Showcase kendi kademelerini ve kendi profil şeklini tanımlar; CORE hangi
+ * knob'ların var olduğunu bilmez. Demo tam da bunu gösterir: profil alanları
+ * burada uydurulmuştur ve panel onları olduğu gibi listeler.
+ */
+function buildGraphicsQualityDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  interface DemoProfile {
+    readonly renderScale: number;
+    readonly particles: number;
+    readonly trails: boolean;
+  }
+
+  const quality = new GraphicsQuality<'high' | 'low', DemoProfile>({
+    levels: {
+      high: { renderScale: 1, particles: 1, trails: true },
+      low: { renderScale: 0.7, particles: 0.35, trails: false },
+    },
+    initial: 'high',
+  });
+
+  const readout = new Text('', { variant: 'muted' });
+  const pixelText = new Text('', { variant: 'muted' });
+  const render = (): void => {
+    const profile = quality.getProfile();
+    readout.setContent(
+      `${quality.getLevel()} — renderScale ${profile.renderScale}, particles ${
+        profile.particles
+      }, trails ${String(profile.trails)}`,
+    );
+    // Rasterlenen piksel oranı ölçeğin KARESİDİR; kademeler arasındaki gerçek
+    // maliyet farkı burada görünür.
+    pixelText.setContent(
+      `${i18next.t('volui:workbench.graphicsQualityPixels')}: ${Math.round(
+        profile.renderScale ** 2 * 100,
+      )}%`,
+    );
+  };
+  disposables.addSubscription(quality.onChange(render));
+  render();
+
+  const controls = document.createElement('div');
+  controls.className = 'vol-showcase-panel-demo__controls';
+  const toggle = new Button(i18next.t('volui:workbench.graphicsQualityToggle'), {
+    variant: 'primary',
+    onClick: () => {
+      quality.setLevel(quality.getLevel() === 'high' ? 'low' : 'high');
+    },
+  });
+  disposables.addDestroyables(toggle, readout, pixelText);
+  disposables.add({ dispose: () => quality.destroy() });
+  controls.appendChild(toggle.element);
+
+  wrap.append(readout.element, pixelText.element, controls);
+  return wrap;
+}
+
+export function buildWorkbenchTab(): {
+  element: HTMLElement;
+  destroy: () => void;
+} {
+  const disposables = new DisposableScope();
+  const section = document.createElement('div');
+  section.className = 'vol-showcase-section';
+  section.append(
+    cardGrid3([
+      card(i18next.t('volui:workbench.propertyFields'), buildPropertyDemo(disposables), {
+        spanAll: true,
+      }),
+      card(i18next.t('volui:workbench.history'), buildHistoryDemo(disposables), { spanAll: true }),
+    ]),
+    card(i18next.t('volui:workbench.iconRegistry'), buildIconRegistry(disposables), {
+      spanAll: true,
+    }),
+    card(i18next.t('volui:workbench.splitPane'), buildSplitViewportDemo(disposables), {
+      spanAll: true,
+    }),
+    card(i18next.t('volui:workbench.graphicsQuality'), buildGraphicsQualityDemo(disposables), {
+      spanAll: true,
+    }),
+  );
+  return {
+    element: section,
+    destroy: () => {
+      disposables.dispose();
+    },
+  };
+}

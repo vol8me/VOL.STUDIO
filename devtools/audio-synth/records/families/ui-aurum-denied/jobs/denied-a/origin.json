@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:cceee97a6d31a7dce62cc6fa9a11b8acbed6282159766f52b540b43a2c7c3ebe",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:2e42e6a6eddd1ff6c1285cd055c7bed4cc99ee055c229e7e74844c19bd9b53be",
+    "familyId": "ui-aurum-denied",
+    "kind": "family-variant",
+    "variantId": "v-72b90ee1bd672f4e",
+    "variantKey": "denied-a"
+  }
+}

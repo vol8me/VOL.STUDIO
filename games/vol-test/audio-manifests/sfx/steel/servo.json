@@ -1,0 +1,408 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.000025864292836907987
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 3.3,
+        "frames": 158400,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -9.025998087939978
+        ],
+        "channelRmsDbfs": [
+          -20.236176742664544
+        ],
+        "crestFactorDb": 11.210178654724565,
+        "integratedLufs": -20.362355661243612,
+        "maxMomentaryLufs": -20.110854320661026,
+        "rmsDbfs": -20.236176742664544,
+        "samplePeakDbfs": -9.025998087939978,
+        "truePeakDbtp": -9.02545820513568
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -87.73207809791359,
+          "high": -35.12714279676474,
+          "low": -26.85749651954964,
+          "mid": -22.121256370985066,
+          "sub": -30.173174970572674
+        },
+        "centroidHz": 762.5994720642442,
+        "flatness": 2.3347993075953672e-9,
+        "peakHz": 562.5,
+        "rolloff85Hz": 1148.4375
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 3.3,
+        "attackSeconds": 0.27,
+        "decay40Seconds": null,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 1.41,
+        "temporalCentroidSeconds": 1.632773933442242,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:bb7b1259cbd9b9b8acf0cfee4af095a6e9b9ee26f8fa50530243a671d6b7c9e5"
+  },
+  "asset": {
+    "bytes": 38834,
+    "encodedHash": "sha256:425faa5a5327d1931c9489e759463074cfa18c0a5cc08eaf2c4f01bc8473a7b7",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/servo.ogg"
+  },
+  "assetId": "vt-hardsteel-servo",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "durationSeconds": {
+        "max": 4.125,
+        "min": 2.64
+      },
+      "id": "vt-hardsteel-servo",
+      "intent": "Taret servosu: dolgun dişli uğultusu ve alçak hidrolik.",
+      "kind": "acoustic",
+      "loop": true,
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "claude"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST — servo"
+    },
+    "hash": "sha256:5768bbba7426481f475be2be790b4b98dc1ef200ffb4d44568d0804c5486494e",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9d2852e8fa81d029021bc5591eb4192dac5844297430c331ac836f0d8c04c469",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:e135710580e9288785b2d613e3eec634131c324ac6eca46746731b2afd8758e3",
+      "nodes": [
+        {
+          "hash": "sha256:73c932af5fb3389065aa8cf48494308d8bd2e21e5df0e7dda63201f24c11c42b",
+          "id": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722",
+          "id": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f1618b5458b7b327a4415cc22bede9a5976a0e37c57273b6dd7b2712acd16e07",
+          "id": "effect.saturation",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:378e408dfec3d4bb8f618707b3f2427556203baa54b5a4100742edf14a2c0995",
+          "id": "source.machine",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": null,
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-hardsteel-servo",
+    "path": "devtools/audio-synth/records/jobs/vt-hardsteel-servo",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Taret servosu: dişli uğultusu ve hidrolik.",
+      "durationSeconds": 3.6,
+      "effects": [
+        {
+          "params": {
+            "frequency": 45,
+            "order": 3,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 380,
+            "gainDb": 2,
+            "q": 0.9
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "character": "tanh",
+            "driveDb": 6,
+            "mix": 0.5,
+            "outputDb": 0
+          },
+          "primitive": "effect.saturation",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 6500,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "layers": [
+        {
+          "gainDb": -8.88,
+          "mechanism": "motor",
+          "name": "gear",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 2400,
+                "mode": "lowpass",
+                "q": 0.8
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "bearing": 0.2,
+              "count": 19,
+              "harmonics": 12,
+              "imbalance": 0.2,
+              "load": 0.6,
+              "mechanism": "gear",
+              "noise": 0.12,
+              "rpm": 1800,
+              "tilt": 0.35
+            },
+            "primitive": "source.machine",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -3.84,
+          "mechanism": "noise",
+          "name": "hum",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 190,
+                "mode": "bandpass",
+                "q": 1.4
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 500,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "color": "pink"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -10.99,
+          "mechanism": "noise",
+          "name": "hydraulic",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 120,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 1100,
+                "mode": "lowpass",
+                "q": 0.7
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "texture",
+          "source": {
+            "params": {
+              "color": "pink"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -8.37,
+          "mechanism": "noise",
+          "name": "sub",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 70,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "color": "brown"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 20,
+        "limiter": {
+          "ceilingDbtp": -1.5
+        },
+        "loop": {
+          "crossfadeSeconds": 0.3
+        },
+        "normalize": "peak",
+        "peakDbfs": -9
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 730104
+    },
+    "hash": "sha256:d7cf3e99b9a1ceda337d9804c5f0bf1e2fa91ab224fe8dcdacbe4b41ced0050b",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 158400,
+      "hash": "sha256:f757af9fc5a983404a6246b016f87222bb2b16dfb628cfa64cd7591ae89d17b8",
+      "sampleRate": 48000
+    },
+    "renderId": "r-a84b82ef5529cf9f",
+    "rendererVersion": 2,
+    "seed": 730104
+  },
+  "schema": "AudioAssetManifestV1",
+  "seam": {
+    "jumpRatio": 0.1453,
+    "levelStepDb": -1.143,
+    "method": "loop-seam-v1",
+    "pass": true,
+    "reasons": [],
+    "spectralStepDb": -3.024
+  }
+}

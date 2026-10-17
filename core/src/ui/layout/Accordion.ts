@@ -1,3 +1,5 @@
+import { emitUiIntent } from '../feedback/uiIntent';
+import { Icon } from '../primitives/Icon';
 export interface AccordionSectionContent {
   element: HTMLElement;
   /** Accordion.destroy() tarafından çağrılır (verilirse). */
@@ -29,7 +31,7 @@ export class Accordion {
   private readonly openIds = new Set<string>();
   private readonly headerElements = new Map<string, HTMLButtonElement>();
   private readonly panelElements = new Map<string, HTMLDivElement>();
-  private readonly boundHeaderClicks = new Map<string, () => void>();
+  private readonly boundHeaderClicks = new Map<string, (event: Event) => void>();
   private readonly instanceId = `vol-accordion-${++accordionInstanceCounter}`;
 
   constructor(sections: AccordionSection[], options: AccordionOptions = {}) {
@@ -40,20 +42,35 @@ export class Accordion {
     this.element = document.createElement('div');
     this.element.className = 'vol-accordion';
 
+    // Tekli kipte birden çok başlangıç açık bölümü verilse de yalnız ilk geçerli olan açılır.
+    const known = defaultOpen.filter((id) => sections.some((section) => section.id === id));
+    const initiallyOpen = new Set(singleOpen ? known.slice(0, 1) : known);
     for (const section of sections) {
-      this.element.appendChild(this.buildSection(section, defaultOpen.includes(section.id)));
+      this.element.appendChild(this.buildSection(section, initiallyOpen.has(section.id)));
     }
   }
 
-  toggle(id: string): void {
-    if (this.openIds.has(id)) {
-      this.close(id);
-    } else {
+  /** `event` verilirse (kullanıcı etkinleştirmesi) bölüm açma/kapama `open`/`close` niyeti olarak duyulur. */
+  toggle(id: string, event?: Event): void {
+    const opening = !this.openIds.has(id);
+    const header = this.headerElements.get(id);
+    if (event && header) {
+      emitUiIntent({
+        kind: opening ? 'open' : 'close',
+        origin: 'Accordion',
+        target: header,
+        event,
+      });
+    }
+    if (opening) {
       this.open(id);
+    } else {
+      this.close(id);
     }
   }
 
   open(id: string): void {
+    if (!this.panelElements.has(id)) return;
     if (this.singleOpen) {
       for (const openId of [...this.openIds]) {
         if (openId !== id) this.close(openId);
@@ -61,13 +78,18 @@ export class Accordion {
     }
     this.openIds.add(id);
     this.headerElements.get(id)?.setAttribute('aria-expanded', 'true');
-    this.panelElements.get(id)?.classList.add('vol-accordion__panel--open');
+    const panel = this.panelElements.get(id);
+    panel?.classList.add('vol-accordion__panel--open');
+    panel?.removeAttribute('inert');
   }
 
   close(id: string): void {
     this.openIds.delete(id);
     this.headerElements.get(id)?.setAttribute('aria-expanded', 'false');
-    this.panelElements.get(id)?.classList.remove('vol-accordion__panel--open');
+    const panel = this.panelElements.get(id);
+    panel?.classList.remove('vol-accordion__panel--open');
+    // Kapalı panel yalnız sıfır yüksekliğe iner; içindeki denetimlere Tab ve okuyucu ulaşmasın.
+    panel?.setAttribute('inert', '');
   }
 
   /** DOM'u, başlık listener'larını ve `content.destroy` sağlayan bölümleri temizler. */
@@ -98,7 +120,8 @@ export class Accordion {
 
     const caret = document.createElement('span');
     caret.className = 'vol-accordion__caret';
-    caret.textContent = '▸';
+    caret.setAttribute('aria-hidden', 'true');
+    caret.appendChild(new Icon({ name: 'chevronRight', size: 14 }).element);
     header.appendChild(caret);
 
     if (section.icon) {
@@ -117,7 +140,7 @@ export class Accordion {
     title.textContent = section.title;
     header.appendChild(title);
 
-    const onClick = (): void => this.toggle(section.id);
+    const onClick = (event: Event): void => this.toggle(section.id, event);
     header.addEventListener('click', onClick);
     this.boundHeaderClicks.set(section.id, onClick);
     this.headerElements.set(section.id, header);
@@ -133,6 +156,7 @@ export class Accordion {
     panel.setAttribute('role', 'region');
     panel.setAttribute('aria-labelledby', headerId);
     if (isOpen) panel.classList.add('vol-accordion__panel--open');
+    else panel.setAttribute('inert', '');
     const panelInner = document.createElement('div');
     panelInner.className = 'vol-accordion__panel-inner';
     panelInner.appendChild(section.content.element);

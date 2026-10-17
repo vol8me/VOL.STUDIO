@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "panel-open"
+  ],
+  "durationSeconds": {
+    "max": 0.48,
+    "min": 0.144
+  },
+  "id": "ui-steel-panel-open-panel-open-c",
+  "intent": "çelik donanım: panel-open Varyant panel-open-c (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel panel-open — panel-open-c"
+}

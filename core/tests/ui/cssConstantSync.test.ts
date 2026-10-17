@@ -1,0 +1,223 @@
+import { describe, it, expect } from 'vitest';
+import { readUiCss } from '../support/uiCss';
+import { MODAL_TRANSITION_MS } from '../../src/ui/overlays/Confirm';
+import { TOAST_FADE_OUT_MS } from '../../src/ui/overlays/Toast';
+import { MIN_NODE_WIDTH, NODE_HEIGHT, NODE_LABEL_FONT } from '../../src/ui/hud/SkillTree';
+import { HANDLE_WIDTH_PX } from '../../src/ui/primitives/RangeSlider';
+import { EVENT_LOG_LEAVE_DURATION_MS } from '../../src/ui/data/EventLog';
+import {
+  LEAVE_ANIMATION_MS,
+  REROLL_FLASH_MS,
+  PURCHASE_FLASH_MS,
+} from '../../src/ui/cards/ShopPicker';
+import { CARD_ENTER_ANIMATION_MS } from '../../src/ui/cards/CardTile';
+import { UI_TIMING } from '../../src/constants';
+
+/**
+ * CSS sabit senkronu:
+ * - Teardown zamanlayıcıları CSS süresinden kısa olamaz.
+ * - Geometrik değerler (genişlik, font) birebir eşit olmalı.
+ */
+const theme = readUiCss('theme.css');
+const overlays = readUiCss('overlays/overlays.css');
+const hud = readUiCss('hud/hud.css');
+const skillTree = readUiCss('hud/skillTree.css');
+const primitiveChoices = readUiCss('primitives/choices.css');
+const dataBoards = readUiCss('data/boards.css');
+const cards = readUiCss('cards/cards.css');
+
+/** `--vol-transition-medium: 0.24s ease` → 240 */
+function cssVarDurationMs(css: string, varName: string): number {
+  const match = new RegExp(`${varName}:\\s*([0-9.]+)(m?s)`).exec(css);
+  expect(match, `${varName} theme.css'te bulunamadı`).not.toBeNull();
+  const value = Number(match![1]);
+  return match![2] === 'ms' ? value : value * 1000;
+}
+
+/**
+ * Bir kural bloğundaki tek bir bildirimin değerini döndürür.
+ *
+ * Yorumlar eşleştirmeden ÖNCE atılır ve bildirim bir satır başından da
+ * yakalanır; yoksa araya açıklama bloğu giren ilk bildirim sessizce
+ * "bulunamadı" olur ve test, sınadığı dosyanın yorumlanmasına karşı kırılgan
+ * kalır.
+ */
+function cssDeclaration(css: string, selector: string, property: string): string {
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const block = new RegExp(
+    `${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`,
+  ).exec(withoutComments);
+  expect(block, `${selector} bulunamadı`).not.toBeNull();
+  const decl = new RegExp(`(?:^|;|\\n)\\s*${property}:\\s*([^;]+)`).exec(block![1]);
+  expect(decl, `${selector} içinde ${property} yok`).not.toBeNull();
+  return decl![1].trim();
+}
+
+/**
+ * `var(--x)` biçimindeki bir değeri `theme.css`teki tanımına çözer.
+ *
+ * Boyutlar tip ölçeğine bağlı olduğu için CSS ham piksel taşımaz; sabiti
+ * doğrudan `var(...)` metniyle karşılaştırmak testi anlamsız kılardı. Çözerek
+ * karşılaştırmak sözleşmeyi GÜÇLENDİRİR: hem sabitin doğru olduğunu hem de
+ * bileşenin doğru ölçek kademesini kullandığını aynı anda doğrular.
+ */
+function resolveToken(value: string): string {
+  const match = /^var\(\s*(--[a-z0-9-]+)\s*\)$/.exec(value.trim());
+  return match ? resolveToken(cssDeclaration(theme, ':root', match[1])) : value;
+}
+
+function pxToNumber(value: string): number {
+  return Number(value.replace('px', '').trim());
+}
+
+describe('CSS sabit senkronu — teardown zamanlayıcıları', () => {
+  it('MODAL_TRANSITION_MS, .vol-modal geçişinden kısa değil', () => {
+    const cssMs = cssVarDurationMs(theme, '--vol-transition-medium');
+    expect(overlays).toMatch(/\.vol-modal\b/);
+    expect(MODAL_TRANSITION_MS).toBeGreaterThanOrEqual(cssMs);
+  });
+
+  it('TOAST_FADE_OUT_MS, .vol-toast geçişinden kısa değil', () => {
+    const cssMs = cssVarDurationMs(theme, '--vol-transition-medium');
+    expect(TOAST_FADE_OUT_MS).toBeGreaterThanOrEqual(cssMs);
+  });
+
+  it('EVENT_LOG_LEAVE_DURATION_MS, leave animasyonundan kısa değil', () => {
+    const animation = cssDeclaration(dataBoards, '.vol-event-log__row--leave', 'animation');
+    const match = /([0-9.]+)(m?s)/.exec(animation);
+    expect(match, 'leave animasyon süresi okunamadı').not.toBeNull();
+    const cssMs = match![2] === 'ms' ? Number(match![1]) : Number(match![1]) * 1000;
+    expect(EVENT_LOG_LEAVE_DURATION_MS).toBeGreaterThanOrEqual(cssMs);
+  });
+
+  it('LEAVE_ANIMATION_MS, .vol-card--leaving animasyonundan kısa değil', () => {
+    // `animation` shorthand'te süre `var(--vol-transition-medium)` olarak
+    // geçiyor; gerçek değeri theme.css'den çöz.
+    const cssMs = cssVarDurationMs(theme, '--vol-transition-medium');
+    expect(LEAVE_ANIMATION_MS).toBeGreaterThanOrEqual(cssMs);
+  });
+
+  it('REROLL_FLASH_MS, ızgara reroll animasyonundan kısa değil', () => {
+    // Sabit, CSS animasyon süresinden kısa olmamalı.
+    const animation = cssDeclaration(
+      cards,
+      '.vol-card-picker--rerolling .vol-card-picker__grid',
+      'animation',
+    );
+    const match = /([0-9.]+)(m?s)/.exec(animation);
+    expect(match, 'reroll ızgara animasyon süresi bulunamadı').not.toBeNull();
+    const cssMs = match![2] === 'ms' ? Number(match![1]) : Number(match![1]) * 1000;
+    expect(REROLL_FLASH_MS).toBeGreaterThanOrEqual(cssMs);
+  });
+
+  it('PURCHASE_FLASH_MS, .vol-card--just-purchased animasyonundan kısa değil', () => {
+    // Satın alma vurgusu için ayrı süre kullanılır.
+    const cssMs = cssVarDurationMs(theme, '--vol-transition-medium');
+    expect(PURCHASE_FLASH_MS).toBeGreaterThanOrEqual(cssMs);
+  });
+
+  it('CARD_ENTER_ANIMATION_MS, .vol-card--entering animasyonundan kısa değil', () => {
+    const gridBase =
+      '.vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased)';
+    const animation = cssDeclaration(cards, gridBase, 'animation');
+    const match = /([0-9.]+)(m?s)/.exec(animation);
+    expect(match, 'entering animasyon süresi okunamadı').not.toBeNull();
+    const cssMs = match![2] === 'ms' ? Number(match![1]) : Number(match![1]) * 1000;
+    const staggerMs = cssVarDurationMs(theme, '--vol-motion-preset-card-stagger');
+    // Zamanlayıcı yedeği, en geç başlayan (4.) kartın animasyonunu da kapsamalı.
+    expect(CARD_ENTER_ANIMATION_MS).toBeGreaterThanOrEqual(cssMs + 3 * staggerMs);
+  });
+});
+
+describe('CSS sabit senkronu — kart destesi', () => {
+  it('CARD_FLY_ANIMATION_MS, .vol-card-stack__card--flying geçişinden kısa değil', () => {
+    const transition = cssDeclaration(cards, '.vol-card-stack__card--flying', 'transition');
+    expect(transition).toContain('var(--vol-transition-medium)');
+    expect(UI_TIMING.CARD_FLY_ANIMATION_MS).toBeGreaterThanOrEqual(
+      cssVarDurationMs(theme, '--vol-transition-medium'),
+    );
+  });
+});
+
+describe('CSS sabit senkronu — geometri birebir eşleşmeli', () => {
+  it('MIN_NODE_WIDTH === .vol-skill-tree__node min-width', () => {
+    const cssWidth = cssDeclaration(skillTree, '.vol-skill-tree__node', 'min-width');
+    expect(pxToNumber(cssWidth)).toBe(MIN_NODE_WIDTH);
+  });
+
+  it('NODE_HEIGHT === .vol-skill-tree__node height (ok gezinmesi yerleşim kutusu)', () => {
+    const cssHeight = cssDeclaration(skillTree, '.vol-skill-tree__node', 'height');
+    expect(pxToNumber(cssHeight)).toBe(NODE_HEIGHT);
+  });
+
+  it('HANDLE_WIDTH_PX === .vol-range-slider__handle width', () => {
+    const cssWidth = cssDeclaration(primitiveChoices, '.vol-range-slider__handle', 'width');
+    expect(pxToNumber(cssWidth)).toBe(HANDLE_WIDTH_PX);
+  });
+
+  it('NODE_LABEL_FONT, .vol-skill-tree__node-label ile aynı font/weight/size taşır', () => {
+    // measureText() bu string ile ölçüm yapıyor; CSS'ten saparsa düğüm
+    // genişlikleri yanlış hesaplanır ve uzun etiketler kutudan taşar.
+    const fontFamily = cssDeclaration(theme, ':root', '--vol-font-family');
+    const fontSize = resolveToken(
+      cssDeclaration(skillTree, '.vol-skill-tree__node-label', 'font-size'),
+    );
+    const fontWeight = cssDeclaration(skillTree, '.vol-skill-tree__node-label', 'font-weight');
+
+    expect(NODE_LABEL_FONT).toBe(`${fontWeight} ${fontSize} ${fontFamily}`);
+
+    // Düğümün kendisi bu aileyi kullanmalı, aksi halde ölçüm başka fontla yapılır.
+    expect(cssDeclaration(skillTree, '.vol-skill-tree__node', 'font-family')).toBe(
+      'var(--vol-font-family)',
+    );
+  });
+
+  it('vol-card-picker paneli yükseklik sınırı ve kaydırmaya sahip', () => {
+    const maxHeight = cssDeclaration(cards, '.vol-card-picker', 'max-height');
+    const overflowY = cssDeclaration(cards, '.vol-card-picker', 'overflow-y');
+    expect(maxHeight).toBe('88vh');
+    expect(overflowY).toBe('auto');
+  });
+
+  it('stagger gecikmesi yalnızca teklif ızgarasındaki YENİ kartlara uygulanır', () => {
+    const gridBase =
+      '.vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased)';
+    const gridSecond = cssDeclaration(cards, `${gridBase}:nth-child(2)`, 'animation-delay');
+    // Gecikme ham ms değil, hareket ön ayarının kademe adımıdır (UI-04.1): tek kaynak token.
+    const step = 'var(--vol-motion-preset-card-stagger)';
+    expect(gridSecond).toBe(step);
+
+    const gridThird = cssDeclaration(cards, `${gridBase}:nth-child(3)`, 'animation-delay');
+    expect(gridThird).toBe(`calc(${step} * 2)`);
+
+    const gridFourth = cssDeclaration(cards, `${gridBase}:nth-child(4)`, 'animation-delay');
+    expect(gridFourth).toBe(`calc(${step} * 3)`);
+    expect(cssVarDurationMs(theme, '--vol-motion-preset-card-stagger')).toBe(40);
+
+    // Yalnızca `.vol-card--entering` alan kartlar animasyon kazanır; envanter
+    // veya satın alınmış kartlar stagere yakalanmaz.
+    const rawGrid = cssDeclaration(cards, gridBase, 'animation');
+    expect(rawGrid).toContain('vol-card-in');
+
+    const inventoryStagger = /\.vol-card-shop__list > \.vol-card:nth-child\(2\)/;
+    expect(cards).not.toMatch(inventoryStagger);
+  });
+});
+
+describe('CSS sözleşmesi — dokunmatik sürükleme', () => {
+  it('SlotGrid öğesi parmakla sürüklenirken tarayıcı kaydırmasına çevrilmez (pointercancel → kayıp bırakma)', () => {
+    expect(cssDeclaration(hud, '.vol-slot-grid__item', 'touch-action')).toBe('none');
+  });
+});
+
+describe('CSS sözleşmesi — dokunmatik balon', () => {
+  it('kaba işaretçide görünür balon dokunuşu yutmaz; fare için üstüne geçilebilir (hoverable) kalır', () => {
+    // Balon altındaki denetimi örterse dokunmatikte ona ulaşılamaz (hover yok, balona dokunmak onu kapatmaz).
+    const coarse =
+      /@media \(pointer: coarse\)\s*\{\s*\.vol-tooltip--visible,\s*\.vol-rich-tooltip--visible\s*\{\s*pointer-events:\s*none;/;
+    expect(overlays).toMatch(coarse);
+    // Fare yolu bozulmadı: WCAG 1.4.13 gereği balon fareyle üstüne geçilebilir.
+    expect(cssDeclaration(overlays, '.vol-tooltip--visible', 'pointer-events')).toBe('auto');
+    expect(cssDeclaration(overlays, '.vol-rich-tooltip--visible', 'pointer-events')).toBe('auto');
+  });
+});

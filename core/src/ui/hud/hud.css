@@ -1,0 +1,746 @@
+.vol-selection-panel {
+  pointer-events: auto;
+  align-items: center;
+  gap: var(--vol-space-md);
+  padding: var(--vol-space-md);
+  box-sizing: border-box;
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  width: 100%;
+  min-height: 230px;
+  display: flex;
+  position: relative;
+}
+
+.vol-selection-panel__empty-state {
+  text-align: center;
+  width: 100%;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text-muted);
+  font-size: var(--vol-text-body);
+  display: none;
+}
+
+.vol-selection-panel--empty .vol-selection-panel__empty-state {
+  display: block;
+}
+
+.vol-selection-panel__portrait {
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 56px;
+  height: 56px;
+  font-size: var(--vol-text-display);
+  display: flex;
+}
+
+.vol-selection-panel__body {
+  justify-content: center;
+  gap: var(--vol-space-sm);
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.vol-selection-panel--empty .vol-selection-panel__portrait,
+.vol-selection-panel--empty .vol-selection-panel__body {
+  display: none;
+}
+
+.vol-selection-panel--transition .vol-selection-panel__portrait,
+.vol-selection-panel--transition .vol-selection-panel__body,
+.vol-selection-panel--transition .vol-selection-panel__empty-state {
+  animation: vol-selection-panel-fade var(--vol-transition-medium);
+}
+
+@keyframes vol-selection-panel-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vol-selection-panel__name {
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  font-size: var(--vol-text-lead);
+  font-weight: 700;
+}
+
+.vol-selection-panel__stats {
+  flex-direction: column;
+  gap: 2px;
+  display: flex;
+}
+
+.vol-selection-panel__stat-row {
+  justify-content: space-between;
+  font-size: var(--vol-text-label);
+  display: flex;
+}
+
+.vol-selection-panel__stat-label {
+  color: var(--vol-ui-text-muted);
+}
+
+.vol-selection-panel__stat-value {
+  color: var(--vol-ui-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.vol-selection-panel__actions {
+  gap: var(--vol-space-xs);
+  flex-wrap: wrap;
+  display: flex;
+}
+
+.vol-slot-grid {
+  pointer-events: auto;
+  -webkit-user-select: none;
+  user-select: none;
+  display: inline-block;
+  position: relative;
+}
+
+.vol-slot-grid__cells {
+  grid-template-columns: repeat(var(--vol-slot-grid-columns, 6), var(--vol-slot-grid-size, 56px));
+  grid-auto-rows: var(--vol-slot-grid-size, 56px);
+  gap: var(--vol-space-sm);
+  display: grid;
+}
+
+.vol-slot-grid__cell {
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  transition:
+    border-color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  position: relative;
+}
+
+.vol-slot-grid__cell--empty {
+  background: var(--vol-ui-bg-subtle);
+}
+
+.vol-slot-grid__cell--drag-over {
+  border-color: var(--vol-ui-brand-border);
+  background: var(--vol-ui-brand-subtle);
+}
+
+.vol-slot-grid__cell--drag-rejected {
+  border-color: var(--vol-ui-danger-border);
+  background: var(--vol-ui-danger-subtle);
+}
+
+.vol-slot-grid__items {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.vol-slot-grid__item {
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  pointer-events: auto;
+  cursor: var(--vol-cursor-grab, grab);
+
+  /* Parmakla sürükleme tarayıcı kaydırmasına çevrilmez (aksi hâlde dikey sürükleme `pointercancel` olur ve bırakma sessizce
+     kaybolur: cihazda ölçüldü). Sayfa, öğelerin dışındaki hücrelerden kaydırılır; tutulan öğenin taşıma düğmesi de vardır. */
+  touch-action: none;
+  box-sizing: border-box;
+  transition:
+    transform var(--vol-transition-fast),
+    opacity var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: absolute;
+  overflow: hidden;
+}
+
+.vol-slot-grid__item--dragging {
+  opacity: 0.4;
+  cursor: var(--vol-cursor-grabbing, grabbing);
+}
+
+/* Taşıma akışı (klavye/kol/dokunma): tutulan öğe çerçeveyle, hücreler dokunulabilir olarak işaretlenir. */
+.vol-slot-grid--moving .vol-slot-grid__cell {
+  cursor: var(--vol-cursor-link, pointer);
+}
+
+.vol-slot-grid__item[aria-pressed='true'] {
+  border-color: var(--vol-ui-brand-border);
+  outline: 2px dashed var(--vol-ui-brand-border);
+  outline-offset: 2px;
+}
+
+.vol-slot-grid__item--rarity-common {
+  border-color: var(--vol-ui-border-soft);
+}
+
+.vol-slot-grid__item--rarity-rare {
+  border-color: var(--vol-ui-info-border);
+}
+
+.vol-slot-grid__item--rarity-epic {
+  border-color: var(--vol-ui-accent-border);
+}
+
+.vol-slot-grid__item-ghost {
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.95;
+  box-shadow: 0 12px 28px var(--vol-ui-scrim);
+  cursor: var(--vol-cursor-grabbing, grabbing);
+  will-change: transform;
+  position: fixed;
+  transform: translate(0, 0);
+}
+
+.vol-slot-grid__item-icon {
+  width: 60%;
+  height: 60%;
+  color: var(--vol-ui-icon);
+  justify-content: center;
+  align-items: center;
+  font-size: var(--vol-text-title);
+  display: inline-flex;
+}
+
+.vol-slot-grid__item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-slot-grid__item-label {
+  color: var(--vol-ui-text-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  max-width: calc(100% - 8px);
+  font-size: var(--vol-text-micro);
+  font-weight: 700;
+  position: absolute;
+  bottom: 2px;
+  left: 4px;
+  overflow: hidden;
+}
+
+.vol-slot-grid__item-quantity {
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-scrim);
+  pointer-events: none;
+  border-radius: 3px;
+  padding: 0 3px;
+  font-size: var(--vol-text-micro);
+  font-weight: 700;
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+}
+
+.vol-action-bar {
+  pointer-events: auto;
+  gap: var(--vol-space-md);
+  display: flex;
+}
+
+.vol-action-bar__slot {
+  pointer-events: auto;
+  cursor: var(--vol-cursor-link, pointer);
+  width: var(--vol-action-bar-size, 68px);
+  height: var(--vol-action-bar-size, 68px);
+  color: var(--vol-ui-text);
+  background: linear-gradient(180deg, var(--vol-ui-surface-1) 0%, var(--vol-ui-bg-subtle) 100%);
+  border: 2px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  box-shadow: 0 2px 0 0 var(--vol-ui-scrim) inset;
+  transition:
+    border-color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast),
+    box-shadow var(--vol-transition-fast),
+    transform var(--vol-transition-fast);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.vol-action-bar__slot::after {
+  content: '';
+  background: var(--vol-ui-brand-solid);
+  opacity: 0;
+  height: 3px;
+  transition: opacity var(--vol-transition-fast);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.vol-action-bar__slot:disabled {
+  cursor: var(--vol-cursor-default, default);
+  opacity: 0.45;
+}
+
+/*
+ * Nedenli kullanılamaz slot (`setUnavailable`): odaklanabilir kalır, bu yüzden `:disabled` değildir. Soluk + KESİKLİ çerçeve:
+ * "basılamaz" yalnız renk/opaklıkla değil şekille de okunur; üzerine gelince/basınca hazır slot gibi tepki vermez.
+ */
+.vol-action-bar__slot--unavailable {
+  cursor: var(--vol-cursor-default, default);
+  opacity: 0.45;
+  border-style: dashed;
+}
+
+.vol-action-bar__slot:active:not(:disabled, .vol-action-bar__slot--unavailable) {
+  transform: scale(0.95);
+}
+
+.vol-action-bar__slot:hover:not(:disabled, .vol-action-bar__slot--unavailable)::after {
+  opacity: 1;
+}
+
+.vol-action-bar__slot:hover:not(
+    :disabled,
+    .vol-action-bar__slot--active,
+    .vol-action-bar__slot--unavailable
+  ) {
+  border-color: var(--vol-ui-brand-border);
+  box-shadow: 0 0 0 3px var(--vol-ui-focus-halo);
+}
+
+.vol-action-bar__icon {
+  pointer-events: none;
+  width: 38%;
+  height: 38%;
+  display: inline-flex;
+}
+
+.vol-action-bar__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-action-bar__initial {
+  color: var(--vol-ui-text-secondary);
+  pointer-events: none;
+  font-size: var(--vol-text-lead);
+  font-weight: 700;
+}
+
+.vol-action-bar__label {
+  letter-spacing: 0.01em;
+  color: var(--vol-ui-text-muted);
+  text-align: center;
+  pointer-events: none;
+  white-space: normal;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-top: 2px;
+  padding: 0 3px;
+  font-size: var(--vol-text-label);
+  font-weight: 600;
+  line-height: 1.15;
+  display: -webkit-box;
+  overflow: hidden;
+}
+
+.vol-action-bar__cooldown {
+  background: conic-gradient(
+    var(--vol-ui-scrim) calc(var(--vol-action-bar-cooldown, 0) * 360deg),
+    transparent 0
+  );
+  pointer-events: none;
+  justify-content: center;
+  align-items: center;
+  display: none;
+  position: absolute;
+  inset: 0;
+}
+
+.vol-action-bar__cooldown--active {
+  display: flex;
+}
+
+.vol-action-bar__cooldown-text {
+  font-variant-numeric: tabular-nums;
+  color: var(--vol-ui-on-brand);
+  text-shadow: 0 1px 2px var(--vol-ui-scrim);
+  font-size: var(--vol-text-body);
+  font-weight: 700;
+}
+
+.vol-action-bar__slot--active {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  color: var(--vol-ui-on-brand);
+  box-shadow: 0 0 0 2px var(--vol-ui-brand-subtle) inset;
+}
+
+.vol-action-bar__slot--active::after {
+  opacity: 1;
+}
+
+.vol-build-menu {
+  pointer-events: auto;
+  gap: var(--vol-space-sm);
+  padding: var(--vol-space-md);
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+
+  /* Hücre en az 72 px: dar ekranda sütun sayısı düşer, etiket/maliyet düğmesinden taşmaz; geniş yerde 10 sütuna ulaşır. */
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  display: grid;
+}
+
+.vol-build-menu__item {
+  pointer-events: auto;
+  padding: var(--vol-space-sm);
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  cursor: var(--vol-cursor-link, pointer);
+  transition:
+    border-color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  display: flex;
+  position: relative;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-build-menu__item:hover {
+  background: var(--vol-ui-hover-fill);
+  border-color: var(--vol-ui-border-strong);
+}
+
+.vol-build-menu__item:active {
+  background: var(--vol-ui-pressed-fill);
+  border-color: var(--vol-ui-border-strong);
+  transform: scale(0.96);
+}
+
+.vol-build-menu__item--selected {
+  background: var(--vol-ui-brand-subtle);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-build-menu__item--selected:hover {
+  background: var(--vol-ui-brand-subtle);
+}
+
+.vol-build-menu__item:disabled {
+  cursor: var(--vol-cursor-default, default);
+  opacity: 0.5;
+}
+
+/* Nedenli kullanılamaz öğe (`setItemUnavailable`): odaklanabilir kalır; soluk + kesikli çerçeve, hazır öğe gibi tepki vermez. */
+.vol-build-menu__item--unavailable,
+.vol-build-menu__item--unavailable:hover,
+.vol-build-menu__item--unavailable:active {
+  cursor: var(--vol-cursor-default, default);
+  background: var(--vol-ui-surface-1);
+  border-color: var(--vol-ui-border-soft);
+  border-style: dashed;
+  opacity: 0.5;
+  transform: none;
+}
+
+.vol-build-menu__icon {
+  width: 24px;
+  height: 24px;
+  color: var(--vol-ui-icon);
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.vol-build-menu__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-build-menu__label {
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  text-align: center;
+  font-size: var(--vol-text-label);
+
+  /* Metin düğmenin dolgu alanını kullanabilir (önceki görünüm); yalnız kenara dayanınca kırılır. */
+  max-width: calc(100% + var(--vol-space-sm) * 2 - 2px);
+  margin-inline: calc(var(--vol-space-sm) * -1 + 1px);
+  overflow-wrap: anywhere;
+}
+
+.vol-build-menu__cost {
+  color: var(--vol-ui-text-muted);
+  font-size: var(--vol-text-micro);
+  max-width: calc(100% + var(--vol-space-sm) * 2 - 2px);
+  margin-inline: calc(var(--vol-space-sm) * -1 + 1px);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.vol-build-menu__hotkey {
+  color: var(--vol-ui-text-muted);
+  font-size: var(--vol-text-micro);
+  font-weight: 700;
+  position: absolute;
+  top: 2px;
+  left: 4px;
+}
+
+.vol-minimap {
+  pointer-events: auto;
+  position: relative;
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  align-self: flex-start;
+  display: inline-flex;
+  overflow: hidden;
+}
+
+.vol-minimap__canvas {
+  cursor: var(--vol-cursor-link, pointer);
+  width: var(--vol-minimap-width);
+  height: var(--vol-minimap-height);
+  display: block;
+}
+
+.vol-minimap__canvas--navigable {
+  cursor: var(--vol-cursor-aim-small, crosshair);
+  touch-action: none;
+}
+
+/* Yakınlaştırma düğmeleri: köşede dikey çift; sınırda sönükleşir (disabled değil, odak yitmesin). */
+.vol-minimap__controls {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/*
+ * Düğmeler haritanın küçük bir köşesidir: işaretçi hassasken kompakt kare. Dokunmatikte (pointer: coarse) kendi
+ * boyut kuralımız yoktur: IconButton'ın 44 px hedef tabanı geçerlidir ve düğmeler yan yana dizilir (köşeyi az örter).
+ */
+@media (pointer: fine) {
+  .vol-minimap__controls .vol-minimap__zoom {
+    width: 22px;
+    height: 22px;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+  }
+}
+
+@media (pointer: coarse) {
+  .vol-minimap__controls {
+    flex-direction: row;
+  }
+}
+
+.vol-minimap__zoom {
+  opacity: 0.88;
+}
+
+.vol-minimap__zoom[aria-disabled='true'] {
+  opacity: 0.4;
+}
+
+.vol-minimap__canvas:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+/* StatsPanel veri satırları genel Sheet kabuğunun kaydırılabilir gövdesinde yaşar. */
+.vol-stats-panel-modal {
+  z-index: var(--vol-z-dialog);
+}
+
+.vol-stats-panel__groups {
+  flex-direction: column;
+  gap: var(--vol-space-lg);
+  display: flex;
+}
+
+.vol-stats-panel__group {
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-stats-panel__group-heading {
+  align-items: center;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-stats-panel__group-icon,
+.vol-stats-panel__entry-icon {
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: var(--vol-ui-brand-solid);
+  display: inline-flex;
+}
+
+.vol-stats-panel__group-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.vol-stats-panel__group-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.vol-stats-panel__group-title {
+  margin: 0;
+  color: var(--vol-ui-text-muted);
+  font-size: var(--vol-text-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vol-stats-panel__entries {
+  flex-direction: column;
+  gap: var(--vol-space-xs);
+  display: flex;
+}
+
+.vol-stats-panel__entry {
+  align-items: baseline;
+  gap: var(--vol-space-md);
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  padding: var(--vol-space-sm) 0;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+}
+
+.vol-stats-panel__entry-icon {
+  width: 22px;
+  min-height: 22px;
+  color: var(--vol-ui-text-muted);
+}
+
+.vol-stats-panel__entry-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.vol-stats-panel__entry-label {
+  color: var(--vol-ui-text-secondary);
+}
+
+.vol-stats-panel__entry-value {
+  color: var(--vol-ui-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.vol-stats-panel__entry-hint {
+  color: var(--vol-ui-text-muted);
+  font-size: var(--vol-text-label);
+  grid-column: 1 / -1;
+}
+
+/*
+ * FPS göstergesi. Konum `data-position`, renk eşiği `data-level` ile gelir;
+ * ikisi de satır içi stil KULLANMAZ — Tauri CSP'si `style-src 'unsafe-inline'`
+ * istemesin diye.
+ */
+.vol-fps-meter {
+  position: fixed;
+  z-index: var(--vol-z-float);
+  padding: 2px 8px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
+  color: var(--vol-ui-text-secondary);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  pointer-events: none;
+  user-select: none;
+
+  /*
+   * GENİŞLİK SABİTLENİR. Gösterge bir köşeye sabitlidir; kutusu her okumada
+   * yeniden boyutlanırsa karşı kenarı oynar ve gözle "gösterge yer değiştirdi"
+   * diye okunur. `tabular-nums` tek başına yetmez: VOL fontları tabular rakam
+   * varyantı taşımaz, o yüzden aynı basamak sayısındaki iki değer bile farklı
+   * genişlik üretir. 9ch, "1 FPS" ile "999 FPS" arası her okumanın aynı
+   * kutuya sığdığı en dar değerdir; daha darında üç basamak taşar.
+   */
+  min-width: 9ch;
+  text-align: center;
+}
+
+/*
+ * Kenar boşluğu safe-area'nın ALTINA düşmez ama masaüstünde de sıfır kalmaz:
+ * `--vol-safe-*` çentiksiz ekranlarda 0'dır ve gösterge cama yapışırdı.
+ */
+.vol-fps-meter[data-position='top-left'] {
+  top: max(var(--vol-safe-top), var(--vol-space-sm));
+  left: max(var(--vol-safe-left), var(--vol-space-md));
+}
+
+.vol-fps-meter[data-position='top-right'] {
+  top: max(var(--vol-safe-top), var(--vol-space-sm));
+  right: max(var(--vol-safe-right), var(--vol-space-md));
+}
+
+.vol-fps-meter[data-position='bottom-left'] {
+  bottom: max(var(--vol-safe-bottom), var(--vol-space-sm));
+  left: max(var(--vol-safe-left), var(--vol-space-md));
+}
+
+.vol-fps-meter[data-position='bottom-right'] {
+  bottom: max(var(--vol-safe-bottom), var(--vol-space-sm));
+  right: max(var(--vol-safe-right), var(--vol-space-md));
+}
+
+/*
+ * Düşük kare hızı rengin yanında ŞEKİLLE de söylenir (renk tek başına taşıyıcı olmaz): uyarı kesikli çerçeve, tehlike
+ * düz çerçeve + iç halka. Kutu ölçüsü değişmez (border kalınlığı sabit, halka içeride çizilir): gösterge yer oynatmaz.
+ */
+.vol-fps-meter[data-level='warn'] {
+  color: var(--vol-ui-warning-solid);
+  border-color: var(--vol-ui-warning-border);
+  border-style: dashed;
+}
+
+.vol-fps-meter[data-level='danger'] {
+  color: var(--vol-ui-danger-solid);
+  border-color: var(--vol-ui-danger-border);
+  box-shadow: inset 0 0 0 2px var(--vol-ui-danger-border);
+}

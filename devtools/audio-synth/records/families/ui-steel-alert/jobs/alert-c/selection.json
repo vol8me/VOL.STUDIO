@@ -1,0 +1,8 @@
+{
+  "analysisHash": "sha256:deabc6ad681523a5fbcf3f20abbd1bc38e1a3d03c5f09f9b42507053ddaa47d5",
+  "pcmHash": "sha256:2866efedf3037961f76f7cf40cc70a4619a13a309f8ae406189909697003cf85",
+  "reason": "aile varyantı: programın tek render adayı",
+  "renderHash": "sha256:5b44b8fe466938f61209d63097f20b0a1b2487c1e119a5a957887a6bb95d488e",
+  "renderId": "r-1a4b0f943a34b5a2",
+  "schema": "AudioSelectionV1"
+}

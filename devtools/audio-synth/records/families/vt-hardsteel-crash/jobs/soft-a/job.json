@@ -1,0 +1,63 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-62b60d4055ab025e": {
+        "hash": "sha256:455ba31c0b631caa8f7ed5530f743bcfcc084aaa3a360bbb69dc28909e2242d5",
+        "path": "analyses/r-62b60d4055ab025e.json"
+      },
+      "r-a89f027dff999250": {
+        "hash": "sha256:6c1322c14a0a0c34cb1b4236d598ee886ad76e61ec794908a075dcece35841cc",
+        "path": "analyses/r-a89f027dff999250.json"
+      },
+      "r-f87fa2dad09ddc28": {
+        "hash": "sha256:1d709e0deef2d9831cc931dbf9fb9bb934a6c2786492fa816a65e58f685297a3",
+        "path": "analyses/r-f87fa2dad09ddc28.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:c3118315933fb9fdbfdf822e5605758dd727624568390fb6788e4367797e2c15",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:c3118315933fb9fdbfdf822e5605758dd727624568390fb6788e4367797e2c15",
+      "hash": "sha256:1e0b3b49e26731aac8b9cccabaaf9c6244bf35298880f767d37ef61f256628ae",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:ea7d59b078cff8593b16fec44334863ee82e1fc1bfed6e54d82b9482d3b68a37",
+      "path": "games/vol-test/audio-manifests/sfx/steel/families/crash/soft-a.json"
+    },
+    "renders": {
+      "r-62b60d4055ab025e": {
+        "hash": "sha256:fe60953cdc63a2a2d3b1bf40e0b6f0c8adb58746c07eb09928d9e0f6a88bdbde",
+        "path": "renders/r-62b60d4055ab025e.json"
+      },
+      "r-a89f027dff999250": {
+        "hash": "sha256:afb7ccaf200aa5400f6b518cba64e7eb9483fd0bff61fb06ee79af02299cd184",
+        "path": "renders/r-a89f027dff999250.json"
+      },
+      "r-f87fa2dad09ddc28": {
+        "hash": "sha256:f2fdf8a39c1e67435cb24afbfe027d4bbc1d79712bccc443d834dcc80cfcb8d5",
+        "path": "renders/r-f87fa2dad09ddc28.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:51a3b0ec65fc994ae5720059772a66baa79af7a45fa2d5ec3ce5313fc506a9fc",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "soft-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 17,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/families/crash/soft-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "vt-hardsteel-crash/soft-a"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

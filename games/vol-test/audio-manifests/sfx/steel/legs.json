@@ -1,0 +1,679 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.000019255312272325193
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 3.5,
+        "frames": 168000,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -6.96522015921302
+        ],
+        "channelRmsDbfs": [
+          -25.632161334782907
+        ],
+        "crestFactorDb": 18.66694117556989,
+        "integratedLufs": -26.353045857691264,
+        "maxMomentaryLufs": -24.594500093454183,
+        "rmsDbfs": -25.632161334782907,
+        "samplePeakDbfs": -6.96522015921302,
+        "truePeakDbtp": -6.958755127733784
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -71.3234200462677,
+          "high": -50.11799059131211,
+          "low": -31.145932110223495,
+          "mid": -30.700628144134914,
+          "sub": -29.46552036021831
+        },
+        "centroidHz": 397.9149948745435,
+        "flatness": 7.757929982395481e-7,
+        "peakHz": 93.75,
+        "rolloff85Hz": 585.9375
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 3.5,
+        "attackSeconds": 0.31,
+        "decay40Seconds": null,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.31,
+        "temporalCentroidSeconds": 1.7408524386624369,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:bcbec421005f42b2609b3c4aa667ef1e51079b3074c6341c97f663d52d5599d4"
+  },
+  "asset": {
+    "bytes": 41364,
+    "encodedHash": "sha256:0b3d6e4fdccfba5ab7cecd1df2ae5761fe2488639ba9e33101fada398bf555d4",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/legs.ogg"
+  },
+  "assetId": "vt-hardsteel-legs",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "durationSeconds": {
+        "max": 4.375,
+        "min": 2.8
+      },
+      "id": "vt-hardsteel-legs",
+      "intent": "Çok bacaklı yürüyücünün adımları: alçak basışlar, hidrolik ve servo.",
+      "kind": "acoustic",
+      "loop": true,
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "claude"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST — legs"
+    },
+    "hash": "sha256:28788d5622fcc184f7909484be97cd238e50655c386d239639106260836febdd",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9d2852e8fa81d029021bc5591eb4192dac5844297430c331ac836f0d8c04c469",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:9e235f85c10cbac89fa1dabb18a619e710ef19b8703142f3ae29d03d7b9b519e",
+      "nodes": [
+        {
+          "hash": "sha256:73c932af5fb3389065aa8cf48494308d8bd2e21e5df0e7dda63201f24c11c42b",
+          "id": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722",
+          "id": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f1618b5458b7b327a4415cc22bede9a5976a0e37c57273b6dd7b2712acd16e07",
+          "id": "effect.saturation",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:409d5e0697cf0e2444ca3ba4939b5fcb01c58f4fabbf07c1294b73b02ce9a52d",
+          "id": "source.contact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:91c81ff2366eae583d7cc0306b88d54c298fe4340b666cdf32ab6099a7037011",
+          "id": "source.friction",
+          "version": 1
+        },
+        {
+          "hash": "sha256:378e408dfec3d4bb8f618707b3f2427556203baa54b5a4100742edf14a2c0995",
+          "id": "source.machine",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        },
+        {
+          "hash": "sha256:2356f7e48539c60b39edfbd3ca1287f94e8902e6d4bbda072d5476c6ca7e02a3",
+          "id": "source.pressure-wave",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": null,
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-hardsteel-legs",
+    "path": "devtools/audio-synth/records/jobs/vt-hardsteel-legs",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Bacaklı yürüyücü: ağır hidrolik adımlar, servo ve eklem gıcırtısı.",
+      "durationSeconds": 3.8,
+      "effects": [
+        {
+          "params": {
+            "frequency": 40,
+            "order": 3,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 300,
+            "gainDb": 2.5,
+            "q": 0.8
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "character": "tanh",
+            "driveDb": 7,
+            "mix": 0.5,
+            "outputDb": 0
+          },
+          "primitive": "effect.saturation",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 7500,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "layers": [
+        {
+          "gainDb": -11.88,
+          "mechanism": "pressure",
+          "name": "st-th0",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.9,
+              "bodyDecay": 0.16,
+              "bodyHz": 88,
+              "decay": 1.4,
+              "positive": 0.004,
+              "rise": 0.0002
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 0.3
+        },
+        {
+          "gainDb": -11.22,
+          "mechanism": "pressure",
+          "name": "st-pu0",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.85,
+              "bodyDecay": 0.1,
+              "bodyHz": 202.4,
+              "decay": 1.2,
+              "positive": 0.003,
+              "rise": 0.0003
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 0.3
+        },
+        {
+          "gainDb": -35.83,
+          "mechanism": "mechanical",
+          "name": "st-ct0",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0.4,
+              "mass": 1.8,
+              "materialA": "metal",
+              "materialB": "stone",
+              "size": 0.35,
+              "velocity": 1.6
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.303
+        },
+        {
+          "gainDb": -12.01,
+          "mechanism": "pressure",
+          "name": "st-th1",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.9,
+              "bodyDecay": 0.16,
+              "bodyHz": 100,
+              "decay": 1.4,
+              "positive": 0.004,
+              "rise": 0.0002
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 1
+        },
+        {
+          "gainDb": -10.48,
+          "mechanism": "pressure",
+          "name": "st-pu1",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.85,
+              "bodyDecay": 0.1,
+              "bodyHz": 230,
+              "decay": 1.2,
+              "positive": 0.003,
+              "rise": 0.0003
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 1
+        },
+        {
+          "gainDb": -32.77,
+          "mechanism": "mechanical",
+          "name": "st-ct1",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0.4,
+              "mass": 1.8,
+              "materialA": "metal",
+              "materialB": "stone",
+              "size": 0.35,
+              "velocity": 1.6
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 1.003
+        },
+        {
+          "gainDb": -11.99,
+          "mechanism": "pressure",
+          "name": "st-th2",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.9,
+              "bodyDecay": 0.16,
+              "bodyHz": 112.00000000000001,
+              "decay": 1.4,
+              "positive": 0.004,
+              "rise": 0.0002
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 1.7
+        },
+        {
+          "gainDb": -9.87,
+          "mechanism": "pressure",
+          "name": "st-pu2",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.85,
+              "bodyDecay": 0.1,
+              "bodyHz": 250,
+              "decay": 1.2,
+              "positive": 0.003,
+              "rise": 0.0003
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 1.7
+        },
+        {
+          "gainDb": -35.07,
+          "mechanism": "mechanical",
+          "name": "st-ct2",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0.4,
+              "mass": 1.8,
+              "materialA": "metal",
+              "materialB": "stone",
+              "size": 0.35,
+              "velocity": 1.6
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 1.7029999999999998
+        },
+        {
+          "gainDb": -11.97,
+          "mechanism": "pressure",
+          "name": "st-th3",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.9,
+              "bodyDecay": 0.16,
+              "bodyHz": 94,
+              "decay": 1.4,
+              "positive": 0.004,
+              "rise": 0.0002
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 2.3999999999999995
+        },
+        {
+          "gainDb": -10.87,
+          "mechanism": "pressure",
+          "name": "st-pu3",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.85,
+              "bodyDecay": 0.1,
+              "bodyHz": 216.2,
+              "decay": 1.2,
+              "positive": 0.003,
+              "rise": 0.0003
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 2.3999999999999995
+        },
+        {
+          "gainDb": -33.58,
+          "mechanism": "mechanical",
+          "name": "st-ct3",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0.4,
+              "mass": 1.8,
+              "materialA": "metal",
+              "materialB": "stone",
+              "size": 0.35,
+              "velocity": 1.6
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 2.4029999999999996
+        },
+        {
+          "gainDb": -12.02,
+          "mechanism": "pressure",
+          "name": "st-th4",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.9,
+              "bodyDecay": 0.16,
+              "bodyHz": 106,
+              "decay": 1.4,
+              "positive": 0.004,
+              "rise": 0.0002
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 3.0999999999999996
+        },
+        {
+          "gainDb": -10.07,
+          "mechanism": "pressure",
+          "name": "st-pu4",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.85,
+              "bodyDecay": 0.1,
+              "bodyHz": 243.8,
+              "decay": 1.2,
+              "positive": 0.003,
+              "rise": 0.0003
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          },
+          "startSeconds": 3.0999999999999996
+        },
+        {
+          "gainDb": -35.91,
+          "mechanism": "mechanical",
+          "name": "st-ct4",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0.4,
+              "mass": 1.8,
+              "materialA": "metal",
+              "materialB": "stone",
+              "size": 0.35,
+              "velocity": 1.6
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 3.1029999999999998
+        },
+        {
+          "gainDb": -18.87,
+          "mechanism": "motor",
+          "name": "servo",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 1500,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "bearing": 0.1,
+              "count": 17,
+              "harmonics": 8,
+              "imbalance": 0.2,
+              "load": 0.5,
+              "mechanism": "gear",
+              "noise": 0.1,
+              "rpm": 1500,
+              "tilt": 0.5
+            },
+            "primitive": "source.machine",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -12.89,
+          "mechanism": "noise",
+          "name": "hydraulic",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 200,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 1600,
+                "mode": "lowpass",
+                "q": 0.6
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "texture",
+          "source": {
+            "params": {
+              "color": "pink"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -22.52,
+          "mechanism": "friction",
+          "name": "creak",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 520,
+                "mode": "bandpass",
+                "q": 0.8
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "source": {
+            "params": {
+              "granularity": 2,
+              "material": "metal",
+              "pressure": 0.7,
+              "roughness": 0.6,
+              "speed": 0.5
+            },
+            "primitive": "source.friction",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 20,
+        "limiter": {
+          "ceilingDbtp": -1.5
+        },
+        "loop": {
+          "crossfadeSeconds": 0.3
+        },
+        "normalize": "peak",
+        "peakDbfs": -7
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 730102
+    },
+    "hash": "sha256:c1c0be5ee95800d9add471d4b4d14d0c5b79d11d0ff462b2ba3d3299a853f89e",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 168000,
+      "hash": "sha256:ec0faa3c3783e7b93eeea841a5cf383445def0a3d4d4a405e20a1e0ec438939e",
+      "sampleRate": 48000
+    },
+    "renderId": "r-6239b8d65b202e5b",
+    "rendererVersion": 2,
+    "seed": 730102
+  },
+  "schema": "AudioAssetManifestV1",
+  "seam": {
+    "jumpRatio": 0.0083,
+    "levelStepDb": -16.479,
+    "method": "loop-seam-v1",
+    "pass": true,
+    "reasons": [],
+    "spectralStepDb": -11.683
+  }
+}

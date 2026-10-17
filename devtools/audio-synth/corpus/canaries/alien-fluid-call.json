@@ -1,0 +1,43 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "alien-fluid-call",
+  "version": 1,
+  "title": "Yabancı akışkan çağrı",
+  "purpose": "FluidCreature archetype’ı: kabarcık nüfusu + akışkan nabzı + kısık formantlı ses, tek istekten.",
+  "source": {
+    "kind": "archetype",
+    "request": {
+      "schema": "ArchetypeRequestV1",
+      "archetype": "archetype.fluid-creature",
+      "version": 1,
+      "variation": 0,
+      "seed": 18,
+      "params": {
+        "durationSeconds": 2
+      }
+    }
+  },
+  "expectations": [
+    {
+      "kind": "onset-rate",
+      "min": 10
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "activeSeconds",
+      "min": 1.2
+    },
+    {
+      "kind": "band-dominance",
+      "dominant": "mid",
+      "over": "air"
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Kabarcıklı, gurultulu bir doku üzerinde kısık bir ses beklenir.",
+    "Hata belirtileri: katmanlardan birinin kaybolması, düzenli makine ritmi, keskin tıklar, sessiz boşluklar."
+  ]
+}

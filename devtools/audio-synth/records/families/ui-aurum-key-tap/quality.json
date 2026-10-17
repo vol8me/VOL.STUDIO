@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.04,
+        "measured": 3,
+        "median": 0.04,
+        "min": 0.04,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 245.155,
+        "measured": 3,
+        "median": 198.018,
+        "min": 174.73,
+        "scale": 0.267626
+      },
+      "maxMomentaryLufs": {
+        "max": -36.8196,
+        "measured": 3,
+        "median": -37.303,
+        "min": -37.5965,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 0,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.276591,
+    "medianDistance": 0.232387,
+    "minDistance": 0.0797312,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 6.879,
+    "medoid": "key-tap-b",
+    "members": [
+      {
+        "distance": 6.879,
+        "key": "key-tap-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "key-tap-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 4.721,
+        "key": "key-tap-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "key-tap-a",
+      "nearest": {
+        "distance": 0.232387,
+        "key": "key-tap-b"
+      },
+      "pcmHash": "sha256:ccedad482f00d97483d5015e331df5aa2cfbef707b539bbef82420979fc0dc8d"
+    },
+    {
+      "key": "key-tap-b",
+      "nearest": {
+        "distance": 0.0797312,
+        "key": "key-tap-c"
+      },
+      "pcmHash": "sha256:458859ba3dd6c73f7afdd1f558a5480384fbba6ff5b87d647bc4e6793f1203a6"
+    },
+    {
+      "key": "key-tap-c",
+      "nearest": {
+        "distance": 0.0797312,
+        "key": "key-tap-b"
+      },
+      "pcmHash": "sha256:fc5a20cd5baafc01818ff9cf117da4e8def8cebf899921fcaf952578e44dc5ba"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

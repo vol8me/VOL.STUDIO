@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.84,
+        "measured": 3,
+        "median": 0.83,
+        "min": 0.83,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 1119.66,
+        "measured": 3,
+        "median": 1049.96,
+        "min": 998.632,
+        "scale": 0.107203
+      },
+      "maxMomentaryLufs": {
+        "max": -12.6663,
+        "measured": 3,
+        "median": -13.0626,
+        "min": -13.1272,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": 718.745,
+        "measured": 3,
+        "median": 551.868,
+        "min": 413.137,
+        "scale": 0.565104
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.112549,
+    "medianDistance": 0.0843038,
+    "minDistance": 0.043977,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 6.459,
+    "medoid": "level-up-b",
+    "members": [
+      {
+        "distance": 6.439,
+        "key": "level-up-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "level-up-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 6.459,
+        "key": "level-up-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "level-up-a",
+      "nearest": {
+        "distance": 0.043977,
+        "key": "level-up-b"
+      },
+      "pcmHash": "sha256:e055b979779979608e226b715b10c682bc86cd763a8ef66407ee3742b4829a02"
+    },
+    {
+      "key": "level-up-b",
+      "nearest": {
+        "distance": 0.043977,
+        "key": "level-up-a"
+      },
+      "pcmHash": "sha256:71c23718878bd77dcc4b58196266eb0a2a7e64d331804dd0a89168eae18f2016"
+    },
+    {
+      "key": "level-up-c",
+      "nearest": {
+        "distance": 0.0843038,
+        "key": "level-up-b"
+      },
+      "pcmHash": "sha256:865ad394e2a5178d78b7e8c3c9b27bad58cb9d355a7a0ec4ab302004d04d05a6"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

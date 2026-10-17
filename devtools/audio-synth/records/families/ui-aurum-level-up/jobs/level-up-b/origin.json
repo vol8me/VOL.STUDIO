@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:ec4648a81996af61e405b0f4063b069b23fece25597b366d3071b1d2b67334ef",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:4f3d205092ff9bec71511b78940d014682a6067d80830dc5c9b5f3a1c8d31afd",
+    "familyId": "ui-aurum-level-up",
+    "kind": "family-variant",
+    "variantId": "v-46193dd78122297a",
+    "variantKey": "level-up-b"
+  }
+}

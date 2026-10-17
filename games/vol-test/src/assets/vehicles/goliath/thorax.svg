@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="102.6" height="91.2" viewBox="0 0 102.6 91.2">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.5" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></linearGradient>
+    <linearGradient id="plateh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.45" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></linearGradient>
+    <radialGradient id="dome" cx="0.38" cy="0.32" r="0.75"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.5" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></radialGradient>
+    <radialGradient id="shell" cx="0.35" cy="0.3" r="0.85"><stop offset="0" stop-color="#f2b13c"/><stop offset="0.5" stop-color="#a8661a"/><stop offset="1" stop-color="#44270a"/></radialGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6"><stop offset="0" stop-color="#fff6df"/><stop offset="0.45" stop-color="#ffc54d"/><stop offset="1" stop-color="#6b3d0b"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a949e"/><stop offset="0.5" stop-color="#3b444d"/><stop offset="1" stop-color="#161b20"/></linearGradient>
+  </defs>
+  <g transform="scale(1.9 1.9)">
+
+  <g transform="translate(24 24)">
+    <g fill="none" stroke-linecap="round">
+      <path d="M14 -15C19 -18 22 -18 26 -22" stroke="#44270a" stroke-width="3.2"/><path d="M14 -15C19 -18 22 -18 26 -22" stroke="#f0a62e" stroke-width="1.8"/>
+      <path d="M14 15C19 18 22 18 26 22" stroke="#44270a" stroke-width="3.2"/><path d="M14 15C19 18 22 18 26 22" stroke="#f0a62e" stroke-width="1.8"/>
+    </g>
+    <g fill="#ffc54d" stroke="#0d1217" stroke-width=".5"><circle cx="26" cy="-22" r="1.6"/><circle cx="26" cy="22" r="1.6"/></g>
+    <g stroke="#0d1217" stroke-width=".7" stroke-linejoin="round">
+      <path d="M16 -4.6C21 -5 25 -4 27.4 -1.2C23.6 -2.4 20 -2.4 16 -1.8Z" fill="url(#steel)"/>
+      <path d="M16 4.6C21 5 25 4 27.4 1.2C23.6 2.4 20 2.4 16 1.8Z" fill="url(#steel)"/>
+    </g>
+    <g fill="#f2b13c"><path d="M25.6 -2.6l1.8 1.4-1.8.1z"/><path d="M25.6 2.6l1.8-1.4-1.8-.1z"/></g>
+    <path d="M19 -7 L16 -15 L8 -20 L-6 -20 L-14 -15 L-19 -8 L-19 8 L-14 15 L-6 20 L8 20 L16 15 L19 7 Z" fill="url(#dome)" stroke="#0d1217" stroke-width="1.15" stroke-linejoin="round"/>
+    <path d="M-17.6 -7.6L-13.2 -13.8L-5.4 -18.8" fill="none" stroke="#cdd6df" stroke-opacity=".5" stroke-width=".8" stroke-linecap="round"/>
+    <path d="M-17 -5 L-12 -7.6 L-6 -7.2 L-6 7.2 L-12 7.6 L-17 5 Z" fill="url(#plate)" stroke="#0d1217" stroke-width=".7" stroke-linejoin="round"/>
+    <g stroke="#5b6670" stroke-width=".55"><path d="M-15 -4.6V4.6M-13 -4.8V4.8M-11 -5V5M-9 -5V5"/></g>
+    <path d="M-15 -12C-10 -18 -2 -19 6 -17.4C4.4 -12 3.6 -7 3.4 -2.6C-2.6 -4.6 -9.6 -7.6 -15 -12Z" fill="url(#shell)" stroke="#2a1604" stroke-width=".6" stroke-linejoin="round"/>
+    <path d="M-15 12C-10 18 -2 19 6 17.4C4.4 12 3.6 7 3.4 2.6C-2.6 4.6 -9.6 7.6 -15 12Z" fill="url(#shell)" stroke="#2a1604" stroke-width=".6" stroke-linejoin="round"/>
+    <path d="M7.4 -12L14 -9.2L16.2 -3M7.4 12L14 9.2L16.2 3" fill="none" stroke="#cdd6df" stroke-opacity=".38" stroke-width=".6" stroke-linecap="round"/>
+    <path d="M6 -8L15 -6.4L17 0L15 6.4L6 8C8 4.6 8 -4.6 6 -8Z" fill="url(#plateh)" stroke="#0d1217" stroke-width=".8" stroke-linejoin="round"/>
+    <path d="M2.2 0H5.2" stroke="#ffc54d" stroke-opacity=".7" stroke-width=".6" stroke-linecap="round"/>
+    <circle cx="11" cy="0" r="3.7" fill="url(#lens)" stroke="#0d1217" stroke-width="0.74"/><circle cx="9.89" cy="-1.18" r="0.96" fill="#ffffff" fill-opacity=".88"/>
+    <g fill="#ffc54d" stroke="#0d1217" stroke-width=".4"><circle cx="2.6" cy="-17.6" r="1.1"/><circle cx="2.6" cy="17.6" r="1.1"/></g>
+    <g fill="#b8c3cd"><circle cx="13.4" cy="-15.4" r="0.5"/><circle cx="13.4" cy="15.4" r="0.5"/><circle cx="-9.4" cy="-17.6" r="0.5"/><circle cx="-9.4" cy="17.6" r="0.5"/><circle cx="-17" cy="-9.6" r="0.5"/><circle cx="-17" cy="9.6" r="0.5"/><circle cx="15.2" cy="-4" r="0.5"/><circle cx="15.2" cy="4" r="0.5"/></g>
+    <g stroke="#0d1217" stroke-width=".8" stroke-linejoin="round">
+      <path d="M3 -18.6L13.6 -17.6L16.4 -10.6L4.4 -11.2Z" fill="url(#plateh)"/>
+      <path d="M3 18.6L13.6 17.6L16.4 10.6L4.4 11.2Z" fill="url(#plateh)"/>
+    </g>
+    <g fill="none" stroke="#ffc54d" stroke-opacity=".8" stroke-width=".7" stroke-linecap="round">
+      <path d="M5.4 -16.6L13 -15.8M5.6 18.0L13 17.2"/><path d="M5.4 -13.4L14.6 -12.8M5.4 13.4L14.6 12.8"/>
+    </g>
+    <g fill="#f2b13c" stroke="#0d1217" stroke-width=".5"><path d="M-17.4 -2.2L-13 -3.2L-13 3.2L-17.4 2.2Z"/><path d="M-11 -3.4L-7 -3.8L-7 3.8L-11 3.4Z"/></g>
+  </g>
+  </g>
+</svg>

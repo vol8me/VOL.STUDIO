@@ -1,0 +1,64 @@
+/**
+ * HUD sekmesi — kart üretimi iki aileye bölündü, burada yalnız sıralama ve
+ * yaşam döngüsü kalır (bkz. `hudFeedbackCards.ts`, `hudPanelCards.ts`).
+ */
+import { DisposableScope } from '@volstudio/core/lifecycle';
+import { cardGrid } from './shared';
+import {
+  buildBarVariantCard,
+  buildVerticalBarCard,
+  buildCounterCard,
+  buildFloatingTextCard,
+  buildFormattedCounterCard,
+  buildHudStatesCard,
+  buildLowThresholdCard,
+  buildResourceBarCard,
+  buildResourceCounterCard,
+  buildXPBarCard,
+} from './hudFeedbackCards';
+import { buildBuildMenuCard } from './hudBuildCard';
+import { buildActivityFeedCard, buildRankListCard, buildVersusBarCard } from './hudScoreboardCards';
+import {
+  buildFpsMeterCard,
+  buildMinimapCard,
+  buildRoundCounterCard,
+  buildSelectionInfoPanelCard,
+  buildStatsPanelCard,
+} from './hudPanelCards';
+
+export function buildHudTab(): { element: HTMLElement; destroy: () => void } {
+  const container = document.createElement('div');
+  container.className = 'vol-showcase-section';
+  const disposables = new DisposableScope();
+
+  const cards = [
+    buildBarVariantCard('health', disposables),
+    buildBarVariantCard('stamina', disposables),
+    buildBarVariantCard('cooldown', disposables),
+    buildLowThresholdCard(disposables),
+    buildHudStatesCard(disposables),
+    buildVerticalBarCard(disposables),
+    buildXPBarCard(disposables),
+    buildCounterCard(disposables),
+    buildFormattedCounterCard(disposables),
+    buildResourceCounterCard(disposables),
+    buildMinimapCard(disposables),
+    buildResourceBarCard(disposables),
+    buildRoundCounterCard(disposables),
+    buildSelectionInfoPanelCard(disposables),
+    buildStatsPanelCard(disposables),
+    buildBuildMenuCard(disposables),
+    buildFloatingTextCard(disposables),
+    buildVersusBarCard(disposables),
+    buildRankListCard(disposables),
+    buildActivityFeedCard(disposables),
+    buildFpsMeterCard(disposables),
+  ];
+
+  container.appendChild(cardGrid(cards));
+
+  return {
+    element: container,
+    destroy: () => disposables.dispose(),
+  };
+}

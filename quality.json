@@ -1,0 +1,380 @@
+{
+  "$comment": [
+    "Kalite kapılarının tek kaynağı; her okunuşta scripts/quality/config.mjs şemasıyla doğrulanır.",
+    "Kapsam eşikleri ölçülen değerin ~2 puan altına kilitlenir ve yalnız yükselir; düşürme taban dala göre reddedilir (ratchetExceptions gerekçesi olmadan scripts/quality/thresholdRatchet.mjs düşer).",
+    "floor: hiçbir paketin inemeyeceği taban. exempt: gerekçesi yazılı muafiyet.",
+    "bundles/scaling: aktif her oyun için zorunlu bütçeler (paket yolu → bütçe)."
+  ],
+  "floor": {
+    "lines": 50,
+    "statements": 50,
+    "branches": 50,
+    "functions": 40
+  },
+  "exempt": {
+    "@volstudio/deck": "Cihaz ölçüm sondası: kanıtı Deck üzerindeki çalıştırmadır (kayıt kanalı, fazlar, girdi gözlemi). web/ ön yüzü tarayıcı + Tauri IPC'ye bağlıdır; birim kapsamı oranı burada anlamlı değildir. Sözleşmesi probe-contract.test.ts ile kilitlidir."
+  },
+  "ratchetExceptions": [
+    {
+      "key": "packages[\"@volstudio/vol-hell\"]",
+      "to": null,
+      "reason": "Paket emekli edildi (1d5a5c1b); workspace'te yok, eşiği ölçülecek bir kod kalmadı."
+    },
+    {
+      "key": "packages[\"@volstudio/vol-asset-studio\"]",
+      "to": null,
+      "reason": "Deneysel paket kaldırıldı (7043dadd); workspace'te yok."
+    },
+    {
+      "key": "packages[\"@volstudio/vol-ui\"]",
+      "to": null,
+      "reason": "Paket devtools/vol-showcase'e taşındı (d57ef317); eşikleri artık @volstudio/vol-showcase kaydındadır."
+    },
+    {
+      "key": "exempt[\"@volstudio/deck\"]",
+      "to": null,
+      "reason": "devtools/deck ayrı workspace paketi oldu (0330a001); muafiyet gerekçesi exempt kaydındadır ve probe-contract.test.ts ile kilitlidir."
+    }
+  ],
+  "packages": {
+    "@volstudio/core": {
+      "lines": 94,
+      "statements": 92,
+      "branches": 86,
+      "functions": 93
+    },
+    "@volstudio/vol-showcase": {
+      "lines": 94,
+      "statements": 94,
+      "branches": 70,
+      "functions": 86
+    },
+    "@volstudio/audio-synth": {
+      "lines": 95,
+      "statements": 94,
+      "branches": 88,
+      "functions": 95
+    },
+    "@volstudio/pen.dev": {
+      "lines": 98,
+      "statements": 98,
+      "branches": 95,
+      "functions": 100
+    },
+    "@volstudio/tauri-v2": {
+      "lines": 97,
+      "statements": 95,
+      "branches": 91,
+      "functions": 100
+    },
+    "@volstudio/vol-test": {
+      "lines": 97,
+      "statements": 96,
+      "branches": 92,
+      "functions": 95
+    },
+    "@volstudio/network": {
+      "lines": 95,
+      "statements": 94,
+      "branches": 93,
+      "functions": 88
+    }
+  },
+  "coverageShape": {
+    "minLines": 100,
+    "floorPct": 50
+  },
+  "skipBudget": {
+    "$comment": "Aşama -> sayım anahtarı -> izin verilen en çok atlama (scripts/quality/counts.mjs). 2026-10-11 Windows ölçümü: node --test 627 testin 2'si (appimageMedia araç yokluğu, deck SIGTERM /proc); e2e vitrin WebKit ana 16/sessiz 2, Chromium 1/1, VOL.TEST WebKit 1. Bütçede olmayan anahtarın hakkı 0'dır; artış ratchetExceptions ister.",
+    "contract": {
+      "node-test": 2
+    },
+    "e2e": {
+      "vol-showcase/chromium/main": 1,
+      "vol-showcase/chromium/quiet": 1,
+      "vol-showcase/webkit/main": 16,
+      "vol-showcase/webkit/quiet": 2,
+      "vol-test/chromium": 0,
+      "vol-test/webkit": 1
+    }
+  },
+  "scriptCoverage": {
+    "$comment": "Kapı kodunun (scripts/**) node --test kapsamı (scripts/quality/scriptCoverage.mjs). 2026-10-11 ölçümü: satır %94,3 / dal %88,1 / işlev %96,0 (628 sınama). acknowledged: sınamalarda hiç yüklenmeyen ya da yarısından azı kapsanan betik ve onu hangi kapı/komutun çalıştırdığı; bayat kayıt düşer.",
+    "lines": 92,
+    "branches": 86,
+    "functions": 94,
+    "floorPct": 50,
+    "minLines": 50,
+    "acknowledged": {
+      "scripts/quality/cli/workspace-contract.mjs": "Sözleşme bekçilerinin CLI birleştiricisidir; `contract` aşamasının `cli` birimi her koşuda onu çalıştırır. Bekçilerin her biri kendi birim testindedir.",
+      "scripts/quality/cli/bundle-report.mjs": "Betik justfile tarifiyle (`bundle`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
+      "scripts/quality/cli/scaling-report.mjs": "Betik justfile tarifiyle (`scaling`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
+      "scripts/quality/cli/coverage-shape-report.mjs": "Betik justfile tarifiyle (`coverage-shape`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
+      "scripts/quality/audioVerify.mjs": "Betik justfile tarifiyle (`audio-verify`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
+      "scripts/quality/cleanWorkspace.mjs": "Betik `just clean` tarifiyle çalışır ve disk siler; test edilmez, tarifi yalnız kullanıcı çalıştırır.",
+      "scripts/doctor.mjs": "Betik `pnpm run doctor:env` ile çalışır; ortam araçlarını yoklar, çıktısı makineye bağlıdır.",
+      "scripts/vite/browserBoundary.mjs": "Vite eklentisidir; vitrin build'i (`build` aşaması) modül grafiğini her koşuda çalıştırır ve kanıtı build çıktısına yazar.",
+      "scripts/linux/build-appimage.mjs": "Linux paketleyicisi (`pnpm build:linux-appimage`); Windows makinede koşmaz. Linux ölçümü docs/linux.md'de NOT-RUN'dır.",
+      "scripts/linux/build-steamrt4.mjs": "Steam Runtime paketleyicisi (`pnpm build:linux-steamrt4`); Windows makinede koşmaz. Linux ölçümü docs/linux.md'de NOT-RUN'dır.",
+      "scripts/android/device-tour.mjs": "Bağlı Android cihaz ister; saf yargı mantığı deviceTour.mjs'te ve testlidir, kanıtı docs/android.md \"Cihaz turu\"dur.",
+      "scripts/android/audio-players.mjs": "Bağlı Android cihaz ister (`dumpsys audio`); cihaz kabulü aracıdır, kapı değildir.",
+      "scripts/android/frame-stats.mjs": "Bağlı Android cihaz ister (`dumpsys gfxinfo`); cihaz kabulü aracıdır, kapı değildir.",
+      "scripts/quality/cli/ui-baseline.mjs": "Vitrini derler ve iki motorda ölçer (`record`); cihaz/tarayıcı ister, kayıt git dışıdır. `compare` mantığı uiBaseline testlerindedir.",
+      "scripts/quality/coverageRun.mjs": "`pnpm -r` ile paket kapsamını koşar (`coverage` aşamasının kendisi); main() yolu aşamada çalışır, saf yardımcıları (`splitMeasured`, `selectRunPackages`) testlidir."
+    }
+  },
+  "fixedWaitBudget": {
+    "$comment": "Tarayıcı testlerindeki waitForTimeout sayısı dosya başına (scripts/quality/fixedWaits.mjs). Artış düşürür; azalış bütçenin düşürülmesini ister. Olay/koşul bekleyen ifadeye çevrilen dosya buradan çıkar.",
+    "devtools/vol-showcase/tests/device/hudInteraction.spec.ts": 2,
+    "devtools/vol-showcase/tests/device/touch.ts": 1,
+    "devtools/vol-showcase/tests/device/volTest.spec.ts": 2,
+    "devtools/vol-showcase/tests/e2e/gamepad.spec.ts": 2,
+    "devtools/vol-showcase/tests/e2e/motionMeasure.spec.ts": 1,
+    "devtools/vol-showcase/tests/e2e/scrollSplit.spec.ts": 2,
+    "games/vol-test/tests/e2e/world.spec.ts": 3
+  },
+  "coverageRuns": {
+    "coverage": {
+      "exclude": ["@volstudio/audio-synth"]
+    },
+    "coverage-audio": {
+      "only": ["@volstudio/audio-synth"]
+    }
+  },
+  "bundles": {
+    "$comment": "Gzip level 9; uygulama/vendor/CSS ayrı ölçülür. 0.2.0 yapılandırma/listener snapshot ve sonlu rig/efekt girdisi düzeltmelerinden sonra vitrin app 239587 → 239651 B, VOL.TEST app 310529 → 310678 B ölçüldü. Oyun app bütçesi yalnız ölçülen 303.4 KiB olur (önce 303.3); yüzde payı eklenmedi. Vitrin app 234, vendor/CSS ve bütün kapsam/güvenlik/timeout eşikleri aynı. Önceki büyüme gerekçeleri Git geçmişindedir; yöntem docs/gates.md içindedir.",
+    "devtools/vol-showcase": {
+      "app": 234,
+      "vendor": 1,
+      "css": 32.1
+    },
+    "games/vol-test": {
+      "app": 303.4,
+      "vendor": 360,
+      "css": 30
+    }
+  },
+  "documentation": {
+    "budgets": {
+      "rootReadme": {
+        "lines": 100,
+        "words": 800
+      },
+      "packageReadme": {
+        "lines": 80,
+        "words": 600
+      },
+      "hub": {
+        "lines": 40,
+        "words": 250
+      },
+      "rootAgent": {
+        "lines": 120,
+        "words": 1000
+      },
+      "pencilAgent": {
+        "lines": 80,
+        "words": 650
+      },
+      "toolAgent": {
+        "lines": 40,
+        "words": 250
+      },
+      "technical": {
+        "lines": 650,
+        "words": 6500
+      }
+    },
+    "paths": [
+      {
+        "path": "README.md",
+        "role": "rootReadme"
+      },
+      {
+        "path": "AGENTS.md",
+        "role": "rootAgent"
+      },
+      {
+        "path": "CLAUDE.md",
+        "role": "toolAgent"
+      },
+      {
+        "path": "devtools/pen.dev/AGENTS.md",
+        "role": "pencilAgent"
+      },
+      {
+        "path": "docs/ui/README.md",
+        "role": "hub"
+      },
+      {
+        "path": "core/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "core/docs/i18n.md",
+        "role": "technical"
+      },
+      {
+        "path": "core/docs/music-engine.md",
+        "role": "technical"
+      },
+      {
+        "path": "core/docs/phaser-boundary.md",
+        "role": "technical"
+      },
+      {
+        "path": "core/docs/primitives.md",
+        "role": "technical"
+      },
+      {
+        "path": "core/docs/sfx.md",
+        "role": "technical"
+      },
+      {
+        "path": "devtools/audio-synth/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "devtools/deck/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "devtools/pen.dev/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "devtools/vol-showcase/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/android.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/gates.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/linux.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/monorepo-audit.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/new-game.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/steam-deck.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/ui/CATALOG.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/ui/CONTRACT.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/ui/VERIFICATION.md",
+        "role": "technical"
+      },
+      {
+        "path": "docs/windows.md",
+        "role": "technical"
+      },
+      {
+        "path": "games/vol-test/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "network/docs/drive.md",
+        "role": "technical"
+      },
+      {
+        "path": "network/docs/server.md",
+        "role": "technical"
+      },
+      {
+        "path": "tauri-v2/DESIGN.md",
+        "role": "technical"
+      },
+      {
+        "path": "network/DESIGN.md",
+        "role": "technical"
+      }
+    ],
+    "exceptions": []
+  },
+  "scaling": {
+    "$comment": "CORE uzamsal indeks 128→512 varlık oranı ~3.3; vol-test mermi adımı 128→512 oranı ~3.7 ölçüldü. Karesel büyüme ~16 olur.",
+    "core": {
+      "$measure": {
+        "script": "scripts/scaling.ts",
+        "series": "spatial"
+      },
+      "spatial512Over128": 6
+    },
+    "games/vol-test": {
+      "$measure": {
+        "script": "scripts/scaling.ts",
+        "series": "projectiles"
+      },
+      "projectiles512Over128": 6
+    }
+  },
+  "fleetBudget": {
+    "$comment": "Başsız çok istemcili sürücü (games/vol-test/scripts/drive.ts --profile <ad> --ops <url>) özetini bu bütçeye karşı yargılar; geçmezse süreç 1 ile çıkar. Ölçüm 14 Ekim, Windows 11, 8 çekirdek, yerel sunucu (dist-server) ve 8 istemci, 30 sn, iki koşu: katılım p99 34-49 ms, yama aralığı p99 65 ms, ping p99 3 ms, bot başına 16,1 yama/s, sunucu adım p95 1,2-1,3 ms, olay döngüsü gecikmesi p99 7-10 ms, atılan bağlantı ve hata 0. Tavanlar ölçülenin yaklaşık 3-8 katıdır (aynı makinede koşan istemci ve sunucu birbirinin zamanlayıcısını ezer); amaç büyüklük mertebesi gerilemesini yakalamaktır. Sunucu maddeleri yalnız --ops verilince denetlenir. Gerçek ağ, 12 kişilik tam oda ve uzun soak ölçülmemiştir ve bu bütçe onları kapsamaz.",
+    "games/vol-test": {
+      "lan": {
+        "clients": 8,
+        "maxJoinFailures": 0,
+        "maxDropped": 0,
+        "maxErrors": 0,
+        "maxActErrors": 0,
+        "joinP99Ms": 400,
+        "patchGapP99Ms": 200,
+        "pingP99Ms": 100,
+        "minPatchesPerSecond": 10,
+        "serverStepP95Ms": 5,
+        "serverLoopP99Ms": 40,
+        "serverEvictions": 0
+      }
+    }
+  },
+  "networkImpairment": {
+    "$comment": "TCP vekili (games/vol-test/tests/support/impairedProxy.ts) her yöne latencyMs + 0..jitterMs ekler; WebSocket TCP üstünde olduğundan kayıp, stallPct yüzdesindeki parçaların stallMs kadar bekleyip arkasındakileri de tutması olarak modellenir (gerçek paket kaybı değil). Ölçümler Windows 11, 8 çekirdek, yazılım çizimi, 2 sayfa değil tek sayfa ve yerel sunucu ile alındı: driftMax öngörü uzlaştırmasının oturum boyunca en büyük düzeltmesi (dünya birimi), pingMaxMs HUD'daki en büyük gidiş-dönüş ölçümü, snaps tek örnekte hız tavanının (maxSpeed × boost) ve yarım snapDistance payının aştığı ani sıçrama sayısı. 14 Ekim ölçümü Chromium/WebKit: control drift 7.7/5.1 ping 182/129; wan drift 5.6/2.9 ping 313/234; lossy drift 29.8/14.6 ping 441/365; hepsinde snaps 0. Bütçeler ölçülen tepenin yaklaşık 2,5-3 katıdır: ana iş parçacığı açlığı tek koşuda ping'i şişirir, bütçe büyüklük mertebesi gerilemesini (uzlaştırma bozulması, ani sıçrama) yakalar. Gerçek ağ, paketli uygulama ve cihaz ölçümü NOT-RUN'dır.",
+    "games/vol-test": {
+      "control": {
+        "latencyMs": 0,
+        "jitterMs": 0,
+        "stallPct": 0,
+        "stallMs": 0,
+        "driftMax": 20,
+        "pingMaxMs": 600,
+        "snaps": 0
+      },
+      "wan": {
+        "latencyMs": 40,
+        "jitterMs": 15,
+        "stallPct": 0,
+        "stallMs": 0,
+        "driftMax": 20,
+        "pingMaxMs": 800,
+        "snaps": 0
+      },
+      "lossy": {
+        "latencyMs": 60,
+        "jitterMs": 30,
+        "stallPct": 3,
+        "stallMs": 250,
+        "driftMax": 80,
+        "pingMaxMs": 1100,
+        "snaps": 0
+      }
+    }
+  }
+}

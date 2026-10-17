@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { Carousel, type CarouselSlide } from '../../src/ui/controls/Carousel';
-import { ChargeButton } from '../../src/ui/controls/ChargeButton';
-import { DPad } from '../../src/ui/controls/DPad';
-import { DirectionButton } from '../../src/ui/controls/DirectionButton';
-import { DualAxisScrollPanel } from '../../src/ui/controls/DualAxisScrollPanel';
-import { PauseResumeButton } from '../../src/ui/controls/PauseResumeButton';
-import { PullToRefresh } from '../../src/ui/controls/PullToRefresh';
-import { RadialMenu } from '../../src/ui/controls/RadialMenu';
-import { SwipeableCardStack } from '../../src/ui/controls/SwipeableCardStack';
+import { Carousel, type CarouselSlide } from '../../src/ui/layout/Carousel';
+import { ChargeButton } from '../../src/ui/buttons/ChargeButton';
+import { DPad } from '../../src/ui/touch/DPad';
+import { DirectionButton } from '../../src/ui/touch/DirectionButton';
+import { DualAxisScrollPanel } from '../../src/ui/layout/DualAxisScrollPanel';
+import { PauseResumeButton } from '../../src/ui/buttons/PauseResumeButton';
+import { uiIntentBusFor } from '../../src/ui/feedback/uiIntent';
+import { PullToRefresh } from '../../src/ui/touch/PullToRefresh';
+import { RadialMenu } from '../../src/ui/overlays/RadialMenu';
+import { SwipeableCardStack } from '../../src/ui/cards/SwipeableCardStack';
+import { UI_TIMING } from '../../src/constants';
 
 const tracked: Array<{ destroy(): void }> = [];
 function track<T extends { destroy(): void }>(instance: T): T {
@@ -24,7 +26,7 @@ function pointerEvent(
   type: string,
   init: Partial<PointerEventInit> & { pointerId: number; clientX: number; clientY: number },
 ): PointerEvent {
-  return new PointerEvent(type, { bubbles: true, cancelable: true, ...init });
+  return new PointerEvent(type, { isPrimary: true, bubbles: true, cancelable: true, ...init });
 }
 
 describe('DirectionButton', () => {
@@ -221,6 +223,53 @@ describe('PauseResumeButton', () => {
     expect(button.element.getAttribute('aria-label')).toBe('Devam Et');
   });
 
+  it('syncRunning sessizdir: onToggle çağrılmaz, durum ve sayaç eşitlenir; setRunning geriye uyumlu bildirir', () => {
+    vi.useFakeTimers();
+    const onToggle = vi.fn();
+    const onTick = vi.fn();
+    const button = track(new PauseResumeButton({ onToggle, counter: { direction: 'up', onTick } }));
+    button.syncRunning(false);
+    expect(button.getIsRunning()).toBe(false);
+    expect(button.element.getAttribute('aria-label')).toBe('Devam Et');
+    vi.advanceTimersByTime(3000);
+    expect(onTick).not.toHaveBeenCalled();
+    button.syncRunning(true);
+    vi.advanceTimersByTime(1000);
+    expect(onTick).toHaveBeenCalledWith(1);
+    expect(onToggle).not.toHaveBeenCalled();
+    button.setRunning(false);
+    expect(onToggle).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  it('kullanıcı tıklaması toggle niyeti yayar; programatik değişim yaymaz', () => {
+    const { bus, release } = uiIntentBusFor(document.body);
+    const kinds: string[] = [];
+    const sub = bus.subscribe({
+      onIntent: (intent) => kinds.push(`${intent.kind}:${intent.origin}`),
+    });
+    const button = track(new PauseResumeButton());
+    document.body.appendChild(button.element);
+    button.setRunning(false);
+    button.syncRunning(true);
+    expect(kinds).toEqual([]);
+    button.element.click();
+    expect(kinds).toEqual(['toggle:PauseResumeButton']);
+    sub.dispose();
+    release();
+  });
+
+  it('pointercancel basılı görünümü temizler', () => {
+    const button = track(new PauseResumeButton());
+    button.element.dispatchEvent(
+      pointerEvent('pointerdown', { pointerId: 1, clientX: 0, clientY: 0 }),
+    );
+    expect(button.element.classList.contains('vol-pause-resume-button--pressed')).toBe(true);
+    button.element.dispatchEvent(
+      pointerEvent('pointercancel', { pointerId: 1, clientX: 0, clientY: 0 }),
+    );
+    expect(button.element.classList.contains('vol-pause-resume-button--pressed')).toBe(false);
+  });
+
   it('startPaused:true ile duraklatılmış başlar', () => {
     const button = track(new PauseResumeButton({ startPaused: true }));
     expect(button.getIsRunning()).toBe(false);
@@ -260,12 +309,12 @@ describe('PauseResumeButton', () => {
     expect(onToggle).not.toHaveBeenCalled();
   });
 
-  it("destroy bekleyen interval'i temizler", () => {
+  it('destroy bekleyen sayaç zamanlayıcısını temizler', () => {
     vi.useFakeTimers();
     const button = new PauseResumeButton({ counter: { direction: 'up' } });
-    const clearSpy = vi.spyOn(window, 'clearInterval');
+    expect(vi.getTimerCount()).toBe(1);
     button.destroy();
-    expect(clearSpy).toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
 
@@ -352,6 +401,78 @@ describe('DualAxisScrollPanel', () => {
     expect(panel.element.scrollTop).toBe(130);
   });
 
+  it('eşik altı hareket sürükleme sayılmaz; alt düğmenin tıklaması çalınmaz', () => {
+    const panel = track(new DualAxisScrollPanel({ width: 200, height: 200 }));
+    const button = document.createElement('button');
+    panel.add({ element: button });
+    document.body.appendChild(panel.element);
+    const clicked = vi.fn();
+    button.addEventListener('click', clicked);
+    panel.element.scrollLeft = 10;
+    panel.element.dispatchEvent(
+      pointerEvent('pointerdown', { pointerId: 1, clientX: 50, clientY: 50 }),
+    );
+    panel.element.dispatchEvent(
+      pointerEvent('pointermove', { pointerId: 1, clientX: 48, clientY: 51 }),
+    );
+    panel.element.dispatchEvent(
+      pointerEvent('pointerup', { pointerId: 1, clientX: 48, clientY: 51 }),
+    );
+    button.click();
+    expect(panel.element.scrollLeft).toBe(10);
+    expect(clicked).toHaveBeenCalledTimes(1);
+    expect(panel.element.classList.contains('vol-dual-scroll--dragging')).toBe(false);
+  });
+
+  it('eşiği aşan sürüklemenin bıraktığı tıklama yutulur; sonraki tıklama normaldir', () => {
+    vi.useFakeTimers();
+    const panel = track(new DualAxisScrollPanel({ width: 200, height: 200 }));
+    const button = document.createElement('button');
+    panel.add({ element: button });
+    document.body.appendChild(panel.element);
+    const clicked = vi.fn();
+    button.addEventListener('click', clicked);
+    panel.element.dispatchEvent(
+      pointerEvent('pointerdown', { pointerId: 1, clientX: 50, clientY: 50 }),
+    );
+    panel.element.dispatchEvent(
+      pointerEvent('pointermove', { pointerId: 1, clientX: 20, clientY: 50 }),
+    );
+    expect(panel.element.classList.contains('vol-dual-scroll--dragging')).toBe(true);
+    panel.element.dispatchEvent(
+      pointerEvent('pointerup', { pointerId: 1, clientX: 20, clientY: 50 }),
+    );
+    button.click();
+    expect(clicked).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    button.click();
+    expect(clicked).toHaveBeenCalledTimes(1);
+  });
+
+  it('iptal edilen sürükleme tıklamayı yutmaz; ikinci işaretçi ve sağ tık pan başlatmaz', () => {
+    const panel = track(new DualAxisScrollPanel({ width: 200, height: 200 }));
+    panel.element.scrollLeft = 5;
+    const move = () =>
+      panel.element.dispatchEvent(
+        pointerEvent('pointermove', { pointerId: 1, clientX: 0, clientY: 0 }),
+      );
+    panel.element.dispatchEvent(
+      pointerEvent('pointerdown', {
+        pointerId: 1,
+        clientX: 50,
+        clientY: 0,
+        button: 2,
+        pointerType: 'mouse',
+      }),
+    );
+    move();
+    panel.element.dispatchEvent(
+      pointerEvent('pointerdown', { pointerId: 1, clientX: 50, clientY: 0, isPrimary: false }),
+    );
+    move();
+    expect(panel.element.scrollLeft).toBe(5);
+  });
+
   it('add() içerik ekler, clear() temizler', () => {
     const panel = track(new DualAxisScrollPanel());
     const child = document.createElement('div');
@@ -410,6 +531,40 @@ describe('PullToRefresh', () => {
     await Promise.resolve();
 
     expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('çekme eşiğine varmadan içerikteki düğme tıklanır; gerçek çekmeden sonraki bırakma tıklamayı yutar', () => {
+    vi.useFakeTimers();
+    const content = document.createElement('div');
+    const button = document.createElement('button');
+    content.appendChild(button);
+    const panel = track(new PullToRefresh({ content, onRefresh: vi.fn() }));
+    const scrollArea = panel.element.querySelector<HTMLDivElement>(
+      '.vol-pull-refresh__scroll-area',
+    )!;
+    const capture = vi.spyOn(scrollArea, 'setPointerCapture');
+    capture.mockClear();
+    const clicked = vi.fn();
+    button.addEventListener('click', clicked);
+
+    scrollArea.dispatchEvent(pointerEvent('pointerdown', { pointerId: 1, clientX: 0, clientY: 0 }));
+    scrollArea.dispatchEvent(pointerEvent('pointermove', { pointerId: 1, clientX: 0, clientY: 2 }));
+    expect(capture).not.toHaveBeenCalled();
+    scrollArea.dispatchEvent(pointerEvent('pointerup', { pointerId: 1, clientX: 0, clientY: 2 }));
+    button.click();
+    expect(clicked).toHaveBeenCalledTimes(1);
+
+    scrollArea.dispatchEvent(pointerEvent('pointerdown', { pointerId: 2, clientX: 0, clientY: 0 }));
+    scrollArea.dispatchEvent(
+      pointerEvent('pointermove', { pointerId: 2, clientX: 0, clientY: 40 }),
+    );
+    expect(capture).toHaveBeenCalledTimes(1);
+    scrollArea.dispatchEvent(pointerEvent('pointerup', { pointerId: 2, clientX: 0, clientY: 40 }));
+    button.click();
+    expect(clicked).toHaveBeenCalledTimes(1);
+    vi.runAllTimers();
+    button.click();
+    expect(clicked).toHaveBeenCalledTimes(2);
   });
 
   it("eşik aşılmadan bırakılırsa onRefresh tetiklenmez, idle'a döner", () => {
@@ -588,12 +743,45 @@ describe('RadialMenu', () => {
   });
 
   it('destroy document pointer listenerlarını temizler', () => {
-    const menu = new RadialMenu({ items: [{ id: 'a', label: 'A' }], onSelect: vi.fn() });
-    const removeListener = vi.spyOn(document, 'removeEventListener');
+    const addDocument = vi.spyOn(document, 'addEventListener');
+    const removeDocument = vi.spyOn(document, 'removeEventListener');
+    const addWindow = vi.spyOn(window, 'addEventListener');
+    const removeWindow = vi.spyOn(window, 'removeEventListener');
+    const onSelect = vi.fn();
+    const menu = track(new RadialMenu({ items: [{ id: 'a', label: 'A' }], onSelect }));
+    document.body.appendChild(menu.element);
+    mockCenterRect(menu, 100, 100);
+    const pointerTypes = ['pointermove', 'pointerup', 'pointercancel'];
+    for (const type of pointerTypes)
+      expect(addDocument).not.toHaveBeenCalledWith(type, expect.any(Function));
+    expect(addWindow).not.toHaveBeenCalledWith('resize', expect.any(Function));
+
+    menu.open(100, 100, 1);
+    document.dispatchEvent(
+      pointerEvent('pointermove', { pointerId: 1, clientX: 100, clientY: 50 }),
+    );
+    expect(menu.element.querySelector('.vol-radial-menu__item--hovered')).not.toBeNull();
+    document.dispatchEvent(
+      pointerEvent('pointermove', { pointerId: 1, clientX: 100, clientY: 100 }),
+    );
+    expect(menu.element.querySelector('.vol-radial-menu__item--hovered')).toBeNull();
     menu.destroy();
-    expect(removeListener).toHaveBeenCalledWith('pointermove', expect.any(Function));
-    expect(removeListener).toHaveBeenCalledWith('pointerup', expect.any(Function));
-    expect(removeListener).toHaveBeenCalledWith('pointercancel', expect.any(Function));
+
+    for (const type of pointerTypes) {
+      expect(addDocument).toHaveBeenCalledWith(type, expect.any(Function));
+      const listener = addDocument.mock.calls.find(([kind]) => kind === type)?.[1];
+      expect(removeDocument).toHaveBeenCalledWith(type, listener);
+      document.dispatchEvent(pointerEvent(type, { pointerId: 1, clientX: 100, clientY: 50 }));
+    }
+    const resizeListener = addWindow.mock.calls.find(([kind]) => kind === 'resize')?.[1];
+    expect(addWindow).toHaveBeenCalledWith('resize', expect.any(Function));
+    expect(removeWindow).toHaveBeenCalledWith('resize', resizeListener);
+    menu.element.style.left = '13px';
+    window.dispatchEvent(new Event('resize'));
+    expect(menu.element.style.left).toBe('13px');
+    expect(menu.element.isConnected).toBe(false);
+    expect(menu.element.querySelector('.vol-radial-menu__item--hovered')).toBeNull();
+    expect(onSelect).not.toHaveBeenCalled();
   });
 });
 
@@ -624,7 +812,7 @@ describe('SwipeableCardStack', () => {
     expect(onSwipe).toHaveBeenCalledWith('c0', 'right');
     expect(stack.remaining).toBe(2);
 
-    vi.advanceTimersByTime(200);
+    vi.advanceTimersByTime(UI_TIMING.CARD_FLY_ANIMATION_MS);
   });
 
   it('eşik altındaki sürükleme kartı geri getirir, onSwipe tetiklenmez', () => {
@@ -657,7 +845,7 @@ describe('SwipeableCardStack', () => {
     acceptBtn.click();
 
     expect(onSwipe).toHaveBeenCalledWith('c0', 'right');
-    vi.advanceTimersByTime(200);
+    vi.advanceTimersByTime(UI_TIMING.CARD_FLY_ANIMATION_MS);
   });
 
   it('son kart da atılınca onEmpty çağrılır', () => {
@@ -668,7 +856,7 @@ describe('SwipeableCardStack', () => {
     );
 
     stack.swipeTop('left');
-    vi.advanceTimersByTime(200);
+    vi.advanceTimersByTime(UI_TIMING.CARD_FLY_ANIMATION_MS);
 
     expect(stack.remaining).toBe(0);
     expect(onEmpty).toHaveBeenCalledTimes(1);

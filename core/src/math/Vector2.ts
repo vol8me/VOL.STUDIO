@@ -22,7 +22,7 @@ export class Vector2 {
 
   normalize(): Vector2 {
     const len = this.length();
-    return len > 0 ? this.scale(1 / len) : new Vector2();
+    return Number.isFinite(len) && len > 0 ? this.scale(1 / len) : new Vector2();
   }
 
   clone(): Vector2 {
@@ -61,9 +61,12 @@ export class Vector2 {
   /** Yerinde normalize eder — yeni obje yaratmaz. */
   normalizeInPlace(): this {
     const len = this.length();
-    if (len > 0) {
+    if (Number.isFinite(len) && len > 0) {
       this.x /= len;
       this.y /= len;
+    } else {
+      this.x = 0;
+      this.y = 0;
     }
     return this;
   }

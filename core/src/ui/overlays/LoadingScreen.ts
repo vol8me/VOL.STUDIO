@@ -1,10 +1,11 @@
+import { i18next } from '../../i18n/I18n';
+import { restoreFocusAfterAction } from '../focus/restoreFocusAfterAction';
+import { Button } from '../primitives/Button';
+import { buildLoadingEmblem } from './loadingEmblems';
+
 /** Gösterge tipi — orbital-rings, energy-core, particle-orbit, hexagon-pulse veya bar. */
 export type LoadingIndicatorType =
-  | 'orbital-rings'
-  | 'energy-core'
-  | 'particle-orbit'
-  | 'hexagon-pulse'
-  | 'bar';
+  'orbital-rings' | 'energy-core' | 'particle-orbit' | 'hexagon-pulse' | 'bar';
 
 /** Arkaplan tipi — image, video veya CSS gradient (varsayılan). */
 export type LoadingBackgroundType = 'image' | 'video' | 'css';
@@ -14,19 +15,19 @@ export type LoadingTransitionType = 'fade' | 'slide' | 'zoom';
 
 /** İçerik (gösterge + yazı) konumu. */
 export type LoadingContentPosition =
-  | 'center'
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right';
+  'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 const CONTENT_POSITION_MAP: Record<LoadingContentPosition, { align: string; justify: string }> = {
-  'center': { align: 'center', justify: 'center' },
+  center: { align: 'center', justify: 'center' },
   'top-left': { align: 'flex-start', justify: 'flex-start' },
   'top-right': { align: 'flex-start', justify: 'flex-end' },
   'bottom-left': { align: 'flex-end', justify: 'flex-start' },
   'bottom-right': { align: 'flex-end', justify: 'flex-end' },
 };
+
+// Birden çok yükleme ekranı aynı sayfayı engelliyorsa son ekran kapanana kadar
+// `inert` kalır. Önceden başka sahibi tarafından kapatılmış öğelere dokunulmaz.
+const backgroundBlockCounts = new WeakMap<HTMLElement, number>();
 
 export interface LoadingIndicatorOptions {
   type?: LoadingIndicatorType;
@@ -48,14 +49,11 @@ export interface LoadingFontSizeOptions {
 }
 
 export interface LoadingScreenOptions {
-  /** Min. gösterim süresi (ms). Gerçek yükleme hızlı olsa bile en az bu kadar göster. Varsayılan: 2000. */
+  /** Min. gösterim süresi (ms): çok kısa yüklemede ekranın yanıp sönmesini önler (öneri: 500). Varsayılan: 0 (kapalı). */
   minDisplayMs?: number;
 
   /** Arkaplan. Varsayılan: CSS gradient. */
-  background?:
-    | { type: 'image'; src: string }
-    | { type: 'video'; src: string }
-    | { type: 'css' };
+  background?: { type: 'image'; src: string } | { type: 'video'; src: string } | { type: 'css' };
 
   /** Arkaplan rengi — CSS custom property veya hex. CSS gradient modunda kullanılır. Varsayılan: --vol-ui-bg. */
   backgroundColor?: string;
@@ -95,6 +93,38 @@ export interface LoadingScreenOptions {
 
   /** Hide animasyonu tamamlandığında çağrılır. */
   onComplete?: () => void;
+
+  /** Başlangıç aşaması metni ("Varlıklar yükleniyor 3 / 8"); `setStage` ile güncellenir ve okuyucuya duyulur. */
+  stage?: string;
+  /** Yükleme boyunca dönen ipuçları; `tipIntervalMs` aralığıyla değişir. */
+  tips?: readonly string[];
+  /** İpucu değişim aralığı (ms). Varsayılan 6000. */
+  tipIntervalMs?: number;
+  /**
+   * Gösterimden ÖNCE beklenen süre (ms): yükleme bundan kısa sürerse ekran hiç görünmez (yanıp sönme yok);
+   * asgari gösterim süresi görünür olduktan sonra ölçülür. Varsayılan 0 (kapalı), öneri 150.
+   */
+  showDelayMs?: number;
+  /** İlerleme bu süre boyunca değişmezse "beklenenden uzun sürüyor" bildirilir (ms; 0 kapatır). Varsayılan 15000. */
+  stallMs?: number;
+  /** Takılma bildirimi metni; verilmezse yerelleştirilmiş varsayılan. */
+  stallMessage?: string;
+  /** İlerleme `stallMs` boyunca durduğunda bir kez çağrılır (ilerleyince yeniden silahlanır). */
+  onStall?: () => void;
+  /**
+   * Görünürken arkadaki sayfayı etkileşime kapatır (`inert`): odak, Tab, kol gezintisi ve okuyucu yükleme
+   * ekranının arkasına ulaşamaz. Kapanınca önceki odak geri verilir. Varsayılan true.
+   */
+  blockBackground?: boolean;
+}
+
+export interface LoadingFailure {
+  /** Hata metni; verilmezse yerelleştirilmiş "Yükleme başarısız". */
+  message?: string;
+  /** Verilirse "Tekrar dene" düğmesi çıkar; basınca hata temizlenir, ilerleme sıfırlanır, bu çağrılır. */
+  onRetry?: () => void;
+  /** Verilirse "Vazgeç" düğmesi çıkar; karar (kapat/geri dön) tüketicidedir, ekran kendini gizlemez. */
+  onCancel?: () => void;
 }
 
 /**
@@ -113,12 +143,41 @@ export class LoadingScreen {
   private readonly indicatorEl: HTMLDivElement;
   private readonly percentEl: HTMLDivElement | null = null;
   private readonly backgroundEl: HTMLDivElement;
+  private backgroundMedia?: HTMLImageElement | HTMLVideoElement;
 
   private readonly minDisplayMs: number;
   private readonly transitionMs: number;
   private readonly progressDurationMs: number;
   private readonly onComplete?: () => void;
   private hideCompleted = false;
+  private readonly progressEl: HTMLDivElement;
+  private readonly stageEl: HTMLDivElement;
+  private readonly tipEl: HTMLDivElement | null = null;
+  private readonly stallEl: HTMLDivElement;
+  private readonly tips: readonly string[];
+  private readonly tipIntervalMs: number;
+  private readonly showDelayMs: number;
+  private readonly stallMs: number;
+  private readonly stallMessageOverride?: string;
+  private readonly onStallHandler?: () => void;
+  private readonly blockBackground: boolean;
+  private tipIndex = 0;
+  private tipTimer: ReturnType<typeof setInterval> | null = null;
+  private tipSwapTimer: ReturnType<typeof setTimeout> | null = null;
+  private stallTimer: ReturnType<typeof setTimeout> | null = null;
+  private showDelayTimer: ReturnType<typeof setTimeout> | null = null;
+  private stalled = false;
+  private determinate = false;
+  private lastTarget = -1;
+  private lastShownPercent = -1;
+  private blockedSiblings: HTMLElement[] = [];
+  private restoreFocusTo: HTMLElement | null = null;
+  private titleIsI18n = false;
+  private headingIsI18n = false;
+  private headingEl: HTMLElement | null = null;
+  private failureEl: HTMLDivElement | null = null;
+  private failureButtons: Button[] = [];
+  private failure: LoadingFailure | null = null;
 
   private showTime = 0;
   private animatedPercent = 0;
@@ -133,13 +192,20 @@ export class LoadingScreen {
 
   constructor(options: LoadingScreenOptions = {}) {
     const {
-      minDisplayMs = 2000,
+      minDisplayMs = 0,
       transitionMs = 400,
       transitionType = 'fade',
       progressMs = 300,
       onComplete,
     } = options;
 
+    this.tips = options.tips ?? [];
+    this.tipIntervalMs = options.tipIntervalMs ?? 6000;
+    this.showDelayMs = options.showDelayMs ?? 0;
+    this.stallMs = options.stallMs ?? 15000;
+    this.stallMessageOverride = options.stallMessage;
+    this.onStallHandler = options.onStall;
+    this.blockBackground = options.blockBackground ?? true;
     this.minDisplayMs = minDisplayMs;
     this.transitionMs = transitionMs;
     this.progressDurationMs = progressMs;
@@ -200,46 +266,193 @@ export class LoadingScreen {
     this.applyBackground(options.background);
     this.element.appendChild(this.backgroundEl);
 
-    // İçerik
+    // İçerik: çerçeveli çelik plaka (başlık şeridi + gövde).
     this.contentEl = document.createElement('div');
-    this.contentEl.className = 'vol-loading__content';
+    this.contentEl.className = 'vol-loading__content vol-frame';
 
-    // Gösterge
-    this.indicatorEl = document.createElement('div');
-    this.indicatorEl.className = 'vol-loading__indicator';
-    this.applyIndicator(options.indicator);
-    this.contentEl.appendChild(this.indicatorEl);
-
-    // Yüzde
+    const header = document.createElement('div');
+    header.className = 'vol-frame__header vol-loading__header';
+    const heading = document.createElement('span');
+    heading.className = options.title ? 'vol-loading__title' : 'vol-loading__heading';
+    heading.textContent = options.title ?? i18next.t('core:loading.title');
+    this.headingIsI18n = !options.title;
+    this.headingEl = heading;
+    header.appendChild(heading);
+    // Yüzde yalnız istenirse; okuyucudan gizli (ilerleme `progressbar` ile hedef değerle duyulur).
     if (options.showPercent) {
       this.percentEl = document.createElement('div');
       this.percentEl.className = 'vol-loading__percent';
+      this.percentEl.setAttribute('aria-hidden', 'true');
       this.percentEl.textContent = '0%';
-      this.contentEl.appendChild(this.percentEl);
+      header.appendChild(this.percentEl);
     }
+    this.contentEl.appendChild(header);
 
-    // Başlık
-    if (options.title) {
-      const titleEl = document.createElement('div');
-      titleEl.className = 'vol-loading__title';
-      titleEl.textContent = options.title;
-      this.contentEl.appendChild(titleEl);
-    }
+    const body = document.createElement('div');
+    body.className = 'vol-loading__body';
+    this.contentEl.appendChild(body);
 
-    // Alt başlık
+    // Gösterge: süs (halkalar vb.) ya da yalnız çubuk; ilerleme semantiği burada.
+    this.indicatorEl = document.createElement('div');
+    this.indicatorEl.className = 'vol-loading__indicator';
+    this.indicatorEl.setAttribute('role', 'progressbar');
+    this.indicatorEl.setAttribute('aria-valuemin', '0');
+    this.indicatorEl.setAttribute('aria-valuemax', '100');
+    this.indicatorEl.setAttribute(
+      'aria-label',
+      options.title ?? i18next.t('core:loading.progress'),
+    );
+    this.titleIsI18n = !options.title;
+    this.applyIndicator(options.indicator);
+    body.appendChild(this.indicatorEl);
+
+    // Segmentli ilerleme çubuğu (çekirdek HUD barı malzemesi); belirsiz başlar, ilk `update` ile kesinleşir.
+    this.progressEl = document.createElement('div');
+    this.progressEl.className = 'vol-bar vol-loading__progress';
+    const fill = document.createElement('div');
+    fill.className = 'vol-bar__fill vol-loading__fill vol-loading__fill--indeterminate';
+    this.progressEl.appendChild(fill);
+    body.appendChild(this.progressEl);
+
+    this.stageEl = document.createElement('div');
+    this.stageEl.className = 'vol-loading__stage';
+    this.stageEl.textContent = options.stage ?? '';
+    body.appendChild(this.stageEl);
+
     if (options.subtitle) {
       const subtitleEl = document.createElement('div');
       subtitleEl.className = 'vol-loading__subtitle';
       subtitleEl.textContent = options.subtitle;
-      this.contentEl.appendChild(subtitleEl);
+      body.appendChild(subtitleEl);
+    }
+
+    this.stallEl = document.createElement('div');
+    this.stallEl.className = 'vol-loading__stall';
+    this.stallEl.hidden = true;
+    body.appendChild(this.stallEl);
+
+    if (this.tips.length > 0) {
+      this.tipEl = document.createElement('div');
+      this.tipEl.className = 'vol-loading__tip';
+      this.tipEl.setAttribute('aria-hidden', 'true');
+      this.tipIndex = Math.floor(Math.random() * this.tips.length);
+      this.renderTip();
+      body.appendChild(this.tipEl);
     }
 
     this.element.appendChild(this.contentEl);
+    i18next.on('languageChanged', this.onLanguageChanged);
   }
 
-  /** Yükleme ekranını görünür yapar. */
+  private readonly onLanguageChanged = (): void => {
+    if (this.titleIsI18n) {
+      this.indicatorEl.setAttribute('aria-label', i18next.t('core:loading.progress'));
+    }
+    if (this.headingIsI18n && this.headingEl) {
+      this.headingEl.textContent = i18next.t('core:loading.title');
+    }
+    if (this.stalled) this.stallEl.textContent = this.stallText();
+    if (this.failure) this.renderFailure();
+  };
+
+  /**
+   * Yüklemeyi başarısız gösterir: ilerleme durur, hata `role="alert"` ile okunur, verilen eylemlere göre
+   * "Tekrar dene"/"Vazgeç" düğmeleri çıkar ve odak ilk düğmeye gider. Bekleyen gizleme iptal olur.
+   */
+  fail(failure: LoadingFailure = {}): void {
+    if (this.hideCompleted) return;
+    this.hideRequested = false;
+    if (this.hideTimer) {
+      clearTimeout(this.hideTimer);
+      this.hideTimer = null;
+    }
+    cancelAnimationFrame(this.progressRafId);
+    this.failure = failure;
+    this.armStall();
+    this.stopTips();
+    this.element.setAttribute('aria-busy', 'false');
+    this.element.classList.add('vol-loading--failed');
+    this.renderFailure();
+    this.failureButtons[0]?.element.focus();
+  }
+
+  /** Başarısızlık görünümünü kaldırır (yeniden denemede kendiliğinden çağrılır). */
+  clearFailure(): void {
+    if (!this.failure) return;
+    this.failure = null;
+    this.disposeFailureUi();
+    this.element.classList.remove('vol-loading--failed');
+    this.element.setAttribute('aria-busy', 'true');
+  }
+
+  private renderFailure(): void {
+    const failure = this.failure;
+    if (!failure) return;
+    const hadFocus = this.failureEl?.contains(document.activeElement) ?? false;
+    const focusedIndex = this.failureButtons.findIndex((b) => b.element === document.activeElement);
+    this.disposeFailureUi();
+
+    const box = document.createElement('div');
+    box.className = 'vol-loading__failure';
+    box.setAttribute('role', 'alert');
+    const message = document.createElement('div');
+    message.className = 'vol-loading__failure-message';
+    message.textContent = failure.message ?? i18next.t('core:loading.failed');
+    box.appendChild(message);
+
+    const actions = document.createElement('div');
+    actions.className = 'vol-loading__failure-actions';
+    if (failure.onRetry) {
+      const onRetry = failure.onRetry;
+      const retry = new Button(i18next.t('core:loading.retry'), {
+        variant: 'primary',
+        fullWidth: false,
+        onClick: () => {
+          this.clearFailure();
+          this.progressTarget = 0;
+          this.animatedPercent = 0;
+          this.element.style.setProperty('--vol-loading-progress', '0%');
+          if (this.percentEl) this.percentEl.textContent = '0%';
+          this.indicatorEl.removeAttribute('aria-valuenow');
+          this.determinate = false;
+          this.lastTarget = -1;
+          this.lastShownPercent = -1;
+          this.progressEl
+            .querySelector('.vol-loading__fill')
+            ?.classList.add('vol-loading__fill--indeterminate');
+          this.armStall();
+          this.startTips();
+          onRetry();
+        },
+      });
+      this.failureButtons.push(retry);
+      actions.appendChild(retry.element);
+    }
+    if (failure.onCancel) {
+      const onCancel = failure.onCancel;
+      const cancel = new Button(i18next.t('core:loading.cancel'), {
+        fullWidth: false,
+        onClick: () => onCancel(),
+      });
+      this.failureButtons.push(cancel);
+      actions.appendChild(cancel.element);
+    }
+    if (this.failureButtons.length > 0) box.appendChild(actions);
+    this.failureEl = box;
+    this.contentEl.appendChild(box);
+    if (hadFocus) this.failureButtons[Math.max(0, focusedIndex)]?.element.focus();
+  }
+
+  private disposeFailureUi(): void {
+    for (const button of this.failureButtons) button.destroy();
+    this.failureButtons = [];
+    this.failureEl?.remove();
+    this.failureEl = null;
+  }
+
+  /** Yükleme ekranını görünür yapar (`showDelayMs` varsa gecikmeli; o süreden kısa yüklemede hiç görünmez). */
   show(): void {
-    // Önceki hide timer/temizlik
+    // Varsa kalan hide timer ve geçiş zamanlayıcısını temizle
     if (this.hideTimer) {
       clearTimeout(this.hideTimer);
       this.hideTimer = null;
@@ -248,16 +461,40 @@ export class LoadingScreen {
       clearTimeout(this.transitionTimer);
       this.transitionTimer = null;
     }
+    if (this.showDelayTimer) {
+      clearTimeout(this.showDelayTimer);
+      this.showDelayTimer = null;
+    }
 
-    this.showTime = performance.now();
     this.hideRequested = false;
     this.hideCompleted = false;
     this.element.setAttribute('aria-busy', 'true');
+    this.armStall();
 
-    // Exit class'ları temizle (önceki hide'tan kalmış olabilir)
-    this.element.classList.remove('vol-loading--enter', 'vol-loading--exit', 'vol-loading--visible');
+    if (this.showDelayMs > 0) {
+      this.element.classList.add('vol-loading--pending');
+      this.showDelayTimer = setTimeout(() => {
+        this.showDelayTimer = null;
+        this.reveal();
+      }, this.showDelayMs);
+      return;
+    }
+    this.reveal();
+  }
 
-    // Önceki show rAF'ı iptal et
+  private reveal(): void {
+    this.element.classList.remove('vol-loading--pending');
+    this.showTime = performance.now();
+
+    // Kalan exit class'larını temizle
+    this.element.classList.remove(
+      'vol-loading--enter',
+      'vol-loading--exit',
+      'vol-loading--visible',
+      'vol-loading--hidden',
+    );
+
+    // Varsa show rAF'ı iptal et
     cancelAnimationFrame(this.showRafId);
 
     // Önce DOM'a ekle, sonra bir frame bekle ki transition çalışsın
@@ -269,19 +506,138 @@ export class LoadingScreen {
         }
       });
     });
+    this.blockPage();
+    this.startTips();
   }
 
-  /** Progress günceller (0-100). Değer yumuşak animasyonla hedefe ulaşır. */
+  /** Arkadaki sayfayı kapatır ve odağı ekrana alır; kapanınca `unblockPage` geri verir. */
+  private blockPage(): void {
+    if (!this.blockBackground || this.blockedSiblings.length > 0) return;
+    const active = document.activeElement;
+    this.restoreFocusTo =
+      active instanceof HTMLElement && active !== document.body && !this.element.contains(active)
+        ? active
+        : null;
+    // Loader uygulama köküne gömüldüyse yalnız body kardeşlerini kapatmak
+    // yetersizdir; loader'a giden DOM yolunun tüm kardeşleri kapatılmalı.
+    let branch: Element | null = this.element;
+    while (branch?.parentElement) {
+      const parent: HTMLElement = branch.parentElement;
+      for (const child of Array.from(parent.children)) {
+        if (child === branch || !(child instanceof HTMLElement)) continue;
+        // Eşzamanlı yükleyiciler birbirinin girişini kilitlememeli.
+        if (child.classList.contains('vol-loading')) continue;
+        const count = backgroundBlockCounts.get(child) ?? 0;
+        if (child.inert && count === 0) continue;
+        backgroundBlockCounts.set(child, count + 1);
+        child.inert = true;
+        this.blockedSiblings.push(child);
+      }
+      if (parent === document.body) break;
+      branch = parent;
+    }
+    this.element.tabIndex = -1;
+    this.element.focus({ preventScroll: true });
+  }
+
+  private unblockPage(): void {
+    for (const child of this.blockedSiblings) {
+      const count = backgroundBlockCounts.get(child);
+      if (count === undefined) continue;
+      if (count <= 1) {
+        backgroundBlockCounts.delete(child);
+        child.inert = false;
+      } else {
+        backgroundBlockCounts.set(child, count - 1);
+      }
+    }
+    this.blockedSiblings = [];
+    const target = this.restoreFocusTo;
+    this.restoreFocusTo = null;
+    const active = document.activeElement;
+    const lost = !active || active === document.body || this.element.contains(active);
+    if (lost) restoreFocusAfterAction(target);
+  }
+
+  /** Aşama metnini günceller; okuyucuya duyulur (`role="status"` kökü). Boş metin aşamayı gizler. */
+  setStage(stage: string): void {
+    this.stageEl.textContent = stage;
+    this.armStall();
+  }
+
+  private renderTip(): void {
+    if (this.tipEl) {
+      this.tipEl.textContent = `${i18next.t('core:loading.tip')} · ${this.tips[this.tipIndex]}`;
+    }
+  }
+
+  private startTips(): void {
+    if (this.tipTimer || this.tips.length < 2) return;
+    this.tipTimer = setInterval(() => {
+      this.tipIndex = (this.tipIndex + 1) % this.tips.length;
+      this.tipEl?.classList.add('vol-loading__tip--swap');
+      if (this.tipSwapTimer) clearTimeout(this.tipSwapTimer);
+      this.tipSwapTimer = setTimeout(() => {
+        this.tipSwapTimer = null;
+        this.renderTip();
+        this.tipEl?.classList.remove('vol-loading__tip--swap');
+      }, 160);
+    }, this.tipIntervalMs);
+  }
+
+  private stopTips(): void {
+    if (this.tipTimer) clearInterval(this.tipTimer);
+    this.tipTimer = null;
+    if (this.tipSwapTimer) clearTimeout(this.tipSwapTimer);
+    this.tipSwapTimer = null;
+    this.tipEl?.classList.remove('vol-loading__tip--swap');
+  }
+
+  private stallText(): string {
+    return this.stallMessageOverride ?? i18next.t('core:loading.stalled');
+  }
+
+  /** İlerleme/aşama her değiştiğinde takılma sayacı yeniden başlar; süre dolarsa bir kez bildirilir. */
+  private armStall(): void {
+    if (this.stallTimer) clearTimeout(this.stallTimer);
+    this.stallTimer = null;
+    if (this.stalled) {
+      this.stalled = false;
+      this.stallEl.hidden = true;
+      this.stallEl.textContent = '';
+    }
+    if (this.stallMs <= 0 || this.hideRequested || this.failure) return;
+    this.stallTimer = setTimeout(() => {
+      this.stallTimer = null;
+      this.stalled = true;
+      this.stallEl.textContent = this.stallText();
+      this.stallEl.hidden = false;
+      this.onStallHandler?.();
+    }, this.stallMs);
+  }
+
+  /** Progress günceller (0-100). Değer yumuşak animasyonla hedefe ulaşır; ilk çağrıda çubuk belirsizden kesine geçer. */
   update(percent: number): void {
+    if (!Number.isFinite(percent)) return;
     const target = Math.max(0, Math.min(100, percent));
+    this.indicatorEl.setAttribute('aria-valuenow', String(Math.round(target)));
+    if (!this.determinate) {
+      this.determinate = true;
+      this.progressEl
+        .querySelector('.vol-loading__fill')
+        ?.classList.remove('vol-loading__fill--indeterminate');
+    }
+    // Aynı hedef tekrar gelirse takılma sayacı sıfırlanmaz (ilerleme yok demektir).
+    if (target !== this.lastTarget) this.armStall();
+    this.lastTarget = target;
 
     // prefers-reduced-motion: animasyonu atla, değeri anında uygula
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
       this.animatedPercent = target;
-      if (this.percentEl) {
-        this.percentEl.textContent = `${Math.round(target)}%`;
-      }
-      this.element.style.setProperty('--vol-loading-progress', `${target}%`);
+      this.paintProgress(target);
       return;
     }
 
@@ -293,16 +649,22 @@ export class LoadingScreen {
     this.progressRafId = requestAnimationFrame((t) => this.animateProgress(t));
   }
 
+  /** Çubuk genişliği ve yüzde metni; yüzde metni yalnız TAM sayı değişince yazılır (kare başına DOM yazımı yok). */
+  private paintProgress(value: number): void {
+    this.element.style.setProperty('--vol-loading-progress', `${value}%`);
+    const whole = Math.round(value);
+    if (this.percentEl && whole !== this.lastShownPercent) {
+      this.percentEl.textContent = `${whole}%`;
+    }
+    this.lastShownPercent = whole;
+  }
+
   private animateProgress(now: number): void {
     const elapsed = now - this.progressStart;
     const t = this.progressDurationMs <= 0 ? 1 : Math.min(1, elapsed / this.progressDurationMs);
     const eased = 1 - Math.pow(1 - t, 3);
     this.animatedPercent = this.progressFrom + (this.progressTarget - this.progressFrom) * eased;
-
-    if (this.percentEl) {
-      this.percentEl.textContent = `${Math.round(this.animatedPercent)}%`;
-    }
-    this.element.style.setProperty('--vol-loading-progress', `${this.animatedPercent}%`);
+    this.paintProgress(this.animatedPercent);
 
     if (t < 1) {
       this.progressRafId = requestAnimationFrame((t2) => this.animateProgress(t2));
@@ -315,7 +677,25 @@ export class LoadingScreen {
    */
   hide(): void {
     if (this.hideRequested) return;
+    this.clearFailure();
     this.hideRequested = true;
+    this.armStall();
+    this.stopTips();
+    // İş bitti: sayfa HEMEN etkileşime açılır. Asgari gösterim ve solma yalnız ekranı görsel olarak tutar;
+    // arkadaki arayüzün klavyesi o süre boyunca ölü kalmamalı (ilk tuş vuruşu kaybolurdu).
+    this.unblockPage();
+
+    // Gösterim gecikmesi dolmadan biten yükleme hiç görünmez: animasyon ve asgari süre atlanır.
+    if (this.showDelayTimer) {
+      clearTimeout(this.showDelayTimer);
+      this.showDelayTimer = null;
+      this.element.classList.remove('vol-loading--pending');
+      this.element.classList.add('vol-loading--hidden');
+      this.element.setAttribute('aria-busy', 'false');
+      this.hideCompleted = true;
+      this.onComplete?.();
+      return;
+    }
 
     const elapsed = performance.now() - this.showTime;
     const remaining = this.minDisplayMs - elapsed;
@@ -338,19 +718,23 @@ export class LoadingScreen {
     this.hideTimer = null;
 
     this.element.setAttribute('aria-busy', 'false');
+    this.unblockPage();
     this.element.classList.remove('vol-loading--visible');
     this.element.classList.add('vol-loading--exit');
 
     this.transitionTimer = setTimeout(() => {
       this.element.classList.remove('vol-loading--enter', 'vol-loading--exit');
+      this.element.classList.add('vol-loading--hidden');
       this.onComplete?.();
     }, this.transitionMs);
   }
 
   /** Arkaplan uygular. */
-  private applyBackground(
-    background: LoadingScreenOptions['background'],
-  ): void {
+  private applyBackground(background: LoadingScreenOptions['background']): void {
+    this.cleanupBackgroundMedia();
+    this.backgroundEl.className = 'vol-loading__background';
+    this.backgroundEl.style.backgroundImage = '';
+
     if (!background || background.type === 'css') {
       this.backgroundEl.classList.add('vol-loading__background--css');
       return;
@@ -359,6 +743,7 @@ export class LoadingScreen {
     if (background.type === 'image') {
       this.backgroundEl.classList.add('vol-loading__background--image');
       const img = new Image();
+      this.backgroundMedia = img;
       img.onload = () => {
         this.backgroundEl.style.backgroundImage = `url(${background.src})`;
       };
@@ -373,37 +758,66 @@ export class LoadingScreen {
     if (background.type === 'video') {
       this.backgroundEl.classList.add('vol-loading__background--video');
       const video = document.createElement('video');
+      this.backgroundMedia = video;
       video.src = background.src;
       video.muted = true;
       video.loop = true;
       video.playsInline = true;
       video.autoplay = true;
-      video.onerror = () => {
+
+      const applyVideoFallback = (): void => {
         this.backgroundEl.classList.remove('vol-loading__background--video');
         this.backgroundEl.classList.add('vol-loading__background--css');
         video.remove();
       };
+
+      video.onerror = applyVideoFallback;
       this.backgroundEl.appendChild(video);
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          this.backgroundEl.classList.remove('vol-loading__background--video');
-          this.backgroundEl.classList.add('vol-loading__background--css');
-          video.remove();
-        });
+
+      try {
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(applyVideoFallback);
+        }
+      } catch {
+        // Bazı tarayıcılar/cihazlar `play()`'i senkron hata fırlatarak reddeder;
+        // bu durumda da statik CSS arkaplanına düş.
+        applyVideoFallback();
       }
       return;
     }
   }
 
-  /** Gösterge uygular. */
+  /** Arkaplan medya elementini durdurur ve referansı serbest bırakır. */
+  private cleanupBackgroundMedia(): void {
+    if (!this.backgroundMedia) return;
+
+    if (this.backgroundMedia instanceof HTMLVideoElement) {
+      try {
+        this.backgroundMedia.pause();
+      } catch {
+        // ignore
+      }
+      this.backgroundMedia.removeAttribute('src');
+      try {
+        this.backgroundMedia.load();
+      } catch {
+        // JSDOM/HTMLMediaElement.load() desteklenmez; ignore
+      }
+      this.backgroundMedia.remove();
+    } else if (this.backgroundMedia instanceof HTMLImageElement) {
+      this.backgroundMedia.onload = null;
+      this.backgroundMedia.onerror = null;
+      this.backgroundMedia.removeAttribute('src');
+      this.backgroundMedia.removeAttribute('srcset');
+    }
+
+    this.backgroundMedia = undefined;
+  }
+
+  /** Gösterge uygular: `bar` yalnız plakadaki çubuktur; diğerleri çubuğun üstünde süs olarak çizilir. */
   private applyIndicator(indicator: LoadingIndicatorOptions | undefined): void {
-    const {
-      type = 'orbital-rings',
-      color,
-      size = 120,
-      customElement,
-    } = indicator ?? {};
+    const { type = 'bar', color, size = 96, customElement } = indicator ?? {};
 
     if (color) {
       this.element.style.setProperty('--vol-loading-color', color);
@@ -416,108 +830,11 @@ export class LoadingScreen {
       return;
     }
 
-    if (type === 'orbital-rings') {
-      this.buildOrbitalRings();
-    } else if (type === 'energy-core') {
-      this.buildEnergyCore();
-    } else if (type === 'particle-orbit') {
-      this.buildParticleOrbit();
-    } else if (type === 'hexagon-pulse') {
-      this.buildHexagonPulse();
-    } else if (type === 'bar') {
-      this.buildBar();
+    if (type === 'bar') {
+      this.indicatorEl.classList.add('vol-loading__indicator--bar');
+    } else {
+      buildLoadingEmblem(type, this.indicatorEl);
     }
-  }
-
-  /** Orbital Rings — 3 eş merkezli halka, dış halka progress arc. */
-  private buildOrbitalRings(): void {
-    this.indicatorEl.classList.add('vol-loading__indicator--orbital');
-
-    const outer = document.createElement('div');
-    outer.className = 'vol-loading__ring vol-loading__ring--outer';
-
-    const mid = document.createElement('div');
-    mid.className = 'vol-loading__ring vol-loading__ring--mid';
-
-    const inner = document.createElement('div');
-    inner.className = 'vol-loading__ring vol-loading__ring--inner';
-
-    this.indicatorEl.appendChild(outer);
-    this.indicatorEl.appendChild(mid);
-    this.indicatorEl.appendChild(inner);
-  }
-
-  /** Energy Core — pulse çekirdek + dönen enerji yayları. */
-  private buildEnergyCore(): void {
-    this.indicatorEl.classList.add('vol-loading__indicator--energy');
-
-    const core = document.createElement('div');
-    core.className = 'vol-loading__core';
-
-    const arc1 = document.createElement('div');
-    arc1.className = 'vol-loading__arc vol-loading__arc--1';
-
-    const arc2 = document.createElement('div');
-    arc2.className = 'vol-loading__arc vol-loading__arc--2';
-
-    const arc3 = document.createElement('div');
-    arc3.className = 'vol-loading__arc vol-loading__arc--3';
-
-    this.indicatorEl.appendChild(arc1);
-    this.indicatorEl.appendChild(arc2);
-    this.indicatorEl.appendChild(arc3);
-    this.indicatorEl.appendChild(core);
-  }
-
-  /** Particle Orbit — ortada sabit nokta, etrafında partiküller döner, progress arttıkça çap büyür. */
-  private buildParticleOrbit(): void {
-    this.indicatorEl.classList.add('vol-loading__indicator--particle');
-
-    const center = document.createElement('div');
-    center.className = 'vol-loading__particle-center';
-
-    const orbit = document.createElement('div');
-    orbit.className = 'vol-loading__particle-orbit';
-
-    const particleCount = 6;
-    for (let i = 0; i < particleCount; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'vol-loading__particle';
-      particle.style.setProperty('--vol-loading-particle-angle', `${(360 / particleCount) * i}deg`);
-      particle.style.setProperty('--vol-loading-particle-delay', `${(1.5 / particleCount) * i}s`);
-      orbit.appendChild(particle);
-    }
-
-    this.indicatorEl.appendChild(orbit);
-    this.indicatorEl.appendChild(center);
-  }
-
-  /** Hexagon Pulse — dönen altıgen, progress arttıkça kenarlar sırayla dolar. */
-  private buildHexagonPulse(): void {
-    this.indicatorEl.classList.add('vol-loading__indicator--hexagon');
-
-    const hex = document.createElement('div');
-    hex.className = 'vol-loading__hexagon';
-
-    const hexInner = document.createElement('div');
-    hexInner.className = 'vol-loading__hexagon-inner';
-
-    this.indicatorEl.appendChild(hex);
-    this.indicatorEl.appendChild(hexInner);
-  }
-
-  /** Bar — yatay progress bar. */
-  private buildBar(): void {
-    this.indicatorEl.classList.add('vol-loading__indicator--bar');
-
-    const track = document.createElement('div');
-    track.className = 'vol-loading__bar-track';
-
-    const fill = document.createElement('div');
-    fill.className = 'vol-loading__bar-fill';
-
-    track.appendChild(fill);
-    this.indicatorEl.appendChild(track);
   }
 
   destroy(): void {
@@ -531,6 +848,13 @@ export class LoadingScreen {
     }
     cancelAnimationFrame(this.progressRafId);
     cancelAnimationFrame(this.showRafId);
+    if (this.showDelayTimer) clearTimeout(this.showDelayTimer);
+    if (this.stallTimer) clearTimeout(this.stallTimer);
+    this.stopTips();
+    this.unblockPage();
+    i18next.off('languageChanged', this.onLanguageChanged);
+    this.disposeFailureUi();
+    this.cleanupBackgroundMedia();
     this.element.remove();
   }
 }

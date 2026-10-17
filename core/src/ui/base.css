@@ -7,10 +7,46 @@
   z-index: 10;
   position: fixed;
   inset: 0;
+
+  /*
+   * Oturma mesafesi ölçeği (`--vol-layout-zoom`, theme.css). `zoom` kutunun
+   * kendisini de büyütür; karşılığında kökün CSS boyutu viewport/zoom'a
+   * çekilir — içerik hep 1280 CSS px genişliğinde yerleşir ve çizim
+   * büyütülür. zoom=1'de `inset:0` ile birebir aynı davranış.
+   */
+  zoom: var(--vol-layout-zoom);
+  width: calc(100vw / var(--vol-layout-zoom));
+  height: calc(100vh / var(--vol-layout-zoom));
+
+  /* WebView'in kendi dokunma vurgusu ve uzun basış balonu `--pressed` durumunun üstüne biner. */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/*
+ * WebView'un KENDİ menüleri oyun yüzeyinde karşılıksızdır: bağlam menüsü,
+ * uzun basış balonu, resim sürükleme hayaleti. Bağlam menüsü ve sürükleme
+ * `suppressNativeMenus` ile olay düzeyinde kapatılır; burada UA'nın kalan
+ * iki davranışı kapatılır. Seçim yalnız `input`/`textarea` DIŞINDA kapanır:
+ * kullanıcı yazdığı metni seçebilmelidir, kopyala menüsüne ihtiyaç yoktur.
+ */
+html,
+body {
+  -webkit-touch-callout: none;
+}
+
+:not(input, textarea) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* UA'nın `[hidden]` kuralını herhangi bir yazar `display` bildirimi ezer; tek merkezi kural korur. */
+[hidden] {
+  display: none !important;
 }
 
 .vol-sr-only {
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
   width: 1px;
@@ -24,3 +60,47 @@
 .vol-ui-root * {
   box-sizing: border-box;
 }
+
+/*
+ * Sürükleme yüzeylerinde metin seçimi kapalıdır: aynı jest seçim olarak da
+ * yorumlanır. Koruma bileşenin kendisindedir, monte edildiği köke bağlı değildir;
+ * seçim yalnız sürüklenebilir yüzeylerde kapanır.
+ */
+.vol-kanban-wrap,
+.vol-slot-grid__item,
+.vol-card-stack,
+.vol-carousel,
+.vol-skill-tree,
+.vol-split-pane__separator,
+.vol-range-slider,
+.vol-curve-editor,
+.vol-joystick,
+.vol-square-joystick,
+.vol-radial-menu,
+.vol-charge-button,
+.vol-long-press-button,
+.vol-multitouch-zone,
+.vol-pinch-zoom,
+.vol-pull-refresh,
+.vol-swipe-zone,
+.vol-dual-scroll,
+.vol-hold-button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/*
+ * Kol/klavye gezinmesinin odak halkası.
+ *
+ * `FocusNavController` yalnız kendi taşıdığı odağa `vol-focusnav-current`
+ * koyar ve işaretçi etkileşiminde siler — fareyle tıklanan eleman halka
+ * GÖSTERMEZ. `:focus-visible`dan ayrıdır çünkü tarayıcı sezgisel kuralı
+ * programatik `focus()` çağrılarında güvenilir değildir (WebKitGTK dahil).
+ */
+.vol-focusnav-current {
+  outline: 3px solid var(--vol-ui-focus-ring) !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px var(--vol-ui-focus-halo);
+}
+
+/* Seçili öğenin yüzey durumu (düğme, satır, girdi) `material/selection.css`tedir. */

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-28f830f10c3afc72": {
+        "hash": "sha256:8469fc1d441c2846160d4f72088ce37826eb28896104947386fe4b54bffcddae",
+        "path": "analyses/r-28f830f10c3afc72.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:438e0178e7549a5b9a977875de6c75dd18e824b680a05834d3e1a16445ea5576",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:438e0178e7549a5b9a977875de6c75dd18e824b680a05834d3e1a16445ea5576",
+      "hash": "sha256:63394bb24d7a7b992195c790456c3d898db1faf94b72348e0d9256e6a296cb91",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:c60f8ed7ede0cdfe9e61141e03588fe87a710acbe36eeaf1636a3e199a38d502",
+      "path": "games/vol-test/audio-manifests/sfx/steel/shot-gatling.json"
+    },
+    "renders": {
+      "r-28f830f10c3afc72": {
+        "hash": "sha256:ec14b5452a92fbb16bbf72ce2f458e8ff448bb7731d5d90bcf68d0224853b1c8",
+        "path": "renders/r-28f830f10c3afc72.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:f43e9c2b391824626a72f9fd5840340c246690d629e461b800a15cd270466557",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-shot-gatling",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 71,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/shot-gatling.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

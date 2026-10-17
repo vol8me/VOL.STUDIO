@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-4a139c89de2db5c8": {
+        "hash": "sha256:24334f5ac174059fb8f4b68c81c7512cac2dc471f321fbf1e2f79a9c52b60475",
+        "path": "analyses/r-4a139c89de2db5c8.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:67a02653e861cf160ffdc9d78df6dce001cdd68241897b5d282c960d68ae4526",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:67a02653e861cf160ffdc9d78df6dce001cdd68241897b5d282c960d68ae4526",
+      "hash": "sha256:642d70fe4458d03e5bf4d5d6b36789f0c9aa8abce17fbd6b8276b080382106fc",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:4e9261b7b59f5fdc49b90d284aea97a70044678224ba4901fea342990c68c816",
+      "path": "core/audio-manifests/ui/steel/hover-b.json"
+    },
+    "renders": {
+      "r-4a139c89de2db5c8": {
+        "hash": "sha256:4ce4e86158316a42af490a6f024d2f87e0e1cdf90d0c089a347498dda0d1b2f0",
+        "path": "renders/r-4a139c89de2db5c8.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:fec30ba06a9f42184c2b84db0e550417ab7f0060fb2d167683828a5e4114b780",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "hover-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/hover-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-hover/hover-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

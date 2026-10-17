@@ -1,0 +1,944 @@
+/*
+ * CORE'un primitif CSS'i `box-sizing: border-box` varsayar (bkz.
+ * `core/src/ui/base.css` — `.vol-ui-root *`), ama o kural yalnızca `UIRoot`
+ * (oyun tarafı) mount ettiği `.vol-ui-root` kapsamında çalışır. Showcase
+ * kendi kökünü (`.vol-showcase-root`) kullanır ve bu kurala hiç girmez —
+ * Bağımsız web yüzeyleri bunu kendi kökünde kurar; vol-showcase'de bu satır hiç
+ * yazılmamıştı. Sonuç: `width:100%` +
+ * `padding` taşıyan her primitif (TextArea, Input, PropertyField içindeki
+ * kontroller, Checkbox track'i) content-box'ta gerçek genişliğin üstüne
+ * padding/border EKLİYOR, konteyneri taşıp sağa kayıyor ya da (Checkbox'ta)
+ * transform mesafesi yanlış hesaplanıyordu.
+ */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-bg);
+  font-family: var(--vol-font-family-body);
+}
+
+.vol-showcase-root {
+  pointer-events: auto;
+  overflow: hidden;
+
+  /*
+   * Oturma mesafesi ölçeği (`--vol-layout-zoom`, core theme.css). Oyun tarafı
+   * bunu `.vol-ui-root`ta alır; vitrin kendi kökünde aynısını uygular ki
+   * readability kapısı (webkit, 1080p/2160p) gerçek davranışı ölçsün.
+   */
+  zoom: var(--vol-layout-zoom);
+  width: calc(100% / var(--vol-layout-zoom));
+  height: calc(100% / var(--vol-layout-zoom));
+}
+
+.vol-showcase-root > .vol-tabs {
+  height: 100%;
+}
+
+.vol-showcase-root:fullscreen {
+  width: 100%;
+  height: 100%;
+  background: var(--vol-ui-bg);
+}
+
+.vol-showcase-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-lg);
+  width: 100%;
+}
+
+.vol-showcase-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--vol-space-lg);
+  padding-bottom: var(--vol-space-lg);
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+}
+
+.vol-showcase-row__label {
+  flex: 0 0 auto;
+  width: 140px;
+  text-align: left;
+}
+
+.vol-showcase-row__group {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+  gap: var(--vol-space-md);
+  align-items: center;
+}
+
+.vol-showcase-icon-button-groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--vol-space-xl);
+  width: 100%;
+}
+
+.vol-showcase-icon-button-group {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+}
+
+.vol-showcase-icon-button-group__row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--vol-space-md);
+}
+
+.vol-showcase-icon-button-group__title {
+  font-size: var(--vol-text-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vol-ui-text-muted);
+}
+
+/*
+ * `auto-fit` + `minmax(260px, 1fr)`: sütun sayısı pencere genişliğine göre
+ * doğal olarak azalır (4 → 3 → 2 → 1), kartlar her genişlikte en az 260px
+ * kalır; sabit 4 sütun pencere daralınca kartları okunmaz genişliğe kadar
+ * sıkıştırırdı. `span-3`/`span-4` kartların @media 900px kuralı (aşağıda) bu
+ * temel davranışla çakışmaz; o kural yalnızca GENİŞ kartları dar ekranda
+ * tam satıra indirir.
+ */
+
+/*
+ * SON SATIR BOŞ HÜCRE BIRAKMAZ.
+ *
+ * Grid `auto-fit` boş SÜTUNLARI toplar ama boş HÜCRELERİ toplamaz: on üç kart
+ * üç sütuna dizildiğinde son satırda bir kart ve iki ölü hücre kalır.
+ *
+ * Flex'te son satırdaki öğeler kalan genişliği paylaşır, yani ölü hücre
+ * kategorik olarak oluşmaz. Bedeli, son satırdaki kartların diğerlerinden
+ * geniş olması; bir katalogda bu, sağda asılı kalan boşluktan iyidir.
+ *
+ * `260px` taban korunur: kartlar bu genişliğin altına inmez, sığmadıklarında
+ * alt satıra geçerler.
+ */
+.vol-showcase-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vol-space-lg);
+  align-items: stretch;
+}
+
+.vol-showcase-card-grid > * {
+  flex: 1 1 260px;
+
+  /* Flex çocuğu varsayılanda içeriğinden küçülmez; uzun bir etiket kartı
+     taban genişliğin ötesine iterdi. */
+  min-width: 0;
+}
+
+.vol-showcase-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background-color: var(--vol-ui-panel);
+  border: 1px solid var(--vol-ui-frame-hairline);
+  border-radius: var(--vol-radius-md);
+
+  /* Plaka çerçevesi: üst ışık, alt kenar, 4 px içeride ikinci hat (keyline), sert dış gölge. */
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    inset 0 0 0 4px var(--vol-ui-panel),
+    inset 0 0 0 5px var(--vol-mat-keyline),
+    0 3px 0 var(--vol-mat-drop);
+}
+
+.vol-showcase-card__header {
+  padding: var(--vol-space-sm) var(--vol-space-lg);
+  border-radius: calc(var(--vol-radius-md) - 1px) calc(var(--vol-radius-md) - 1px) 0 0;
+}
+
+.vol-showcase-card__header .vol-showcase-card__title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * GENİŞLİK MODİFİKASYONLARI — flex tabanı olarak.
+ *
+ * Bunlar `grid-column: span N` idi. Yerleşim flex'e geçince (son satırda ölü
+ * hücre bırakmamak için) o bildirimler SESSİZCE işlevsiz kaldı: kural duruyor,
+ * hiçbir şey yapmıyordu. Flex'te karşılığı taban genişliktir — `flex-basis`
+ * kartın istediği payı verir, `flex-grow` kalanı paylaştırır.
+ *
+ * Yüzdeler `gap` payını bırakacak şekilde biraz altta tutulur; aksi hâlde iki
+ * `%50` kart boşlukla birlikte satırı taşırıp alt alta düşerdi.
+ */
+.vol-showcase-card--span-all {
+  flex: 1 1 100%;
+}
+
+.vol-showcase-card--span-2 {
+  flex: 1 1 calc(50% - var(--vol-space-lg));
+}
+
+.vol-showcase-card--span-3 {
+  flex: 1 1 calc(66% - var(--vol-space-lg));
+}
+
+.vol-showcase-card--span-4 {
+  flex: 1 1 100%;
+}
+
+@media (width <= 900px) {
+  .vol-showcase-card--span-2,
+  .vol-showcase-card--span-3,
+  .vol-showcase-card--span-4 {
+    flex: 1 1 100%;
+  }
+}
+
+/*
+ * Palette sekmesine özel 12 birimlik sabit grid. Genel showcase-card-grid
+ * `auto-fill minmax(260px,1fr)` kullanır — sütun sayısı ekran genişliğine
+ * göre dinamik değiştiği için `span:2` kartların satırı tam doldurup
+ * doldurmadığı öngörülemezdi (bazı genişliklerde boşluk/hizasızlık
+ * oluşuyordu). Palette grupları token sayısına göre 3/4/6/12'lik sabit
+ * span'lerle satırları tam dolduracak şekilde elle dizilir.
+ */
+.vol-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--vol-space-lg);
+  align-items: stretch;
+}
+
+.vol-palette-grid .vol-showcase-card--span-3 {
+  grid-column: span 3;
+}
+
+.vol-palette-grid .vol-showcase-card--span-4 {
+  grid-column: span 4;
+}
+
+.vol-palette-grid .vol-showcase-card--span-6 {
+  grid-column: span 6;
+}
+
+@media (width <= 900px) {
+  .vol-palette-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .vol-palette-grid .vol-showcase-card--span-3 {
+    grid-column: span 3;
+  }
+
+  .vol-palette-grid .vol-showcase-card--span-4,
+  .vol-palette-grid .vol-showcase-card--span-6 {
+    grid-column: span 6;
+  }
+}
+
+.vol-showcase-card__body {
+  padding: var(--vol-space-lg);
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: var(--vol-space-sm);
+  align-items: center;
+}
+
+.vol-showcase-card__body--center {
+  justify-content: center;
+}
+
+.vol-showcase-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+}
+
+.vol-showcase-six-digits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-lg);
+  width: 100%;
+}
+
+.vol-showcase-timer-variations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-lg);
+  width: 100%;
+}
+
+.vol-showcase-timer-variations__column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+}
+
+.vol-showcase-panel-demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-md);
+  width: 100%;
+}
+
+.vol-showcase-panel-demo--centered {
+  align-items: center;
+}
+
+.vol-showcase-panel-demo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vol-space-sm);
+}
+
+/* Dikey barlar kendi yüksekliklerini taşımaz; demo sütunu verir. */
+.vol-showcase-vertical-bars {
+  display: flex;
+  gap: var(--vol-space-md);
+  align-items: flex-end;
+  height: 120px;
+}
+
+/* Kart demoları — nadirlik kademeleri yan yana karşılaştırılabilsin. */
+.vol-showcase-card-row {
+  display: grid;
+
+  /* Altı kart geniş kutuda tek satırda kalır; dar ekranda sarar (önceden 40 px'lik sütunlara sıkışıp harfler dikey diziliyordu). */
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--vol-space-sm);
+}
+
+.vol-showcase-panel-demo__controls .vol-button {
+  flex: 1;
+  width: auto;
+  min-width: 120px;
+}
+
+/* Yakınlaştırma düğmeleri kısa komuttur: etiket iki satıra bölünmez, sığmazsa düğme alt satıra iner. */
+.vol-showcase-panel-demo__controls .vol-showcase-zoom-button {
+  white-space: nowrap;
+}
+
+.vol-showcase-panel-stage {
+  position: relative;
+  height: 190px;
+  overflow: hidden;
+  background-color: var(--vol-ui-well);
+  border: 1px solid var(--vol-ui-frame-hairline);
+  border-radius: var(--vol-radius-sm);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+  margin-bottom: var(--vol-space-md);
+}
+
+/* FloatingText tam satır kart aldığında (bkz. hudTab.ts) daha geniş bir
+   alanda birden çok noktaya doğuş göstermek için ekstra yükseklik kazanır. */
+.vol-showcase-panel-stage--wide {
+  height: 260px;
+}
+
+.vol-showcase-demo-panel {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - var(--vol-space-lg) * 2);
+  max-width: 260px;
+  text-align: center;
+}
+
+.vol-palette-group__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: var(--vol-space-sm);
+  width: 100%;
+}
+
+.vol-palette-swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vol-palette-swatch__chip {
+  height: 40px;
+  border-radius: var(--vol-radius-sm);
+  border: 1px solid var(--vol-ui-border-soft);
+}
+
+/* Token adı teknik bir etikettir: dokunmatikte `title` yok, bu yüzden kısaltılmaz, dar sütunda satır kırar. */
+.vol-palette-swatch__name {
+  font-size: var(--vol-text-label);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.vol-palette-swatch__hex {
+  font-size: var(--vol-text-label);
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.vol-showcase-animated-label-sample {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.6;
+  padding-top: 12px;
+  color: var(--vol-ui-brand-hover);
+}
+
+.vol-showcase-list-panel {
+  inset: var(--vol-space-sm);
+  transform: none;
+  width: auto;
+  max-width: 220px;
+  margin: 0 auto;
+  overflow: auto;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.vol-showcase-list-panel__item {
+  text-align: left;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+}
+
+/*
+ * Köşe bildirimi EKRANIN köşesindedir, sayfanın değil.
+ *
+ * `position: absolute` + `z-index: auto` ile bildirim kartlarla AYNI boyama
+ * katmanında kalır ve sağ üstteki kartın arkasında kaybolur.
+ * Bir bildirim, üzerine geldiği içeriği örtmek için vardır; katmanı da
+ * `Toast`la aynıdır.
+ */
+.vol-showcase-corner-panel {
+  position: fixed;
+  z-index: var(--vol-z-toast);
+  top: var(--vol-space-md);
+  right: var(--vol-space-md);
+  left: auto;
+  align-items: flex-start;
+  width: 220px;
+  padding: var(--vol-space-md);
+  background-color: var(--vol-ui-panel);
+  border: 1px solid var(--vol-ui-frame-hairline);
+  border-radius: var(--vol-radius-sm);
+  box-shadow:
+    inset 4px 0 0 var(--vol-ui-brand-solid),
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop);
+}
+
+.vol-showcase-vertical-sliders {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--vol-space-xl);
+}
+
+.vol-showcase-vertical-sliders__column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--vol-space-sm);
+}
+
+.vol-showcase-scroll-cards {
+  display: flex;
+}
+
+.vol-showcase-scroll-cards .vol-scroll-view__content {
+  gap: var(--vol-space-md);
+}
+
+.vol-showcase-scroll-card {
+  flex-shrink: 0;
+  width: 120px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+}
+
+/*
+ * height SABİT verilmez: 24 hücre / 4 sütun = 6 satır × 130px + gap'ler,
+ * sabit bir height (ör. 600px) bu doğal içerik yüksekliğinden KISA
+ * kalıyordu — grid taşıp son satırın altındaki padding-bottom hiçbir zaman
+ * görünmüyordu (üstte padding-top var, altta "yok" gibi görünüyordu).
+ * height'i belirtmemek grid'i içeriğine göre doğal boyuta getirir, padding
+ * dört yönde de simetrik kalır.
+ */
+.vol-showcase-dual-scroll-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 130px;
+  gap: var(--vol-space-sm);
+  box-sizing: border-box;
+  width: 800px;
+  padding: var(--vol-space-md);
+}
+
+.vol-showcase-dual-scroll-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  color: var(--vol-ui-text-muted);
+  font-size: 14px;
+}
+
+.vol-showcase-pinch-map {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-rows: 90px;
+  gap: var(--vol-space-sm);
+  box-sizing: border-box;
+  width: 700px;
+  padding: var(--vol-space-md);
+}
+
+.vol-showcase-pinch-map__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  color: var(--vol-ui-text-muted);
+  font-size: 14px;
+}
+
+.vol-showcase-world-camera {
+  display: block;
+  width: min(100%, 640px);
+  height: auto;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+  cursor: grab;
+}
+
+.vol-showcase-world-camera:active {
+  cursor: grabbing;
+}
+
+.vol-showcase-swipe-zone-surface {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: var(--vol-ui-text-secondary);
+  font-size: 28px;
+  transition: transform var(--vol-transition-fast);
+}
+
+.vol-showcase-multitouch-surface {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+  overflow: hidden;
+}
+
+.vol-showcase-multitouch-dot {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  margin-left: -16px;
+  margin-top: -16px;
+  border-radius: 50%;
+  background: var(--vol-ui-brand-subtle);
+  border: 2px solid var(--vol-ui-brand-solid);
+  pointer-events: none;
+}
+
+.vol-showcase-virtual-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 var(--vol-space-md);
+  font-size: 13px;
+  color: var(--vol-ui-text-secondary);
+}
+
+.vol-showcase-carousel-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vol-space-xs);
+  width: 100%;
+  height: 140px;
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+}
+
+.vol-showcase-leaderboard {
+  display: flex;
+  flex-direction: column;
+}
+
+.vol-showcase-leaderboard__row {
+  padding: var(--vol-space-sm) var(--vol-space-md);
+  font-size: 14px;
+  color: var(--vol-ui-text-secondary);
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+}
+
+.vol-showcase-quest-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vol-space-xs);
+  width: 100%;
+  height: 100%;
+  padding: var(--vol-space-lg);
+  text-align: center;
+}
+
+/*
+ * Sabit yükseklikli durum satırı — içeriği değiştikçe (ör. "Basılı: sol"
+ * gibi farklı uzunlukta metinler) satırın büyüyüp komşu elementleri
+ * itmesini engeller (bkz. touchTab.ts buildStatusRow, DPad/DirectionButton
+ * demolarında layout kaymasını önlemek için kullanılır).
+ *
+ * `min-height` tek başına yalnız ALT sınırdır: uzun bir mesaj satırı büyütür,
+ * `align-items:stretch` yüzünden aynı satırdaki komşu kartlar da her mesaj
+ * değişiminde kayar. `max-height` + `-webkit-line-clamp:2` satıra iki
+ * satırlık bir üst sınır da koyar; taşan metin kırpılır, kart boyutu oynamaz.
+ */
+.vol-showcase-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  max-height: 40px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.vol-showcase-status-row p,
+.vol-showcase-status-row span {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* KARTLAR sekmesi — LevelUpPicker/ShopPicker kartları CardTile'ın altında
+   yüzde-elli bölünmüş tek bir satırda durur (bkz. cardsTab.ts). */
+
+/*
+ * align-items: flex-start (stretch DEĞİL) — ShopPicker açıldığında
+ * LevelUpPicker'dan çok daha uzun içerik taşıyor (4 kart + envanter
+ * bölümleri + bakiye + iki buton). stretch olsaydı kısa kart uzun olana
+ * eşitlenip ortasında büyük bir boş alan bırakırdı; her kart kendi
+ * içeriğine göre boy alır.
+ */
+.vol-showcase-cards-bottom-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--vol-space-lg);
+  align-items: flex-start;
+}
+
+.vol-showcase-cards-bottom-row > .vol-showcase-card {
+  min-width: 0;
+}
+
+@media (width <= 700px) {
+  .vol-showcase-cards-bottom-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*
+ * `CardPicker` bilinçli olarak Modal'a bağlı değildir (bkz. core/src/ui/cards/CardPicker.ts)
+ * — konumlandırma çağıranın sorumluluğu. Bir oyun onu ortalanmış, kararmış,
+ * `position: absolute; inset: 0` bir katmana yerleştirir; vitrin `position:
+ * fixed` kullanır çünkü tam ekran tek bir oyun konteyneri yok, sayfa
+ * kaydırılabilir; `fixed` viewport'u kaydırmadan bağımsız ortalar.
+ */
+.vol-showcase-card-layer {
+  pointer-events: auto;
+  background: var(--vol-ui-scrim);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--vol-space-md);
+  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: var(--vol-z-dialog);
+  opacity: 1;
+  transition: opacity var(--vol-transition-medium) ease-in;
+}
+
+.vol-showcase-card-layer[hidden] {
+  display: none;
+}
+
+/*
+ * Kapanış geçişi — cardsTab.ts'teki createLayerController `hidden`'ı hemen
+ * DEĞİL, bu geçiş bitene kadar (`HIDE_ANIMATION_MS`, CORE'un
+ * `CardPicker.hide()` ile AYNI süre) erteliyor. Aksi halde panel kendi
+ * içinde yumuşakça solurken (bkz. cards.css `vol-card-picker-out`) arkasındaki
+ * scrim aniden kesilip iki geçiş uyumsuz görünürdü.
+ */
+.vol-showcase-card-layer--leaving {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-showcase-card-layer {
+    transition: none;
+  }
+}
+
+/* KARTLAR sekmesi — ShopPicker.slotArea demosu: Q/E yetenek slotları. */
+.vol-showcase-ability-slots {
+  display: flex;
+  gap: var(--vol-space-sm);
+}
+
+.vol-showcase-ability-slots__slot {
+  min-width: 96px;
+  padding: var(--vol-space-xs) var(--vol-space-sm);
+  background: var(--vol-ui-surface-2);
+  border: 1px dashed var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  color: var(--vol-ui-text-muted);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  text-align: center;
+}
+
+.vol-showcase-ability-slots__slot--filled {
+  background: var(--vol-ui-brand-subtle);
+  border: 1px solid var(--vol-ui-brand-border);
+  color: var(--vol-ui-text);
+  font-weight: 700;
+}
+
+/*
+ * Showcase içindeki FpsMeter örneği akışa alınır: bileşenin kendisi
+ * `position: fixed`tir ve kart içinde sayfanın köşesine kaçardı.
+ *
+ * `align-self` ŞART: `position: fixed` bir kutu içeriğine göre büzülür, ama
+ * akışa alınan blok flex kabı tarafından kartın tamamına gerilir; vitrin
+ * bileşeni oyunda asla almadığı bir biçimde gösterirdi.
+ */
+.vol-showcase-fps-meter {
+  position: static;
+  align-self: flex-start;
+}
+
+.vol-showcase-fatal-stage {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  overflow: hidden;
+}
+
+.vol-showcase-fatal-preview {
+  position: absolute;
+  z-index: 0;
+}
+
+.vol-showcase-gamepad-demo {
+  position: relative;
+}
+
+.vol-showcase-gamepad-cursor {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--vol-ui-focus-ring);
+  background: var(--vol-ui-bg);
+  pointer-events: none;
+  z-index: var(--vol-z-dialog-content);
+}
+
+/* Ses laboratuvarı: düğme/seçici satırları ve makine tarafından okunan göstergeler */
+.vol-showcase-ses__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vol-space-sm);
+}
+
+.vol-showcase-ses__readout {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* Kimlik sekmesi: ikon galerisi */
+.vol-showcase-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: var(--vol-space-sm);
+  flex: 1 1 100%;
+
+  /* `flex-start` ızgarayı içeriğine büzüyor ve auto-fill TEK sütuna düşüyordu (masaüstünde de, telefonda da):
+     kartın tam genişliğini kullanır. */
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.vol-showcase-icon-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--vol-ui-text);
+}
+
+.vol-showcase-icon-cell__name {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--vol-ui-text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Kimlik sekmesi: imleç önizlemesi ve test alanları */
+.vol-showcase-cursor-preview {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--vol-radius-sm, 4px);
+  background: var(--vol-ui-surface-3);
+}
+
+.vol-showcase-cursor-preview--reticle {
+  color: var(--vol-ui-text);
+}
+
+.vol-showcase-cursor-preview svg {
+  width: 48px;
+  height: 48px;
+}
+
+.vol-showcase-arena {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm, 4px);
+  background:
+    linear-gradient(var(--vol-ui-hairline-alpha) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, var(--vol-ui-hairline-alpha) 1px, transparent 1px) 0 0 / 32px 32px,
+    var(--vol-ui-bg-subtle);
+  touch-action: none;
+}
+
+/* Niyet sondası: kartta üretilen anlamsal niyetlerin son birkaçı; sabit yükseklik, kart kaymaz. */
+.vol-showcase-intent-probe {
+  min-height: 2.6em;
+  font-size: var(--vol-text-label);
+  color: var(--vol-ui-text-secondary);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.vol-showcase-arena__thing {
+  position: absolute;
+  padding: 6px 10px;
+  border: 2px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm, 4px);
+  background: var(--vol-ui-surface-2);
+  color: var(--vol-ui-text);
+  font-size: 12px;
+}
+
+.vol-showcase-arena__thing--friendly,
+.vol-showcase-arena__thing--garrison,
+.vol-showcase-arena__thing--repair {
+  border-color: var(--vol-ui-success-solid);
+}
+
+.vol-showcase-arena__thing--hostile,
+.vol-showcase-arena__thing--blocked {
+  border-color: var(--vol-ui-danger-solid);
+}
+
+.vol-showcase-arena__thing--resource,
+.vol-showcase-arena__thing--tree {
+  border-color: var(--vol-ui-warning-solid);
+}
+
+.vol-showcase-arena__thing--build {
+  border-color: var(--vol-ui-brand-solid);
+  border-style: dashed;
+}
+
+/* İnşa zemini (BuildMenu kartı): su bölgesi "engelli" imlecini verir; yer tutucu ölçüsü sabit, metin taşmaz. */
+.vol-showcase-arena--build {
+  height: 180px;
+}
+
+.vol-showcase-arena--build .vol-showcase-arena__thing--blocked {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-style: dashed;
+}
+
+.vol-showcase-arena__target {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--vol-ui-danger-solid);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--vol-ui-danger-solid) 0 28%, transparent 30%);
+}
+
+/*
+ * Her kart kendi bileşik katmanıdır, YALNIZ WebKitGTK'de. Steam Deck'te (CPU boyayan WebKitGTK) kaydırma sırasında
+ * yüzeyler her karede yeniden boyanıyordu: Forms 43 → 60, Touch 47 → 60 FPS (kart kart ölçüm, docs/steam-deck.md).
+ * Sayfa ya da kaydırıcı ölçeğinde terfi tersine ETKİ eder (−6…−14 FPS, dev dokular), bu yüzden katman kart boyundadır.
+ * Chromium'da katman metin kenar yumuşatmasını (LCD → gri) değiştirir ve kazanç yoktur; bu yüzden motor ayrımıyla.
+ */
+html[data-vol-engine='webkitgtk'] .vol-showcase-card {
+  will-change: transform;
+}

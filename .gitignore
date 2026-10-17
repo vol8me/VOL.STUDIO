@@ -1,13 +1,9 @@
-# Agent kuralları — yalnızca yerel/dahili kullanım, GitHub'a gönderilmez
-CLAUDE.md
-.claude/
-AGENTS.md
-**/AGENTS.md
+# Her satır ya bir aracın gerçekten ürettiği çıktıyı ya da açık bir güvenlik
+# nedenini karşılar; üreticisi kalmayan satır silinir.
 
-# Secrets / credentials — asla commit edilmez
+# Gizli bilgi ve imza anahtarları (Android keystore dahil)
 .env
 .env.*
-!.env.example
 *.pem
 *.key
 *.p12
@@ -15,34 +11,64 @@ AGENTS.md
 *.jks
 secrets.json
 
-# Dependencies
+# Bağımlılıklar ve yerel araç önbellekleri (render/sample önbelleği dahil)
 node_modules/
-.pnpm-store/
-.pnpm-debug.log*
 
-# Build outputs
+# Derleme çıktıları: Vite `dist/`, Cargo workspace `target/`, tsc artımlı bilgisi
 dist/
-build/
+dist-server/
 target/
 *.tsbuildinfo
 
-# Tauri mobile/desktop generated projects
-/tauri-v2/src-tauri/gen/
-/tauri-v2/src-tauri/target/
+# Test ve kapsam raporları (Vitest, Playwright)
+coverage/
+test-results/
+playwright-report/
 
-# Editor
-.vscode/*
-!.vscode/extensions.json
+# Yerel ve yeniden üretilebilir çıktılar
+# - Claude Code kişisel ayarı, oturum verisi ve yerel araştırma kaydı; yalnız paylaşılan
+#   ayar (model yönlendirmesi) ve alt ajan tanımları izlenir
+# - graphify bilgi grafiği
+# - audio-synth dinleme/inceleme çıktısı
+# - vol-test sunucusunun kalıcı iklim kaydı (`.state/climate.json`): çalışma zamanı verisi
+.claude/*
+!.claude/settings.json
+!.claude/agents/
+graphify-out/
+devtools/*/export/
+.state/
+
+# Tauri'nin ürettiği kodlar; `gen/android` elle düzenlendiği için izlenir,
+# yalnız Gradle derleme çıktısı dışarıdadır.
+/devtools/deck/src-tauri/gen/
+/devtools/vol-showcase/src-tauri/gen/
+/games/*/src-tauri/gen/schemas/
+/games/*/src-tauri/app-icon.svg
+/games/*/src-tauri/gen/android/**/build/
+/games/*/src-tauri/gen/android/.gradle/
+/tauri-v2/plugins/*/android/build/
+/tauri-v2/plugins/*/android/.gradle/
+/tauri-v2/plugins/*/android/.tauri/
+/games/*/src-tauri/gen/android/app/src/main/java/**/generated/
+/games/*/src-tauri/gen/android/app/src/main/jniLibs/
+/games/*/src-tauri/gen/android/app/src/main/assets/tauri.conf.json
+/games/*/src-tauri/gen/android/app/tauri.build.gradle.kts
+/games/*/src-tauri/gen/android/tauri.settings.gradle
+
+# Deck araçları: derleme anında kopyalanan motor ve ölçüm kayıtları
+/devtools/deck/web/vendor/
+/devtools/deck/records/
+/devtools/vol-showcase/records/
+/games/vol-test/records/
+
+# Editör ve işletim sistemi
 .idea/
+.vscode/
 *.sw?
-
-# OS
 .DS_Store
 Thumbs.db
 desktop.ini
+.directory
 
-# Logs
+# Günlükler
 *.log
-tauri-v2/src-tauri/android-*.log
-tauri-v2/src-tauri/android-*.png
-tauri-v2/src-tauri/chromium.log

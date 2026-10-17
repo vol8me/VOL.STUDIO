@@ -1,0 +1,281 @@
+{
+  "buses": {
+    "space": {
+      "effects": [
+        {
+          "params": {
+            "amount": 0.28,
+            "damp": 0.55,
+            "decay": 0.6,
+            "preDelay": 0.012,
+            "roomSize": 0.7
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 110,
+            "order": 2,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ]
+    }
+  },
+  "channels": 1,
+  "description": "Otomatik top atışı: sert çatlak, gövde ve kızak.",
+  "durationSeconds": 0.42,
+  "effects": [
+    {
+      "params": {
+        "frequency": 34,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "edge": "low",
+        "frequency": 100,
+        "gainDb": -2
+      },
+      "primitive": "effect.eq-shelf",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 300,
+        "gainDb": 2.5,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 1700,
+        "gainDb": 3,
+        "q": 0.7
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 5,
+        "mix": 0.75,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "edge": "high",
+        "frequency": 4500,
+        "gainDb": 2.5
+      },
+      "primitive": "effect.eq-shelf",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 11000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "gainDb": -10.13,
+      "mechanism": "pressure",
+      "name": "muzzle",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.7,
+          "bodyDecay": 0.16,
+          "bodyHz": 95,
+          "decay": 1.2,
+          "positive": 0.0035,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -10.74,
+      "mechanism": "pressure",
+      "name": "punch",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -16
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 210,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0008,
+          "curve": "exponential",
+          "decay": 0.012,
+          "release": 0.01,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 6.04,
+      "mechanism": "noise",
+      "name": "crack",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 2800,
+            "mode": "bandpass",
+            "q": 0.7
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 900,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -20
+        }
+      ],
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": 10.52,
+      "mechanism": "explosion",
+      "name": "blast",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -16
+        }
+      ],
+      "source": {
+        "params": {
+          "brightness": 0.35,
+          "color": "pink",
+          "crackle": 0.2,
+          "darkening": 0.7,
+          "decay": 0.16
+        },
+        "primitive": "source.blast",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -47.72,
+      "mechanism": "mechanical",
+      "name": "bolt",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.05,
+          "mass": 0.9,
+          "materialA": "metal",
+          "materialB": "metal",
+          "size": 0.14,
+          "velocity": 2.8
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.028
+    },
+    {
+      "gainDb": -35.53,
+      "mechanism": "impact",
+      "name": "barrel",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.5,
+            "damping": 0.7,
+            "decay": 0.12,
+            "frequency": 780,
+            "inharmonicity": 0.002,
+            "layout": "bar",
+            "modes": 6
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "contactTime": 0.0008,
+          "roughness": 0.2
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "fadeInSeconds": 0.0005,
+    "fadeOutSeconds": 0.07,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "normalize": "peak",
+    "peakDbfs": -4
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 720105
+}

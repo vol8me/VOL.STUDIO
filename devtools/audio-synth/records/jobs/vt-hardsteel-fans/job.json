@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-ad229c36792a1053": {
+        "hash": "sha256:195a21f2f27924054b22311966876f2f13da8bf635d72b8c9b074c3427c481f7",
+        "path": "analyses/r-ad229c36792a1053.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:67eda0f641f43ad27e66833c7a960a446637c9575c9227f1b7da6b377ce795ef",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:67eda0f641f43ad27e66833c7a960a446637c9575c9227f1b7da6b377ce795ef",
+      "hash": "sha256:d759ff12a50f7f965d04e8a8caff4e392ff2262e9c61f58d05a44ac4f888923d",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:735b2053d52b0e0959b5e6d91675a6277681cc6697716f6c914a87ac1891cf05",
+      "path": "games/vol-test/audio-manifests/sfx/steel/fans.json"
+    },
+    "renders": {
+      "r-ad229c36792a1053": {
+        "hash": "sha256:0037ab2e58fe61e00169b745e971fdf73d115c7fb22df9b1b143f7ae0f369e43",
+        "path": "renders/r-ad229c36792a1053.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:909ecab4041dfe78458344fb17501a89751a82bd277246faefb2a425d0bf5588",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-fans",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 65,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/fans.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

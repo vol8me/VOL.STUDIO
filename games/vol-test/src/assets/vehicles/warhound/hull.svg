@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="30" viewBox="0 0 44 30">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e4d6b2"/>
+      <stop offset="0.5" stop-color="#a8946a"/>
+      <stop offset="1" stop-color="#5a4d38"/>
+    </linearGradient>
+    <linearGradient id="deck" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c9b78c"/>
+      <stop offset="0.55" stop-color="#8d7a56"/>
+      <stop offset="1" stop-color="#3f352a"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4c4638"/>
+      <stop offset="1" stop-color="#16130f"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="0.4" cy="0.4" r="0.65">
+      <stop offset="0" stop-color="#fffbe0"/>
+      <stop offset="0.45" stop-color="#ffe45e"/>
+      <stop offset="1" stop-color="#7a5b05"/>
+    </radialGradient>
+    <linearGradient id="vent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a241c"/>
+      <stop offset="1" stop-color="#0b0907"/>
+    </linearGradient>
+  </defs>
+  <g transform="scale(1 0.8824)">
+  <path d="M43.2 17L39 12.2L31.4 9.6L27 5L19.4 3.6L11.6 5.2L6.4 9.2L4 13.2V20.8L6.4 24.8L11.6 28.8L19.4 30.4L27 29L31.4 24.4L39 21.8Z" fill="url(#deck)" stroke="#0d1217" stroke-width="1.1" stroke-linejoin="round"/>
+  <path d="M36.4 17L33.4 13.4L28 11.6L23.4 8.4L16.4 7.8L10.4 10.4L8.2 14V20L10.4 23.6L16.4 26.2L23.4 25.6L28 22.4L33.4 20.6Z" fill="url(#plate)" stroke="#0d1217" stroke-opacity=".75" stroke-width=".7" stroke-linejoin="round"/>
+  <path d="M19.4 3.6L27 5L31.4 9.6L27.6 11L22.2 8.8Z" fill="url(#dark)" stroke="#0d1217" stroke-width=".7" stroke-linejoin="round"/>
+  <path d="M19.4 30.4L27 29L31.4 24.4L27.6 23L22.2 25.2Z" fill="url(#dark)" stroke="#0d1217" stroke-width=".7" stroke-linejoin="round"/>
+  <path d="M9.4 12.4H17.4M9.4 15.4H17.4M9.4 18.6H17.4M9.4 21.6H17.4" stroke="#0d1217" stroke-opacity=".7" stroke-width="1.3" stroke-linecap="round"/>
+  <rect x="7" y="12" width="3.2" height="10" rx="1" fill="url(#vent)" stroke="#0d1217" stroke-width=".6"/>
+  <path d="M7.8 13.5V20.5" stroke="#ffe45e" stroke-opacity=".7" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M26.2 17H38.6" stroke="#0d1217" stroke-opacity=".55" stroke-width=".6" stroke-linecap="round"/>
+  <ellipse cx="30.4" cy="17" rx="5.4" ry="4.2" fill="#0d1217" fill-opacity=".85"/>
+  <ellipse cx="30.4" cy="17" rx="4.8" ry="3.6" fill="url(#glass)" stroke="#0d1217" stroke-width=".5"/>
+  <path d="M28.2 15.6C29.4 14.6 31.4 14.6 32.6 15.4" stroke="#ffffff" stroke-opacity=".7" stroke-width=".6" stroke-linecap="round" fill="none"/>
+  <g stroke="#ffe45e" stroke-opacity=".8" stroke-width=".6" stroke-linecap="round" fill="none">
+    <path d="M24.2 9.6L30.4 11.2M24.2 24.4L30.4 22.8"/>
+    <path d="M12 6.6L17 5.4M12 27.4L17 28.6"/>
+  </g>
+  <g fill="#d8c7a0" stroke="#0d1217" stroke-width=".4">
+    <circle cx="14" cy="9.2" r=".7"/><circle cx="14" cy="24.8" r=".7"/>
+    <circle cx="23.4" cy="6.2" r=".7"/><circle cx="23.4" cy="27.8" r=".7"/>
+  </g>
+  </g>
+</svg>

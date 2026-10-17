@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="17.9" height="16.7" viewBox="0 0 17.9 16.7">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.5" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></linearGradient>
+    <linearGradient id="plateh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.45" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></linearGradient>
+    <radialGradient id="dome" cx="0.38" cy="0.32" r="0.75"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.5" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></radialGradient>
+    <radialGradient id="shell" cx="0.35" cy="0.3" r="0.85"><stop offset="0" stop-color="#f2b13c"/><stop offset="0.5" stop-color="#a8661a"/><stop offset="1" stop-color="#44270a"/></radialGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6"><stop offset="0" stop-color="#fff6df"/><stop offset="0.45" stop-color="#ffc54d"/><stop offset="1" stop-color="#6b3d0b"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a949e"/><stop offset="0.5" stop-color="#3b444d"/><stop offset="1" stop-color="#161b20"/></linearGradient>
+  </defs>
+  <g transform="scale(1.9 2.2)">
+
+  <g transform="translate(1.2 3.8)">
+    <path d="M0 -2.3 C2.8 -2.42 5.25 -1.26 7 0 C5.25 1.26 2.8 2.42 0 2.3 Z" fill="url(#plate)" stroke="#0d1217" stroke-width="0.8" stroke-linejoin="round"/>
+    <path d="M1.26 -1.26 C3.15 -1.38 4.55 -0.74 6.02 -0.14" fill="none" stroke="#cdd6df" stroke-opacity=".5" stroke-width=".55" stroke-linecap="round"/>
+    <circle cx="6.3" cy="0" r=".55" fill="#ffc54d"/>
+  </g>
+  </g>
+</svg>

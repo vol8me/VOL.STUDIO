@@ -1,0 +1,286 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.00002160302591515833,
+          -0.000017017527636708014
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0,
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 2,
+        "durationSeconds": 12,
+        "frames": 576000,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -8.91845935913102,
+          -10.675650288453657
+        ],
+        "channelRmsDbfs": [
+          -22.967631056131044,
+          -24.713919126987697
+        ],
+        "crestFactorDb": 14.835128438643782,
+        "integratedLufs": -20.523649765910946,
+        "maxMomentaryLufs": -17.54571570678982,
+        "rmsDbfs": -23.753587797774802,
+        "samplePeakDbfs": -8.91845935913102,
+        "truePeakDbtp": -8.91845935913102
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -45.09329083214004,
+          "high": -34.93517495604748,
+          "low": -28.172259427686882,
+          "mid": -26.801876090384702,
+          "sub": -37.28696942661552
+        },
+        "centroidHz": 1027.5897065423733,
+        "flatness": 0.021245655164031044,
+        "peakHz": 398.4375,
+        "rolloff85Hz": 1546.875
+      },
+      "stereo": {
+        "correlation": 0.9938307743686497,
+        "width": 0.11459153678455432
+      },
+      "temporal": {
+        "activeSeconds": 12,
+        "attackSeconds": 6.36,
+        "decay40Seconds": null,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 7.03,
+        "temporalCentroidSeconds": 5.9850519856085524,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:3656a6ee58769e82893681a1461f9ee07ed892c805d7b7aae457b390e480fd8e"
+  },
+  "asset": {
+    "bytes": 215881,
+    "encodedHash": "sha256:8e8eb07618100d5ecb76dd0ae6c9dc5b484c7486b6490803f8777ea86f34cd0d",
+    "format": "ogg-vorbis",
+    "path": "devtools/audio-synth/reference/production/assets/ambience/reference-ambience.ogg"
+  },
+  "assetId": "reference-ambience",
+  "brief": {
+    "document": {
+      "assetClass": "ambience",
+      "channels": 2,
+      "descriptors": [
+        "ambience",
+        "loop",
+        "weather"
+      ],
+      "durationSeconds": {
+        "max": 20,
+        "min": 12
+      },
+      "id": "reference-ambience",
+      "intent": "Açık arazi rüzgarı üzerine hafif, düzenli yağmur dokusu: uzun süre çalınabilen, dikişsiz döngü ambiyans yatağı. Regresyon korpusunun ambience/texture sınıfı temsilcisidir.",
+      "kind": "acoustic",
+      "loop": true,
+      "mechanisms": [
+        "wind",
+        "rain"
+      ],
+      "placement": "bed",
+      "provenance": {
+        "author": "agent",
+        "by": "devin"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "ambience",
+      "title": "Referans rüzgar-yağmur ambiyansı"
+    },
+    "hash": "sha256:cab4a710cebebc677a80deae7d0a32b7bcf04b177d87c29a8f00da794fa63192",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "6",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:a776e173ee49d0dfa96bcbf997016593a91f297bfc9a2af4a2e609db91aa4432",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 6,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 6,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:ee9c05baf33233d6f5f9d23b9cf7dab2d3f81dd4bb209cecdaeebe0e17ac58e3",
+      "nodes": [
+        {
+          "hash": "sha256:3a70cf47244175c5f7606c35b7d920ce90ceccbad122500d60ff4a00ce2b3f50",
+          "id": "source.rain",
+          "version": 2
+        },
+        {
+          "hash": "sha256:82c80f31f31c0bdc8ccbcded5512331ec14b4f56d074e33f00719d4ad41a071e",
+          "id": "source.wind",
+          "version": 2
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/audio-synth",
+    "runtimeDeclaration": null,
+    "runtimeKey": "reference/ambience",
+    "targetKind": "reference"
+  },
+  "job": {
+    "jobId": "reference-ambience",
+    "path": "devtools/audio-synth/records/jobs/reference-ambience",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 2,
+    "image": {
+      "correlation": 0.994,
+      "dualMono": false,
+      "method": "stereo-image-v1",
+      "monoFoldLossDb": 0.063,
+      "sideDb": -18.817
+    },
+    "placement": "bed",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "ambience",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 2,
+      "description": "Referans ambiyans: esintili rüzgar tabanı + seyrek çeşitli damla; dikişsiz döngü.",
+      "durationSeconds": 16,
+      "layers": [
+        {
+          "durationSeconds": 16,
+          "gainDb": -7,
+          "mechanism": "wind",
+          "name": "wind-bed",
+          "pan": -0.2,
+          "role": "texture",
+          "source": {
+            "params": {
+              "gustScale": 1.6,
+              "gustiness": 0.55,
+              "speed": 8,
+              "whistle": 0.3
+            },
+            "primitive": "source.wind",
+            "version": 2
+          }
+        },
+        {
+          "durationSeconds": 16,
+          "gainDb": -13,
+          "mechanism": "rain",
+          "name": "rain-patter",
+          "pan": 0.18,
+          "role": "texture",
+          "source": {
+            "params": {
+              "dropSize": 2.4,
+              "hiss": 0.15,
+              "intensity": 240,
+              "surface": 0.22,
+              "variability": 0.65
+            },
+            "primitive": "source.rain",
+            "version": 2
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 12,
+        "limiter": {
+          "ceilingDbtp": -1
+        },
+        "loop": {
+          "crossfadeSeconds": 4
+        },
+        "normalize": "peak",
+        "peakDbfs": -9
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 4107
+    },
+    "hash": "sha256:a333149f8f27332e910d1a8e52bb8d67fef77385e22caf70a9a40ae8220d1234",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 2,
+      "format": "f32le-interleaved-clamped",
+      "frames": 576000,
+      "hash": "sha256:27f9b0775236529ac2edd7b909108885fe5729f432513b7d877ce404d1f9d343",
+      "sampleRate": 48000
+    },
+    "renderId": "r-78ba971c32578df7",
+    "rendererVersion": 2,
+    "seed": 4107
+  },
+  "schema": "AudioAssetManifestV1",
+  "seam": {
+    "jumpRatio": 0.0557,
+    "levelStepDb": -0.554,
+    "method": "loop-seam-v1",
+    "pass": true,
+    "reasons": [],
+    "spectralStepDb": 1.195
+  }
+}

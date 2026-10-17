@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.29,
+        "measured": 3,
+        "median": 0.28,
+        "min": 0.27,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 1020.35,
+        "measured": 3,
+        "median": 917.075,
+        "min": 798.311,
+        "scale": 0.22825
+      },
+      "maxMomentaryLufs": {
+        "max": -24.3377,
+        "measured": 3,
+        "median": -25.923,
+        "min": -27.1819,
+        "scale": 1.86645
+      },
+      "pitchHz": {
+        "max": 977.057,
+        "measured": 3,
+        "median": 738.96,
+        "min": 699.241,
+        "scale": 0.118173
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.247877,
+    "medianDistance": 0.131715,
+    "minDistance": 0.117589,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 8.322,
+    "medoid": "equip-b",
+    "members": [
+      {
+        "distance": 5.753,
+        "key": "equip-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "equip-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 8.322,
+        "key": "equip-c",
+        "shiftOctaves": -0.167
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "equip-a",
+      "nearest": {
+        "distance": 0.117589,
+        "key": "equip-b"
+      },
+      "pcmHash": "sha256:91c89ea6d9dde1779d987fe5777b594e7388b3b0834163f4c0f542c5321d9912"
+    },
+    {
+      "key": "equip-b",
+      "nearest": {
+        "distance": 0.117589,
+        "key": "equip-a"
+      },
+      "pcmHash": "sha256:325b414c1358d8247438567142a02562963e49f612f6a8f31f744093f6d168a8"
+    },
+    {
+      "key": "equip-c",
+      "nearest": {
+        "distance": 0.131715,
+        "key": "equip-b"
+      },
+      "pcmHash": "sha256:1bb1136858d95d4d0038e7e16277e18d2aee248acec50a87c656b0bdaccbdf68"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

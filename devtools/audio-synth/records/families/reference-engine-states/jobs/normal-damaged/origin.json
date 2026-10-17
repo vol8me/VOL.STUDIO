@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:b0ea2cb385927da40c4314307bebe8c70563ac11a6cbefba9592331af9902579",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:3f6908b78d2f6300c3e48b22eddaa469800066415a26e1e2c6761d8ca4332647",
+    "familyId": "reference-engine-states",
+    "kind": "family-variant",
+    "variantId": "v-07b05d7655a10c7b",
+    "variantKey": "normal-damaged"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "assetClass": "ambience",
+  "channels": 2,
+  "descriptors": [
+    "ambience",
+    "loop",
+    "weather"
+  ],
+  "durationSeconds": {
+    "max": 20,
+    "min": 12
+  },
+  "id": "reference-ambience",
+  "intent": "Açık arazi rüzgarı üzerine hafif, düzenli yağmur dokusu: uzun süre çalınabilen, dikişsiz döngü ambiyans yatağı. Regresyon korpusunun ambience/texture sınıfı temsilcisidir.",
+  "kind": "acoustic",
+  "loop": true,
+  "mechanisms": [
+    "wind",
+    "rain"
+  ],
+  "placement": "bed",
+  "provenance": {
+    "author": "agent",
+    "by": "devin"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "ambience",
+  "title": "Referans rüzgar-yağmur ambiyansı"
+}

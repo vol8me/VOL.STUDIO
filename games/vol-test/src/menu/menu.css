@@ -1,0 +1,327 @@
+/*
+ * Menü, garaj, ayarlar, geliştirici ve duraklatma ekranları. Görünen her parça CORE bileşenidir; bu
+ * dosya yalnız yerleşimi verir. Hepsi aynı iskeletten gelir (başlık şeridi, kayan gövde, eylem şeridi) ve
+ * aynı sağ şerittir: arkasında canlı savaş ya da araç vitrini görünür, vitrin kalan sol alana oturur
+ * (`Showroom`). Dar ekranda şerit alt levhaya iner (eşik `MENU.showroom.stackedFraction`).
+ *
+ * Giriş ve çıkış kayma geçişidir: şerit kenardan kayarak gelir, giderken kenara kayar. Mesafe ve süre
+ * `MENU.slidePx` ve `MENU.fadeMs` değerleridir; `ScreenScene` bunları `--vt-slide` ve `--vt-slide-ms`
+ * olarak yazar, buradaki değerler yalnız yedektir.
+ */
+@keyframes vt-sheet-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--vt-slide-x), var(--vt-slide-y));
+  }
+}
+
+.vol-panel.vt-screen {
+  --vt-screen-pad: var(--vol-space-xl);
+  --vt-slide-x: var(--vt-slide, 36px);
+  --vt-slide-y: 0px;
+
+  /* CORE `Panel` içerik genişliğinde ve ortalı gelir; ekran tüm yüksekliği kullanır. */
+  inset: 0 0 0 auto;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--vol-space-md);
+  justify-content: stretch;
+  width: min(440px, 100%);
+  max-width: none;
+  padding: calc(var(--vol-safe-top) + var(--vt-screen-pad))
+    calc(var(--vol-safe-right) + var(--vt-screen-pad))
+    calc(var(--vol-safe-bottom) + var(--vt-screen-pad)) var(--vt-screen-pad);
+  background: linear-gradient(270deg, var(--vol-ui-overlay-panel) 78%, transparent);
+  animation: vt-sheet-in var(--vt-slide-ms, 200ms) ease-out;
+  transition:
+    opacity var(--vt-slide-ms, 200ms) ease-in,
+    transform var(--vt-slide-ms, 200ms) ease-in;
+}
+
+.vt-screen[data-leaving='true'] {
+  opacity: 0;
+  transform: translate(var(--vt-slide-x), var(--vt-slide-y));
+  pointer-events: none;
+}
+
+.vt-screen__header {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-md);
+  min-width: 0;
+}
+
+.vt-screen__heading {
+  display: grid;
+  gap: var(--vol-space-xs);
+  justify-items: start;
+  min-width: 0;
+}
+
+.vt-screen__heading > * {
+  margin: 0;
+}
+
+/* Başlık şeridin genişliğine sığar: uzun başlık ("Duraklatıldı") şeridin dışına taşmaz. */
+.vt-screen__heading > h1 {
+  max-width: 100%;
+  font-size: clamp(26px, 2.6vw, 44px);
+  overflow-wrap: anywhere;
+}
+
+.vt-screen__body {
+  min-height: 0;
+}
+
+/* Kayan içerik sarmalayıcısı gövdeyi doldurur: garaj düzeni yüzdelik yükseklikle gövdeye yayılır. */
+.vt-screen__body > .vol-scroll-view__content {
+  height: 100%;
+}
+
+/* Eylemler altta, tek sütun. */
+.vt-screen__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+  padding-block-start: var(--vol-space-sm);
+}
+
+.vt-screen__actions:empty {
+  display: none;
+}
+
+.vt-screen__status {
+  min-height: 1.5em;
+  margin: 0;
+}
+
+.vt-screen__status[data-tone='danger'] {
+  color: var(--vol-ui-danger-solid);
+}
+
+/* Ayarlar ve geliştirici: tek sütun, şeridin genişliğinde. */
+.vt-settings__form {
+  width: 100%;
+
+  /* Şerit dar olunca geniş denetimli satırlar (dil, ekran kipi) etiketin altına iner: CORE kapsayıcı kuralı. */
+  container-type: inline-size;
+}
+
+/*
+ * Garaj: ad ve cephe formu üstte, araç kartları altta ve şeridin kalan yüksekliğinde kayar. Gövde
+ * kaymaz: uzun olan kart alanıdır, böylece eylem düğmeleri her zaman görünür.
+ */
+.vt-garage__layout {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--vol-space-md);
+  height: 100%;
+}
+
+.vt-garage__vehicles,
+.vt-garage__join {
+  display: grid;
+  gap: var(--vol-space-sm);
+}
+
+.vt-garage__vehicles {
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+.vt-garage__vehicles > h2 {
+  margin: 0;
+  text-align: start;
+}
+
+/* Şerit dardır: etiket denetimin üstünde durur. */
+.vt-garage__form .vol-settings-row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--vol-space-xs);
+}
+
+.vt-garage__form .vol-settings-row__control {
+  justify-content: stretch;
+}
+
+.vt-garage__card .vol-card__description {
+  display: none;
+}
+
+.vt-garage__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: var(--vol-space-sm);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+}
+
+.vt-garage__stats {
+  display: grid;
+  gap: var(--vol-space-xs);
+}
+
+.vt-garage__skill {
+  display: grid;
+  gap: var(--vol-space-xs);
+  margin-top: var(--vol-space-sm);
+  font-size: var(--vol-text-label);
+}
+
+.vt-garage__skill .vol-text {
+  margin: 0;
+  text-align: start;
+}
+
+.vt-garage__stat .vol-text {
+  text-align: start;
+}
+
+.vt-garage__stat .vol-bar {
+  width: 100%;
+}
+
+.vt-garage__stat {
+  display: grid;
+  grid-template-columns: 5.2em minmax(0, 1fr);
+  align-items: center;
+  gap: var(--vol-space-sm);
+  font-size: var(--vol-text-label);
+}
+
+/*
+ * Dar ekran (telefon dikey): şerit alt levhadır ve altından kayar; araçlar tek satırlık yatay kaydırma
+ * şeridi, katılım alanı üstte; hepsi levhaya sığar. Kartlar şeritte yaslanır (`scroll-snap`). Garaj
+ * daha çok yer ister: araç yine de üstte görünecek kadar boşluk kalır.
+ */
+@media (width <= 719px) {
+  .vol-panel.vt-screen {
+    --vt-screen-pad: var(--vol-space-md);
+    --vt-slide-x: 0px;
+    --vt-slide-y: var(--vt-slide, 36px);
+
+    inset: auto 0 0;
+    width: 100%;
+    max-height: 62%;
+    padding-inline: calc(var(--vol-safe-left) + var(--vt-screen-pad))
+      calc(var(--vol-safe-right) + var(--vt-screen-pad));
+    background: var(--vol-ui-overlay-panel);
+  }
+
+  .vol-panel.vt-screen:has(.vt-garage__layout) {
+    max-height: 80%;
+  }
+
+  .vt-garage__layout {
+    gap: var(--vol-space-sm);
+  }
+
+  .vt-garage__vehicles {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .vt-garage__vehicles > h2 {
+    display: none;
+  }
+
+  .vt-garage__cards {
+    display: flex;
+    overflow: auto hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .vt-garage__card {
+    flex: 0 0 min(44vw, 180px);
+    scroll-snap-align: center;
+  }
+
+  /* Şeritte kartlar kısa kalsın: ölçü çubukları garajın yatay şeridine sığmaz. */
+  .vt-garage__stats {
+    display: none;
+  }
+
+  .vt-garage__join .vt-screen__status:empty {
+    display: none;
+  }
+}
+
+/* Garajın iki eylemi dar ve alçak ekranda yan yana dizilir: katılım formu ve kartlara yer kalır. */
+@media (width <= 719px), (height <= 520px) {
+  .vt-screen:has(.vt-garage__layout) .vt-screen__actions {
+    flex-direction: row;
+  }
+
+  .vt-screen:has(.vt-garage__layout) .vt-screen__actions > .vol-button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .vt-garage__form [role='radio'] {
+    padding-inline: var(--vol-space-sm);
+    white-space: nowrap;
+  }
+}
+
+/*
+ * Alçak yatay ekran (telefon): alt başlık gizlenir ve gövde yüksekliğin çoğunu alır. Şerit sağda
+ * kalır; araç kartları sütunda dikey kayar.
+ */
+@media (height <= 520px) and (width > 719px) {
+  .vol-panel.vt-screen {
+    --vt-screen-pad: var(--vol-space-sm);
+  }
+
+  .vt-screen__heading > p {
+    display: none;
+  }
+
+  /* Garaj iki sütun olur: katılım formu solda, araçlar sağda dikey kayar; vitrine yer kalacak kadar dar. */
+  .vol-panel.vt-screen:has(.vt-garage__layout) {
+    width: min(540px, 100%);
+  }
+
+  .vt-garage__layout {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: var(--vol-space-sm);
+  }
+
+  .vt-garage__join {
+    align-content: start;
+  }
+
+  .vt-garage__vehicles > h2 {
+    display: none;
+  }
+
+  .vt-garage__vehicles {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .vt-garage__cards {
+    grid-template-columns: minmax(0, 1fr);
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+  }
+
+  .vt-garage__card {
+    scroll-snap-align: start;
+  }
+
+  .vt-garage__stats {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-panel.vt-screen {
+    animation: none;
+    transition: none;
+  }
+}

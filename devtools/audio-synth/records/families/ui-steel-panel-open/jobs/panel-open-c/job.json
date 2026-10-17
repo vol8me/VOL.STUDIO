@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-00073209dc65f96a": {
+        "hash": "sha256:786f7e9f1f44710dc3c8062665f2e5fbdc60d2f65e1fe3d492272d6c70065f9d",
+        "path": "analyses/r-00073209dc65f96a.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:21fdd85f238b29e4e0fab53840861a7714f1f3c9a1d51edd6be5a83eea82989f",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:21fdd85f238b29e4e0fab53840861a7714f1f3c9a1d51edd6be5a83eea82989f",
+      "hash": "sha256:6cc704cbaa19a978e93a2dfcfb3226920c4ad0c5a62b4993eb39dbffc1422f63",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:daaca0aa32fb06dda38b33f0cb9ed99697e75040a4099137fa0a56d2a73bc3bf",
+      "path": "core/audio-manifests/ui/steel/panel-open-c.json"
+    },
+    "renders": {
+      "r-00073209dc65f96a": {
+        "hash": "sha256:014383073a150a0047b631a0af29f23f6897286188123365417bd5db1086ac44",
+        "path": "renders/r-00073209dc65f96a.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:08b6a0275ded986fdf1a02f229546dd2a6dbe7775c61a6955acc46f737983c47",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "panel-open-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/panel-open-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-panel-open/panel-open-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

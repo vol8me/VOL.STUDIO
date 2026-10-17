@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-ad209f132f76096e": {
+        "hash": "sha256:4a0497dca7640911a0ada94ed514d27a114a69ee1918336c076fc06b689bd7dc",
+        "path": "analyses/r-ad209f132f76096e.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:c5eadfd5e7a6b97df1169e1bb740dd7131434cfa057543c99f957a23ff28a4b9",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:c5eadfd5e7a6b97df1169e1bb740dd7131434cfa057543c99f957a23ff28a4b9",
+      "hash": "sha256:c808ed655a64e225499ce6cccd2e1b3fba07f7c63248702d6efadc9a8923e847",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:7bedffc91e73edff92e8d8ef7590acb70f24926d8bf31d7f12c8143ce29b03d3",
+      "path": "core/audio-manifests/ui/aurum/focus-c.json"
+    },
+    "renders": {
+      "r-ad209f132f76096e": {
+        "hash": "sha256:0487d1b0be064919830f2ad67006f5750199878bcee0bfb06f30110fa808509f",
+        "path": "renders/r-ad209f132f76096e.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:c0a503db5084fc3ba78e6420fdf093061e4057a9e3a7185e806f373cf2b30db8",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "focus-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/focus-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-focus/focus-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

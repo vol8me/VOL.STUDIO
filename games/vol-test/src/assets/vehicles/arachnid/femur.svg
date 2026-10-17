@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32.6" height="13" viewBox="0 0 32.6 13">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8957f"/><stop offset="0.5" stop-color="#51443a"/><stop offset="1" stop-color="#211a15"/></linearGradient>
+    <linearGradient id="plateh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a8957f"/><stop offset="0.45" stop-color="#51443a"/><stop offset="1" stop-color="#211a15"/></linearGradient>
+    <radialGradient id="dome" cx="0.38" cy="0.32" r="0.75"><stop offset="0" stop-color="#a8957f"/><stop offset="0.5" stop-color="#51443a"/><stop offset="1" stop-color="#211a15"/></radialGradient>
+    <radialGradient id="shell" cx="0.35" cy="0.3" r="0.85"><stop offset="0" stop-color="#ec4a5e"/><stop offset="0.5" stop-color="#96203a"/><stop offset="1" stop-color="#3d0d1a"/></radialGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6"><stop offset="0" stop-color="#fff0f2"/><stop offset="0.45" stop-color="#ff5a6e"/><stop offset="1" stop-color="#6a0f22"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8f8274"/><stop offset="0.5" stop-color="#463d35"/><stop offset="1" stop-color="#1e1915"/></linearGradient>
+  </defs>
+  <g transform="translate(6.1 6.5)">
+    <path d="M0 -4.5 L7.98 -4.8 L21 -3.9 A3.9 3.9 0 0 1 21 3.9 L7.98 4.8 L0 4.5 A4.5 4.5 0 0 1 0 -4.5 Z" fill="url(#plate)" stroke="#0d1217" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M0.9 -3.1 L7.98 -3.4 L19.44 -2.5" fill="none" stroke="#d8c4aa" stroke-opacity=".45" stroke-width=".7" stroke-linecap="round"/>
+    <path d="M6.51 -4.1V4.1M13.02 -3.2V3.2" stroke="#0d1217" stroke-opacity=".55" stroke-width=".6"/>
+    <path d="M14.49 -3.4H17.64V3.4H14.49Z" fill="url(#shell)" stroke="#1f0810" stroke-width=".45" stroke-linejoin="round"/>
+    <path d="M7.56 0H11.55" stroke="#ff5a6e" stroke-opacity=".7" stroke-width=".6" stroke-linecap="round"/>
+    <g fill="#c9b8a3"><circle cx="3.36" cy="0" r="0.5"/><circle cx="12.18" cy="0" r="0.5"/></g>
+  </g>
+</svg>

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-ce119f1b94e70450": {
+        "hash": "sha256:e3406ca77bf71f3f6868664b14540d21934dadf0060f12469f9a468b0114b170",
+        "path": "analyses/r-ce119f1b94e70450.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:ea4fd1c5fa7e0c0f767b289e923d10f4d15bcff4ec3d981f38d1584098a47fbd",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:ea4fd1c5fa7e0c0f767b289e923d10f4d15bcff4ec3d981f38d1584098a47fbd",
+      "hash": "sha256:8ead0e6f3921d1cc6fcb16890b73a59602fe8f4b86992c70c96181fdca85801a",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:357cdd3704badb7c3f753a19e69c076596b2b66d95f27495a2a179523cf01e3c",
+      "path": "core/audio-manifests/ui/steel/notify-b.json"
+    },
+    "renders": {
+      "r-ce119f1b94e70450": {
+        "hash": "sha256:21db621db409e6d49ee5dcacb4c8cb0abee072722e3e2013a3a1068cd0db71f2",
+        "path": "renders/r-ce119f1b94e70450.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:442bea82903af243757f635f8c608a1cd2596fd65539123d843be2298804eead",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "notify-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/notify-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-notify/notify-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

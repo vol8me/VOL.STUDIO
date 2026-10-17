@@ -1,0 +1,101 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
+import { i18next } from '@volstudio/core/i18n';
+import { Input, Select, SettingsRow, Slider } from '@volstudio/core/ui';
+import type { GameSettings } from '@/app/GameSettings';
+import { CHAOS } from '@/config/chaos';
+import { isScenario, validSeed, SCENARIO, SCENARIOS, type ScenarioId } from '@/config/scenarios';
+
+/** Geliştirici ayarları: alıştırma dünyasının senaryosu ve tohumu. */
+export class ScenarioPanel {
+  readonly elements: readonly HTMLElement[];
+  private readonly scope = new DisposableScope();
+  private readonly picker: Select;
+  private readonly seed: Input;
+  private readonly pickerRow: SettingsRow;
+  private readonly seedRow: SettingsRow;
+  private readonly chaos: Slider;
+
+  constructor(settings: GameSettings) {
+    this.picker = this.scope.addDestroyable(
+      new Select({
+        options: this.options(),
+        value: settings.get().scenario,
+        onCommit: (scenario) => {
+          if (isScenario(scenario)) void settings.update({ scenario });
+        },
+      }),
+    );
+    this.picker.element.dataset.testid = 'dev-scenario';
+    this.seed = this.scope.addDestroyable(
+      new Input({
+        type: 'number',
+        value: String(settings.get().seed),
+        onCommit: (input) => {
+          const seed = input.trim() ? Number(input) : NaN;
+          if (validSeed(seed)) void settings.update({ seed });
+          else this.seed.setValue(String(settings.get().seed));
+        },
+      }),
+    );
+    this.seed.element.inputMode = 'numeric';
+    this.seed.element.min = '0';
+    this.seed.element.max = String(SCENARIO.maxSeed);
+    this.seed.element.step = '1';
+    this.seed.element.dataset.testid = 'dev-seed';
+    this.pickerRow = this.scope.addDestroyable(
+      new SettingsRow({
+        label: i18next.t('voltest:pause.scenario'),
+        control: this.picker,
+        stackOnNarrow: true,
+      }),
+    );
+    this.seedRow = this.scope.addDestroyable(
+      new SettingsRow({
+        label: i18next.t('voltest:pause.seed'),
+        control: this.seed,
+        stackOnNarrow: true,
+      }),
+    );
+    this.chaos = this.scope.addDestroyable(
+      new Slider({
+        label: i18next.t('voltest:pause.chaos'),
+        min: CHAOS.min,
+        max: CHAOS.max,
+        step: CHAOS.step,
+        value: settings.get().chaos,
+        formatValue: (value) => `×${value.toFixed(2).replace(/\.?0+$/, '')}`,
+        onInput: (chaos) => void settings.update({ chaos }),
+      }),
+    );
+    this.chaos.element.dataset.testid = 'dev-chaos';
+    this.elements = [this.pickerRow.element, this.seedRow.element, this.chaos.element];
+    this.scope.addSubscription(
+      settings.subscribe((next) => {
+        this.picker.setValue(next.scenario);
+        this.seed.setValue(String(next.seed));
+        this.chaos.setValue(next.chaos);
+      }),
+    );
+    this.refreshLabels();
+  }
+
+  refreshLabels(): void {
+    const scenario = i18next.t('voltest:pause.scenario');
+    const seed = i18next.t('voltest:pause.seed');
+    this.pickerRow.setLabel(scenario);
+    this.picker.setOptions(this.options());
+    this.seedRow.setLabel(seed);
+    this.chaos.setLabel(i18next.t('voltest:pause.chaos'));
+  }
+
+  destroy(): void {
+    this.scope.dispose();
+  }
+
+  private options(): Array<{ value: ScenarioId; label: string }> {
+    return (Object.keys(SCENARIOS) as ScenarioId[]).map((value) => ({
+      value,
+      label: i18next.t(`voltest:pause.scenarioMode.${value}`),
+    }));
+  }
+}

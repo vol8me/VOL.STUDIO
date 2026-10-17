@@ -1,8 +1,38 @@
 {
+  "loading": {
+    "title": "Loading",
+    "stalled": "Still working… this is taking longer than usual.",
+    "tip": "Tip",
+    "failed": "Loading failed",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "progress": "Loading progress"
+  },
   "carousel": {
     "prev": "Previous",
     "next": "Next",
+    "slide": "{{n}} / {{total}}",
     "page": "Page {{n}}"
+  },
+  "keyboard": {
+    "space": "Space",
+    "done": "Done",
+    "cancel": "Cancel",
+    "symbols": "#+=",
+    "letters": "ABC",
+    "shiftLabel": "Shift",
+    "backspaceLabel": "Backspace",
+    "layoutLabel": "Switch keyboard language",
+    "leftLabel": "Move cursor left",
+    "rightLabel": "Move cursor right",
+    "newlineLabel": "New line",
+    "symbolsLabel": "Symbols and punctuation",
+    "lettersLabel": "Letters",
+    "title": {
+      "default": "Text entry",
+      "password": "Password",
+      "search": "Search"
+    }
   },
   "dpad": {
     "up": "Up",
@@ -12,7 +42,12 @@
   },
   "swipe": {
     "reject": "Reject",
-    "accept": "Accept"
+    "accept": "Accept",
+    "stack": "Card stack: left arrow rejects, right arrow accepts",
+    "accepted": "Accepted: {{label}}",
+    "rejected": "Rejected: {{label}}",
+    "remaining": "Cards left: {{count}}",
+    "done": "No cards left"
   },
   "pause": {
     "pause": "Pause",
@@ -50,7 +85,14 @@
     "label": "Resources"
   },
   "bar": {
-    "ariaLabel": "{{variant}} bar"
+    "ariaLabel": "progress bar",
+    "valueText": "{{value}} / {{max}}",
+    "low": "low",
+    "error": "error"
+  },
+  "timerBar": {
+    "ariaLabel": "timer",
+    "valueText": "{{seconds}} s left"
   },
   "datatable": {
     "empty": "No records"
@@ -61,32 +103,218 @@
     "placeholder": "Search commands…",
     "general": "General"
   },
+  "editMenu": {
+    "label": "Edit",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select all"
+  },
+  "toast": {
+    "dismiss": "Dismiss"
+  },
+  "slotGrid": {
+    "grabbed": "{{label}} picked up. Arrow keys or a tap choose a slot, Space or Enter drops, Escape cancels.",
+    "targetEmpty": "Slot {{n}}, empty",
+    "targetSwap": "Slot {{n}}, swap with {{label}}",
+    "targetBlocked": "Slot {{n}}, not allowed",
+    "dropped": "{{label}} moved to slot {{n}}",
+    "rejected": "Cannot place {{label}} in slot {{n}}",
+    "cancelled": "Move cancelled"
+  },
+  "actionBar": {
+    "label": "Actions",
+    "remaining": "{{seconds}} s left"
+  },
+  "buildMenu": {
+    "label": "Build menu"
+  },
+  "skillTree": {
+    "label": "Skill tree",
+    "locked": "locked",
+    "available": "available",
+    "unlocked": "unlocked",
+    "requires": "Requires: {{names}}",
+    "view": "Tree view",
+    "controls": "View controls",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "resetView": "Reset view",
+    "zoomLevel": "Zoom {{percent}} percent"
+  },
+  "chargeButton": {
+    "start": "Charging",
+    "percent": "{{percent}} percent",
+    "ready": "Fully charged"
+  },
+  "dualAxisScroll": {
+    "label": "Scrollable area"
+  },
+  "pinchZoom": {
+    "label": "Zoomable area",
+    "level": "Zoom {{percent}}%"
+  },
+  "joystick": {
+    "label": "Virtual stick"
+  },
   "confirm": {
     "yes": "Yes",
     "no": "No"
   },
   "select": {
-    "placeholder": "Select…"
+    "placeholder": "Select…",
+    "listbox": "Options",
+    "empty": "No options"
+  },
+  "curveEditor": {
+    "hint": "Arrow keys move a point, Shift moves it ten times as far. Enter grabs or drops it, Escape cancels, Delete removes it.",
+    "add": "Add point",
+    "remove": "Remove point",
+    "point": "Point {{index}} of {{count}}: X {{x}}, Y {{y}}",
+    "grabbed": "Grabbed.",
+    "added": "Added.",
+    "removed": "Removed."
+  },
+  "rangeSlider": {
+    "min": "Minimum",
+    "max": "Maximum",
+    "minOf": "{{label}} (minimum)",
+    "maxOf": "{{label}} (maximum)"
   },
   "stepper": {
     "decrement": "Decrease",
     "increment": "Increase"
   },
+  "splitPane": {
+    "resize": "Resize panels"
+  },
+  "propertyField": {
+    "reset": "Reset to default"
+  },
+  "settingsForm": {
+    "apply": "Apply",
+    "revert": "Undo changes",
+    "resetAll": "Reset to defaults",
+    "resetRow": "Default",
+    "resetRowNamed": "Reset to default: {{label}}",
+    "unsaved_one": "{{count}} unsaved change",
+    "unsaved_other": "{{count}} unsaved changes",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "saveFailed": "Could not save. Your changes are still here.",
+    "invalid": "Fix the highlighted settings first.",
+    "audio": {
+      "master": "Master volume",
+      "ui": "Interface sounds",
+      "sfx": "Effects",
+      "music": "Music",
+      "speech": "Speech",
+      "muted": "Mute all"
+    }
+  },
   "wizard": {
+    "step": "Step {{n}} of {{total}}: {{title}}",
     "back": "Back",
     "next": "Next",
     "finish": "Finish"
   },
-  "wavecounter": {
-    "wave": "Wave {{wave}}",
-    "waveTotal": "Wave {{wave}} / {{total}}",
-    "next": "Next wave: {{seconds}}s"
+  "versusBar": {
+    "label": "Score",
+    "side": "{{name}} {{value}} of {{target}}"
+  },
+  "rankList": {
+    "label": "Ranking",
+    "empty": "No entries"
+  },
+  "activityFeed": {
+    "label": "Activity"
   },
   "minimap": {
+    "summary_one": "{{label}}: {{count, number}} marker, zoom {{zoom}}x",
+    "summary_other": "{{label}}: {{count, number}} markers, zoom {{zoom}}x",
+    "zoomIn": "Zoom map in",
+    "zoomOut": "Zoom map out",
     "label": "Map",
+    "north": "N",
     "interactive": "{{label}}, interactive — press Enter to jump to center"
   },
   "selectionInfo": {
-    "emptyState": "No selection"
+    "emptyState": "No selection",
+    "label": "Selection",
+    "selected": "Selected: {{name}}",
+    "health": "Health"
+  },
+  "statsPanel": {
+    "close": "Close statistics"
+  },
+  "roundcounter": {
+    "round": "Round {{round}}",
+    "roundTotal": "Round {{round}} / {{total}}",
+    "next": "Next: {{seconds}}s"
+  },
+  "fpsMeter": {
+    "value": "{{fps}} FPS",
+    "ariaLabel": "Frame rate"
+  },
+  "keyBindings": {
+    "listeningFor": "Press a key for {{action}}. Escape cancels.",
+    "listening": "Press a key…",
+    "rebind": "Rebind {{action}}",
+    "reset": "Reset",
+    "resetAction": "Reset {{action}} to default",
+    "empty": "No actions to rebind"
+  },
+  "xp": {
+    "progress": "Lv. {{level}} — {{value}} / {{max}}"
+  },
+  "dialogue": {
+    "fastForward": "Speed up typing",
+    "skipLine": "Finish the line"
+  },
+  "dialog": {
+    "cancel": "Cancel",
+    "busy": "Working…",
+    "failed": "The action did not complete. You can try again or cancel.",
+    "destructive": {
+      "confirm": "Delete",
+      "consequence": "This cannot be undone."
+    },
+    "exit": {
+      "title": "Before you leave",
+      "message": "You have unsaved changes.",
+      "saveAndExit": "Save and exit",
+      "discardAndExit": "Exit without saving",
+      "stay": "Cancel, stay"
+    },
+    "permission": {
+      "allow": "Allow",
+      "deny": "Not now"
+    },
+    "conflict": {
+      "title": "Save conflict",
+      "message": "The save on this device and the remote copy differ. Choose which one to keep; the other is replaced.",
+      "local": "This device",
+      "remote": "Remote copy",
+      "keepLocal": "Keep this device's save",
+      "useRemote": "Use the remote copy",
+      "keepLocalNote": "The remote copy is replaced with this device's save.",
+      "useRemoteNote": "This device's save is replaced with the remote copy.",
+      "cancelNote": "If you cancel, nothing changes.",
+      "failed": "The conflict could not be resolved; your saves were not touched. You can try again or cancel."
+    },
+    "tour": {
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip",
+      "done": "Done",
+      "step": "Step {{current}} / {{total}}"
+    },
+    "legal": {
+      "close": "Close",
+      "attributions": "Attributions",
+      "license": "License",
+      "source": "Source",
+      "author": "Author"
+    }
   }
 }

@@ -1,0 +1,20 @@
+{
+  "name": "@volstudio/deck",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Steam Deck araçları: cihaz ölçüm sondası ve devkit otomasyonu",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@volstudio/core": "workspace:*",
+    "esbuild": "^0.27.7",
+    "phaser": "^4.2.1",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.5"
+  }
+}

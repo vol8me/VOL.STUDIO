@@ -1,0 +1,492 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "çelik donanım · reward",
+      "durationSeconds": 0.46,
+      "gestures": {
+        "thump-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              190
+            ],
+            [
+              0.04,
+              90
+            ],
+            [
+              0.14,
+              86.39999999999999
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0002,
+              "curve": "exponential",
+              "decay": 0.014,
+              "release": 0.004,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 3,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 3600,
+                "mode": "bandpass",
+                "q": 0.9
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 1260,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0015,
+              "curve": "exponential",
+              "decay": 0.14,
+              "release": 0.025,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -1,
+          "inserts": [
+            {
+              "params": {
+                "character": "asymmetric",
+                "driveDb": 14,
+                "mix": 1,
+                "outputDb": -3
+              },
+              "primitive": "effect.saturation",
+              "version": 1
+            }
+          ],
+          "mechanism": "mechanical",
+          "name": "thump",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 50,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 900,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "thump-pitch"
+              },
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0006,
+              "curve": "cosine",
+              "decay": 0.102,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -4,
+          "mechanism": "mechanical",
+          "name": "n1",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.8,
+                "damping": 0.7,
+                "decay": 0.12,
+                "frequency": 784,
+                "inharmonicity": 0.012,
+                "layout": "bar",
+                "modes": 5
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.1
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0006,
+              "curve": "cosine",
+              "decay": 0.102,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -4,
+          "mechanism": "mechanical",
+          "name": "n2",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.8,
+                "damping": 0.7,
+                "decay": 0.12,
+                "frequency": 988,
+                "inharmonicity": 0.012,
+                "layout": "bar",
+                "modes": 5
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.1
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.08
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0006,
+              "curve": "cosine",
+              "decay": 0.12239999999999998,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -3,
+          "mechanism": "mechanical",
+          "name": "n3",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.8,
+                "damping": 0.7,
+                "decay": 0.144,
+                "frequency": 1175,
+                "inharmonicity": 0.012,
+                "layout": "bar",
+                "modes": 5
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.1
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.16
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0003,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9433
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui/steel",
+    "durationSeconds": {
+      "max": 0.98,
+      "min": 0.36
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "çelik donanım: reward",
+  "dimensions": [
+    {
+      "name": "bright",
+      "range": {
+        "max": 4392,
+        "min": 2808,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "click",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.1764,
+        "min": 0.1036,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "thump",
+        "param": "decay",
+        "primitive": "articulation.envelope",
+        "slot": "articulation"
+      }
+    },
+    {
+      "name": "pitch",
+      "range": {
+        "max": 878.08,
+        "min": 689.92,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "n1",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "pitch2",
+      "range": {
+        "max": 1106.56,
+        "min": 869.44,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "n2",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "warmth",
+      "range": {
+        "max": 1100,
+        "min": 720,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 1,
+        "kind": "node-param",
+        "layer": "thump",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    }
+  ],
+  "familyId": "ui-steel-reward",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "bright": {
+          "max": 3336,
+          "min": 2808
+        },
+        "decay": {
+          "max": 0.1764,
+          "min": 0.15213
+        },
+        "pitch": {
+          "max": 752.64,
+          "min": 689.92
+        },
+        "pitch2": {
+          "max": 948.48,
+          "min": 869.44
+        },
+        "warmth": {
+          "max": 846.66667,
+          "min": 720
+        }
+      },
+      "light": {
+        "bright": {
+          "max": 4392,
+          "min": 3864
+        },
+        "decay": {
+          "max": 0.12787,
+          "min": 0.1036
+        },
+        "pitch": {
+          "max": 878.08,
+          "min": 815.36
+        },
+        "pitch2": {
+          "max": 1106.56,
+          "min": 1027.52
+        },
+        "warmth": {
+          "max": 1100,
+          "min": 973.33333
+        }
+      },
+      "medium": {
+        "bright": {
+          "max": 3864,
+          "min": 3336
+        },
+        "decay": {
+          "max": 0.15213,
+          "min": 0.12787
+        },
+        "pitch": {
+          "max": 815.36,
+          "min": 752.64
+        },
+        "pitch2": {
+          "max": 1027.52,
+          "min": 948.48
+        },
+        "warmth": {
+          "max": 973.33333,
+          "min": 846.66667
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9433,
+  "title": "UI steel reward",
+  "variants": [
+    {
+      "key": "reward-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "reward"
+      ]
+    },
+    {
+      "key": "reward-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "reward"
+      ]
+    },
+    {
+      "key": "reward-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "reward"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

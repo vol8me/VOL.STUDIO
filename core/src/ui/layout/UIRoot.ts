@@ -1,6 +1,10 @@
 import '../theme.css';
+import { uiIntentBusFor, type UiIntentBus } from '../feedback/uiIntent';
+import { startFocusModality } from '../focus/focusModality';
 
 const ROOT_CLASS = 'vol-ui-root';
+/** Aynı DOM element'ini paylasan UIRoot ornek sayısı (dataset üzerinde tutulur). */
+const REF_COUNT_ATTR = 'volUiRootRefs';
 
 /**
  * Canvas/oyun döngüsünden bağımsız tam ekran DOM UI katmanı; menü/HUD
@@ -10,6 +14,8 @@ const ROOT_CLASS = 'vol-ui-root';
  */
 export class UIRoot {
   readonly element: HTMLDivElement;
+  private readonly intentHandle: { bus: UiIntentBus; release(): void };
+  private released = false;
 
   constructor(parent: HTMLElement | string = document.body) {
     const target = typeof parent === 'string' ? document.getElementById(parent) : parent;
@@ -22,12 +28,26 @@ export class UIRoot {
     const existing = target.querySelector<HTMLDivElement>(`:scope > .${ROOT_CLASS}`);
     if (existing) {
       this.element = existing;
-      return;
+    } else {
+      this.element = document.createElement('div');
+      this.element.className = ROOT_CLASS;
+      target.appendChild(this.element);
     }
+    this.retain();
+    // Odak halkası giriş aygıtını izler: fareyle açılan menüde programatik odak halka çizmez.
+    startFocusModality();
+    // Paylaşılan kök tek niyet veriyolunu paylaşır: ikinci UIRoot dinleyici/ses çoğaltmaz.
+    this.intentHandle = uiIntentBusFor(this.element);
+  }
 
-    this.element = document.createElement('div');
-    this.element.className = ROOT_CLASS;
-    target.appendChild(this.element);
+  /** Bu kökün anlamsal UI niyet veriyolu (ses/titreşim/ölçüm sağlayıcıları buna abone olur). */
+  get intents(): UiIntentBus {
+    return this.intentHandle.bus;
+  }
+
+  private retain(): void {
+    const current = Number(this.element.dataset[REF_COUNT_ATTR] ?? '0');
+    this.element.dataset[REF_COUNT_ATTR] = String(current + 1);
   }
 
   mount(node: HTMLElement): void {
@@ -40,7 +60,23 @@ export class UIRoot {
     }
   }
 
+  /**
+   * Element paylaşıldığı için (aynı parent'ta ikinci bir UIRoot mevcut olanı
+   * yeniden kullanır) koşulsuz remove() diğerinin altındaki zemini de silerdi.
+   * Yalnızca son sahip DOM'dan kaldırır.
+   */
   destroy(): void {
+    if (this.released) return;
+    this.released = true;
+    this.intentHandle.release();
+
+    const remaining = Number(this.element.dataset[REF_COUNT_ATTR] ?? '1') - 1;
+    if (remaining > 0) {
+      this.element.dataset[REF_COUNT_ATTR] = String(remaining);
+      return;
+    }
+
+    delete this.element.dataset[REF_COUNT_ATTR];
     this.element.remove();
   }
 }

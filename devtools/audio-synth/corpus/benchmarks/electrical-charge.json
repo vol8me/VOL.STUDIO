@@ -1,0 +1,90 @@
+{
+  "schema": "BenchmarkTaskV1",
+  "id": "electrical-charge",
+  "version": 1,
+  "title": "Elektrik şarjı",
+  "purpose": "source.electrical charge: perde ve üst harmonik içeriği yükselirken enerji birikimi; ark kıvılcımları arada.",
+  "category": "electrical",
+  "parts": [
+    {
+      "id": "main",
+      "source": {
+        "kind": "program",
+        "program": {
+          "schema": "AcousticProgramV1",
+          "sampleRate": 48000,
+          "channels": 1,
+          "durationSeconds": 2.0,
+          "seed": 47,
+          "master": {
+            "normalize": "peak",
+            "peakDbfs": -3,
+            "fadeInSeconds": 0.05,
+            "fadeOutSeconds": 0.2
+          },
+          "layers": [
+            {
+              "name": "charge",
+              "source": {
+                "primitive": "source.electrical",
+                "version": 1,
+                "params": {
+                  "hum": 0.4,
+                  "buzz": 0.5,
+                  "arcs": 0.1,
+                  "charge": 1,
+                  "instability": 0.2,
+                  "ring": 0.5,
+                  "ringHz": 3200,
+                  "mains": 140
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expectations": [
+        {
+          "kind": "asset-policy",
+          "assetClass": "sfx"
+        },
+        {
+          "kind": "clipping"
+        },
+        {
+          "kind": "clicks",
+          "max": 20
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "durationSeconds",
+          "min": 1.2,
+          "max": 3.0
+        },
+        {
+          "kind": "pitch-contour",
+          "shape": "rising",
+          "minRatio": 1.4
+        },
+        {
+          "kind": "descriptor",
+          "descriptor": "centroidHz",
+          "min": 1200
+        },
+        {
+          "kind": "onset-rate",
+          "min": 1
+        },
+        {
+          "kind": "band-dominance",
+          "dominant": "high",
+          "over": "sub"
+        }
+      ]
+    }
+  ],
+  "listeningGuide": [
+    "Kondansatör şarjı gibi yükselen elektrik vınlaması; seyrek kıvılcım çatırtıları duyulabilir.",
+    "Hata belirtileri: motora dönüşen düşük perde, sabit şebeke uğultusu, düşen perde."
+  ]
+}

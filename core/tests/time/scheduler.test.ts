@@ -1,0 +1,336 @@
+import { describe, it, expect, vi } from 'vitest';
+import { Scheduler } from '../../src/time/Scheduler';
+
+describe('Scheduler', () => {
+  it('after() süre dolunca BİR KEZ çalışır', () => {
+    const scheduler = new Scheduler();
+    const fn = vi.fn();
+    scheduler.after(100, fn);
+
+    scheduler.update(99);
+    expect(fn).not.toHaveBeenCalled();
+
+    scheduler.update(1);
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    scheduler.update(1000);
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it('every() periyodik çalışır', () => {
+    const scheduler = new Scheduler();
+    const fn = vi.fn();
+    scheduler.every(50, fn);
+
+    scheduler.update(50);
+    scheduler.update(50);
+    scheduler.update(50);
+    expect(fn).toHaveBeenCalledTimes(3);
+  });
+
+  it('uzun bir kare birikmiş tetiklenmeleri YEMEZ', () => {
+    // Kare düşmesinde iş sessizce atlanırsa oyun mantığı gerçek zamandan
+    // geri kalır; 200ms'lik bir karede 50ms'lik iş dört kez çalışmalı.
+    const scheduler = new Scheduler();
+    const fn = vi.fn();
+    scheduler.every(50, fn);
+
+    scheduler.update(200);
+    expect(fn).toHaveBeenCalledTimes(4);
+  });
+
+  it('iptal edilen iş bir daha çalışmaz', () => {
+    const scheduler = new Scheduler();
+    const fn = vi.fn();
+    const cancel = scheduler.every(10, fn);
+
+    scheduler.update(10);
+    cancel();
+    scheduler.update(100);
+
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it('iptal iki kez çağrılabilir (no-op)', () => {
+    const scheduler = new Scheduler();
+    const cancel = scheduler.after(10, vi.fn());
+    cancel();
+    expect(() => cancel()).not.toThrow();
+  });
+
+  it('callback içinde eklenen iş AYNI turda çalışmaz (sonsuz döngü koruması)', () => {
+    // Kendini yeniden kaydeden bir callback, aynı update() içinde işlenirse
+    // döngü asla bitmez.
+    const scheduler = new Scheduler();
+    const inner = vi.fn();
+    scheduler.after(10, () => {
+      scheduler.after(0, inner);
+    });
+
+    scheduler.update(10);
+    expect(inner).not.toHaveBeenCalled();
+
+    scheduler.update(1);
+    expect(inner).toHaveBeenCalledTimes(1);
+  });
+
+  it('callback içinde iptal edilen tekrarlı iş o turda tekrar çalışmaz', () => {
+    const scheduler = new Scheduler();
+    let calls = 0;
+    const cancel = scheduler.every(10, () => {
+      calls++;
+      cancel();
+    });
+
+    scheduler.update(100);
+    expect(calls).toBe(1);
+  });
+
+  it('sıfır/negatif periyot reddedilir — tek update içinde sonsuz döngü olurdu', () => {
+    const scheduler = new Scheduler();
+    const fn = vi.fn();
+    scheduler.every(0, fn);
+    scheduler.update(100);
+
+    expect(fn).not.toHaveBeenCalled();
+    expect(scheduler.size).toBe(0);
+  });
+
+  it('negatif periyot da reddedilir', () => {
+    const scheduler = new Scheduler();
+    const fn = vi.fn();
+    scheduler.every(-5, fn);
+    scheduler.update(100);
+
+    expect(fn).not.toHaveBeenCalled();
+    expect(scheduler.size).toBe(0);
+  });
+
+  it('sıfır/negatif delta zamanı ilerletmez', () => {
+    const scheduler = new Scheduler();
+    const fn = vi.fn();
+    scheduler.after(10, fn);
+
+    scheduler.update(0);
+    scheduler.update(-50);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('clear() tüm işleri iptal eder', () => {
+    const scheduler = new Scheduler();
+    scheduler.after(10, vi.fn());
+    scheduler.every(10, vi.fn());
+    expect(scheduler.size).toBe(2);
+
+    scheduler.clear();
+    expect(scheduler.size).toBe(0);
+  });
+
+  it('tek seferlik iş çalıştıktan sonra listeden düşer', () => {
+    const scheduler = new Scheduler();
+    scheduler.after(10, vi.fn());
+    scheduler.update(10);
+    expect(scheduler.size).toBe(0);
+  });
+
+  it('deterministik: aynı delta dizisi aynı sırayı üretir', () => {
+    const run = (): string[] => {
+      const scheduler = new Scheduler();
+      const order: string[] = [];
+      scheduler.after(30, () => order.push('a'));
+      scheduler.every(20, () => order.push('b'));
+      for (const dt of [10, 15, 20, 25]) scheduler.update(dt);
+      return order;
+    };
+
+    expect(run()).toEqual(run());
+  });
+
+  describe('runaway telafi koruması', () => {
+    it('tek update içindeki tekrar sayısı SINIRLIDIR', () => {
+      // Donmuş bir sekmeden dönüşte tek dev delta, kısa periyotlu bir işi
+      // yüz binlerce kez çağırıp kareyi kilitlerdi.
+      const scheduler = new Scheduler({ maxCatchUp: 5 });
+      const fn = vi.fn();
+      scheduler.every(1, fn);
+
+      scheduler.update(600_000); // 10 dakikalık donma
+      expect(fn).toHaveBeenCalledTimes(5);
+    });
+
+    it('sınıra takılan iş borcunu DÜŞER — sonraki karede tekrar takılmaz', () => {
+      // Borç düşülmezse her karede aynı sınıra çarpar ve iş asla normale dönmez.
+      const scheduler = new Scheduler({ maxCatchUp: 3 });
+      const fn = vi.fn();
+      scheduler.every(10, fn);
+
+      scheduler.update(100_000);
+      fn.mockClear();
+
+      scheduler.update(10);
+      expect(fn).toHaveBeenCalledTimes(1);
+    });
+
+    it('atlanan tetiklenme sayısı bildirilir (sessizce kaybolmaz)', () => {
+      const onCatchUpLimit = vi.fn();
+      const scheduler = new Scheduler({ maxCatchUp: 2, onCatchUpLimit });
+      scheduler.every(10, vi.fn());
+
+      scheduler.update(1000);
+      expect(onCatchUpLimit).toHaveBeenCalledTimes(1);
+      expect(onCatchUpLimit.mock.calls[0][0]).toBeGreaterThan(0);
+    });
+
+    it('normal karede sınır devreye girmez', () => {
+      const onCatchUpLimit = vi.fn();
+      const scheduler = new Scheduler({ maxCatchUp: 32, onCatchUpLimit });
+      const fn = vi.fn();
+      scheduler.every(16, fn);
+
+      scheduler.update(16);
+      scheduler.update(16);
+      expect(fn).toHaveBeenCalledTimes(2);
+      expect(onCatchUpLimit).not.toHaveBeenCalled();
+    });
+
+    it('geçersiz maxCatchUp varsayılana düşer', () => {
+      const scheduler = new Scheduler({ maxCatchUp: 0 });
+      const fn = vi.fn();
+      scheduler.every(1, fn);
+
+      scheduler.update(10_000);
+      expect(fn).toHaveBeenCalledTimes(32);
+    });
+
+    it('tek seferlik iş sınırdan etkilenmez', () => {
+      const scheduler = new Scheduler({ maxCatchUp: 1 });
+      const fn = vi.fn();
+      scheduler.after(10, fn);
+
+      scheduler.update(10_000);
+      expect(fn).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('yeniden giriş (reentrancy)', () => {
+    it('callback içinden update() REDDEDİLİR', () => {
+      // İç çağrı kabul edilseydi zamanı yeniden ilerletir ve tek update(10)
+      // callback'i birden çok kez çalıştırırdı.
+      const scheduler = new Scheduler();
+      let calls = 0;
+      let innerResult: boolean | null = null;
+
+      scheduler.every(10, () => {
+        calls++;
+        if (calls === 1) innerResult = scheduler.update(10);
+      });
+
+      expect(scheduler.update(10)).toBe(true);
+      expect(calls).toBe(1);
+      expect(innerResult).toBe(false);
+    });
+
+    it('reddedilen yeniden giriş bildirilir', () => {
+      const onReentrantUpdate = vi.fn();
+      const scheduler = new Scheduler({ onReentrantUpdate });
+      scheduler.every(10, () => scheduler.update(10));
+
+      scheduler.update(10);
+      expect(onReentrantUpdate).toHaveBeenCalledTimes(1);
+    });
+
+    it('yeniden giriş sonrası scheduler normal çalışmaya devam eder', () => {
+      const scheduler = new Scheduler();
+      let calls = 0;
+      scheduler.every(10, () => {
+        calls++;
+        scheduler.update(10);
+      });
+
+      scheduler.update(10);
+      scheduler.update(10);
+      expect(calls).toBe(2);
+    });
+
+    it('yeniden giriş "sonraki turda çalış" garantisini korur', () => {
+      const scheduler = new Scheduler();
+      const late = vi.fn();
+      scheduler.every(10, () => {
+        scheduler.update(10); // reddedilir
+        scheduler.after(0, late);
+      });
+
+      scheduler.update(10);
+      expect(late).not.toHaveBeenCalled();
+
+      scheduler.update(1);
+      expect(late).toHaveBeenCalledTimes(1);
+    });
+  });
+});
+
+describe('Scheduler hata kurtarması', () => {
+  it('hata atan işi iptal eder, pending işleri sonraki yayında ve sağlıklı işleri çalıştırır', () => {
+    const scheduler = new Scheduler();
+    const events: string[] = [];
+    scheduler.after(1, () => {
+      scheduler.after(1, () => events.push('yeni'));
+      throw new Error('iş');
+    });
+    scheduler.after(2, () => events.push('sağlıklı'));
+    expect(() => scheduler.update(1)).toThrow('iş');
+    expect(events).toEqual([]);
+    expect(scheduler.update(2)).toBe(true);
+    expect(events).toEqual(['sağlıklı', 'yeni']);
+    expect(scheduler.size).toBe(0);
+  });
+  it('yeniden giriş kancasının hatası yayın durumunu toparlar', () => {
+    const scheduler = new Scheduler({
+      onReentrantUpdate: () => {
+        throw new Error('kanca');
+      },
+    });
+    let done = false;
+    scheduler.after(1, () => scheduler.update(1));
+    scheduler.after(2, () => {
+      done = true;
+    });
+    expect(() => scheduler.update(1)).toThrow('kanca');
+    expect(scheduler.update(2)).toBe(true);
+    expect(done).toBe(true);
+  });
+  it('telafi kancasının hatası sonraki yayını engellemez', () => {
+    const scheduler = new Scheduler({
+      maxCatchUp: 1,
+      onCatchUpLimit: () => {
+        throw new Error('kanca');
+      },
+    });
+    const cancel = scheduler.every(10, () => {});
+    expect(() => scheduler.update(30)).toThrow('kanca');
+    cancel();
+    let done = false;
+    scheduler.after(1, () => {
+      done = true;
+    });
+    expect(scheduler.update(1)).toBe(true);
+    expect(done).toBe(true);
+  });
+  it.each([
+    [20, 1],
+    [30, 2],
+    [31, 2],
+  ])('%i ms telafide %i tetik atlar ve yeni periyodu başlatır', (delta, skipped) => {
+    const reports: number[] = [];
+    let calls = 0;
+    const scheduler = new Scheduler({ maxCatchUp: 1, onCatchUpLimit: (n) => reports.push(n) });
+    scheduler.every(10, () => calls++);
+    scheduler.update(delta);
+    expect(calls).toBe(1);
+    expect(reports).toEqual([skipped]);
+    scheduler.update(9);
+    expect(calls).toBe(1);
+    scheduler.update(1);
+    expect(calls).toBe(2);
+  });
+});

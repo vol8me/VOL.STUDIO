@@ -1,0 +1,180 @@
+{
+  "channels": 1,
+  "description": "çelik donanım · press",
+  "durationSeconds": 0.177,
+  "gestures": {
+    "thump-pitch": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          220
+        ],
+        [
+          0.04,
+          105
+        ],
+        [
+          0.1,
+          100.8
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0002,
+          "curve": "exponential",
+          "decay": 0.014,
+          "release": 0.004,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 5,
+      "mechanism": "mechanical",
+      "name": "click",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 4357.56,
+            "mode": "bandpass",
+            "q": 0.9
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1260,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0015,
+          "curve": "exponential",
+          "decay": 0.0752498,
+          "release": 0.025,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 0,
+      "inserts": [
+        {
+          "params": {
+            "character": "asymmetric",
+            "driveDb": 14,
+            "mix": 1,
+            "outputDb": -3
+          },
+          "primitive": "effect.saturation",
+          "version": 1
+        }
+      ],
+      "mechanism": "mechanical",
+      "name": "thump",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 50,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1005.86,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "thump-pitch"
+          },
+          "waveform": "sine"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0006,
+          "curve": "cosine",
+          "decay": 0.035699999999999996,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -9,
+      "mechanism": "mechanical",
+      "name": "ring",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.8,
+            "damping": 0.7,
+            "decay": 0.041999999999999996,
+            "frequency": 1262.84,
+            "inharmonicity": 0.012,
+            "layout": "bar",
+            "modes": 5
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "contactTime": 0.0008,
+          "roughness": 0.1
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 40,
+    "fadeInSeconds": 0.0003,
+    "fadeOutSeconds": 0.02,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 9321
+}

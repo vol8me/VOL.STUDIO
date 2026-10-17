@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { LongPressButton } from '../../src/ui/controls/LongPressButton';
-import { SwipeGestureZone, type SwipeGestureEvent } from '../../src/ui/controls/SwipeGestureZone';
-import { MultiTouchZone } from '../../src/ui/controls/MultiTouchZone';
-import { SquareJoystick } from '../../src/ui/controls/SquareJoystick';
+import { LongPressButton } from '../../src/ui/buttons/LongPressButton';
+import { SwipeGestureZone, type SwipeGestureEvent } from '../../src/ui/touch/SwipeGestureZone';
+import { MultiTouchZone } from '../../src/ui/touch/MultiTouchZone';
+import { SquareJoystick } from '../../src/ui/touch/SquareJoystick';
 
 const tracked: Array<{ destroy(): void }> = [];
 function track<T extends { destroy(): void }>(instance: T): T {
@@ -473,9 +473,24 @@ describe('SquareJoystick', () => {
     expect(onMove).not.toHaveBeenCalled();
   });
 
-  it('destroy pointer listenerlarını temizler', () => {
+  it('destroy sürükleme ortasında çağrılırsa tüm pointer listenerlarını temizler', () => {
     const joystick = new SquareJoystick();
     const base = joystick.element.querySelector<HTMLDivElement>('.vol-square-joystick__base')!;
+
+    // Global (window) listener'lar yalnızca aktif bir sürükleme sırasında
+    // bağlıdır; destroy()'un onları gerçekten kaldırdığını görmek için önce
+    // bir sürükleme başlatılmalı — aksi halde hiç bağlanmamış bir listener'ın
+    // "kaldırıldığını" doğrulamak anlamsız.
+    base.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        pointerId: 1,
+        clientX: 0,
+        clientY: 0,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
     const removeBaseListener = vi.spyOn(base, 'removeEventListener');
     const removeWindowListener = vi.spyOn(window, 'removeEventListener');
 

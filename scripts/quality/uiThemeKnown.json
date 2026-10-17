@@ -1,0 +1,19 @@
+{
+  "schema": "UiThemeKnownV1",
+  "note": "Tema kapısının bilinen kusur kaydı. contrast: sahip açık UI görevine bağlı; kusur düzelince kayıt bayatlar ve kapı düşer. rawDurations: dosya başına ham (var dışı) hareket süresi sayısı; yalnız azalır, bileşenler UI-03+ ile var(--vol-motion-*)'a geçtikçe düşürülür.",
+  "contrast": [],
+  "rawDurations": {
+    "core/src/ui/buttons/buttons.css": 1,
+    "core/src/ui/camera/camera.css": 1,
+    "core/src/ui/cards/cards.css": 2,
+    "core/src/ui/data/boards.css": 3,
+    "core/src/ui/feedback/feedback.css": 3,
+    "core/src/ui/hud/skillTree.css": 7,
+    "core/src/ui/layout/layout.css": 5,
+    "core/src/ui/overlays/loading.css": 12,
+    "core/src/ui/overlays/overlays.css": 1,
+    "core/src/ui/primitives/primitives.css": 1,
+    "core/src/ui/primitives/views.css": 10,
+    "core/src/ui/touch/touch.css": 2
+  }
+}

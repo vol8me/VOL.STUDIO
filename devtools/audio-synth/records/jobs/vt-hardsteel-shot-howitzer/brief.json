@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 2.25,
+    "min": 1.44
+  },
+  "id": "vt-hardsteel-shot-howitzer",
+  "intent": "Havan: dev şok dalgası ve uzun, alçak kükreme.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — shot-howitzer"
+}

@@ -1,0 +1,122 @@
+{
+  "$comment": "Bilinen ve bilinçle kabul edilmiş bağımlılık riskleri. `security-js` ve `security-rust` bu listeden BAŞKA hiçbir advisory'ye izin vermez; listedeki kayıt güncel ve kanıtlı değilse kapı düşer. Kural ve doğrulama: docs/gates.md → Güvenlik riski politikası.",
+  "js": [
+    {
+      "advisory": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "version": "3.0.3",
+      "patch": "patches/braces@3.0.3.patch",
+      "reason": "Düzeltme yayımlanmadı: braces'in son sürümü 3.0.3, upstream deposu Ocak 2025'ten beri commit almadı ve düzeltme PR'ları birleştirilmedi. stylelint 17 dahil bütün sürümler aynı micromatch/fast-glob zincirini taşır; başka sürüme geçerek çözülemez. Yama iç içe küme/parantez derinliğini 100 ile sınırlar; aşan desen SyntaxError verir.",
+      "exposure": "Yalnız geliştirme aracı: stylelint braces'i kendi yapılandırmasındaki ve komut satırındaki desenlerle çağırır; dışarıdan desen gelmez, ürüne girmez.",
+      "owner": "micromatch/braces (issue #70)",
+      "removeWhen": "braces'in düzeltilmiş sürümü yayımlanınca yükselt, yamayı ve bu kaydı sil; security-js yayımı kendisi bildirir.",
+      "reviewed": "2026-10-10"
+    }
+  ],
+  "rust": [
+    {
+      "advisory": "RUSTSEC-2024-0429",
+      "crate": "glib",
+      "version": "0.18.5",
+      "kind": "unsound",
+      "via": "gtk 0.18.2 ← tao, muda, tauri-runtime(-wry), wry",
+      "platforms": ["linux"],
+      "reason": "Düzeltme glib 0.20'dedir; Tauri 2'nin Linux yığını gtk-rs 0.18'e bağlıdır ve en son kararlı Tauri (2.12.2: tao 0.37, wry 0.57) de gtk-rs 0.18'de kalır.",
+      "exposure": "Etkilenen API `Variant::array_iter_str` / `VariantStrIter`. Bağımlılık kapanışında (tauri, tauri-runtime, tauri-runtime-wry, tao, wry, muda, gtk, gio, gdk, gdkx11, webkit2gtk, javascriptcore-rs, soup3) çağıran yok; glib'in kendi çağrıları yalnız testlerde. Depo kodu glib'i hiç kullanmaz. Windows ve Android derlemesine girmez.",
+      "owner": "tauri-apps/tauri, gtk-rs",
+      "removeWhen": "Tauri gtk-rs ≥ 0.20'ye (glib ≥ 0.20) geçince.",
+      "reviewed": "2026-10-10"
+    },
+    {
+      "advisory": "RUSTSEC-2024-0370",
+      "crate": "proc-macro-error",
+      "version": "1.0.4",
+      "kind": "unmaintained",
+      "via": "glib-macros 0.18.5 ← gtk-rs 0.18",
+      "platforms": ["linux"],
+      "reason": "gtk-rs 0.18 makro zincirinin parçası; Tauri'nin gtk-rs yükseltmesiyle birlikte kalkar.",
+      "exposure": "Yalnız derleme zamanı procedural makro; çalışma zamanı koduna girmez. Advisory bakımsızlık bildirir, zafiyet bildirmez.",
+      "owner": "tauri-apps/tauri, gtk-rs",
+      "removeWhen": "Tauri gtk-rs ≥ 0.20'ye geçince.",
+      "reviewed": "2026-10-10"
+    },
+    {
+      "advisory": "RUSTSEC-2024-0436",
+      "crate": "paste",
+      "version": "1.0.15",
+      "kind": "unmaintained",
+      "via": "steamworks 0.13.1 (isteğe bağlı `steamworks` özelliği)",
+      "platforms": ["windows", "linux", "macos"],
+      "reason": "steamworks 0.13.1 en son sürümdür ve paste'e bağlıdır.",
+      "exposure": "Yalnız derleme zamanı procedural makro; çalışma zamanı koduna girmez. Advisory bakımsızlık bildirir, zafiyet bildirmez.",
+      "owner": "Noxime/steamworks-rs",
+      "removeWhen": "steamworks paste'siz bir sürüm yayımlayınca.",
+      "reviewed": "2026-10-10"
+    },
+    {
+      "advisory": "RUSTSEC-2025-0075",
+      "crate": "unic-char-range",
+      "version": "0.9.0",
+      "kind": "unmaintained",
+      "via": "unic-ucd-ident 0.9.0 ← urlpattern 0.3.0 ← tauri-utils 2.9.3",
+      "platforms": ["windows", "linux", "macos", "android"],
+      "reason": "tauri-utils 2.9.3 urlpattern 0.3 ister. Tauri 2.12 (tauri-utils 2.10 → urlpattern 0.6) unic'i bırakır; çerçeve minör geçişi cihaz kabulü gerektirdiğinden TODO.md F10.12'de ayrı yürütülür.",
+      "exposure": "Unicode veri tabloları. Advisory bakımsızlık bildirir, zafiyet bildirmez.",
+      "owner": "tauri-apps/tauri",
+      "removeWhen": "tauri-utils urlpattern'in unic'siz sürümüne geçince.",
+      "reviewed": "2026-10-10"
+    },
+    {
+      "advisory": "RUSTSEC-2025-0080",
+      "crate": "unic-common",
+      "version": "0.9.0",
+      "kind": "unmaintained",
+      "via": "unic-ucd-ident 0.9.0 ← urlpattern 0.3.0 ← tauri-utils 2.9.3",
+      "platforms": ["windows", "linux", "macos", "android"],
+      "reason": "tauri-utils 2.9.3 urlpattern 0.3 ister. Tauri 2.12 (tauri-utils 2.10 → urlpattern 0.6) unic'i bırakır; çerçeve minör geçişi cihaz kabulü gerektirdiğinden TODO.md F10.12'de ayrı yürütülür.",
+      "exposure": "Unicode veri tabloları. Advisory bakımsızlık bildirir, zafiyet bildirmez.",
+      "owner": "tauri-apps/tauri",
+      "removeWhen": "tauri-utils urlpattern'in unic'siz sürümüne geçince.",
+      "reviewed": "2026-10-10"
+    },
+    {
+      "advisory": "RUSTSEC-2025-0081",
+      "crate": "unic-char-property",
+      "version": "0.9.0",
+      "kind": "unmaintained",
+      "via": "unic-ucd-ident 0.9.0 ← urlpattern 0.3.0 ← tauri-utils 2.9.3",
+      "platforms": ["windows", "linux", "macos", "android"],
+      "reason": "tauri-utils 2.9.3 urlpattern 0.3 ister. Tauri 2.12 (tauri-utils 2.10 → urlpattern 0.6) unic'i bırakır; çerçeve minör geçişi cihaz kabulü gerektirdiğinden TODO.md F10.12'de ayrı yürütülür.",
+      "exposure": "Unicode veri tabloları. Advisory bakımsızlık bildirir, zafiyet bildirmez.",
+      "owner": "tauri-apps/tauri",
+      "removeWhen": "tauri-utils urlpattern'in unic'siz sürümüne geçince.",
+      "reviewed": "2026-10-10"
+    },
+    {
+      "advisory": "RUSTSEC-2025-0098",
+      "crate": "unic-ucd-version",
+      "version": "0.9.0",
+      "kind": "unmaintained",
+      "via": "unic-ucd-ident 0.9.0 ← urlpattern 0.3.0 ← tauri-utils 2.9.3",
+      "platforms": ["windows", "linux", "macos", "android"],
+      "reason": "tauri-utils 2.9.3 urlpattern 0.3 ister. Tauri 2.12 (tauri-utils 2.10 → urlpattern 0.6) unic'i bırakır; çerçeve minör geçişi cihaz kabulü gerektirdiğinden TODO.md F10.12'de ayrı yürütülür.",
+      "exposure": "Unicode veri tabloları. Advisory bakımsızlık bildirir, zafiyet bildirmez.",
+      "owner": "tauri-apps/tauri",
+      "removeWhen": "tauri-utils urlpattern'in unic'siz sürümüne geçince.",
+      "reviewed": "2026-10-10"
+    },
+    {
+      "advisory": "RUSTSEC-2025-0100",
+      "crate": "unic-ucd-ident",
+      "version": "0.9.0",
+      "kind": "unmaintained",
+      "via": "urlpattern 0.3.0 ← tauri-utils 2.9.3",
+      "platforms": ["windows", "linux", "macos", "android"],
+      "reason": "tauri-utils 2.9.3 urlpattern 0.3 ister. Tauri 2.12 (tauri-utils 2.10 → urlpattern 0.6) unic'i bırakır; çerçeve minör geçişi cihaz kabulü gerektirdiğinden TODO.md F10.12'de ayrı yürütülür.",
+      "exposure": "Unicode kimlik karakteri tabloları. Advisory bakımsızlık bildirir, zafiyet bildirmez.",
+      "owner": "tauri-apps/tauri",
+      "removeWhen": "tauri-utils urlpattern'in unic'siz sürümüne geçince.",
+      "reviewed": "2026-10-10"
+    }
+  ]
+}

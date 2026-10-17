@@ -1,0 +1,20 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 4.125,
+    "min": 2.64
+  },
+  "id": "vt-hardsteel-tracks",
+  "intent": "Ağır palet: halka vuruşları, makara gümbürtüsü ve çakıl ezilmesi.",
+  "kind": "acoustic",
+  "loop": true,
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — tracks"
+}

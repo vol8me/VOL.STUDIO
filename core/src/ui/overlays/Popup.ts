@@ -1,4 +1,7 @@
 import { UI_THRESHOLD } from '../../constants';
+import { pushBackHandler, triggerBack } from '../../platform/backNavigation';
+import { signalOverlay } from './overlaySignal';
+import { isRtl } from '../direction';
 
 export type PopupPlacement = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end';
 
@@ -11,7 +14,15 @@ export interface PopupOptions {
   container?: HTMLElement;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /**
+   * Verilirse açılış/kapanış sesi bu kaynak adıyla niyet olarak yayılır (hedef tetikleyicidir).
+   * Verilmezse sessizdir: Select gibi kendi niyetini yayan bileşenler sesi çiftlemez.
+   */
+  signal?: string;
 }
+
+/** Escape sahibi açılış sırasıdır; document dinleyicisinin kayıt sırası değildir. */
+const openPopups: Popup[] = [];
 
 /**
  * Bir hedef elemente anchored, dışa-tıklama/Escape-kapatılabilir konumlu
@@ -25,18 +36,28 @@ export class Popup {
   private readonly placement: PopupPlacement;
   private readonly closeOnOutsideClick: boolean;
   private readonly onCloseHandler?: () => void;
+  private readonly signalOrigin: string | undefined;
   private readonly container: HTMLElement;
   private open = false;
   private destroyed = false;
   private boundOutsideClick: (event: MouseEvent) => void;
+  private readonly boundReposition: () => void;
   private boundKeydown: (event: KeyboardEvent) => void;
+  private releaseBackHandler: (() => void) | null = null;
+  private targetObserver: ResizeObserver | undefined;
 
   constructor(target: HTMLElement, options: PopupOptions = {}) {
-    const { placement = 'bottom-start', closeOnOutsideClick = true, onClose, container = document.body } = options;
+    const {
+      placement = 'bottom-start',
+      closeOnOutsideClick = true,
+      onClose,
+      container = document.body,
+    } = options;
     this.target = target;
     this.placement = placement;
     this.closeOnOutsideClick = closeOnOutsideClick;
     this.onCloseHandler = onClose;
+    this.signalOrigin = options.signal;
     this.container = container;
 
     this.element = document.createElement('div');
@@ -51,10 +72,21 @@ export class Popup {
     };
 
     this.boundKeydown = (event) => {
-      if (event.key === 'Escape') {
-        this.close();
+      if (
+        event.key === 'Escape' &&
+        !event.defaultPrevented &&
+        openPopups[openPopups.length - 1] === this
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        // Popup üstüne Modal/OSK açılmış olabilir; klavye de ortak LIFO geri sahibini kullanır.
+        triggerBack();
       }
     };
+
+    // Popup viewport koordinatlariyla konumlanır; açıkken sayfa kaydırılır veya
+    // pencere yeniden boyutlanirsa hedefinden kopup havada kalırdı.
+    this.boundReposition = () => this.reposition();
   }
 
   add(node: { element: HTMLElement }): this {
@@ -63,8 +95,9 @@ export class Popup {
   }
 
   show(): void {
-    if (this.open) return;
+    if (this.destroyed || this.open) return;
     this.open = true;
+    openPopups.push(this);
 
     if (!this.element.isConnected) {
       this.container.appendChild(this.element);
@@ -83,15 +116,38 @@ export class Popup {
       });
     }
     document.addEventListener('keydown', this.boundKeydown);
+    // Android geri hareketi Escape'in karşılığıdır: açık katman olayı önce
+    // kendisi tüketir. Kayıt olmasaydı geri tuşu alttaki ekranın işleyicisine
+    // (ör. uygulamadan çıkış onayı) gider, katman ise açık kalırdı.
+    this.releaseBackHandler = pushBackHandler(() => {
+      this.close();
+      return true;
+    });
+    // capture: true — ic scroll konteynerlerinin kaydırması da yakalanmali.
+    window.addEventListener('scroll', this.boundReposition, { capture: true, passive: true });
+    window.addEventListener('resize', this.boundReposition);
+    // Tetikleyici sahneden kalkarsa (sekme/panel gizlendi, düğüm söküldü) liste havada kalıp görünür alanın köşesine
+    // yapışırdı: ölçüsü sıfırlanan tetikleyicinin listesi kendiliğinden kapanır (kullanıcı eylemi değil: sessiz).
+    if (typeof ResizeObserver !== 'undefined') {
+      this.targetObserver = new ResizeObserver(() => {
+        if (!this.target.isConnected || this.target.getClientRects().length === 0) {
+          this.close({ silent: true });
+        }
+      });
+      this.targetObserver.observe(this.target);
+    }
+    if (this.signalOrigin) signalOverlay('open', this.signalOrigin, this.target);
   }
 
-  close(): void {
-    if (!this.open) return;
+  /** `silent`: kapanışı bir seçim izliyorsa (kendi sesi vardır) kapanış sesi çalmaz. */
+  close(options: { silent?: boolean } = {}): void {
+    if (this.destroyed || !this.open) return;
     this.open = false;
 
     this.element.classList.remove('vol-popup--visible');
-    document.removeEventListener('click', this.boundOutsideClick);
-    document.removeEventListener('keydown', this.boundKeydown);
+    this.detachWhileOpenListeners();
+    if (this.signalOrigin && !options.silent)
+      signalOverlay('close', this.signalOrigin, this.target);
     this.onCloseHandler?.();
   }
 
@@ -108,10 +164,26 @@ export class Popup {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
     this.destroyed = true;
+    this.open = false;
+    this.element.classList.remove('vol-popup--visible');
+    this.detachWhileOpenListeners();
+    this.element.remove();
+  }
+
+  /** Yalnız açıkken yaşayan dinleyiciler: dış tıklama, klavye, geri hareketi, konum. */
+  private detachWhileOpenListeners(): void {
+    const index = openPopups.indexOf(this);
+    if (index !== -1) openPopups.splice(index, 1);
     document.removeEventListener('click', this.boundOutsideClick);
     document.removeEventListener('keydown', this.boundKeydown);
-    this.element.remove();
+    this.releaseBackHandler?.();
+    this.releaseBackHandler = null;
+    window.removeEventListener('scroll', this.boundReposition, { capture: true });
+    window.removeEventListener('resize', this.boundReposition);
+    this.targetObserver?.disconnect();
+    this.targetObserver = undefined;
   }
 
   /** Tercih edilen `placement` boyunca konumlandırır, viewport'tan taşarsa karşı tarafa çevirir. */
@@ -119,7 +191,7 @@ export class Popup {
     const targetRect = this.target.getBoundingClientRect();
     const popupWidth = this.element.offsetWidth;
     const popupHeight = this.element.offsetHeight;
-    const margin = UI_THRESHOLD.POPUP_MARGIN;
+    const margin = UI_THRESHOLD.POPUP_MARGIN_PX;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
@@ -132,13 +204,16 @@ export class Popup {
       openUp = false;
     }
 
-    let alignEnd = this.placement.endsWith('end');
-    const spaceRightFromStart = viewportWidth - targetRect.left;
-    if (!alignEnd && spaceRightFromStart < popupWidth + margin) {
-      alignEnd = true;
+    // `start`/`end` MANTIKSAL kenardır: RTL'de başlangıç tetikleyicinin sağ kenarıdır (UI-07.2).
+    // Taşarsa karşı kenara çevrilir (iki yönde de), sonra görünür alana sıkıştırılır.
+    let alignRight = this.placement.endsWith('end') !== isRtl(this.target);
+    if (!alignRight && viewportWidth - targetRect.left < popupWidth + margin) {
+      alignRight = targetRect.right >= popupWidth + margin;
+    } else if (alignRight && targetRect.right < popupWidth + margin) {
+      alignRight = viewportWidth - targetRect.left < popupWidth + margin;
     }
 
-    const left = alignEnd ? targetRect.right - popupWidth : targetRect.left;
+    const left = alignRight ? targetRect.right - popupWidth : targetRect.left;
     const clampedLeft = Math.min(Math.max(margin, left), viewportWidth - popupWidth - margin);
 
     const top = openUp ? targetRect.top - popupHeight - margin : targetRect.bottom + margin;

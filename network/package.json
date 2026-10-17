@@ -1,0 +1,40 @@
+{
+  "name": "@volstudio/network",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./protocol": {
+      "import": "./src/protocol/index.ts",
+      "types": "./src/protocol/index.ts"
+    },
+    "./client": {
+      "import": "./src/client/index.ts",
+      "types": "./src/client/index.ts"
+    },
+    "./server": {
+      "import": "./src/server/index.ts",
+      "types": "./src/server/index.ts"
+    },
+    "./drive": {
+      "import": "./src/drive/index.ts",
+      "types": "./src/drive/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@colyseus/core": "0.18.18",
+    "@colyseus/sdk": "0.18.5",
+    "@colyseus/ws-transport": "0.18.4",
+    "@volstudio/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.5"
+  }
+}

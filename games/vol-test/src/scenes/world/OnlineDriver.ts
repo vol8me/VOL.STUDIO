@@ -1,0 +1,227 @@
+import { GAME } from '@/config/game';
+import { PredictionStepper } from '@volstudio/network/client';
+import { NETWORK } from '@/config/network';
+import { ONLINE_VIEW } from '@/config/onlineView';
+import type { Hud } from '@/hud/Hud';
+import { OnlinePanel, teamColor } from '@/hud/OnlinePanel';
+import type { NetEvent } from '@/network/events';
+import { createFront, type FrontFrame } from '@/view/front';
+import { NO_TEAM } from '@/network/schema';
+import { OnlineWorld } from '@/network/OnlineWorld';
+import type { OnlineSession } from '@/network/OnlineSession';
+import { feedLine, readWar, type FeedLine } from '@/network/warView';
+import { idleCommand } from '@/sim/command';
+import type { Vehicle } from '@/sim/entities/Vehicle';
+import type { SimEvent } from '@/sim/events';
+import type { Simulation } from '@/sim/Simulation';
+import type { ClimateSnapshot } from '@/sim/weather/types';
+import { NameTags, type TagFrame } from '@/view/NameTags';
+import { tankFrame } from './frames';
+import type { DriverContext, DriverFrame, DriverMeasurement, WorldDriver } from './WorldDriver';
+
+/** Ölçüm kayıtlarında çevrimiçi dünyanın senaryo adı. */
+export const ONLINE_SCENARIO = 'online';
+
+/** Duraklatma menüsü açıkken dünya sunucuda akar: araç yalnız boş girdi yollar. */
+const IDLE = idleCommand();
+
+function isSimEvent(event: NetEvent): event is SimEvent {
+  return (
+    event.kind !== 'joined' &&
+    event.kind !== 'left' &&
+    event.kind !== 'zone' &&
+    event.kind !== 'warWon'
+  );
+}
+
+/**
+ * Çevrimiçi dünya: sunucu yetkilidir, burada yalnız öngörülen kendi aracımız, ara değerli uzak
+ * araçlar ve yerel uçan mermiler vardır. `PredictionStepper` kare aralığını sınırlı SDK
+ * tick'lerine böler; her adımın girdisi hem sunucuya gider hem yerelde öngörülür. Saatin ve
+ * olayların sahibi sunucudur, bu yüzden duraklatma dünyayı dondurmaz.
+ */
+export class OnlineDriver implements WorldDriver {
+  readonly world: OnlineWorld;
+  /** Dünya sunucuda akar: menü dünyayı durdurmaz (`WorldDriver.live`). */
+  readonly live = true;
+  private readonly tags: NameTags;
+  private readonly batch: NetEvent[] = [];
+  private readonly pending: FeedLine[] = [];
+  private readonly frontFrame: FrontFrame;
+  private panel: OnlinePanel | undefined;
+  private panelDueMs = 0;
+  private leaving = false;
+  private driftMax = 0;
+  private readonly prediction: PredictionStepper;
+
+  constructor(
+    private readonly context: DriverContext,
+    private readonly session: OnlineSession,
+  ) {
+    const { scope } = context;
+    this.world = new OnlineWorld(session, context.world);
+    this.prediction = new PredictionStepper(session.predict, {
+      maxSliceMs: GAME.simulationStepMs * NETWORK.prediction.sliceSteps,
+      maxSlices: NETWORK.prediction.maxSlices,
+      maxSteps: NETWORK.inputBuffer,
+    });
+    this.frontFrame = createFront(context.world);
+    // Sahne kapanırken önce dünya, sonra bağlantı sökülür (dünya oturumun dinleyicisini bırakır).
+    scope.addSubscription(() => {
+      this.prediction.dispose();
+      this.world.dispose();
+      session.dispose();
+    });
+    this.tags = scope.addDestroyable(new NameTags(context.scene));
+    // Sunucu iklimi: katılımda gelen anlık görüntü hemen, sonrakiler düzenli aralıkla uygulanır.
+    // Katılımdaki ilk görüntü sert yüklenir (henüz görünür bir şey yok); sonrakiler yumuşakça uyumlanır:
+    // su birikintisi ve yeşillik her yayında sıçramaz.
+    let joined = false;
+    const apply = (snapshot: ClimateSnapshot): void => {
+      context.weather.restore(snapshot, joined);
+      joined = true;
+    };
+    if (session.climate) apply(session.climate);
+    scope.addSubscription(session.onClimate(apply));
+    scope.addSubscription(
+      session.onStatus((status) => {
+        if (status === 'closed' && !this.leaving)
+          context.restart({ notice: 'voltest:online.lost' });
+      }),
+    );
+  }
+
+  get sim(): Simulation {
+    return this.world.sim;
+  }
+
+  get player(): Vehicle {
+    return this.world.player;
+  }
+
+  get measurement(): DriverMeasurement {
+    return { scenario: ONLINE_SCENARIO, seed: 0 };
+  }
+
+  /** Bölge durumu sunucu şemasından okunur; geometri dünya ölçüsünden bir kez türetilmiştir. */
+  front(): FrontFrame {
+    const state = this.session.room.state.zones;
+    for (const zone of this.frontFrame.zones) {
+      const live = state[zone.index];
+      if (!live) continue;
+      zone.owner = live.owner;
+      zone.progress = live.progress;
+      zone.contested = live.contested;
+    }
+    return this.frontFrame;
+  }
+
+  metrics(): Readonly<Record<string, number>> {
+    return {
+      'online.pingMs': this.session.pingMs,
+      'online.jitterMs': this.session.jitterMs,
+      'online.driftEma': this.world.pilot.drift.ema,
+      'online.driftPeak': this.world.pilot.drift.peak,
+      'online.driftMax': this.driftMax,
+      'online.remotes': this.world.remotes.count,
+    };
+  }
+
+  advance(timeMs: number, deltaMs: number, paused: boolean): DriverFrame {
+    this.prediction.advance(timeMs, () =>
+      this.world.step(paused ? IDLE : this.context.controls.step(GAME.simulationStepMs)),
+    );
+    this.world.advance(deltaMs);
+    // Hava saati yerelde sunucuyla aynı belirli takvimde akar; anlık görüntü yalnız uyumlar.
+    this.context.weather.step(deltaMs);
+    // Çizim pozu zaten `previous`ta ara değerlidir (OnlineWorld sözleşmesi): alfa 0.
+    return { alpha: 0 };
+  }
+
+  isBot(vehicleId: number): boolean {
+    return vehicleId !== this.player.id && this.world.isBot(vehicleId);
+  }
+
+  drainEvents(out: SimEvent[]): SimEvent[] {
+    this.batch.length = 0;
+    const selfId = this.player.id;
+    const selfFaction = this.player.team ?? NO_TEAM;
+    for (const event of this.world.drainEvents(this.batch)) {
+      const line = feedLine(event, selfId, selfFaction, (id) => this.world.nameOf(id));
+      if (line) this.pending.push(line);
+      if (isSimEvent(event)) out.push(event);
+    }
+    return out;
+  }
+
+  attachHud(hud: Hud): void {
+    const panel = new OnlinePanel();
+    this.panel = panel;
+    const unmount = hud.mount(panel.element);
+    this.context.scope.addSubscription(() => {
+      unmount();
+      panel.destroy();
+    });
+    hud.setPauseActions([
+      {
+        id: 'leave',
+        labelKey: 'voltest:online.leave',
+        variant: 'danger',
+        run: () => void this.leave(),
+      },
+    ]);
+  }
+
+  present(nowMs: number): void {
+    this.tags.update(this.tagFrames(), nowMs);
+    // Sönümlü tepe yama aralığında kaybolur; en büyük değer her karede izlenir.
+    this.driftMax = Math.max(this.driftMax, this.world.pilot.drift.peak);
+    const panel = this.panel;
+    if (!panel) return;
+    for (const line of this.pending) panel.push(line);
+    this.pending.length = 0;
+    panel.tick(nowMs);
+    if (nowMs < this.panelDueMs) return;
+    this.panelDueMs = nowMs + ONLINE_VIEW.panelIntervalMs;
+    const session = this.session;
+    const { drift } = this.world.pilot;
+    panel.update(readWar(session.room.state, this.player.id), {
+      status: session.status,
+      pingMs: session.pingMs,
+      jitterMs: session.jitterMs,
+      driftEma: drift.ema,
+      driftPeak: drift.peak,
+      driftMax: this.driftMax,
+      poseX: this.player.chassis.x,
+      poseY: this.player.chassis.y,
+    });
+  }
+
+  /** Bilerek ayrılır: sunucu oyuncuyu hemen düşürür, sonra ana menü açılır. */
+  async leave(): Promise<void> {
+    if (this.leaving) return;
+    this.leaving = true;
+    await this.session.leave();
+    this.context.toMenu();
+  }
+
+  private *tagFrames(): Generator<TagFrame> {
+    const ownId = this.player.id;
+    for (const vehicle of this.sim.vehicles) {
+      const frame = tankFrame(vehicle.chassis, 0);
+      const vitality = vehicle.vitality;
+      const team = vehicle.team === null ? undefined : teamColor(vehicle.team);
+      yield {
+        id: vehicle.id,
+        x: frame.x,
+        y: frame.y,
+        name: this.world.nameOf(vehicle.id) ?? '',
+        color: vehicle.id === ownId ? ONLINE_VIEW.colors.self : (team ?? ONLINE_VIEW.colors.foe),
+        health: vitality.health / vitality.maxHealth,
+        alive: vitality.alive,
+        protected: vitality.protectionRemainingMs > 0,
+        bot: vehicle.id !== ownId && this.world.isBot(vehicle.id),
+      };
+    }
+  }
+}

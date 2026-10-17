@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 1.069,
+    "min": 0.684
+  },
+  "id": "vt-hardsteel-shot-plasma",
+  "intent": "Plazma topu: gövdeli, alçalan enerji şişmesi ve çıtırtı.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — shot-plasma"
+}

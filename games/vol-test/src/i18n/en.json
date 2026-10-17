@@ -1,0 +1,311 @@
+{
+  "app": {
+    "title": "VOL.TEST",
+    "fatal": "VOL.TEST failed to start"
+  },
+  "menu": {
+    "title": "VOL.TEST",
+    "subtitle": "A persistent war world",
+    "play": "Join the war",
+    "practice": "Practice",
+    "settings": "Settings",
+    "dev": "Developer",
+    "exit": "Exit",
+    "exitTitle": "Exit the game?",
+    "exitConfirm": "Exit",
+    "exitCancel": "Cancel"
+  },
+  "garage": {
+    "title": "Garage",
+    "vehicle": "Vehicle",
+    "join": "Join the war",
+    "practice": "Go to practice",
+    "back": "Back",
+    "select": "Select",
+    "selected": "Selected",
+    "stat": {
+      "durability": "Durability",
+      "speed": "Speed",
+      "firepower": "Firepower"
+    },
+    "vehicles": {
+      "striker": {
+        "name": "Striker",
+        "class": "MEDIUM"
+      },
+      "bulwark": {
+        "name": "Bulwark",
+        "class": "HEAVY"
+      },
+      "dart": {
+        "name": "Dart",
+        "class": "LIGHT"
+      },
+      "arachnid": {
+        "name": "Arachnid",
+        "class": "WALKER"
+      },
+      "widow": {
+        "name": "Widow",
+        "class": "WALKER"
+      },
+      "goliath": {
+        "name": "Goliath",
+        "class": "GIANT WALKER"
+      },
+      "manta": {
+        "name": "Manta",
+        "class": "HOVER HUNTER"
+      },
+      "barracuda": {
+        "name": "Barracuda",
+        "class": "HOVER RAIDER"
+      },
+      "leviathan": {
+        "name": "Leviathan",
+        "class": "HOVER GUNSHIP"
+      },
+      "warhound": {
+        "name": "Warhound",
+        "class": "MECH SCOUT"
+      },
+      "templar": {
+        "name": "Templar",
+        "class": "MECH LINE"
+      },
+      "juggernaut": {
+        "name": "Juggernaut",
+        "class": "HEAVY MECH"
+      },
+      "jackal": {
+        "name": "Jackal",
+        "class": "LEAPER SKIRMISHER"
+      },
+      "panther": {
+        "name": "Panther",
+        "class": "LEAPER SNIPER"
+      },
+      "rhino": {
+        "name": "Rhino",
+        "class": "HEAVY LEAPER"
+      }
+    },
+    "skillTitle": "Skill",
+    "skillInfo": {
+      "dash": "{{seconds, number}} s: top speed rises {{speed}}%.",
+      "leap": "{{seconds, number}} s: {{speed}}% faster, leaps over rocks and water.",
+      "shield": "{{seconds, number}} s: no combat damage, shots cannot push you.",
+      "overdrive": "{{seconds, number}} s: fire rate rises {{fireRate}}%, speed {{speed}}%.",
+      "ram": "{{seconds, number}} s: speed rises {{speed}}%; a rival you hit at speed takes {{ram, number}}x damage, you take {{ramTaken}}% collision damage.",
+      "siege": "{{seconds, number}} s: speed drops {{slow}}%; incoming damage falls {{takenDown}}%, your damage rises {{dealtUp}}%."
+    }
+  },
+  "dev": {
+    "title": "Developer",
+    "world": "World",
+    "practice": "Practice",
+    "season": "Season",
+    "seasonOption": {
+      "auto": "Calendar flow",
+      "spring": "Spring",
+      "summer": "Summer",
+      "autumn": "Autumn",
+      "winter": "Winter"
+    },
+    "weather": "Weather",
+    "weatherOption": {
+      "auto": "By season",
+      "clear": "Clear",
+      "dust": "Dust",
+      "rain": "Rain",
+      "snow": "Snow"
+    },
+    "vehicle": "Vehicle",
+    "density": "Backdrop parade (vehicles at once)"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageOption": {
+      "auto": "Automatic",
+      "tr": "Türkçe",
+      "en": "English"
+    },
+    "back": "Back"
+  },
+  "boot": {
+    "title": "VOL.TEST",
+    "services": "Starting services",
+    "assets": "Loading tank parts",
+    "world": "Building the world"
+  },
+  "hud": {
+    "boost": "Boost reserve",
+    "mapSummary": "Map: you and {{vehicles}} other vehicles, zoom {{zoom}}x",
+    "map": "Map",
+    "metre": "m",
+    "fullscreen": "Fullscreen",
+    "fireReload": "Shot reload",
+    "health": "Vehicle health",
+    "respawnIn": "Vehicle destroyed · respawn in {{seconds, number}} s",
+    "protection": "Respawn protection · {{seconds, number}} s",
+    "skill": {
+      "dash": "Dash reserve",
+      "leap": "Leap reserve",
+      "shield": "Shield reserve",
+      "overdrive": "Overdrive reserve",
+      "ram": "Ram reserve",
+      "siege": "Siege reserve"
+    }
+  },
+  "controls": {
+    "move": "Move",
+    "aim": "Aim",
+    "fire": "Fire",
+    "boost": "Boost",
+    "zoom": "Zoom",
+    "grid": "Grid",
+    "pause": "Pause",
+    "menu": "Menu",
+    "brake": "Brake",
+    "skill": {
+      "dash": "Dash",
+      "leap": "Leap",
+      "shield": "Shield",
+      "overdrive": "Overdrive",
+      "ram": "Ram",
+      "siege": "Siege"
+    }
+  },
+  "touch": {
+    "boost": "Boost",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "pause": "Pause",
+    "menu": "Menu",
+    "brake": "Brake",
+    "skill": {
+      "dash": "Dash",
+      "leap": "Leap",
+      "shield": "Shield",
+      "overdrive": "Overdrive",
+      "ram": "Ram",
+      "siege": "Siege"
+    }
+  },
+  "integrity": {
+    "recovered": "Your save was damaged and restored from its backup.",
+    "reset": "Your save was damaged and could not be restored; a fresh save was started (the damaged file was kept)."
+  },
+  "pause": {
+    "settings": "Settings",
+    "dev": "Developer",
+    "title": "Paused",
+    "resume": "Resume",
+    "liveTitle": "Menu",
+    "liveResume": "Back to battle",
+    "liveNote": "The world keeps running on the server; your vehicle sends no input while the menu is open.",
+    "quality": "Effects quality",
+    "qualityLevel": {
+      "high": "High",
+      "low": "Low"
+    },
+    "volume": "Volume",
+    "haptics": "Haptics",
+    "grid": "Ground grid",
+    "display": "Display mode",
+    "displayMode": {
+      "windowed": "Windowed",
+      "fullscreen": "Fullscreen"
+    },
+    "scenario": "Test scenario",
+    "seed": "Seed",
+    "chaos": "Chaos tempo",
+    "scenarioMode": {
+      "empty": "Empty world",
+      "slalom": "Slalom",
+      "targets": "Target shooting",
+      "sandbox": "Physics sandbox",
+      "multitank": "Multiple tanks"
+    },
+    "menu": "Main menu",
+    "resolution": "Render resolution",
+    "resolutionOption": {
+      "auto": "Automatic (recommended)",
+      "scale": "{{percent}}%"
+    },
+    "windowSize": "Window size",
+    "windowSizeOption": {
+      "auto": "Keep as is",
+      "size": "{{width}} × {{height}}"
+    }
+  },
+  "war": {
+    "faction": {
+      "amber": "Amber",
+      "blue": "Blue"
+    },
+    "zone": {
+      "core": "Core",
+      "outpostWest": "West Outpost",
+      "outpostEast": "East Outpost",
+      "ridgeNorth": "North Ridge",
+      "ridgeSouth": "South Ridge",
+      "frontNorth": "North Front",
+      "frontSouth": "South Front"
+    },
+    "zoneShort": {
+      "core": "C",
+      "outpostWest": "WO",
+      "outpostEast": "EO",
+      "ridgeNorth": "NR",
+      "ridgeSouth": "SR",
+      "frontNorth": "NF",
+      "frontSouth": "SF"
+    },
+    "neutral": "Neutral",
+    "contested": "Contested"
+  },
+  "online": {
+    "title": "Join the war",
+    "leave": "Leave the war",
+    "name": "Player name",
+    "namePlaceholder": "Pilot",
+    "faction": "Faction",
+    "factionAuto": "Balance for me",
+    "enter": "Join",
+    "cancel": "Cancel",
+    "connecting": "Connecting…",
+    "error": {
+      "protocol": "The server is incompatible with this version; update the game.",
+      "full": "The server is full.",
+      "notFound": "No open war world was found.",
+      "unreachable": "Could not reach the server.",
+      "busy": "The server is busy right now; try again shortly.",
+      "failed": "Could not join the war."
+    },
+    "lost": "Connection lost; returned to the offline world.",
+    "reconnecting": "Connection dropped — reconnecting…",
+    "ping": "{{ms}} ms",
+    "board": {
+      "title": "Scoreboard",
+      "titleLegend": "{{title}} · {{kills}} / {{deaths}}",
+      "killsShort": "K",
+      "deathsShort": "D",
+      "you": "{{name}} (you)",
+      "away": "{{name}} (disconnected)",
+      "botTag": "bot",
+      "empty": "No players"
+    },
+    "feed": {
+      "joined": "{{name}} joined",
+      "left": "{{name}} left",
+      "kill": "{{killer}} » {{victim}}",
+      "down": "{{victim}} went down",
+      "drowned": "{{victim}} drowned",
+      "zoneTaken": "{{zone}} fell to {{faction}}",
+      "zoneLost": "{{zone}} turned neutral",
+      "warWon": "{{faction}} won the war (win #{{wins}})"
+    }
+  }
+}

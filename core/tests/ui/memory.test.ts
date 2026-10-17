@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { TextArea } from '../../src/ui/primitives/TextArea';
-import { TouchButton } from '../../src/ui/controls/TouchButton';
+import { HoldButton } from '../../src/ui/buttons/HoldButton';
 import { Tabs } from '../../src/ui/layout/Tabs';
 
 describe('Bellek sızıntısı regresyonları', () => {
@@ -25,10 +25,10 @@ describe('Bellek sızıntısı regresyonları', () => {
     expect(instances.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('TouchButton pointer capture serbest bırakılır ve listenerlar temizlenir', () => {
+  it('HoldButton pointer capture serbest bırakılır ve listenerlar SİMETRİK temizlenir', () => {
     const onPress = vi.fn();
     const onRelease = vi.fn();
-    const button = new TouchButton({ label: 'Ateş', onPress, onRelease });
+    const button = new HoldButton({ label: 'Ateş', onPress, onRelease });
     document.body.appendChild(button.element);
 
     const releaseSpy = vi.spyOn(button.element, 'releasePointerCapture');
@@ -47,7 +47,30 @@ describe('Bellek sızıntısı regresyonları', () => {
     expect(releaseSpy).toHaveBeenCalledWith(pointerId);
 
     button.destroy();
-    expect(removeListenerSpy).toHaveBeenCalledTimes(4);
+
+    /*
+     * Sabit bir sayı (`toHaveBeenCalledTimes(4)`) yerine KÜME karşılaştırması.
+     *
+     * Sabit sayı, bileşene meşru bir listener eklendiğinde sızıntı olmadan
+     * kırılır ve "sayıyı güncelle" refleksiyle geçilmeye açıktır. Asıl sözleşme
+     * "bağlanan HER tür kaldırılır"; beklenen küme burada açıkça yazılıdır,
+     * yani yeni bir listener eklenip kaldırılmazsa test yine kırılır.
+     */
+    const boundTypes = [
+      'pointerdown',
+      'pointerup',
+      'pointercancel',
+      'lostpointercapture',
+      'pointerleave',
+      'keydown',
+      'keyup',
+      'click',
+      'blur',
+      'vol:focuspress',
+      'vol:focusrelease',
+    ];
+    const removedTypes = removeListenerSpy.mock.calls.map((call) => call[0]);
+    expect([...new Set(removedTypes)].sort()).toEqual([...boundTypes].sort());
     expect(button.element.isConnected).toBe(false);
   });
 

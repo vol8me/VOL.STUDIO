@@ -1,4 +1,5 @@
-import { i18next } from '../../systems/I18n';
+import { requiredAt } from '../../collections/requiredAt';
+import { i18next } from '../../i18n/I18n';
 
 export interface WizardStep {
   id: string;
@@ -30,6 +31,7 @@ export class Wizard {
   private readonly contentSlot: HTMLDivElement;
   private readonly backButton: HTMLButtonElement;
   private readonly nextButton: HTMLButtonElement;
+  private readonly status: HTMLDivElement;
   private finishLabel: string;
   private readonly finishLabelIsI18n: boolean;
   private readonly onFinishHandler?: () => void;
@@ -38,8 +40,21 @@ export class Wizard {
   private boundBackClick: () => void;
   private boundNextClick: () => void;
   private transitionToken = 0;
+  /** Bekleyen gecis zamanlayıcısı/karesi — destroy() iptal eder. */
+  private transitionTimer: number | null = null;
+  private transitionFrame: number | null = null;
+  /** validate() beklenirken ikinci bir ilerleme baslatilmasini engeller. */
+  private advancing = false;
+  private validationToken = 0;
+  private destroyed = false;
 
   constructor(options: WizardOptions) {
+    // Boş adım listesi tüm indekslemeleri (renderStep, handleNext, updateChrome)
+    // undefined'a düşürür; hatayı anlaşılmaz bir TypeError yerine burada ver.
+    if (options.steps.length === 0) {
+      throw new Error('Wizard: en az bir adım gerekli (steps boş olamaz)');
+    }
+
     this.steps = options.steps;
     this.finishLabelIsI18n = options.finishLabel === undefined;
     this.finishLabel = options.finishLabel ?? i18next.t('core:wizard.finish');
@@ -56,6 +71,12 @@ export class Wizard {
       indicatorRow.appendChild(this.buildIndicator(index, step));
     }
     this.element.appendChild(indicatorRow);
+
+    // Adım değişimi görsel kayma dışında okuyucuya da duyulur (ilk açılışta susar).
+    this.status = document.createElement('div');
+    this.status.className = 'vol-sr-only';
+    this.status.setAttribute('role', 'status');
+    this.element.appendChild(this.status);
 
     this.contentViewport = document.createElement('div');
     this.contentViewport.className = 'vol-wizard__content-viewport';
@@ -86,8 +107,10 @@ export class Wizard {
     this.element.appendChild(footer);
 
     // İlk render'da geçiş animasyonu yok — kayacak önceki içerik yoktur.
-    this.contentSlot.replaceChildren(this.steps[this.currentIndex].content.element);
-    this.updateChrome();
+    this.contentSlot.replaceChildren(requiredAt(this.steps, this.currentIndex).content.element);
+    // notify:false — tüketici henüz Wizard referansına sahip değil; constructor'dan
+    // onStepChange tetiklemek çağıranı hazir olmadığı bir callback'e sokar.
+    this.updateChrome({ notify: false });
 
     i18next.on('languageChanged', this.onLanguageChanged);
   }
@@ -105,13 +128,22 @@ export class Wizard {
 
   /** validate() çağırmadan doğrudan verilen adıma atlar (ör. özet ekranından "2. adımı düzenle" bağlantısı). */
   goToStep(index: number): void {
-    if (index < 0 || index >= this.steps.length) return;
+    if (this.destroyed || index < 0 || index >= this.steps.length) return;
+    this.invalidateValidation();
+    this.moveToStep(index);
+  }
+
+  private moveToStep(index: number): void {
     const direction: 'forward' | 'backward' = index > this.currentIndex ? 'forward' : 'backward';
     this.currentIndex = index;
     this.renderStep(direction);
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
+    this.invalidateValidation();
+    this.cancelTransition();
     i18next.off('languageChanged', this.onLanguageChanged);
     this.backButton.removeEventListener('click', this.boundBackClick);
     this.nextButton.removeEventListener('click', this.boundNextClick);
@@ -119,6 +151,18 @@ export class Wizard {
       step.content.destroy?.();
     }
     this.element.remove();
+  }
+
+  private cancelTransition(): void {
+    // Gecis zamanlayıcısı kopmus DOM üzerinde replaceChildren cagirmamali.
+    if (this.transitionTimer !== null) {
+      window.clearTimeout(this.transitionTimer);
+      this.transitionTimer = null;
+    }
+    if (this.transitionFrame !== null) {
+      cancelAnimationFrame(this.transitionFrame);
+      this.transitionFrame = null;
+    }
   }
 
   private buildIndicator(index: number, step: WizardStep): HTMLDivElement {
@@ -140,19 +184,52 @@ export class Wizard {
     return indicator;
   }
 
+  /**
+   * Async `validate()` beklenirken buton kilitlenir. Aksi halde yavas bir
+   * doğrulama sırasında cift tıklama iki geçişi kuyruğa alir ve bir adim atlanır.
+   */
   private async handleNext(): Promise<void> {
-    const current = this.steps[this.currentIndex];
-    if (current.validate) {
-      const valid = await current.validate();
-      if (!valid) return;
-    }
+    if (this.destroyed || this.advancing) return;
+    this.advancing = true;
+    const token = ++this.validationToken;
+    // Kilitlenen düğme odaktaysa tarayıcı odağı gövdeye atar; bitince geri verilir.
+    const hadFocus = document.activeElement === this.nextButton;
+    this.nextButton.disabled = true;
 
-    if (this.currentIndex === this.steps.length - 1) {
-      this.onFinishHandler?.();
-      return;
-    }
+    try {
+      const current = requiredAt(this.steps, this.currentIndex);
+      if (current.validate) {
+        const valid = await current.validate();
+        if (token !== this.validationToken || !valid) return;
+      }
 
-    this.goToStep(this.currentIndex + 1);
+      if (this.currentIndex === this.steps.length - 1) {
+        this.onFinishHandler?.();
+        return;
+      }
+
+      this.moveToStep(this.currentIndex + 1);
+    } catch (error) {
+      // validate/onFinish/goToStep hata fırlatırsa ilerleme kilitlenmesin;
+      // unhandled rejection yerine loglanır.
+      if (token === this.validationToken) {
+        console.error('[Wizard] Sonraki adıma geçiş başarısız:', error);
+      }
+    } finally {
+      if (token === this.validationToken) {
+        this.invalidateValidation();
+        if (hadFocus && this.element.isConnected && document.activeElement === document.body) {
+          this.nextButton.focus();
+        }
+      }
+    }
+  }
+
+  /** Eski doğrulama yeni adımı, yeni isteğin kilidini veya sökülmüş sahibini değiştiremez. */
+  private invalidateValidation(): void {
+    this.validationToken++;
+    this.advancing = false;
+    this.nextButton.disabled = false;
   }
 
   /**
@@ -161,7 +238,8 @@ export class Wizard {
    * timeout'un yeni içeriği ezmesini önler.
    */
   private renderStep(direction: 'forward' | 'backward' = 'forward'): void {
-    const step = this.steps[this.currentIndex];
+    this.cancelTransition();
+    const step = requiredAt(this.steps, this.currentIndex);
     const token = ++this.transitionToken;
 
     const outClass =
@@ -175,7 +253,8 @@ export class Wizard {
 
     this.contentSlot.classList.add(outClass);
 
-    window.setTimeout(() => {
+    this.transitionTimer = window.setTimeout(() => {
+      this.transitionTimer = null;
       if (token !== this.transitionToken) return;
       this.contentSlot.classList.remove(
         'vol-wizard__content--exit-forward',
@@ -188,7 +267,8 @@ export class Wizard {
       // karede kaldırmadan önce boyasın — aksi halde iki class değişikliği tek
       // karede birleşir ve geçiş görünmez.
       void this.contentSlot.offsetWidth;
-      requestAnimationFrame(() => {
+      this.transitionFrame = requestAnimationFrame(() => {
+        this.transitionFrame = null;
         if (token !== this.transitionToken) return;
         this.contentSlot.classList.remove(
           'vol-wizard__content--enter-forward',
@@ -201,18 +281,29 @@ export class Wizard {
   }
 
   /** Adım göstergelerini, geri/ileri buton etiketlerini günceller ve onStepChange tetikler — içerik animasyonundan bağımsız. */
-  private updateChrome(): void {
-    const step = this.steps[this.currentIndex];
+  private updateChrome(options: { notify?: boolean } = {}): void {
+    const step = requiredAt(this.steps, this.currentIndex);
 
     for (const [index, indicator] of this.stepIndicators.entries()) {
       indicator.classList.toggle('vol-wizard__indicator--active', index === this.currentIndex);
       indicator.classList.toggle('vol-wizard__indicator--done', index < this.currentIndex);
+      if (index === this.currentIndex) indicator.setAttribute('aria-current', 'step');
+      else indicator.removeAttribute('aria-current');
     }
 
-    this.backButton.disabled = this.currentIndex === 0;
+    const backLocks = this.currentIndex === 0;
+    if (backLocks && document.activeElement === this.backButton) this.nextButton.focus();
+    this.backButton.disabled = backLocks;
     const isLast = this.currentIndex === this.steps.length - 1;
     this.nextButton.textContent = isLast ? this.finishLabel : i18next.t('core:wizard.next');
 
-    this.onStepChangeHandler?.(this.currentIndex, step);
+    if (options.notify !== false) {
+      this.status.textContent = i18next.t('core:wizard.step', {
+        n: this.currentIndex + 1,
+        total: this.steps.length,
+        title: step.title,
+      });
+      this.onStepChangeHandler?.(this.currentIndex, step);
+    }
   }
 }

@@ -1,0 +1,72 @@
+// Üretilmiştir: core/scripts/cursors/curate.mjs. Elle düzenlenmez.
+
+export const UI_CURSORS = [
+  'default',
+  'link',
+  'text',
+  'busy',
+  'wait',
+  'denied',
+  'help',
+  'grab',
+  'grabbing',
+  'resizeH',
+  'resizeV',
+  'resizeNWSE',
+  'resizeNESW',
+  'moveAll',
+  'zoomIn',
+  'zoomOut',
+  'copy',
+  'alias',
+  'aimSmall',
+] as const;
+export const RTS_CURSORS = [
+  'select',
+  'attack',
+  'walk',
+  'build',
+  'repair',
+  'mine',
+  'chop',
+  'rally',
+  'patrol',
+  'garrison',
+  'cancelOrder',
+  'scrollN',
+  'scrollNE',
+  'scrollE',
+  'scrollSE',
+  'scrollS',
+  'scrollSW',
+  'scrollW',
+  'scrollNW',
+  'look',
+] as const;
+export const RETICLES = [
+  'chevrons',
+  'corners',
+  'cornersPlus',
+  'cross',
+  'dot',
+  'doubleRing',
+  'gapPlus',
+  'plus',
+  'ring',
+  'ringDot',
+  'ringGap',
+  'ringPlus',
+  'ringTicks',
+  'sniper',
+  'squareTicks',
+  'target',
+  'ticks',
+  'ticksDot',
+  'triangle',
+  'xCorners',
+] as const;
+
+export type UiCursorId = (typeof UI_CURSORS)[number];
+export type RtsCursorId = (typeof RTS_CURSORS)[number];
+export type CursorId = UiCursorId | RtsCursorId;
+export type ReticleId = (typeof RETICLES)[number];

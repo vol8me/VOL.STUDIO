@@ -1,0 +1,196 @@
+import type { AssetClass } from '../analysis/assetQa';
+import { validateCharacterPolicy, type AudioCharacterPolicyV1 } from '../analysis/character';
+import { layoutProblem, placementOf, PLACEMENTS, type Placement } from '../analysis/layout';
+import { AudioParamError } from '../guard/errors';
+import { checkArray, checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
+import { STATE_AXES, type StateAxis } from '../family/vocabulary';
+import { checkMusicBrief, MUSIC_BRIEF_KEYS, type MusicBriefV1 } from '../music/brief';
+import { materialById } from './materials';
+import { mechanismById } from './ontology';
+import { STYLE_PROFILES } from './styles';
+
+export const AUDIO_BRIEF_SCHEMA = 'AudioBriefV1';
+
+/**
+ * Brief zarfı: ortak kimlik/niyet/provenance + tek discriminated union.
+ * `kind: 'acoustic'` akustik tek-olay isteğini, `kind: 'music'` müzik
+ * isteğini (`music/brief.ts`) taşır. Alan kümeleri ayrıdır ve iki dal asla
+ * birbirinin alanını okumaz; müzik isteğinin ikinci bir geçerli şeması yoktur.
+ */
+export type AcousticSubtype = 'sfx' | 'organic' | 'ambience';
+
+export interface BriefProvenanceV1 {
+  readonly author: 'agent' | 'human';
+  /** Serbest araç/kişi etiketi; kimlik doğrulaması değildir. */
+  readonly by?: string;
+}
+
+interface BriefEnvelopeV1 {
+  readonly schema: typeof AUDIO_BRIEF_SCHEMA;
+  readonly id: string;
+  readonly title: string;
+  /** Doğal dil niyet — korunur ama programın makine-okunur kaynağı DEĞİLDİR. */
+  readonly intent: string;
+  readonly provenance: BriefProvenanceV1;
+  readonly character?: AudioCharacterPolicyV1;
+}
+
+export interface AcousticBriefV1 extends BriefEnvelopeV1 {
+  readonly kind: 'acoustic';
+  readonly subtype: AcousticSubtype;
+  readonly assetClass: Exclude<AssetClass, 'music'>;
+  readonly durationSeconds: { readonly min: number; readonly max: number };
+  readonly channels: 1 | 2;
+  /**
+   * Çalınış biçimi (`analysis/layout.ts`); yazılmazsa sınıfın varsayılanı.
+   * Kanal sayısı yerleşimin izin verdiği sayılardan biri olmalıdır.
+   */
+  readonly placement?: Placement;
+  /**
+   * Açık oyun durumu anlamı (`family/vocabulary.ts` sıralı eksenleri): bu
+   * asset hangi durumu temsil ediyor. Tüketici domain nesnesini buna eşler.
+   */
+  readonly state?: Readonly<Partial<Record<StateAxis, string>>>;
+  /** Serbest betimleyici etiketler (ör. `wet`, `short-tail`); DSP'ye çevrilmez. */
+  readonly descriptors?: readonly string[];
+  readonly loop?: boolean;
+  /** Ontoloji mekanizmaları (kapalı sözlük); planlayıcı bunları beyan olarak okur. */
+  readonly mechanisms?: readonly string[];
+  /** Hazır stil profili kimliği (planlayıcı iskelete yazar). */
+  readonly style?: string;
+  /** Materyal profili kimliği (materyal alan tariflere geçer). */
+  readonly material?: string;
+}
+
+export type AudioBriefV1 = AcousticBriefV1 | MusicBriefV1;
+export type AudioBriefKind = AudioBriefV1['kind'];
+
+const ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+function checkText(value: unknown, path: string, max: number): string {
+  if (typeof value !== 'string' || value.trim().length === 0 || value.length > max) {
+    throw new AudioParamError(path, 'type', `boş olmayan, en çok ${max} karakterlik metin`, value);
+  }
+  return value;
+}
+
+function checkProvenance(value: unknown): BriefProvenanceV1 {
+  const o = checkObject(value, 'provenance', ['author', 'by']);
+  const author = checkChoice(o.author, 'provenance.author', ['agent', 'human'] as const);
+  return o.by === undefined ? { author } : { author, by: checkText(o.by, 'provenance.by', 200) };
+}
+
+function checkState(value: unknown): Partial<Record<StateAxis, string>> {
+  const o = checkObject(value, 'state', Object.keys(STATE_AXES));
+  const axes = Object.keys(o).sort() as StateAxis[];
+  if (axes.length === 0) throw new AudioParamError('state', 'range', 'en az bir durum ekseni', 0);
+  return Object.fromEntries(
+    axes.map((axis) => [axis, checkChoice(o[axis], `state.${axis}`, STATE_AXES[axis])]),
+  );
+}
+
+function checkAcoustic(o: ParamObject, envelope: BriefEnvelopeV1): AcousticBriefV1 {
+  const subtype = checkChoice(o.subtype, 'subtype', ['sfx', 'organic', 'ambience'] as const);
+  const assetClass = checkChoice(o.assetClass, 'assetClass', ['ui', 'sfx', 'ambience'] as const);
+  const range = checkObject(o.durationSeconds, 'durationSeconds', ['min', 'max']);
+  const min = checkNumber(range.min, 'durationSeconds.min', { above: 0, max: 600 });
+  const max = checkNumber(range.max, 'durationSeconds.max', { min, max: 600 });
+  if (o.channels !== 1 && o.channels !== 2) {
+    throw new AudioParamError('channels', 'type', '1 ya da 2 olmalı', o.channels);
+  }
+  const placement =
+    o.placement === undefined ? undefined : checkChoice(o.placement, 'placement', PLACEMENTS);
+  const layout = layoutProblem(assetClass, placementOf(assetClass, placement), o.channels);
+  if (layout) throw new AudioParamError('channels', 'combination', layout, o.channels);
+  const descriptors =
+    o.descriptors === undefined
+      ? undefined
+      : checkArray(o.descriptors, 'descriptors').map((d, i) =>
+          checkText(d, `descriptors[${i}]`, 40),
+        );
+  if (o.loop !== undefined && typeof o.loop !== 'boolean') {
+    throw new AudioParamError('loop', 'type', 'boolean olmalı', o.loop);
+  }
+  const mechanisms =
+    o.mechanisms === undefined
+      ? undefined
+      : checkArray(o.mechanisms, 'mechanisms').map((m, i) => {
+          if (typeof m !== 'string' || !mechanismById(m)) {
+            throw new AudioParamError(`mechanisms[${i}]`, 'unknown-id', 'ontolojide yok', m);
+          }
+          return m;
+        });
+  if (o.style !== undefined && !STYLE_PROFILES.some((p) => p.id === o.style)) {
+    throw new AudioParamError('style', 'unknown-id', 'stil profili yok', o.style);
+  }
+  const state = o.state === undefined ? undefined : checkState(o.state);
+  if (o.material !== undefined && (typeof o.material !== 'string' || !materialById(o.material))) {
+    throw new AudioParamError('material', 'unknown-id', 'materyal profili yok', o.material);
+  }
+  return {
+    ...envelope,
+    kind: 'acoustic',
+    subtype,
+    assetClass,
+    durationSeconds: { min, max },
+    channels: o.channels,
+    ...(placement ? { placement } : {}),
+    ...(state ? { state } : {}),
+    ...(descriptors ? { descriptors } : {}),
+    ...(o.loop === undefined ? {} : { loop: o.loop }),
+    ...(mechanisms ? { mechanisms } : {}),
+    ...(o.style === undefined ? {} : { style: o.style as string }),
+    ...(o.material === undefined ? {} : { material: o.material }),
+  };
+}
+
+const ENVELOPE_KEYS = [
+  'schema',
+  'kind',
+  'id',
+  'title',
+  'intent',
+  'provenance',
+  'character',
+] as const;
+const ACOUSTIC_KEYS = [
+  'subtype',
+  'assetClass',
+  'durationSeconds',
+  'channels',
+  'placement',
+  'state',
+  'descriptors',
+  'loop',
+  'mechanisms',
+  'style',
+  'material',
+];
+
+/** Brief'i doğrular; bilinmeyen `kind`/alan render'dan ÖNCE adlı hata verir. */
+export function validateBrief(value: unknown): AudioBriefV1 {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new AudioParamError('brief', 'type', 'nesne olmalı', value);
+  }
+  const raw = value as ParamObject;
+  if (raw.schema !== AUDIO_BRIEF_SCHEMA) {
+    throw new AudioParamError('schema', 'type', `"${AUDIO_BRIEF_SCHEMA}" olmalı`, raw.schema);
+  }
+  const kind = checkChoice(raw.kind, 'kind', ['acoustic', 'music'] as const);
+  const o = checkObject(value, '', [
+    ...ENVELOPE_KEYS,
+    ...(kind === 'music' ? MUSIC_BRIEF_KEYS : ACOUSTIC_KEYS),
+  ]);
+  if (typeof o.id !== 'string' || !ID.test(o.id)) {
+    throw new AudioParamError('id', 'type', `${ID.source} kalıbına uymalı`, o.id);
+  }
+  const envelope: BriefEnvelopeV1 = {
+    schema: AUDIO_BRIEF_SCHEMA,
+    id: o.id,
+    title: checkText(o.title, 'title', 120),
+    intent: checkText(o.intent, 'intent', 4000),
+    provenance: checkProvenance(o.provenance),
+    ...(o.character === undefined ? {} : { character: validateCharacterPolicy(o.character) }),
+  };
+  return kind === 'music' ? checkMusicBrief(o, envelope) : checkAcoustic(o, envelope);
+}

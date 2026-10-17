@@ -1,0 +1,108 @@
+/*
+ * Çevrimiçi savaş HUD'u. Bileşenlerin görünümü CORE'undur; bu dosya konum ve aralık verir. Metin
+ * taşıyan bölgeler UI yüzey tokenıyla zeminlenir (hud.css ile aynı kural). Panel dokunmayı
+ * yakalamaz; tablo ve akış yalnız okunur.
+ */
+.vt-online {
+  --vt-online-top: calc(var(--vol-safe-top) + 10px);
+
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+/* CORE tablosu ve günlüğü kendi `pointer-events: auto`sunu verir; oyun alanındaki dokunuşu yutmasınlar. */
+.vt-online * {
+  pointer-events: none;
+}
+
+/*
+ * Üst orta şerit (`VersusBar`): iki cephe ve ortada hedefe uzanan iz. Sağ üstte harita, solda
+ * sıralama durur; şerit ikisinin arasında kalır.
+ */
+.vt-online__banner {
+  position: absolute;
+  top: var(--vt-online-top);
+  left: 50%;
+  width: min(420px, calc(100% - 2 * var(--vt-map, 168px) - 96px));
+  transform: translateX(-50%);
+}
+
+.vt-online__ping {
+  --vt-grade: var(--vol-ui-success-solid);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.vt-online__ping::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vt-grade);
+}
+
+.vt-online__ping[data-grade='fair'] {
+  --vt-grade: var(--vol-ui-warning-solid);
+}
+
+.vt-online__ping[data-grade='bad'] {
+  --vt-grade: var(--vol-ui-danger-solid);
+}
+
+/* Sıralama sol üsttedir (sol alt göstergelere ve akışa ait); sürücü kendi satırını görür. */
+.vt-online__board {
+  position: absolute;
+  top: var(--vt-online-top);
+  left: calc(var(--vol-safe-left) + 20px);
+  width: min(248px, 26vw);
+}
+
+.vt-online__notice {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--vol-ui-danger-border);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
+  transform: translateX(-50%);
+}
+
+.vt-online__notice[hidden] {
+  display: none;
+}
+
+/* Akış sol altta, göstergelerin üstündedir; satırlar süresi dolunca kendiliğinden söner. */
+.vt-online__feed {
+  position: absolute;
+  bottom: calc(var(--vol-safe-bottom) + 16px + var(--vt-feed-lift, 112px));
+  left: calc(var(--vol-safe-left) + 20px);
+  width: min(300px, 32vw);
+}
+
+/* Akış ve sıralama ancak yeterli alan ve işaretçi varken gösterilir; şerit her zaman görünür. */
+@media (height <= 520px), (width <= 760px), (pointer: coarse) {
+  .vt-online__feed,
+  .vt-online__board {
+    display: none;
+  }
+
+  .vt-online__banner {
+    width: min(360px, calc(100% - 2 * var(--vt-map, 120px) - 24px));
+  }
+}
+
+/* Katılım paneli: CORE modalının içeriği dikey akar; yalnız durum satırı oyuna özgüdür. */
+.vt-lobby__status {
+  min-height: 1.5em;
+  margin: 0;
+}
+
+.vt-lobby__status[data-tone='danger'] {
+  color: var(--vol-ui-danger-solid);
+}

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-show-floating-input"
+description = "Enables the show_floating_input command without any pre-configured scope."
+commands.allow = ["show_floating_input"]
+
+[[permission]]
+identifier = "deny-show-floating-input"
+description = "Denies the show_floating_input command without any pre-configured scope."
+commands.deny = ["show_floating_input"]

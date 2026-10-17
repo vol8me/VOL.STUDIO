@@ -1,0 +1,33 @@
+/**
+ * @volstudio/audio-synth — prosedürel ses sentezi, saf matematik.
+ *
+ * Katmanlar ve sordukları soru:
+ *
+ *   kernel/       Herkesin paylaştığı temel: kanonik JSON ve özet, render
+ *                 oturumu, sabitler. Çalışma zamanında hiçbir katmanı import etmez.
+ *   synthesis/    Örnek NASIL üretilir? (osilatör, gürültü, zarf, filtre)
+ *   engine/       Parametreler nasıl BİRLEŞTİRİLİR? (`SynthParams` → örnek)
+ *   instruments/  Bir enstrüman ailesi NASIL DAVRANIR? (fiziksel model)
+ *   presets/      Bu sesin ADI ne? (parametre kümesi, yeni DSP taşımaz)
+ *   arrange/      Bu sesler ZAMANDA nasıl dizilir? (perde, çizelge, yükseklik)
+ *   analysis/     Çıkan ses NE ÖLÇÜYOR? (LUFS, true peak, spektrum, FM riski)
+ *   program/      Agent'ın yazdığı KANONİK program ne? (brief, registry, render)
+ *
+ * Node ve tarayıcıda çalışır; dosya yazma `@volstudio/audio-synth/writer`,
+ * job/manifest/publish protokolü `@volstudio/audio-synth/protocol` alt
+ * yolundadır (Node-only).
+ */
+
+export type * from './types';
+
+export { AudioParamError, RenderBudgetError } from './guard';
+export type { AudioParamIssue, RenderCost, RenderBudget } from './guard';
+
+export * from './synthesis';
+export { Reverb } from './effects';
+export * from './instruments';
+
+export * as Presets from './presets';
+export * as Arrange from './arrange';
+export * as Analysis from './analysis';
+export * as Acoustic from './program';

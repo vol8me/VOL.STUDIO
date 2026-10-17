@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-a06ecdcacfb63d98": {
+        "hash": "sha256:5c35af18aebdbe73c11708e5b47c8ff9d3e9f1c135a722b6e4816615a05ff321",
+        "path": "analyses/r-a06ecdcacfb63d98.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:acd94ff3de288a492ea0feb38e65987929313c4343e6593e4b3e4fc347e993be",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:acd94ff3de288a492ea0feb38e65987929313c4343e6593e4b3e4fc347e993be",
+      "hash": "sha256:574c3ca8af7a3be73cd01e0d4dbc12a8aca747938a3282bb79389bc4331be7b6",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:81576932f8389b0aad5c019b16eb1482b85182dd392a79c5b5d883eb738f01cb",
+      "path": "games/vol-test/audio-manifests/sfx/steel/shot-howitzer.json"
+    },
+    "renders": {
+      "r-a06ecdcacfb63d98": {
+        "hash": "sha256:081b2003ae7a2548ac136a0113ba24c0a18d3d0aadc9e17d997345a76db07224",
+        "path": "renders/r-a06ecdcacfb63d98.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:5f7fdf0efedabd1e308dfdb64133de78063f4c7dcff44f1c10e2fa91bcdb36c3",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-shot-howitzer",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 90,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/shot-howitzer.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "channels": 1,
+  "format": "wav-pcm16",
+  "frames": 38400,
+  "hash": "sha256:5145cd48f17951758d793191afc393b0ad0d4267120548e35688025e73941736",
+  "id": "metal-hit",
+  "notes": "Hybrid transient fixture’ı (source.contact).",
+  "origin": {
+    "kind": "synthetic-fixture",
+    "program": {
+      "channels": 1,
+      "durationSeconds": 0.8,
+      "layers": [
+        {
+          "name": "hit",
+          "source": {
+            "params": {
+              "debris": 0,
+              "mass": 0.4,
+              "velocity": 5
+            },
+            "primitive": "source.contact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -1
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 17
+    }
+  },
+  "sampleRate": 48000,
+  "schema": "SampleAssetV1",
+  "title": "Metal–metal çarpma"
+}

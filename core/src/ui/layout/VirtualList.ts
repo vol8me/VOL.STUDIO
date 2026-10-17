@@ -1,3 +1,6 @@
+import { requiredAt } from '../../collections/requiredAt';
+import { scrollByArrowKey } from './arrowScroll';
+
 export interface VirtualListOptions<T> {
   items: T[];
   /** Satır başına sabit piksel yükseklik; pencereleme hesabı buna dayanır (değişken yükseklik desteklenmez). */
@@ -42,17 +45,24 @@ export class VirtualList<T> {
     this.element.className = 'vol-virtual-list';
     this.element.style.height = `${options.height}px`;
     // tabindex="0" bu overflow:auto kapsayıcını klavye-odaklanabilir yapar, native
-    // Page Up/Down/Home/End/ok kaydırmasını etkinleştirir; olmadan klavye-only
-    // kullanıcılar erişemez.
+    // Page Up/Down/Home/End kaydırmasını etkinleştirir; olmadan klavye-only kullanıcılar
+    // erişemez. Ok tuşunu `FocusNavController` yuttuğundan yüzey kendisi kaydırır (ScrollView ile aynı).
     this.element.tabIndex = 0;
+    this.element.dataset.volArrows = 'vertical';
+    this.element.addEventListener('keydown', (event) =>
+      scrollByArrowKey(this.element, event, 'vertical'),
+    );
     this.element.setAttribute('role', 'list');
 
     this.spacer = document.createElement('div');
     this.spacer.className = 'vol-virtual-list__spacer';
+    // Düzen sarmalayıcıları listitem zincirini kesmesin (axe aria-required-children).
+    this.spacer.setAttribute('role', 'presentation');
     this.element.appendChild(this.spacer);
 
     this.viewport = document.createElement('div');
     this.viewport.className = 'vol-virtual-list__viewport';
+    this.viewport.setAttribute('role', 'presentation');
     this.element.appendChild(this.viewport);
 
     this.boundScroll = () => this.scheduleRender();
@@ -132,8 +142,11 @@ export class VirtualList<T> {
     for (let i = start; i < end; i++) {
       const row = document.createElement('div');
       row.className = 'vol-virtual-list__row';
+      row.setAttribute('role', 'listitem');
+      row.setAttribute('aria-posinset', String(i + 1));
+      row.setAttribute('aria-setsize', String(this.items.length));
       row.style.height = `${this.itemHeight}px`;
-      row.appendChild(this.renderItemFn(this.items[i], i));
+      row.appendChild(this.renderItemFn(requiredAt(this.items, i), i));
       fragment.appendChild(row);
     }
     this.viewport.appendChild(fragment);

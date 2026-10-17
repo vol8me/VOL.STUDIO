@@ -1,11 +1,10 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "types": ["node"],
     "paths": {
-      "@volstudio/core": ["../core/src"],
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "tests", "../core/src/@types"]
+  "include": ["src", "tests", "../core/src/types"]
 }

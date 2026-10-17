@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-set-input-manifest"
+description = "Enables the set_input_manifest command without any pre-configured scope."
+commands.allow = ["set_input_manifest"]
+
+[[permission]]
+identifier = "deny-set-input-manifest"
+description = "Denies the set_input_manifest command without any pre-configured scope."
+commands.deny = ["set_input_manifest"]

@@ -1,0 +1,182 @@
+import type Phaser from 'phaser';
+import { describe, expect, it } from 'vitest';
+import { ONLINE_VIEW } from '@/config/onlineView';
+import { NameTags, type TagFrame } from '@/view/NameTags';
+import { fakeScene, lastCall, type FakeObject } from '../support/fakeScene';
+
+function frame(id: number, patch: Partial<TagFrame> = {}): TagFrame {
+  return {
+    id,
+    x: 100 * id,
+    y: 50,
+    name: `Pilot${id}`,
+    color: 0x52f5cf,
+    health: 1,
+    alive: true,
+    protected: false,
+    bot: false,
+    ...patch,
+  };
+}
+
+function setup() {
+  const fake = fakeScene();
+  const tags = new NameTags(fake as unknown as Phaser.Scene);
+  const texts = (): FakeObject[] => fake.created.filter((object) => object.kind === 'text');
+  const graphics = fake.created.find((object) => object.kind === 'graphics')!;
+  return { tags, fake, texts, graphics };
+}
+
+describe('NameTags', () => {
+  it('her araca bir yazı kurar, çubuğun üstüne ortalar ve renklendirir', () => {
+    const { tags, texts } = setup();
+    tags.update([frame(1), frame(2, { color: 0xe8644a })]);
+    expect(tags.count).toBe(2);
+    const [first, second] = texts();
+    expect(first.args[2]).toBe('Pilot1');
+    expect((first.args[3] as { color: string }).color).toBe('#52f5cf');
+    expect((second.args[3] as { color: string }).color).toBe('#e8644a');
+    const [x, y] = lastCall(first, 'setPosition') as [number, number];
+    expect(x).toBe(100);
+    expect(y).toBeLessThan(50 + ONLINE_VIEW.tag.offsetY);
+    expect(lastCall(first, 'setOrigin')).toEqual([0.5, 1]);
+    expect(lastCall(first, 'setResolution')).toEqual([ONLINE_VIEW.tag.resolution]);
+  });
+
+  it('aynı aracı yeniden kurmaz; ad ve renk değişince yalnız onları günceller', () => {
+    const { tags, texts } = setup();
+    tags.update([frame(1)]);
+    tags.update([frame(1, { x: 130 })]);
+    expect(texts()).toHaveLength(1);
+    const text = texts()[0];
+    expect(lastCall(text, 'setPosition')?.[0]).toBe(130);
+    tags.update([frame(1, { name: 'Yeni', color: 0xe8644a })]);
+    expect(lastCall(text, 'setText')).toEqual(['Yeni']);
+    expect(lastCall(text, 'setColor')).toEqual(['#e8644a']);
+  });
+
+  it('çerçevede olmayan aracın yazısını söker', () => {
+    const { tags, texts } = setup();
+    tags.update([frame(1), frame(2)]);
+    const [, second] = texts();
+    tags.update([frame(1)]);
+    expect(tags.count).toBe(1);
+    expect(lastCall(second, 'destroy')).toBeDefined();
+    tags.update([]);
+    expect(tags.count).toBe(0);
+  });
+
+  it('ölü aracın etiketi solar ve canı çizilmez; koruma çerçeve ekler', () => {
+    const { tags, texts, graphics } = setup();
+    tags.update([frame(1, { alive: false, health: 0 })]);
+    expect(lastCall(texts()[0], 'setAlpha')).toEqual([ONLINE_VIEW.tag.deadAlpha]);
+    const fills = graphics.calls.filter(([name]) => name === 'fillRect');
+    expect(fills).toHaveLength(1);
+
+    tags.update([frame(1, { health: 0.5 })]);
+    expect(lastCall(texts()[0], 'setAlpha')).toEqual([1]);
+    const widths = graphics.calls
+      .filter(([name]) => name === 'fillRect')
+      .map(([, args]) => args[2] as number);
+    expect(widths.at(-1)).toBeCloseTo(ONLINE_VIEW.tag.barWidth / 2);
+    expect(graphics.calls.some(([name]) => name === 'strokeRect')).toBe(false);
+
+    tags.update([frame(1, { protected: true })]);
+    expect(graphics.calls.some(([name]) => name === 'strokeRect')).toBe(true);
+  });
+
+  it('can oranını 0..1 aralığına sıkıştırır', () => {
+    const { tags, graphics } = setup();
+    tags.update([frame(1, { health: 3 }), frame(2, { health: -1 })]);
+    const widths = graphics.calls
+      .filter(([name]) => name === 'fillRect')
+      .map(([, args]) => args[2] as number);
+    // [zemin, dolgu] çiftleri: 1'e kırpılan tam, 0'a kırpılan sıfır genişlik.
+    expect(widths).toEqual([
+      ONLINE_VIEW.tag.barWidth + 2,
+      ONLINE_VIEW.tag.barWidth,
+      ONLINE_VIEW.tag.barWidth + 2,
+      0,
+    ]);
+  });
+
+  it('can düşünce çubuk beyaza parlar ve kaybedilen can soluk iz olarak kalıp erir', () => {
+    const { tags, graphics } = setup();
+    const tag = ONLINE_VIEW.tag;
+    const frameCalls = () => {
+      const calls = [...graphics.calls];
+      graphics.calls.length = 0;
+      return calls;
+    };
+    tags.update([frame(1)], 0);
+    frameCalls();
+    tags.update([frame(1, { health: 0.5 })], 100);
+    const hit = frameCalls();
+    const styles = hit.filter(([name]) => name === 'fillStyle').map(([, args]) => args[0]);
+    // Zemin, iz (soluk sarı), parlayan dolgu (beyaz).
+    expect(styles).toEqual([0x14100c, tag.trailColor, 0xffffff]);
+    const rects = hit.filter(([name]) => name === 'fillRect').map(([, args]) => args[2] as number);
+    expect(rects[1]).toBeCloseTo(tag.barWidth * 0.5);
+
+    // Parlama bitti, iz bekleme süresinde tutulur.
+    tags.update([frame(1, { health: 0.5 })], 100 + tag.flashMs + 10);
+    const held = frameCalls();
+    const heldStyles = held.filter(([name]) => name === 'fillStyle').map(([, args]) => args[0]);
+    expect(heldStyles).toEqual([0x14100c, tag.trailColor, 0x52f5cf]);
+
+    // Bekleme sonrası erir ve can seviyesine varınca iz kaybolur.
+    tags.update([frame(1, { health: 0.5 })], 100 + tag.trailHoldMs + 100);
+    const draining = frameCalls().filter(([name]) => name === 'fillRect');
+    expect(draining[1][1][2] as number).toBeLessThan(tag.barWidth * 0.5);
+    tags.update([frame(1, { health: 0.5 })], 5000);
+    frameCalls();
+    tags.update([frame(1, { health: 0.5 })], 5016);
+    expect(frameCalls().filter(([name]) => name === 'fillRect')).toHaveLength(2);
+  });
+
+  it('iyileşme ve yeniden doğuş izi sıfırlar; ilk görünen kare iz taşımaz', () => {
+    const { tags, graphics } = setup();
+    const rects = () => graphics.calls.filter(([name]) => name === 'fillRect').length;
+    tags.update([frame(1, { health: 0.4 })], 0);
+    expect(rects()).toBe(2);
+    tags.update([frame(1, { health: 0.2 })], 10);
+    expect(rects()).toBe(5);
+    graphics.calls.length = 0;
+    tags.update([frame(1, { health: 0.9 })], 20);
+    expect(rects()).toBe(2);
+    graphics.calls.length = 0;
+    tags.update([frame(1, { health: 0.1 })], 30);
+    tags.update([frame(1, { alive: false, health: 0 })], 40);
+    graphics.calls.length = 0;
+    tags.update([frame(1, { health: 1 })], 50);
+    expect(rects()).toBe(2);
+  });
+
+  it('söküldüğünde yazıları ve çizimi yok eder', () => {
+    const { tags, texts, graphics } = setup();
+    tags.update([frame(1), frame(2)]);
+    tags.destroy();
+    for (const text of texts()) expect(lastCall(text, 'destroy')).toBeDefined();
+    expect(lastCall(graphics, 'destroy')).toBeDefined();
+    expect(tags.count).toBe(0);
+  });
+
+  it('bot adın soluna sarı rozet noktası çizer; insana çizmez', () => {
+    const { tags, graphics } = setup();
+    const circles = (): unknown[][] =>
+      graphics.calls.filter(([name]) => name === 'fillCircle').map(([, args]) => args);
+    tags.update([frame(1)]);
+    expect(circles()).toHaveLength(0);
+    graphics.calls.length = 0;
+    tags.update([frame(1, { bot: true })]);
+    const drawn = circles();
+    // Koyu halka ve sarı nokta; ikisi de adın solunda (etiket merkezinden küçük x).
+    expect(drawn).toHaveLength(2);
+    for (const [x] of drawn) expect(x as number).toBeLessThanOrEqual(100);
+    const fills = graphics.calls
+      .filter(([name]) => name === 'fillStyle')
+      .map(([, args]) => args[0]);
+    expect(fills).toContain(ONLINE_VIEW.colors.bot);
+    expect((drawn[1][2] as number) < (drawn[0][2] as number)).toBe(true);
+  });
+});

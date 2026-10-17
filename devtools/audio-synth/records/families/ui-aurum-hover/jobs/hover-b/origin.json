@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:2f1e24f46582ba553d467c0661a673040dd71162dd4d12d89084b4c9cdb20224",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:a869e929ab9720a14df343eca1abf9b3f139987e452a9dcd40f74f8654e41b93",
+    "familyId": "ui-aurum-hover",
+    "kind": "family-variant",
+    "variantId": "v-cc277601c2cdf5ff",
+    "variantKey": "hover-b"
+  }
+}

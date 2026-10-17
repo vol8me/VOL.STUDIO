@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 0.562,
+    "min": 0.36
+  },
+  "id": "vt-hardsteel-shot-arc",
+  "intent": "Ark topu: elektrik atlaması ve gövdeli basınç patlaması.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — shot-arc"
+}

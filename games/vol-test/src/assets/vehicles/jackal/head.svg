@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="28" viewBox="0 0 22 28">
+  <defs>
+    <linearGradient id="deck" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#bfe2d4"/>
+      <stop offset="0.5" stop-color="#4f8a7a"/>
+      <stop offset="1" stop-color="#15302b"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cfe9dc"/>
+      <stop offset="0.5" stop-color="#5a9686"/>
+      <stop offset="1" stop-color="#183630"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2e4a43"/>
+      <stop offset="1" stop-color="#0c1c19"/>
+    </linearGradient>
+    <linearGradient id="trim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0dfb4"/>
+      <stop offset="0.5" stop-color="#b79f6a"/>
+      <stop offset="1" stop-color="#4d3f22"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="0.4" cy="0.4" r="0.65">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#b7ff5e"/>
+      <stop offset="1" stop-color="#3d6a10"/>
+    </radialGradient>
+  </defs>
+  <path d="M10 8.4L4 5.2L-2.4 0.8L2.4 7.8L4.6 9Z" fill="url(#plate)" stroke="#0d1217" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M8.4 7.8L0.6 2.6" fill="none" stroke="#b7ff5e" stroke-opacity="0.9" stroke-width="0.65" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10 19.6L4 22.8L-2.4 27.2L2.4 20.2L4.6 19Z" fill="url(#plate)" stroke="#0d1217" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M8.4 20.2L0.6 25.4" fill="none" stroke="#b7ff5e" stroke-opacity="0.9" stroke-width="0.65" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22 14L21.38 12.6L20.36 11.85L18.24 10.95L16.52 9.9L14.28 8.1L12.43 7.18L9.97 6.62L8.16 6.71L6.04 7.49L4.72 8.5L3.48 10.3L3 11.66L3 14L3 16.34L3.48 17.7L4.72 19.5L6.04 20.51L8.16 21.29L9.97 21.38L12.43 20.82L14.28 19.9L16.52 18.1L18.24 17.05L20.36 16.15L21.38 15.4Z" fill="url(#deck)" stroke="#0d1217" stroke-width="1.05" stroke-linejoin="round"/>
+  <path d="M18.4 14L16.84 12.6L15.7 11.67L13.9 10.33L12.36 9.6L10.24 9.1L8.74 9.19L7.06 9.91L6.09 11.04L5 14L6.09 16.96L7.06 18.09L8.74 18.81L10.24 18.9L12.36 18.4L13.9 17.67L15.7 16.33L16.84 15.4Z" fill="url(#plate)" stroke="#0d1217" stroke-opacity="0.8" stroke-width="0.6" stroke-linejoin="round"/>
+  <path d="M16.8 12.3L12.8 10.1" fill="none" stroke="#b7ff5e" stroke-opacity="0.95" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M16.8 15.7L12.8 17.9" fill="none" stroke="#b7ff5e" stroke-opacity="0.95" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M21.4 14L18.4 14" fill="none" stroke="#0d1217" stroke-opacity="0.8" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17.4 13.9L8.4 13.9" fill="none" stroke="#0d1217" stroke-opacity="0.45" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="21.2" cy="14" r="0.75" fill="#b7ff5e" stroke="#0d1217" stroke-width="0.3"/>
+</svg>

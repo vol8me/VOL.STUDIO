@@ -1,0 +1,54 @@
+{
+  "channels": 1,
+  "format": "wav-pcm16",
+  "frames": 57600,
+  "hash": "sha256:787742aafeffdbbd6c7ce7ea1111a38d571b59c07d904ef4660cc58eb26a701d",
+  "id": "tone-c4-hard-rr",
+  "notes": "Aynı nota, farklı tohum ve esneklik: round-robin fixture’ı.",
+  "origin": {
+    "kind": "synthetic-fixture",
+    "program": {
+      "channels": 1,
+      "durationSeconds": 1.2,
+      "layers": [
+        {
+          "name": "note",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.7,
+                "damping": 1.2,
+                "decay": 1.4,
+                "frequency": 261.63,
+                "inharmonicity": 0.0006,
+                "layout": "string",
+                "modes": 16
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "source": {
+            "params": {
+              "contactTime": 0.0007,
+              "roughness": 0.15
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -1
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 29
+    }
+  },
+  "sampleRate": 48000,
+  "schema": "SampleAssetV1",
+  "title": "Tonal nota C4 (sert, round-robin varyantı)"
+}

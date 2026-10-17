@@ -1,8 +1,19 @@
 packages:
   - 'core'
+  - 'devtools/*'
   - 'games/*'
+  - 'network'
   - 'tauri-v2'
 publicHoistPattern:
   - '@tauri-apps/*'
+overrides:
+  colord: 2.10.0
+  js-yaml: 4.3.2
 allowBuilds:
   esbuild: true
+  msgpackr-extract: false
+  simple-git-hooks: true
+patchedDependencies:
+  braces@3.0.3: patches/braces@3.0.3.patch
+minimumReleaseAgeExclude:
+  - '@colyseus/schema@5.0.39'

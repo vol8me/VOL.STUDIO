@@ -1,0 +1,135 @@
+import { expect, test, type Page } from '@playwright/test';
+import { selectTab } from './support/determinism';
+import { installVirtualPad } from './support/gamepad';
+
+/**
+ * Basılı-tutma denetimleri (Hold/Charge/LongPress) fareden bağımsız çalışır: klavye Space/Enter ve kol A
+ * aynı basış/bırakış çiftini üretir; azaltılmış harekette işlev değişmez (halka bir dekorasyondur).
+ * Şarj süresi vitrinde 1100 ms; iddialar sınıf işaretlerine bakar, metne değil.
+ */
+const CHARGE = '.vol-charge-button';
+
+/** Süre ölçülür: determinizm düzeneği `performance.now`'u dondurur, bu yüzden sayfa gerçek zamanla açılır. */
+async function openLive(page: Page): Promise<void> {
+  await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForSelector('[role="tablist"]');
+}
+const LONG_PRESS = '.vol-long-press-button';
+
+async function holdPad(page: Page, pressed: boolean): Promise<void> {
+  await page.evaluate((state) => {
+    const pad = window.__virtualPad;
+    pad.timestamp += 1;
+    pad.buttons[0].pressed = state;
+  }, pressed);
+}
+
+test.describe('klavye', () => {
+  for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+    test(`ChargeButton Space basılı tutulunca dolar, bırakınca sıfırlanır (hareket: ${reducedMotion})`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ reducedMotion });
+      await openLive(page);
+      await selectTab(page, 'touch');
+      const charge = page.locator(CHARGE).first();
+      await charge.scrollIntoViewIfNeeded();
+      await charge.focus();
+
+      await page.keyboard.down('Space');
+      await expect(charge).toHaveClass(/vol-charge-button--charging/);
+      await expect(charge).toHaveAttribute('aria-pressed', 'true');
+      await expect(charge).toHaveClass(/vol-charge-button--full/, { timeout: 3000 });
+      await page.keyboard.up('Space');
+      await expect(charge).not.toHaveClass(/vol-charge-button--charging/);
+      await expect(charge).toHaveAttribute('aria-pressed', 'false');
+    });
+  }
+
+  test('ChargeButton okuyucu duyurusu: 5 duyuru (başlangıç, %25/50/75, dolu), ad etiket kalır, bırakışta temizlenir', async ({
+    page,
+  }) => {
+    await openLive(page);
+    await selectTab(page, 'touch');
+    const charge = page.locator(CHARGE).first();
+    await charge.scrollIntoViewIfNeeded();
+    await charge.focus();
+    const label = (await charge.locator('.vol-charge-button__label').textContent()) ?? '';
+    await expect(charge).toHaveAccessibleName(label);
+
+    await charge.evaluate((button) => {
+      const region = button.querySelector('[role="status"]')!;
+      const heard: string[] = [];
+      (window as unknown as { __heard: string[] }).__heard = heard;
+      new MutationObserver(() => {
+        const text = region.textContent ?? '';
+        if (text) heard.push(text);
+      }).observe(region, { childList: true, characterData: true, subtree: true });
+    });
+    await page.keyboard.down('Space');
+    await expect(charge).toHaveClass(/vol-charge-button--full/, { timeout: 3000 });
+    await page.keyboard.up('Space');
+    const heard = await page.evaluate(() => (window as unknown as { __heard: string[] }).__heard);
+    expect(heard, 'kare başına değil: yalnız eşiklerde').toHaveLength(5);
+    expect(new Set(heard).size, 'beş duyuru birbirinden farklı').toBe(5);
+    await expect(charge.locator('[role="status"]')).toHaveText('');
+    await expect(charge).toHaveAccessibleName(label);
+  });
+
+  test('LongPressButton uzun Enter basışı eşiği aşar ve basılı durum sınıfını verir', async ({
+    page,
+  }) => {
+    await openLive(page);
+    await selectTab(page, 'touch');
+    const press = page.locator(LONG_PRESS).first();
+    await press.scrollIntoViewIfNeeded();
+    await press.focus();
+
+    await page.keyboard.down('Enter');
+    await expect(press).toHaveClass(/vol-long-press-button--pressed/);
+    await expect(press).toHaveClass(/vol-long-press-button--long-pressed/, { timeout: 3000 });
+    await page.keyboard.up('Enter');
+    await expect(press).not.toHaveClass(/vol-long-press-button--pressed/);
+  });
+});
+
+test('RadialMenu tuşla açılır; oklar döner, Enter seçer, odak açan düğmeye döner', async ({
+  page,
+}) => {
+  await openLive(page);
+  await selectTab(page, 'touch');
+  const opener = page
+    .locator('.vol-showcase-panel-demo button', { hasText: /keys|Tuşla/i })
+    .first();
+  await opener.scrollIntoViewIfNeeded();
+  await opener.click();
+  const menu = page.locator('.vol-radial-menu');
+  await expect(menu).toHaveClass(/vol-radial-menu--visible/);
+  await expect(menu.locator('.vol-radial-menu__item').first()).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(menu.locator('.vol-radial-menu__item').nth(1)).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(menu).not.toHaveClass(/vol-radial-menu--visible/);
+  await expect(opener).toBeFocused();
+});
+
+test.describe('kol', () => {
+  test.beforeEach(async ({ page }) => {
+    await installVirtualPad(page);
+  });
+
+  test('A basılı tutulunca odaktaki ChargeButton dolar; bırakınca durur', async ({ page }) => {
+    await openLive(page);
+    await selectTab(page, 'touch');
+    const charge = page.locator(CHARGE).first();
+    await charge.scrollIntoViewIfNeeded();
+    await charge.focus();
+
+    await holdPad(page, true);
+    await expect(charge).toHaveClass(/vol-charge-button--charging/);
+    await expect(charge).toHaveClass(/vol-charge-button--full/, { timeout: 3000 });
+    await holdPad(page, false);
+    await expect(charge).not.toHaveClass(/vol-charge-button--charging/);
+  });
+});

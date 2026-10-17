@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 0.938,
+    "min": 0.6
+  },
+  "id": "vt-hardsteel-dash",
+  "intent": "Atılım başlangıcı: itici ateşlemesi ve dolgun hava patlaması.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — dash"
+}

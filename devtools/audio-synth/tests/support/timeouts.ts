@@ -1,0 +1,30 @@
+/**
+ * Ağır testlerin süre sınırları — gerekçe TEK yerde. Kapsam ölçümü (v8 +
+ * AST yeniden eşleme) sentezi ölçülen olarak ~4.5 kat yavaşlatır; kapsamsız
+ * birkaç saniye süren render ya da yayın testi 5 saniyelik varsayılanı aşar.
+ * Global `testTimeout` BÜYÜTÜLMEZ: başka testlerdeki gerçek bir takılmayı
+ * gizlerdi. Sınır yalnız gerçekten ağır olan teste ya da her testi render
+ * eden bloğa verilir.
+ */
+
+/** Süreç içi ses render'ı ya da tek bir alt süreç. */
+export const RENDER_TIMEOUT = 60_000;
+
+/** Kodlama + çözme içeren yayın hattı, birden çok süreç ya da çok aşamalı üretim. */
+export const PIPELINE_TIMEOUT = 120_000;
+
+/**
+ * Bütün korpusu tek raporda süren testler (benchmark derlemi, kodlama
+ * profili yeniden ölçümü). Kapsamsız ~40 sn süren bu süpürmeler kapsam
+ * altında ~4.5 kat yavaşlayarak 120 sn'yi aşar; sınır buna göre ayrıdır.
+ */
+export const CORPUS_TIMEOUT = 480_000;
+
+/**
+ * Kapsamsız 10–25 sn süren çok parçalı müzik render süpürmeleri: kapsam altında ~4.5 kat yavaşlayıp
+ * `PIPELINE_TIMEOUT`u aşar (ölçülen: 15–25 sn → 70–140 sn).
+ */
+export const HEAVY_RENDER_TIMEOUT = 240_000;
+
+export const RENDER_BLOCK = { timeout: RENDER_TIMEOUT } as const;
+export const PIPELINE_BLOCK = { timeout: PIPELINE_TIMEOUT } as const;

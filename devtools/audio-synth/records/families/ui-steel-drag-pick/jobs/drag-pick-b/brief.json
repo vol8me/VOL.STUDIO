@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "drag-pick"
+  ],
+  "durationSeconds": {
+    "max": 0.32,
+    "min": 0.08
+  },
+  "id": "ui-steel-drag-pick-drag-pick-b",
+  "intent": "çelik donanım: drag-pick Varyant drag-pick-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel drag-pick — drag-pick-b"
+}

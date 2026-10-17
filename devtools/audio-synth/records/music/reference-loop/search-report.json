@@ -1,0 +1,556 @@
+{
+  "baseProgramHash": "sha256:856643a6e01c4815166b9caab341105b0f6d0c7105fc64fbe4b39c9ddcc1af79",
+  "candidates": [
+    {
+      "candidateId": "c-576416ecec84a92b",
+      "distance": 2.15,
+      "index": 0,
+      "pass": true,
+      "programHash": "sha256:a4fd2025810eceb0fe81ce5a279569b4772d607f3a3e2436996b051e6d4f68c1",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.2,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.1413,
+        "lead-gain": 0.5131,
+        "lead-shift": 1.5551,
+        "swing": 0.1256
+      }
+    },
+    {
+      "candidateId": "c-e75f4d4b13cc4cd3",
+      "distance": 1.2,
+      "index": 1,
+      "pass": true,
+      "programHash": "sha256:818017930a444065e5ec996ef61118e785adb92c38d5e1abc3e97b450112c78a",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.25,
+        "notesPerBar": 8,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.3413,
+        "lead-gain": 0.2943,
+        "lead-shift": 1.698,
+        "swing": 0.0922
+      }
+    },
+    {
+      "candidateId": "c-c9ea6c0f9467a358",
+      "distance": 1.0848,
+      "index": 2,
+      "pass": false,
+      "programHash": "sha256:725057934ee5685a050502937d49ba8e80683cface25dccfca0e6c46e19dbde2",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.1538,
+        "notesPerBar": 6.5,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.4413,
+        "lead-gain": 0.4693,
+        "lead-shift": 1.0245,
+        "swing": 0.2922
+      }
+    },
+    {
+      "candidateId": "c-db3a876a8aca1825",
+      "distance": 2.4928,
+      "index": 3,
+      "pass": false,
+      "programHash": "sha256:72e007f8eaf8f45e218a284df02271759d9fd50fbbb827f5e4557ad8a22c7f8c",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.1143,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.0213,
+        "lead-gain": 0.3818,
+        "lead-shift": 1.3102,
+        "swing": 0.1922
+      }
+    },
+    {
+      "candidateId": "c-9512b84d0aa5484f",
+      "distance": 2.15,
+      "index": 4,
+      "pass": true,
+      "programHash": "sha256:9d1584bbe34288a68786150b578e9dd6f5e70117674f05d348d2ac7ba91541cf",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.2,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.2213,
+        "lead-gain": 0.5568,
+        "lead-shift": 1.7388,
+        "swing": 0.0589
+      }
+    },
+    {
+      "candidateId": "c-9384970fb72842e9",
+      "distance": 2.15,
+      "index": 5,
+      "pass": true,
+      "programHash": "sha256:4e8435c7c11809a61fc358cb34f69ccd1cd58b1a68b1fb1805abfe998124ba10",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.2,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.1213,
+        "lead-gain": 0.2725,
+        "lead-shift": 1.8816,
+        "swing": 0.2589
+      }
+    },
+    {
+      "candidateId": "c-0faaeee5081dd76f",
+      "distance": 1.7,
+      "index": 6,
+      "pass": false,
+      "programHash": "sha256:37bd0b519e74090f5cdc9f649393191732e61626360e232d359012464b541919",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.125,
+        "notesPerBar": 8,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.3213,
+        "lead-gain": 0.4475,
+        "lead-shift": 1.1674,
+        "swing": 0.1589
+      }
+    },
+    {
+      "candidateId": "c-608a6a753b59fab3",
+      "distance": 1.0848,
+      "index": 7,
+      "pass": false,
+      "programHash": "sha256:73a3deab6ce51124ed1d30d24973cb10d18d93acc7eef545db62dc52ab3ca6dc",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.1538,
+        "notesPerBar": 6.5,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.4213,
+        "lead-gain": 0.36,
+        "lead-shift": 1.4531,
+        "swing": 0.0144
+      }
+    },
+    {
+      "candidateId": "c-000d2aee63aa4a24",
+      "distance": 2.15,
+      "index": 8,
+      "pass": true,
+      "programHash": "sha256:bc1b56db4f88d16727c76cd8bdd9046a872a9606179c47822d9bfe4d824a9bdb",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.2,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.0613,
+        "lead-gain": 0.535,
+        "lead-shift": 1.5959,
+        "swing": 0.2144
+      }
+    },
+    {
+      "candidateId": "c-0dd5cfe6524da308",
+      "distance": 1.7,
+      "index": 9,
+      "pass": false,
+      "programHash": "sha256:dbd2e4073cdc649e9647a513dbe3edd5e642a653519744f6d327391653ff3ca9",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.125,
+        "notesPerBar": 8,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.2613,
+        "lead-gain": 0.3162,
+        "lead-shift": 1.0653,
+        "swing": 0.1144
+      }
+    },
+    {
+      "candidateId": "c-450a4d7ba3c87035",
+      "distance": 2.4928,
+      "index": 10,
+      "pass": false,
+      "programHash": "sha256:5fe318b0c751564317892dfff576c69dda3d8f6eb151592b0e45844b3b12af48",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.1143,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.1613,
+        "lead-gain": 0.4912,
+        "lead-shift": 1.351,
+        "swing": 0.0811
+      }
+    },
+    {
+      "candidateId": "c-c3aeaa6fee9799ea",
+      "distance": 1.2,
+      "index": 11,
+      "pass": true,
+      "programHash": "sha256:687e591718dacbf3d6f4d0de93961d8df25774fb82914d62c2798e93299f80f9",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.25,
+        "notesPerBar": 8,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.3613,
+        "lead-gain": 0.4037,
+        "lead-shift": 1.7796,
+        "swing": 0.2811
+      }
+    },
+    {
+      "candidateId": "c-23b6aeac59a44d18",
+      "distance": 0.5308,
+      "index": 12,
+      "pass": true,
+      "programHash": "sha256:13e21a9cfa690ea1a388830ebdca46792a7d278fe0f66117d91f9de762f65fd8",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.3077,
+        "notesPerBar": 6.5,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.4613,
+        "lead-gain": 0.5787,
+        "lead-shift": 1.9225,
+        "swing": 0.1811
+      }
+    },
+    {
+      "candidateId": "c-2b994504b868c490",
+      "distance": 2.4928,
+      "index": 13,
+      "pass": false,
+      "programHash": "sha256:727ca278070371aa086c5ebdf6561505a5cde86b6cbec3fa0a174a782aea4ddb",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.1143,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.0813,
+        "lead-gain": 0.2615,
+        "lead-shift": 1.2082,
+        "swing": 0.0478
+      }
+    },
+    {
+      "candidateId": "c-7697d7a3a02542c2",
+      "distance": 1.7,
+      "index": 14,
+      "pass": false,
+      "programHash": "sha256:e29cc6c9a9285332c4037e7980f174236597b5b092e0dc2c4a1bcc2c1ac83ed5",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.125,
+        "notesPerBar": 8,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.2813,
+        "lead-gain": 0.4365,
+        "lead-shift": 1.4939,
+        "swing": 0.2478
+      }
+    },
+    {
+      "candidateId": "c-2f599013720e69df",
+      "distance": 2.15,
+      "index": 15,
+      "pass": true,
+      "programHash": "sha256:ce42d92de511645ede85f8b0ac1508e07d9186958741520ba4b6957d6f5b213c",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.2,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.1813,
+        "lead-gain": 0.349,
+        "lead-shift": 1.6367,
+        "swing": 0.1478
+      }
+    },
+    {
+      "candidateId": "c-2f86ec40c11c8cc5",
+      "distance": 1.7,
+      "index": 16,
+      "pass": false,
+      "programHash": "sha256:7043030ae0115cfe932e96dd9a19bb534c1e59cd21f2a1597a24aa07d98127a6",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.125,
+        "notesPerBar": 8,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.3813,
+        "lead-gain": 0.524,
+        "lead-shift": 1.0857,
+        "swing": 0.0107
+      }
+    },
+    {
+      "candidateId": "c-c1329c272c9b9023",
+      "distance": 1.0848,
+      "index": 17,
+      "pass": false,
+      "programHash": "sha256:2c8c397463aa0b282489d4a723c4d76f9d298905a3dcb8abe66c6082760f23be",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.1538,
+        "notesPerBar": 6.5,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.4813,
+        "lead-gain": 0.3053,
+        "lead-shift": 1.3714,
+        "swing": 0.2107
+      }
+    },
+    {
+      "candidateId": "c-15ee9d246af3d1c2",
+      "distance": 2.15,
+      "index": 18,
+      "pass": true,
+      "programHash": "sha256:46751a191a11df82f26337af93171918b1d2178b81d83535f39844013a4bd1c9",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.2,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.0093,
+        "lead-gain": 0.4803,
+        "lead-shift": 1.8,
+        "swing": 0.1107
+      }
+    },
+    {
+      "candidateId": "c-696146ec012f70dd",
+      "distance": 2.15,
+      "index": 19,
+      "pass": true,
+      "programHash": "sha256:ae3f65e246a0403eea24cea0da8956d92c5c266c5dd405dd19e6dbd9f6f4762a",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.2,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.2093,
+        "lead-gain": 0.3928,
+        "lead-shift": 1.9429,
+        "swing": 0.0774
+      }
+    },
+    {
+      "candidateId": "c-55e97d48143aebcd",
+      "distance": 2.4928,
+      "index": 20,
+      "pass": false,
+      "programHash": "sha256:086d74d92e3100d531ae8dac492258da221a4cc51449b0d8226c9b4c18fbed94",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.1143,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.1093,
+        "lead-gain": 0.5678,
+        "lead-shift": 1.2286,
+        "swing": 0.2774
+      }
+    },
+    {
+      "candidateId": "c-0a0e6c7ad21efdb4",
+      "distance": 1.2,
+      "index": 21,
+      "pass": true,
+      "programHash": "sha256:7b27e93a6d0438f517343f3d907928e3aa9672fdac1e2ab6551956f75f429f5e",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.25,
+        "notesPerBar": 8,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.3093,
+        "lead-gain": 0.2834,
+        "lead-shift": 1.5143,
+        "swing": 0.1774
+      }
+    },
+    {
+      "candidateId": "c-fba5d5c2e89e30ec",
+      "distance": 0.5308,
+      "index": 22,
+      "pass": true,
+      "programHash": "sha256:5301403b2e75cd859e1cdc4a36b4d8ca7a3293b4f2640cbe5e9c74eb2d05fdaa",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.3077,
+        "notesPerBar": 6.5,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.4093,
+        "lead-gain": 0.4584,
+        "lead-shift": 1.6571,
+        "swing": 0.0441
+      }
+    },
+    {
+      "candidateId": "c-a492cdf158d24171",
+      "distance": 2.4928,
+      "index": 23,
+      "pass": false,
+      "programHash": "sha256:b957d3ebb4f19b1be8a0558e1defaf01f865c9016dee5d36b7a6fbe6a3bd0a33",
+      "rejection": null,
+      "symbolic": {
+        "maxPolyphony": 6,
+        "melodicSalience": 0.1143,
+        "notesPerBar": 8.75,
+        "outOfSystemRatio": 0
+      },
+      "values": {
+        "keys-thin": 0.0493,
+        "lead-gain": 0.3709,
+        "lead-shift": 1.0099,
+        "swing": 0.2441
+      }
+    }
+  ],
+  "evidence": {
+    "expanded": 24,
+    "rendered": 3
+  },
+  "finalists": [
+    {
+      "audio": {
+        "frames": 441000,
+        "integratedLufs": -16.959302600553254,
+        "samplePeakDbfs": -1.9531602115684312,
+        "truePeakDbtp": -1.9489279020941543
+      },
+      "candidateId": "c-23b6aeac59a44d18",
+      "distance": 0.5308,
+      "policy": {
+        "verdict": "pass",
+        "violations": []
+      },
+      "programHash": "sha256:13e21a9cfa690ea1a388830ebdca46792a7d278fe0f66117d91f9de762f65fd8"
+    },
+    {
+      "audio": {
+        "frames": 441000,
+        "integratedLufs": -16.84427797742832,
+        "samplePeakDbfs": -1.9625430758141227,
+        "truePeakDbtp": -1.9577253102205305
+      },
+      "candidateId": "c-fba5d5c2e89e30ec",
+      "distance": 0.5308,
+      "policy": {
+        "verdict": "pass",
+        "violations": []
+      },
+      "programHash": "sha256:5301403b2e75cd859e1cdc4a36b4d8ca7a3293b4f2640cbe5e9c74eb2d05fdaa"
+    },
+    {
+      "audio": {
+        "frames": 441000,
+        "integratedLufs": -16.067250339349826,
+        "samplePeakDbfs": -2.842177053371253,
+        "truePeakDbtp": -2.842177053371253
+      },
+      "candidateId": "c-0a0e6c7ad21efdb4",
+      "distance": 1.2,
+      "policy": {
+        "verdict": "pass",
+        "violations": []
+      },
+      "programHash": "sha256:7b27e93a6d0438f517343f3d907928e3aa9672fdac1e2ab6551956f75f429f5e"
+    }
+  ],
+  "musicId": "reference-loop",
+  "ranked": [
+    "c-23b6aeac59a44d18",
+    "c-fba5d5c2e89e30ec",
+    "c-0a0e6c7ad21efdb4",
+    "c-c3aeaa6fee9799ea",
+    "c-e75f4d4b13cc4cd3",
+    "c-000d2aee63aa4a24",
+    "c-15ee9d246af3d1c2",
+    "c-2f599013720e69df",
+    "c-576416ecec84a92b",
+    "c-696146ec012f70dd",
+    "c-9384970fb72842e9",
+    "c-9512b84d0aa5484f"
+  ],
+  "schema": "MusicSearchReportV1",
+  "searchId": "loop-balance",
+  "seed": 991,
+  "specHash": "sha256:1e958280ce8237a407b82a91480a0e75e5b8c0f168632151ad9a673895f51fba",
+  "strategy": "scrambled-halton"
+}

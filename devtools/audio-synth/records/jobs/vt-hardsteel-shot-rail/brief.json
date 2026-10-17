@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 1.069,
+    "min": 0.684
+  },
+  "id": "vt-hardsteel-shot-rail",
+  "intent": "Ray topu: sert çatlak, kapasitör boşalması ve gövdeli alçak itki.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — shot-rail"
+}

@@ -1,0 +1,28 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "dry",
+    "weapon",
+    "treatment:occluded"
+  ],
+  "durationSeconds": {
+    "max": 2.1,
+    "min": 0.8
+  },
+  "id": "reference-impact-occluded",
+  "intent": "Kuru, konumsal bir silah atışı: yakın/orta/uzak ve engel/ortam/cihaz teslim varyantlarının ortak kaynağı. Kuyruk ve yansıma kaynağa değil teslim profiline aittir. Teslim profili occluded: Engel ardında (kırınım): doğrudan yolun tizi kırılır (1.8 kHz alçak geçiren, 12 dB/oktav), atak yumuşar, çevreden dolaşan yansıma payı artar.",
+  "kind": "acoustic",
+  "mechanisms": [
+    "impact",
+    "pressure"
+  ],
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "treatment-profile"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Referans silah atışı — occluded"
+}

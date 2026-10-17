@@ -1,0 +1,140 @@
+{
+  "channels": 1,
+  "description": "çelik donanım · slider-tick",
+  "durationSeconds": 0.09,
+  "gestures": {
+    "thump-pitch": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          280
+        ],
+        [
+          0.04,
+          220
+        ],
+        [
+          0.08,
+          211.2
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0002,
+          "curve": "exponential",
+          "decay": 0.008,
+          "release": 0.004,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 5,
+      "mechanism": "mechanical",
+      "name": "click",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 3591.42,
+            "mode": "bandpass",
+            "q": 0.9
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1071,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0015,
+          "curve": "exponential",
+          "decay": 0.0224343,
+          "release": 0.025,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -3,
+      "inserts": [
+        {
+          "params": {
+            "character": "asymmetric",
+            "driveDb": 9.799999999999999,
+            "mix": 1,
+            "outputDb": -3
+          },
+          "primitive": "effect.saturation",
+          "version": 1
+        }
+      ],
+      "mechanism": "mechanical",
+      "name": "thump",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 50,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1027.27,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "thump-pitch"
+          },
+          "waveform": "sine"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 40,
+    "fadeInSeconds": 0.0003,
+    "fadeOutSeconds": 0.02,
+    "normalize": "peak",
+    "peakDbfs": -10
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 9377
+}

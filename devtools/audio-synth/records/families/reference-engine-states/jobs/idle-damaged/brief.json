@@ -1,0 +1,27 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "energy:idle",
+    "integrity:damaged"
+  ],
+  "durationSeconds": {
+    "max": 2.5,
+    "min": 1.5
+  },
+  "id": "reference-engine-states-idle-damaged",
+  "intent": "Tek motor programından türeyen oyun durumu ailesi: enerji (rölanti, normal, yüksek devir) ve bütünlük (sağlam, hasarlı) sıralı eksenleri. Varyant idle-damaged (energy:idle, integrity:damaged).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "state": {
+    "energy": "idle",
+    "integrity": "damaged"
+  },
+  "subtype": "sfx",
+  "title": "Referans motor durumları — idle-damaged"
+}

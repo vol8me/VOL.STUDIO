@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-cbbd95ed3e9cef9f": {
+        "hash": "sha256:e3176ecd60362579f1ec625bdd6a28f69eb9c2776def5d454e23486d0938368a",
+        "path": "analyses/r-cbbd95ed3e9cef9f.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:fabea817adca6f63d30b3370f4761f4fd1b8c26151495803389801dd3524eab0",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:fabea817adca6f63d30b3370f4761f4fd1b8c26151495803389801dd3524eab0",
+      "hash": "sha256:4a7e3c94e4ea98a46a60bc5a7ba026c2171b84b2a32967ccd1fe8893dfa86d95",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:4fa5c665c8d6de23da774056e5c8e634751766a048c325e61cb0611a9d59aaa3",
+      "path": "games/vol-test/audio-manifests/sfx/steel/tracks.json"
+    },
+    "renders": {
+      "r-cbbd95ed3e9cef9f": {
+        "hash": "sha256:62608054dccc205c59d67861efec9775e37d7b8e9ee699b95d79690024240b25",
+        "path": "renders/r-cbbd95ed3e9cef9f.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:0593526400a1698d26fdaa3f1929581eb217682f35498dcf1f007b5012eca806",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-tracks",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 72,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/tracks.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

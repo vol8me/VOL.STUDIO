@@ -1,0 +1,76 @@
+{
+  "schema": "UiStateFixturesV1",
+  "note": "Her kayıt registry'deki bir export'un uygulanabilir durumunu stateMatrix.spec.ts'te bir katman senaryosuyla sınar. focusVisible: odak katmana (focus: inside) ya da yeniden adlanan tetikleyicisine (focus: trigger) taşınır ve örtülmez. keyboard: Escape katmanı kapatır ve odağı tetikleyiciye geri verir. known: bilinen kusurun sahip görevi, motor bazında (* her motor).",
+  "fixtures": [
+    {
+      "scope": "panels/modal",
+      "export": "Modal",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "panels/sheet",
+      "export": "Sheet",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "panels/popup",
+      "export": "Popup",
+      "focus": "trigger",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "panels/popover",
+      "export": "Popover",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "panels/dialog",
+      "export": "showDestructiveConfirm",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "panels/conflict",
+      "export": "showSyncConflict",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "panels/legal",
+      "export": "showLegalDocument",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "panels/tour",
+      "export": "startGuidedTour",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "forms/select",
+      "export": "Select",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "forms/osk",
+      "export": "OnScreenKeyboard",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    }
+  ]
+}

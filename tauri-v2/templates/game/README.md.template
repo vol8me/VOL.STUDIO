@@ -1,0 +1,17 @@
+# {{TITLE}}
+
+CORE ve paylaşılan Tauri v2 kabuğunu kullanan oyun başlangıcı.
+
+- `pnpm --filter @volstudio/{{NAME}} dev`: web geliştirme.
+- `pnpm --filter @volstudio/{{NAME}} tauri dev`: native geliştirme.
+- `pnpm --filter @volstudio/{{NAME}} build`: gönderilen web çıktısı.
+- `pnpm --filter @volstudio/{{NAME}} test:coverage`: birim testi ve kapsam.
+- `pnpm --filter @volstudio/{{NAME}} test:e2e`: Chromium ve WebKit kabulü.
+
+Android için `pnpm --filter @volstudio/{{NAME}} tauri android init` çalıştırılır;
+üretilen başlatıcı ikonları ürünün `src-tauri/icons/icon.png` kaynağından
+`tauri icon` ile yenilenir. Cihaz kabulü [yeni oyun rehberindedir](../../docs/new-game.md).
+
+Başlangıç ikonu ürün kimliğinden deterministik üretilir; yayın öncesi ürün
+çizimiyle değiştirilir. Ölçekleme bütçesi başlangıçtaki CORE uzamsal indeks
+ölçümüdür; oynanış eklendiğinde gerçek oyun yüküne taşınır.

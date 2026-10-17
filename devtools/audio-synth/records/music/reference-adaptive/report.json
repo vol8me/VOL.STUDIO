@@ -1,0 +1,199 @@
+{
+  "brief": [
+    {
+      "detail": "adaptiveLoop",
+      "name": "playback",
+      "ok": true
+    },
+    {
+      "detail": "4/4",
+      "name": "meter",
+      "ok": true
+    },
+    {
+      "detail": "112 bpm ∈ [100, 124]",
+      "name": "tempo",
+      "ok": true,
+      "value": 112
+    },
+    {
+      "detail": "4 ölçü ∈ [4, 8]",
+      "name": "length",
+      "ok": true,
+      "value": 4
+    },
+    {
+      "detail": "minor ∈ minor",
+      "name": "tonal-system",
+      "ok": true
+    },
+    {
+      "detail": "body",
+      "name": "form",
+      "ok": true
+    },
+    {
+      "detail": "7.5 nota/ölçü, \"moderate\" bandı [3, 10]",
+      "name": "rhythmic-density",
+      "ok": true,
+      "value": 7.5
+    },
+    {
+      "detail": "ölçülen 0.4667, beyan 0.47",
+      "name": "melodic-salience",
+      "ok": true,
+      "value": 0.4667
+    },
+    {
+      "detail": "hedef sırayla uyum 1",
+      "name": "section-contrast",
+      "ok": true,
+      "value": 1
+    },
+    {
+      "detail": "brief [calm:0, active:0.5, peak:1] program [calm:0, active:0.5, peak:1]",
+      "name": "adaptive-states",
+      "ok": true
+    }
+  ],
+  "lanes": [
+    {
+      "events": 12,
+      "highMidi": 64,
+      "id": "pad",
+      "instrument": "preset:additivePad",
+      "lowMidi": 50,
+      "maxPolyphony": 3,
+      "meanMidi": 56.42,
+      "notesPerBar": 3,
+      "role": "pad"
+    },
+    {
+      "events": 12,
+      "highMidi": 65,
+      "id": "pluck",
+      "instrument": "preset:metalPluck",
+      "lowMidi": 55,
+      "maxPolyphony": 1,
+      "meanMidi": 60.42,
+      "notesPerBar": 3,
+      "role": "pluck"
+    },
+    {
+      "events": 6,
+      "highMidi": 64,
+      "id": "melody",
+      "instrument": "preset:softLead",
+      "lowMidi": 45,
+      "maxPolyphony": 2,
+      "meanMidi": 54.33,
+      "notesPerBar": 1.5,
+      "role": "lead"
+    }
+  ],
+  "motifs": [
+    {
+      "chain": "transpose",
+      "instances": 6,
+      "motif": "hook",
+      "variationId": "m-ab958b902e38"
+    }
+  ],
+  "musicId": "reference-adaptive",
+  "pitchClasses": [
+    6,
+    0,
+    2,
+    0,
+    6,
+    4,
+    0,
+    2,
+    0,
+    8,
+    0,
+    2
+  ],
+  "policyVersion": 1,
+  "programHash": "sha256:4d890f5df7a0c9c0e1402c14aaf490c8ed3a001ad373f25e8dd2a83a6c0889a6",
+  "rules": [
+    {
+      "detail": "6 eşzamanlı",
+      "ok": true,
+      "overridden": false,
+      "rule": "en çok 8 eşzamanlı ses",
+      "ruleId": "max-polyphony"
+    },
+    {
+      "detail": "7.5 nota/ölçü",
+      "ok": true,
+      "overridden": false,
+      "rule": "parça başına en çok 24 nota/ölçü",
+      "ruleId": "max-density:program"
+    },
+    {
+      "detail": "kullanılmadı",
+      "ok": true,
+      "overridden": false,
+      "rule": "preset:honkyTonkPiano yasak",
+      "ruleId": "forbid-instrument:preset:honkyTonkPiano"
+    },
+    {
+      "detail": "0 şerit bant içinde",
+      "ok": true,
+      "overridden": false,
+      "rule": "bass rolü MIDI 24–60 aralığında kalmalı",
+      "ruleId": "register-limit:bass"
+    },
+    {
+      "detail": "0 şerit bant içinde",
+      "ok": true,
+      "overridden": false,
+      "rule": "keys rolü MIDI 48–90 aralığında kalmalı",
+      "ruleId": "register-limit:keys"
+    },
+    {
+      "detail": "1 şerit bant içinde",
+      "ok": true,
+      "overridden": false,
+      "rule": "pluck rolü MIDI 55–96 aralığında kalmalı",
+      "ruleId": "register-limit:pluck"
+    }
+  ],
+  "schema": "MusicSymbolicReportV1",
+  "scoreHash": "sha256:42c432e723c4a0a036e9e40ea565ca129ef6f9243c42997c7f5cbb7314e603ea",
+  "sections": [
+    {
+      "activeLanes": 3,
+      "bars": [
+        0,
+        4
+      ],
+      "events": 30,
+      "harmonicChangesPerBar": 1,
+      "id": "body",
+      "measuredEnergy": 0.5,
+      "notesPerBar": 7.5,
+      "role": "body",
+      "targetEnergy": 0.7
+    }
+  ],
+  "totals": {
+    "bars": 4,
+    "events": 30,
+    "maxPolyphony": 6,
+    "melodicSalience": 0.4667,
+    "motifInstances": 6,
+    "notesPerBar": 7.5,
+    "outOfSystemRatio": 0,
+    "uniqueVariations": 1
+  },
+  "transitions": [],
+  "unchecked": [
+    "themeBook.notes: Klişe kaçınması: kapanışta beklenen V-i yürüyüşü tek başına bırakılmaz. Bu not makineyle DENETLENMEZ."
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

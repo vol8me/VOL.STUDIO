@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:0edf88d642afa0d2ecb7e93d7f46b3ff02bedf5b99bd7bc4c26d0287bcf07377",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:ce90fb92846de0e35779099deb6dc1986238e03a5f8c53f7a9b72d3c5d2940e5",
+    "familyId": "ui-steel-key-delete",
+    "kind": "family-variant",
+    "variantId": "v-bdf2cc2bda23db80",
+    "variantKey": "key-delete-b"
+  }
+}

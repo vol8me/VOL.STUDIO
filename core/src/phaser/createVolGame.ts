@@ -1,0 +1,225 @@
+import Phaser from 'phaser';
+import { FontManager, type FontFaceSpec } from '../fonts/FontManager';
+import { ViewportManager, type ScaleStrategy, type ViewportScaleSetting } from './ViewportManager';
+import { VOL_FONTS, type VolFontFamily } from '../fonts/DefaultFonts';
+import { TECH } from '../constants';
+import type { Diagnostics } from '../diagnostics/Diagnostics';
+import type { RendererInfo, RendererKind } from '../diagnostics/types';
+
+export interface VolGameConfig {
+  /** Yalnızca strategy: 'resize' iken opsiyoneldir — bkz. ViewportConfig.width. */
+  width?: number;
+  height?: number;
+  parent?: string | HTMLElement;
+  backgroundColor?: string;
+  strategy?: ScaleStrategy;
+  /** Yüksek DPR ekranlarda piksel fill-rate'i sınırlamak için maksimum DPR. */
+  maxDpr?: ViewportScaleSetting;
+  /**
+   * Rasterleme çözünürlüğü çarpanı (0.25–1), DPR'den bağımsız. Dünya boyutu ve
+   * ekrandaki görüntü boyutu değişmez; yalnız işlenen piksel sayısı düşer.
+   */
+  renderScale?: ViewportScaleSetting;
+  /** Backing store piksel tavanı (bkz. `ViewportConfig.maxPixels`): büyük ve yoğun ekranda dolum maliyetini sınırlar. */
+  maxPixels?: ViewportScaleSetting;
+  scenes: Phaser.Types.Core.GameConfig['scene'];
+  physics?: Phaser.Types.Core.GameConfig['physics'];
+  input?: Phaser.Types.Core.InputConfig;
+  /** Phaser ses bağlamı opt-in'dir; tüketici CORE sesini bu bağlama bağlar. */
+  audio?: Phaser.Types.Core.GameConfig['audio'];
+  /** Phaser renderer ayarları; oyun kalite profilinden açıkça verilebilir. */
+  render?: Phaser.Types.Core.RenderConfig;
+  /**
+   * Kare hızı üst sınırı (ör. pil için 30/40). Verilmezse ekranın yenileme
+   * hızı ve sistemin sınırlayıcısı (Steam Deck'te Steam'in kare sınırı) geçerlidir.
+   */
+  fpsLimit?: number;
+  /**
+   * Hangi renderer istensin? Varsayılan `'auto'`.
+   *
+   * `'auto'`: WebGL denenir, kurulamazsa Canvas2D'ye düşülür — cihazda hiç
+   * açılmamaktansa yavaş açılmak yeğdir. Geri düşüş SESSİZ kalmaz: teşhis
+   * anlık görüntüsünde `renderer.fellBack` işaretlenir ve konsola uyarı düşer.
+   *
+   * `'webgl'`: geri düşüş YOK. WebGL kurulamıyorsa oyun açılmaz — belirsiz bir
+   * yavaşlık yerine açık bir hata isteyen sürüm/ölçüm koşuları içindir.
+   */
+  renderer?: RendererRequest;
+  /** Yüklenecek font alt seti. Belirtilmezse tüm VOL fontları yüklenir. */
+  fonts?: VolFontFamily[];
+  /**
+   * Ölçüm örneği. `createVolGame` bunu OLUŞTURMAZ, yalnızca oyunun ömrüne
+   * bağlar (oyun destroy olunca `destroy()` çağırır).
+   *
+   * Tüketici `isDiagnosticsEnabled()` ile karar verip `createDiagnostics(...)` ile
+   * kendi örneğini üretir ve buraya geçirir.
+   */
+  diagnostics?: Diagnostics;
+  /**
+   * Sahneler init edilmeden (Phaser.Game oluşturulmadan) ÖNCE çalışır; native
+   * state/save load için kullanılır. Hook reddedilirse oyun başlatılmaz.
+   */
+  onBeforeSceneInit?: () => Promise<void>;
+}
+
+/**
+ * VOL.STUDIO oyunlarını asenkron olarak başlatır. Deterministik açılış sırası:
+ * fontlar yüklenir, ardından `onBeforeSceneInit` awaitlenir, sonra `Phaser.Game` oluşturulur.
+ */
+export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game> {
+  if (config.fpsLimit !== undefined && !(Number.isFinite(config.fpsLimit) && config.fpsLimit > 0)) {
+    throw new Error(`fpsLimit pozitif bir sayı olmalı: ${config.fpsLimit}`);
+  }
+  const selectedFamilies: VolFontFamily[] =
+    config.fonts ?? (Object.keys(VOL_FONTS) as VolFontFamily[]);
+
+  const specs: FontFaceSpec[] = [];
+  for (const family of selectedFamilies) {
+    const spec = VOL_FONTS[family];
+    if (!spec) {
+      throw new Error(`Geçersiz font ailesi: ${family}`);
+    }
+    specs.push(spec);
+  }
+
+  const fontManager = new FontManager({ fonts: specs, timeoutMs: TECH.FONT_LOAD_TIMEOUT_MS });
+  const loaded = await fontManager.load();
+  const failed = loaded.filter((f) => f.status === 'error');
+
+  if (failed.length > 0) {
+    console.warn(
+      `[createVolGame] Fontlar yüklenemedi, sistem fontuna düşülüyor: ${failed
+        .map((f) => f.family)
+        .join(', ')}`,
+    );
+  }
+
+  let fallback: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      document.fonts.ready,
+      new Promise<void>((resolve) => (fallback = setTimeout(resolve, TECH.FONT_READY_FALLBACK_MS))),
+    ]);
+  } finally {
+    clearTimeout(fallback);
+  }
+
+  if (config.onBeforeSceneInit) {
+    await config.onBeforeSceneInit();
+  }
+
+  const viewportManager = new ViewportManager({
+    width: config.width,
+    height: config.height,
+    parent: config.parent,
+    backgroundColor: config.backgroundColor,
+    strategy: config.strategy,
+    maxDpr: config.maxDpr,
+    renderScale: config.renderScale,
+    maxPixels: config.maxPixels,
+  });
+
+  const requestedRenderer: RendererRequest = config.renderer ?? 'auto';
+  const gameConfig: Phaser.Types.Core.GameConfig = {
+    ...viewportManager.getConfig(),
+    // Renderer AÇIKÇA seçilir; varsayılanın ne olduğu okunabilir olmalıdır.
+    type:
+      requestedRenderer === 'webgl'
+        ? Phaser.WEBGL
+        : requestedRenderer === 'canvas'
+          ? Phaser.CANVAS
+          : Phaser.AUTO,
+    scene: config.scenes,
+    physics: config.physics,
+    input: config.input,
+    render: config.render,
+    ...(config.fpsLimit === undefined ? {} : { fps: { limit: config.fpsLimit } }),
+    audio: config.audio ?? { noAudio: true },
+  };
+
+  const game = new Phaser.Game(gameConfig);
+  // Sahneler kamerayı geçerli rasterleme çarpanına göre kurabilsin diye
+  // yönetici registry'ye konur: `applyVolViewport(scene)` bunu okur.
+  // Gerçek `Phaser.Game`de registry her zaman vardır; opsiyonel erişim
+  // yalnızca Phaser'ı taklit eden test/araç ortamları içindir.
+  game.registry?.set(VIEWPORT_REGISTRY_KEY, viewportManager);
+
+  const { diagnostics } = config;
+  if (diagnostics) {
+    game.events.once(Phaser.Core.Events.DESTROY, () => diagnostics.destroy());
+  }
+
+  // Renderer boot ile birlikte kesinleşir; READY'den önce okumak `unknown` verir.
+  const reportRenderer = (): void => {
+    const info = describeRenderer(game, requestedRenderer);
+    diagnostics?.setRenderer(info);
+    if (info.fellBack) {
+      console.warn(
+        `[vol] WebGL kurulamadı, ${info.kind} renderer'a düşüldü — ` +
+          'vektör çizim ve partikül yükü altında kare süresi belirgin artar.',
+      );
+    }
+  };
+  if (game.isBooted) reportRenderer();
+  else game.events.once(Phaser.Core.Events.READY, reportRenderer);
+
+  if (config.strategy === 'resize') {
+    const detachResize = viewportManager.attachResize(game);
+    game.events.once(Phaser.Core.Events.DESTROY, detachResize);
+  }
+
+  return game;
+}
+
+/** `createVolGame`in kabul ettiği renderer talebi. */
+export type RendererRequest = 'auto' | 'webgl' | 'canvas';
+
+/**
+ * Phaser'ın renderer tipini teşhis sözleşmesine çevirir.
+ *
+ * `Phaser.AUTO` VARSAYILANDIR ve bilinçlidir: WebGL kurulamayan bir cihazda
+ * hiç açılmamaktansa yavaş açılmak yeğdir. Bedeli, geri düşüşün SESSİZ
+ * olmasıdır — bu yüzden ölçülür ve raporlanır, yutulmaz.
+ */
+function describeRenderer(game: Phaser.Game, requested: RendererRequest): RendererInfo {
+  const type: unknown = (game as { renderer?: { type?: unknown } }).renderer?.type;
+  const kind: RendererKind =
+    type === Phaser.WEBGL
+      ? 'webgl'
+      : type === Phaser.CANVAS
+        ? 'canvas'
+        : type === Phaser.HEADLESS
+          ? 'headless'
+          : 'unknown';
+  // `unknown` bir ayrışma DEĞİLDİR: ölçüm yapılamamıştır (Phaser taklidi, boot öncesi).
+  const fellBack = kind !== 'unknown' && requested !== 'auto' && kind !== requested;
+  return { kind, requested, fellBack: fellBack || (requested === 'auto' && kind === 'canvas') };
+}
+
+/** `ViewportManager`ın Phaser registry anahtarı. */
+export const VIEWPORT_REGISTRY_KEY = 'volViewportManager';
+
+/**
+ * `createVolGame` oyununun canvas ve kameralarını geçerli viewport ölçüleriyle yeniden kurar. Pencere
+ * boyutu değişmeden `renderScale`/`maxPixels` sağlayıcıları değiştiğinde (uyarlanır çözünürlük) çağrılır;
+ * `createVolGame` dışındaki oyunda no-op.
+ */
+export function refreshVolViewport(game: Phaser.Game): void {
+  const manager: unknown = game.registry?.get(VIEWPORT_REGISTRY_KEY);
+  if (manager instanceof ViewportManager) manager.refresh(game);
+}
+
+/**
+ * Sahnenin kamerasını oyunun viewport sözleşmesine göre kurar.
+ *
+ * `createVolGame` ile kurulmuş bir oyunda her sahne `create()` içinde bunu
+ * çağırmalıdır: kamera yakınlaştırması rasterleme çarpanına eşitlenir ve
+ * dünya birimleri CSS pikseline sabitlenir. Çağrılmazsa sahne, çözünürlük
+ * çarpanı 1 değilken dünyanın yalnız bir bölümünü gösterir.
+ *
+ * `createVolGame` dışında kurulmuş bir oyunda güvenle no-op olur.
+ */
+export function applyVolViewport(scene: Phaser.Scene): void {
+  const manager: unknown = scene.game?.registry?.get(VIEWPORT_REGISTRY_KEY);
+  if (manager instanceof ViewportManager) manager.applyToScene(scene);
+}

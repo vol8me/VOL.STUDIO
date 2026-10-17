@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "panel-close"
+  ],
+  "durationSeconds": {
+    "max": 0.42,
+    "min": 0.112
+  },
+  "id": "ui-steel-panel-close-panel-close-b",
+  "intent": "çelik donanım: panel-close Varyant panel-close-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel panel-close — panel-close-b"
+}

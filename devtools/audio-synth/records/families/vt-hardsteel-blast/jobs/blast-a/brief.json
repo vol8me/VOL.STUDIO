@@ -1,0 +1,24 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "rarity:common",
+    "weight:light",
+    "blast"
+  ],
+  "durationSeconds": {
+    "max": 1.4,
+    "min": 0.85
+  },
+  "id": "vt-hardsteel-blast-blast-a",
+  "intent": "Yakın patlama: kocaman şok dalgası, ateş topu ve uzun gümbürdeyen kuyruk. Varyant blast-a (rarity:common, weight:light).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST blast — blast-a"
+}

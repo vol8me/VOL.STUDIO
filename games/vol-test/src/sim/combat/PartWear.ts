@@ -1,0 +1,166 @@
+import { PARTS } from '@/config/parts';
+import type { VehicleSpec } from '@/config/vehicles';
+import type { Chassis } from '../chassis/Chassis';
+import { LEGS_PER_SIDE, TRACK_BITS, hasLegStations, legBit, legStations } from '../chassis/parts';
+
+/** Doğrusal basamak: `from`un altı 0, `to`nun üstü 1. */
+function ramp(value: number, from: number, to: number): number {
+  return Math.min(1, Math.max(0, (value - from) / (to - from)));
+}
+
+/**
+ * Bir aracın parça aşınması. Mermi temas noktası gövde çerçevesine çevrilir ve hasar o bölgenin
+ * parçasına (yan palet, yan itici ya da en yakın bacaklar) yazılır; parça dayanımına ulaşınca kırılır. Konum
+ * kritikse (gövde kenarı) aşınma büyür. Rastgelelik yoktur: aynı atış dizisi aynı parçayı kırar,
+ * bu yüzden sunucu, öngörü ve sınama aynı sonucu görür. Darbeden sonra bir süre dinlenen parçanın
+ * aşınması söner; uzun süre hasar alınmazsa kırık parçalar birer birer yerine oturur.
+ *
+ * Aşınma ağa gitmez: yalnız sonuç (`Chassis.parts` bit maskesi) ağ durumundadır.
+ */
+export class PartWear {
+  private readonly wear: number[];
+  private readonly limit: number;
+  private sinceHitMs = 0;
+  private sinceDamageMs = 0;
+  private mendMs = 0;
+
+  constructor(private readonly spec: VehicleSpec) {
+    this.wear = new Array<number>(hasLegStations(spec.kind) ? LEGS_PER_SIDE * 2 : TRACK_BITS).fill(
+      0,
+    );
+    this.limit = spec.health * PARTS[spec.kind].healthShare;
+  }
+
+  /** Bir parçanın dayanımı (can karşılığı). */
+  get partLimit(): number {
+    return this.limit;
+  }
+
+  /** Parçanın birikmiş aşınması (sınama ve ölçüm). */
+  wearOf(slot: number): number {
+    return this.wear[slot] ?? 0;
+  }
+
+  /** Aracın canı azaldı (mermi, çarpma, ne olursa): onarım sessizliği ve aşınma sönümü yeniden başlar. */
+  touch(): void {
+    this.sinceDamageMs = 0;
+    this.sinceHitMs = 0;
+    this.mendMs = 0;
+  }
+
+  /**
+   * Mermi `(x, y)` noktasında `damage` can götürdü: bölgenin parçasını aşındırır ve BU çağrıda kırılan
+   * parçaların bit maskesini döner (`Chassis.parts`a yazmak çağıranındır).
+   */
+  strike(chassis: Chassis, x: number, y: number, damage: number): number {
+    if (![x, y, damage].every(Number.isFinite) || damage < 0)
+      throw new RangeError('Parça isabeti sonlu, hasarı negatif olmayan değerler taşımalı');
+    if (!(damage > 0)) return 0;
+    const dx = x - chassis.x;
+    const dy = y - chassis.y;
+    const cos = Math.cos(chassis.hull);
+    const sin = Math.sin(chassis.hull);
+    const forward = dx * cos + dy * sin;
+    const right = -dx * sin + dy * cos;
+    const halfWidth = chassis.shape.halfWidth;
+    const edge = Math.min(1, Math.abs(right) / halfWidth);
+    return hasLegStations(this.spec.kind)
+      ? this.strikeLegs(chassis, forward, right, edge, damage)
+      : this.strikeSide(chassis, right, edge, damage);
+  }
+
+  /** Aşınmayı söndürür, sessizlik sürerse kırık parçaları birer birer yerine oturtur; onarılan maskeyi döner. */
+  step(chassis: Chassis, stepMs: number): number {
+    if (!Number.isFinite(stepMs) || stepMs < 0)
+      throw new RangeError('Parça adımı sonlu ve negatif olmayan süre olmalı');
+    if (stepMs === 0) return 0;
+    const previousHit = this.sinceHitMs;
+    const previousDamage = this.sinceDamageMs;
+    this.sinceHitMs += stepMs;
+    this.sinceDamageMs += stepMs;
+    if (this.sinceHitMs > PARTS.wear.decayDelayMs) {
+      const activeMs =
+        Math.max(0, this.sinceHitMs - PARTS.wear.decayDelayMs) -
+        Math.max(0, previousHit - PARTS.wear.decayDelayMs);
+      const fade = (PARTS.wear.decayPerSecond * activeMs) / 1000;
+      for (let slot = 0; slot < this.wear.length; slot++) {
+        if (this.wear[slot] < this.limit) this.wear[slot] = Math.max(0, this.wear[slot] - fade);
+      }
+    }
+    if (chassis.parts === 0 || this.sinceDamageMs < PARTS.repair.quietMs) return 0;
+    this.mendMs +=
+      Math.max(0, this.sinceDamageMs - PARTS.repair.quietMs) -
+      Math.max(0, previousDamage - PARTS.repair.quietMs);
+    if (this.mendMs < PARTS.repair.intervalMs) return 0;
+    let repaired = 0;
+    for (let slot = 0; slot < this.wear.length; slot++) {
+      const bit = this.bitOf(slot);
+      if ((chassis.parts & bit) === 0) continue;
+      chassis.parts &= ~bit;
+      this.wear[slot] = 0;
+      repaired |= bit;
+      this.mendMs -= PARTS.repair.intervalMs;
+      if (this.mendMs < PARTS.repair.intervalMs) break;
+    }
+    if (chassis.parts === 0) this.mendMs = 0;
+    return repaired;
+  }
+
+  /** Doğuş ya da sıfırlama: bütün parçalar sağlam, aşınma boş. */
+  reset(): void {
+    this.wear.fill(0);
+    this.sinceHitMs = 0;
+    this.sinceDamageMs = 0;
+    this.mendMs = 0;
+  }
+
+  /** Aşınma yuvasının bit maskesi (tankta ve süzülende yuva 0 sol, 1 sağ; yürüyücüde `taraf*4 + istasyon`). */
+  bitOf(slot: number): number {
+    return hasLegStations(this.spec.kind)
+      ? legBit(Math.floor(slot / LEGS_PER_SIDE), slot % LEGS_PER_SIDE)
+      : 1 << slot;
+  }
+
+  /** Tankın yan paleti ve süzülenin yan iticisi: gövdenin dışına düşen darbe o yanın parçasına gider. */
+  private strikeSide(chassis: Chassis, right: number, edge: number, damage: number): number {
+    const config = PARTS[hasLegStations(this.spec.kind) ? 'tank' : this.spec.kind];
+    const reach = ramp(edge, config.sideStart, 1);
+    if (reach === 0) return 0;
+    const critical = edge >= config.criticalStart ? config.criticalGain : 1;
+    // Sol palet gövdenin -y yanındadır (sağ eksen +y).
+    return this.add(chassis, right < 0 ? 0 : 1, damage * reach * critical);
+  }
+
+  private strikeLegs(
+    chassis: Chassis,
+    forward: number,
+    right: number,
+    edge: number,
+    damage: number,
+  ): number {
+    const spec = this.spec;
+    if (spec.kind !== 'walker' && spec.kind !== 'leaper') return 0;
+    const config = PARTS[spec.kind];
+    const stations = legStations(spec);
+    const side = right < 0 ? 0 : 1;
+    const critical = edge >= config.criticalStart ? config.criticalGain : 1;
+    const reach = config.centreWeight + (1 - config.centreWeight) * ramp(edge, config.sideStart, 1);
+    const spacing = (stations[0] - stations[stations.length - 1]) / (stations.length - 1);
+    const sigma = Math.max(1, spacing * config.spread);
+    let broken = 0;
+    stations.forEach((station, index) => {
+      const offset = (forward - station) / sigma;
+      const share = Math.exp(-offset * offset);
+      if (share < 0.05) return;
+      broken |= this.add(chassis, side * LEGS_PER_SIDE + index, damage * reach * critical * share);
+    });
+    return broken;
+  }
+
+  private add(chassis: Chassis, slot: number, amount: number): number {
+    const bit = this.bitOf(slot);
+    if ((chassis.parts & bit) !== 0) return 0;
+    this.wear[slot] = Math.min(this.limit, this.wear[slot] + amount);
+    return this.wear[slot] >= this.limit ? bit : 0;
+  }
+}

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { i18n, i18next, I18n } from '../../src/systems/I18n';
-import type { SaveManager } from '../../src/systems/SaveManager';
+import { i18n, i18next, I18n } from '../../src/i18n/I18n';
+import type { SaveManager } from '../../src/persistence/SaveManager';
 
 function makeSaveManager(stored: string | undefined = undefined): SaveManager {
   const store = new Map<string, unknown>();
@@ -133,10 +133,45 @@ describe('I18n — SaveManager entegrasyonu', () => {
     expect(i18n.getLocale()).toBe('tr');
   });
 
+  it('TANINMAYAN kayitli dil kabul edilmez, tespit yoluna duser', async () => {
+    /*
+     * `detectLocale()` bir dili ancak `locales` kumesinde varsa dondurur;
+     * yoksa fallback'e düşer. Depodan gelen değer bir donem bu doğrulamayı
+     * TAMAMEN atlıyordu: `load<string>(key, detectLocale())` ifadesi yedeği
+     * özenle doğruluyor ama kayıtlı değeri olduğu gibi `i18next.init`e
+     * taşıyordu.
+     *
+     * Depo elle düzenlenebilir, eski bir sürümde kaldırılmış bir dil kodu
+     * taşıyabilir ya da `JSON.parse` sonucu hiç string olmayabilir. CORE'un
+     * kendi tüketicileri depoya guvenmemeyi ogrenmisken (hepsi
+     * `load<unknown>` + temizlik yapar) CORE'un kendisi tek yerde guveniyordu.
+     */
+    const saveManager = makeSaveManager('de');
+    await i18n.init({ saveManager });
+    expect(i18n.getLocale()).toBe('tr');
+  });
+
+  it('string OLMAYAN kayitli deger kabul edilmez', async () => {
+    const store = new Map<string, unknown>([['vol-locale', 42]]);
+    const saveManager = {
+      load: <T>(key: string, fallback: T): Promise<T> =>
+        Promise.resolve((store.get(key) ?? fallback) as T),
+      save: <T>(key: string, value: T): Promise<void> => {
+        store.set(key, value);
+        return Promise.resolve();
+      },
+    } as unknown as SaveManager;
+
+    await i18n.init({ saveManager });
+    expect(i18n.getLocale()).toBe('tr');
+  });
+
   it('ozel saveKey desteklenir', async () => {
     const store = new Map<string, unknown>([['oyun-dili', 'en']]);
     const saveManager = {
-      load: vi.fn(<T>(key: string, def: T): Promise<T> => Promise.resolve((store.get(key) as T) ?? def)),
+      load: vi.fn(<T>(key: string, def: T): Promise<T> =>
+        Promise.resolve((store.get(key) as T) ?? def),
+      ),
       save: vi.fn((key: string, value: unknown): Promise<void> => {
         store.set(key, value);
         return Promise.resolve();
@@ -148,17 +183,24 @@ describe('I18n — SaveManager entegrasyonu', () => {
     } as unknown as SaveManager;
     await i18n.init({ saveManager, saveKey: 'oyun-dili' });
     expect(i18n.getLocale()).toBe('en');
-    expect(saveManager.load).toHaveBeenCalledWith('oyun-dili', 'tr');
+
+    /*
+     * Sözleşme: ÖZEL ANAHTAR okunur. İddia `load`un ikinci argümanını
+     * kilitlemez: o değerin nasıl getirildiğidir, ne getirildiği değil.
+     * Uygulama detayını kilitleyen bir iddia, doğru bir düzeltmeyi
+     * yanlışmış gibi gösterir.
+     */
+    expect(vi.mocked(saveManager.load).mock.calls[0][0]).toBe('oyun-dili');
   });
 });
 
 describe('I18n — addResources (namespace)', () => {
   it('yeni namespace ve dil eklenir', async () => {
     await i18n.init();
-    i18n.addResources('tr', 'volhell', {
+    i18n.addResources('tr', 'game', {
       menu: { start: 'BAŞLA' },
     });
-    expect((i18next.t as (key: string) => string)('volhell:menu.start')).toBe('BAŞLA');
+    expect((i18next.t as (key: string) => string)('game:menu.start')).toBe('BAŞLA');
   });
 
   it('getLocales yeni dili icerir', async () => {
@@ -174,12 +216,27 @@ describe('I18n — addResources (namespace)', () => {
   });
 
   it('init oncesi cagrilirsa queue lanir ve init sonrasi uygulanir', async () => {
-    i18n.addResources('tr', 'volhell', {
+    i18n.addResources('tr', 'game', {
       menu: { start: 'BAŞLA' },
     });
     expect(i18n.isInitialized()).toBe(false);
     await i18n.init();
-    expect((i18next.t as (key: string) => string)('volhell:menu.start')).toBe('BAŞLA');
+    expect((i18next.t as (key: string) => string)('game:menu.start')).toBe('BAŞLA');
+  });
+
+  it('boş kaynak eklenmez ve locale listesine dahil olmaz', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await i18n.init();
+    i18n.addResources('de', 'core', {});
+    expect(i18next.t('core:carousel.prev', { lng: 'de' })).not.toBe('Zurück');
+    expect(i18n.getLocales()).not.toContain('de');
+    warnSpy.mockRestore();
+  });
+
+  it('core kaynağı olmayan dile geçiş reddedilir', async () => {
+    await i18n.init();
+    i18n.addResources('fr', 'game', { menu: { start: 'DÉMARRER' } });
+    await expect(i18n.changeLanguage('fr')).rejects.toThrow(/core.*kaynağı/);
   });
 });
 
@@ -350,16 +407,32 @@ describe('I18n — resources option (ek dil)', () => {
 describe('I18n — reset', () => {
   it('reset eklenen resource bundle lari i18next ten temizler', async () => {
     await i18n.init();
-    i18n.addResources('tr', 'volhell', { menu: { start: 'BAŞLA' } });
-    expect((i18next.t as (key: string) => string)('volhell:menu.start')).toBe('BAŞLA');
+    i18n.addResources('tr', 'game', { menu: { start: 'BAŞLA' } });
+    expect((i18next.t as (key: string) => string)('game:menu.start')).toBe('BAŞLA');
     i18n.reset();
     await i18n.init();
-    expect((i18next.t as (key: string) => string)('volhell:menu.start')).not.toBe('BAŞLA');
+    expect((i18next.t as (key: string) => string)('game:menu.start')).not.toBe('BAŞLA');
   });
 
-  it('reset pendingResources i temizler', () => {
-    i18n.addResources('tr', 'volhell', { menu: { start: 'BAŞLA' } });
+  it('reset, init ÖNCESİ eklenmiş bekleyen kaynakları düşürür', async () => {
+    /*
+     * Bekleyen kaynaklar `init` sırasında uygulandığı için `reset`in etkisi
+     * ancak init SONRASI görülür; yalnız `reset` çağırmak no-op'u yakalamaz.
+     */
+    i18n.addResources('tr', 'game', { menu: { start: 'BAŞLA' } });
     i18n.reset();
+    await i18n.init();
+
+    expect(i18next.exists('game:menu.start')).toBe(false);
+  });
+
+  it('reset EDİLMEDİĞİNDE bekleyen kaynak init sırasında uygulanır', async () => {
+    // Karşı taraf: yukarıdaki testin `reset` yüzünden mi yoksa mekanizma hiç
+    // çalışmadığı için mi geçtiğini ayırt eder.
+    i18n.addResources('tr', 'game', { menu: { start: 'BAŞLA' } });
+    await i18n.init();
+
+    expect(i18next.exists('game:menu.start')).toBe(true);
   });
 
   it('reset sonrasi initialized false doner', async () => {

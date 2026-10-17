@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-255c1fc2e1897526": {
+        "hash": "sha256:231289e78e35b8ea6c79eadede402275a83f3fe34a9f47159f17a872bbc00a94",
+        "path": "analyses/r-255c1fc2e1897526.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:5b70a2fffb57a95acb2f0396cab0d57c4903f9533fc6871eef943042bfa5b894",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:5b70a2fffb57a95acb2f0396cab0d57c4903f9533fc6871eef943042bfa5b894",
+      "hash": "sha256:36f5f1222c6fee179bdabaa4070391f63c5cb4c1e9212caad91cd4b1d9a02ab4",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:27c081216685f038ede06827765bb8d3e238720e18d1c3432a30e2bfda72c818",
+      "path": "games/vol-test/audio-manifests/sfx/steel/steps.json"
+    },
+    "renders": {
+      "r-255c1fc2e1897526": {
+        "hash": "sha256:599d122cff763042fdae2a853720052bcf399e3e5f2ff9b0a4cccd111cec68c8",
+        "path": "renders/r-255c1fc2e1897526.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:95bcb7cf087c115836299aa1630d69a0af38f24bc1c45a774c01052998433b7f",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-steps",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 258,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/steps.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

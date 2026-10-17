@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="16" viewBox="0 0 30 16">
+  <defs>
+    <radialGradient id="dome" cx="0.38" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#f3f6ff"/>
+      <stop offset="0.5" stop-color="#a3b4d6"/>
+      <stop offset="1" stop-color="#3b4d78"/>
+    </radialGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#eef3ff"/>
+      <stop offset="0.45" stop-color="#3a6bff"/>
+      <stop offset="1" stop-color="#0a1d6a"/>
+    </radialGradient>
+    <linearGradient id="rail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9fb0d0"/>
+      <stop offset="0.5" stop-color="#394a6e"/>
+      <stop offset="1" stop-color="#101a30"/>
+    </linearGradient>
+  </defs>
+  <rect x="12" y="6" width="12" height="3.4" rx="1.2" fill="url(#rail)" stroke="#0d1217" stroke-width=".6"/>
+  <path d="M23 5H27.6L29.4 6.6V8.8L27.6 10.4H23Z" fill="#1d2a47" stroke="#0d1217" stroke-width=".6" stroke-linejoin="round"/>
+  <path d="M28.6 6.4V9" stroke="#3a6bff" stroke-opacity=".85" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M8 1.2L14.2 4.4V11L8 14.2L1.8 11V4.4Z" fill="url(#dome)" stroke="#0d1217" stroke-width=".85" stroke-linejoin="round"/>
+  <path d="M8 1.2V5M1.8 4.4L5.4 6.2M14.2 4.4L10.6 6.2M1.8 11L5.4 9.2M14.2 11L10.6 9.2M8 14.2V10.4" stroke="#5a6e92" stroke-width=".5" stroke-linecap="round"/>
+  <circle cx="8" cy="7.7" r="2.5" fill="url(#lens)" stroke="#0d1217" stroke-width=".55"/>
+  <circle cx="7.2" cy="6.9" r=".7" fill="#fff" fill-opacity=".9"/>
+</svg>

@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "key-delete"
+  ],
+  "durationSeconds": {
+    "max": 0.22,
+    "min": 0.048
+  },
+  "id": "ui-aurum-key-delete-key-delete-a",
+  "intent": "yaldızlı cam ve lake: key-delete Varyant key-delete-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum key-delete — key-delete-a"
+}

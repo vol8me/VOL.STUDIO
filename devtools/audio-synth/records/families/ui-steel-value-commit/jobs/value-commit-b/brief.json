@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "value-commit"
+  ],
+  "durationSeconds": {
+    "max": 0.4,
+    "min": 0.112
+  },
+  "id": "ui-steel-value-commit-value-commit-b",
+  "intent": "çelik donanım: value-commit Varyant value-commit-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel value-commit — value-commit-b"
+}

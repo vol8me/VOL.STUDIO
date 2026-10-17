@@ -1,0 +1,833 @@
+.vol-card-stack {
+  pointer-events: auto;
+  align-items: center;
+  gap: var(--vol-space-lg);
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+}
+
+.vol-card-stack__stack {
+  width: 100%;
+  max-width: 320px;
+  height: 220px;
+  position: relative;
+}
+
+.vol-card-stack__card {
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  box-shadow: 0 8px 24px var(--vol-ui-scrim);
+  touch-action: none;
+  transform: scale(calc(1 - var(--vol-card-stack-depth, 0) * 0.05))
+    translateY(calc(var(--vol-card-stack-depth, 0) * 10px));
+  transition:
+    transform var(--vol-transition-medium),
+    box-shadow var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  display: flex;
+  position: absolute;
+  inset: 0;
+}
+
+.vol-card-stack__card:last-child {
+  cursor: var(--vol-cursor-grab, grab);
+  z-index: 3;
+}
+
+.vol-card-stack__card--dragging {
+  cursor: var(--vol-cursor-grabbing, grabbing);
+  transition: none;
+}
+
+/* Uçuş süresi `CARD_FLY_ANIMATION_MS` (240) ile eşleşir; deste uçuş bitince yeniden çizilir. */
+.vol-card-stack__card--flying {
+  transition: transform var(--vol-transition-medium);
+}
+
+.vol-card-stack__card--swipe-right {
+  border-color: var(--vol-ui-success-border);
+  box-shadow:
+    0 8px 24px var(--vol-ui-scrim),
+    0 0 0 3px var(--vol-ui-success-subtle);
+}
+
+.vol-card-stack__card--swipe-left {
+  border-color: var(--vol-ui-danger-border);
+  box-shadow:
+    0 8px 24px var(--vol-ui-scrim),
+    0 0 0 3px var(--vol-ui-danger-subtle);
+}
+
+.vol-card-stack__hint {
+  top: var(--vol-space-md);
+  opacity: 0;
+  pointer-events: none;
+  border: 3px solid;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+  transition: opacity var(--vol-transition-fast);
+  display: flex;
+  position: absolute;
+}
+
+.vol-card-stack__hint svg {
+  width: 22px;
+  height: 22px;
+}
+
+.vol-card-stack__hint--accept {
+  right: var(--vol-space-md);
+  color: var(--vol-ui-success-border);
+  border-color: var(--vol-ui-success-border);
+  background: var(--vol-ui-success-subtle);
+}
+
+.vol-card-stack__hint--reject {
+  left: var(--vol-space-md);
+  color: var(--vol-ui-danger-border);
+  border-color: var(--vol-ui-danger-border);
+  background: var(--vol-ui-danger-subtle);
+}
+
+.vol-card-stack__actions {
+  /* Düğme sırası fiziksel yönü izler (ret solda, kabul sağda): RTL'de de kaydırma yönüyle ve ipucu rozetleriyle örtüşür. */
+  direction: ltr;
+  gap: var(--vol-space-lg);
+  display: flex;
+}
+
+.vol-card-stack__action {
+  pointer-events: auto;
+  cursor: var(--vol-cursor-link, pointer);
+  width: 52px;
+  height: 52px;
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-strong);
+  transition:
+    border-color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast),
+    color var(--vol-transition-fast);
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.vol-card-stack__action svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Deste bitti: kalıcı devre dışı. (Uçuş sırasındaki geçici `aria-disabled` görünümü değiştirmez.) */
+.vol-card-stack__action:disabled {
+  cursor: var(--vol-cursor-default, default);
+  color: var(--vol-ui-disabled-text);
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-card-stack__action:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.vol-card-stack__action:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.vol-card-stack__action--reject:hover:not(:disabled) {
+  border-color: var(--vol-ui-danger-border);
+  background: var(--vol-ui-danger-subtle);
+  color: var(--vol-ui-danger-border);
+}
+
+.vol-card-stack__action--accept:hover:not(:disabled) {
+  border-color: var(--vol-ui-success-border);
+  background: var(--vol-ui-success-subtle);
+  color: var(--vol-ui-success-border);
+}
+
+/* Azaltılmış hareket: uçuş ve düğme ölçeği yok; karar aynı, deste hemen yeniden çizilir. */
+@media (prefers-reduced-motion: reduce) {
+  .vol-card-stack__card,
+  .vol-card-stack__card--flying {
+    transition:
+      box-shadow var(--vol-transition-fast),
+      border-color var(--vol-transition-fast);
+  }
+
+  .vol-card-stack__action:hover:not(:disabled),
+  .vol-card-stack__action:active:not(:disabled) {
+    transform: none;
+  }
+} /* Kart seçim panelleri — level-up ve dükkan. Metin-only kartlar; nadirlik
+   farkı yalnızca renk/kenarlıkla verilir, ikon veya görsel varlık yoktur. */
+
+.vol-card-picker {
+  pointer-events: auto;
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  flex-direction: column;
+  gap: var(--vol-space-md);
+  width: min(720px, 92vw);
+  max-height: 88vh;
+  padding: var(--vol-space-lg);
+  display: flex;
+  position: relative;
+  overflow-y: auto;
+}
+
+.vol-card-picker[hidden] {
+  display: none;
+}
+
+/*
+ * Panelin açılış geçişi — level-up ve dükkan ekranları belirirken.
+ * Oyun bu sırada duraklatıldığı için animasyon oynanışı geciktirmez;
+ * amaç, panelin ekrana "çarpması" yerine yerine oturması.
+ *
+ * `:not(.vol-card-picker--leaving)` BİLEREKTİR: `hide()` `hidden`'ı hemen
+ * değil `HIDE_ANIMATION_MS` sonra uygular (bkz.
+ * CardPicker.ts) — o ara pencerede eleman hâlâ `:not([hidden])`, bu satır
+ * olmasaydı giriş ve çıkış animasyonu AYNI ANDA uygulanıp çakışırdı.
+ */
+@keyframes vol-card-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vol-card-picker:not([hidden], .vol-card-picker--leaving) {
+  animation: vol-card-picker-in var(--vol-transition-medium) ease-out both;
+}
+
+/* Panelin kapanış geçişi — `CardPicker.hide()` bu class'ı ekleyip süre
+   sonunda `hidden`'ı uygular (bkz. CardPicker.ts, HIDE_ANIMATION_MS). */
+@keyframes vol-card-picker-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+.vol-card-picker--leaving {
+  animation: vol-card-picker-out var(--vol-transition-medium) ease-in both;
+}
+
+/* Reroll'da teklif ızgarasına yalnızca hafif bir "yere oturma" hareketi verilir.
+ * Parlaklık/opaklık oynaması yapılmaz; kartların kendi giriş animasyonu zaten
+ * "deste yenilendi" hissi yaratır. */
+@keyframes vol-card-grid-reroll {
+  from {
+    transform: translateY(2px) scale(0.985);
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vol-card-picker__grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--vol-space-md);
+  display: grid;
+  align-items: stretch;
+}
+
+.vol-card-picker--rerolling .vol-card-picker__grid {
+  animation: vol-card-grid-reroll 0.24s ease-in-out both;
+  pointer-events: none;
+}
+
+/* Kartlar yumuşakça belirir: aşırı büyüme/parlama olmadan opaklık + hafif
+ * ölçek + kayma. */
+@keyframes vol-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/*
+ * Kart listeden çıkarken (satıldığında, ya da reroll'da tekliften düşünce) —
+ * ShopPicker.ts bu class'ı ekleyip `LEAVE_ANIMATION_MS` (=240ms, bu animasyonun
+ * süresiyle eşleşir) sonra DOM'dan gerçekten kaldırıyor.
+ */
+@keyframes vol-card-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+.vol-card--leaving {
+  animation: vol-card-out var(--vol-transition-medium) ease-in both;
+  pointer-events: none;
+}
+
+/*
+ * Bir teklif İLK KEZ satın alındığında kısa bir "başarı" vurgusu —
+ * ShopPicker.ts yalnızca purchased:false → true geçişinde ekler, ikinci bir
+ * render'da (ör. ilgisiz bir kilitleme) tekrar tetiklenmez.
+ */
+@keyframes vol-card-purchase-flash {
+  0% {
+    background: var(--vol-ui-success-subtle);
+    border-color: var(--vol-ui-success-border);
+  }
+
+  100% {
+    background: var(--vol-ui-disabled-fill);
+    border-color: var(--vol-ui-disabled-border);
+  }
+}
+
+.vol-card--just-purchased {
+  animation: vol-card-purchase-flash var(--vol-transition-medium) ease-out both;
+}
+
+.vol-card-picker__header {
+  flex-direction: column;
+  gap: var(--vol-space-xs);
+  display: flex;
+}
+
+.vol-card-picker__title {
+  letter-spacing: 0.08em;
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-title);
+  font-weight: 700;
+}
+
+.vol-card-picker__hint {
+  color: var(--vol-ui-text-muted);
+  font-family: var(--vol-font-family-body);
+  font-size: var(--vol-text-body);
+}
+
+/* Teklif yerine durum: yükleniyor (… işareti) ya da hata (! işareti); renk tek taşıyıcı değildir. */
+.vol-card-picker__notice {
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-sm) var(--vol-space-md);
+  font-family: var(--vol-font-family-body);
+  font-size: var(--vol-text-body);
+}
+
+.vol-card-picker__notice--loading::before {
+  content: '… ';
+}
+
+.vol-card-picker__notice--error {
+  background: var(--vol-ui-danger-subtle);
+  border-color: var(--vol-ui-danger-border);
+}
+
+.vol-card-picker__notice--error::before {
+  content: '! ';
+  font-weight: 700;
+}
+
+.vol-card-picker__footer {
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--vol-space-md);
+  display: flex;
+}
+
+/* --- Kart ---------------------------------------------------------------- */
+
+.vol-card {
+  text-align: left;
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-left: 3px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+  min-height: 150px;
+  padding: var(--vol-space-md);
+
+  /* Nadirlik farkı kenarlık renginde taşınır; geçişi de o renge uygula ki
+     kart üzerine gelindiğinde renk zıplamak yerine yumuşasın. */
+  transition:
+    background var(--vol-transition-fast),
+    border-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast);
+  display: flex;
+}
+
+/* Teklif ızgarasındaki kartlar aynı satırda eşit yükseklikte dursun;
+   `.vol-ui-root * { box-sizing: border-box }` ile `height: 100%` padding'i
+   de kapsar. */
+.vol-card-picker__grid > .vol-card {
+  height: 100%;
+}
+
+/*
+ * Panel açılırken teklif ızgarasındaki YENİ kartlar sırayla belirir. Dükkan
+ * (`.vol-card-picker--shop`) reroll'unda tüm açık kartlar aynı anda
+ * animasyon alır; level-up'ta 2. ve 3. kart gecikmeli belirir. Envanter
+ * listelerine uygulanmaz. Yalnızca `.vol-card--entering` alan kartlar
+ * animasyon alır; mevcut kartlar yerinde güncellenir, çıkış/flash
+ * durumlarındaki kartlar da giriş animasyonuyla çakışmaz.
+ */
+
+/* prettier-ignore */
+.vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased) {
+  animation: vol-card-in 0.36s ease-out both;
+}
+
+.vol-card:not(.vol-card--disabled):hover,
+.vol-card:not(.vol-card--disabled).vol-gamepad-hover {
+  background: var(--vol-ui-surface-2);
+  transform: translateY(-2px);
+}
+
+/* prettier-ignore */
+.vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(2) {
+  animation-delay: var(--vol-motion-preset-card-stagger);
+}
+
+/* prettier-ignore */
+.vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(3) {
+  animation-delay: calc(var(--vol-motion-preset-card-stagger) * 2);
+}
+
+/* prettier-ignore */
+.vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(4) {
+  animation-delay: calc(var(--vol-motion-preset-card-stagger) * 3);
+}
+
+.vol-card--disabled {
+  color: var(--vol-ui-disabled-text);
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-card--draggable {
+  cursor: var(--vol-cursor-grab, grab);
+}
+
+.vol-card--dragging {
+  opacity: 0.5;
+}
+
+/*
+ * `outline` kullanılır (border DEĞİL) — `.vol-card`'ın kendi `border` VE
+ * `border-left` (nadirlik rengi) özellikleriyle çakışmaması için. `outline`
+ * layout'a katılmaz, mevcut kenarlıkların üstüne biner.
+ */
+.vol-card--locked {
+  /* Kesikli çizgi: kilit durumu renkten bağımsız, biçimle de okunur. */
+  outline: 2px dashed var(--vol-ui-accent-solid);
+  outline-offset: -2px;
+}
+
+/* Kalıcı seçim (`setSelected`): vurgu çerçevesi ve dolu zemin; renkten bağımsız, kalınlıkla da okunur. */
+.vol-card--selected {
+  background: var(--vol-ui-accent-subtle);
+  border-color: var(--vol-ui-accent-border);
+  box-shadow: 0 0 0 1px var(--vol-ui-accent-border);
+}
+
+/* Oyunun eklediği ayrıntı bloğu (`addDetail`). */
+.vol-card__detail {
+  gap: var(--vol-space-xs);
+  flex-direction: column;
+  min-width: 0;
+  display: flex;
+}
+
+/* Seçilen kart: 1,04 ölçek + çerçeve vurgusu (azaltılmış harekette ölçek yok, çerçeve kalır). */
+.vol-card--picked {
+  border-color: var(--vol-ui-brand-border);
+  transform: scale(var(--vol-motion-card-select-scale));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-card--picked {
+    transform: none;
+  }
+}
+
+.vol-card__badges {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 var(--vol-space-sm);
+  min-width: 0;
+  display: flex;
+}
+
+.vol-card__rarity,
+.vol-card__type {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  letter-spacing: 0.14em;
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-micro);
+  font-weight: 700;
+}
+
+.vol-card__type {
+  color: var(--vol-ui-text-muted);
+}
+
+/* Nadirlik işareti: kademe sayısı kadar baklava (renk dışı); `aria-hidden`, ad rozetinde. */
+.vol-card__pips {
+  align-items: center;
+  gap: 0.25em;
+  font-size: var(--vol-text-micro);
+  line-height: 1;
+  display: inline-flex;
+}
+
+.vol-card__pips svg {
+  width: 0.8em;
+  height: 0.8em;
+}
+
+.vol-card__action {
+  cursor: var(--vol-cursor-link, pointer);
+  letter-spacing: 0.06em;
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-3);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm);
+  margin-left: auto;
+  padding: var(--vol-space-xs) var(--vol-space-md);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  font-weight: 700;
+  transition:
+    background var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-card__action:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-card__action:disabled {
+  cursor: var(--vol-cursor-default, default);
+  color: var(--vol-ui-disabled-text);
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-card__action:hover:not(:disabled),
+.vol-card__action.vol-gamepad-hover:not(:disabled) {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+}
+
+/*
+ * İkincil aksiyon (kilitle/tak/sat) birincil (satın al/seç) ile AYNI dolgulu
+ * stili paylaşıyordu — sınıf zaten `--secondary` olarak ayrılmıştı ama hiç
+ * kural yazılmamıştı, ikisi görsel olarak ayırt edilemiyordu. Ghost stil
+ * (saydam zemin, soluk kenarlık) birincili öne çıkarır.
+ */
+.vol-card__action--secondary {
+  color: var(--vol-ui-text-secondary);
+  background: transparent;
+  border-color: var(--vol-ui-border-soft);
+}
+
+.vol-card__action--secondary:hover:not(:disabled),
+.vol-card__action--secondary.vol-gamepad-hover:not(:disabled) {
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-hover-fill);
+  border-color: var(--vol-ui-border-strong);
+}
+
+.vol-card__title {
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-lead);
+  font-weight: 700;
+}
+
+.vol-card__description {
+  color: var(--vol-ui-text-secondary);
+  flex: 1;
+  font-family: var(--vol-font-family-body);
+  font-size: var(--vol-text-body);
+  line-height: 1.45;
+}
+
+.vol-card__footer {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-card__price {
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-body);
+  font-weight: 700;
+}
+
+.vol-card__status {
+  letter-spacing: 0.08em;
+  color: var(--vol-ui-text-muted);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+}
+
+/* Nadirlik — renk farkı + baklava sayısı (`.vol-card__pips`); kademe yukarı çıktıkça vurgu artar. */
+
+.vol-card--rare {
+  border-left-color: var(--vol-ui-info-solid);
+}
+
+.vol-card--rare .vol-card__rarity,
+.vol-card--rare .vol-card__pips {
+  color: var(--vol-ui-rarity-rare-selected);
+}
+
+.vol-card--epic {
+  border-left-color: var(--vol-ui-accent-solid);
+}
+
+.vol-card--epic .vol-card__rarity,
+.vol-card--epic .vol-card__pips {
+  /* Salt epic tonu surface-1 üzerinde 4,46:1 kalıyordu; metne doğru bir miktar açıldı. */
+  color: color-mix(in srgb, var(--vol-ui-rarity-epic-selected) 82%, var(--vol-ui-text));
+}
+
+.vol-card--legendary {
+  /* Zemin tonu (`--vol-card-bg`) malzeme katmanında: gradyan değil düz renk. */
+  border-left-color: var(--vol-ui-warning-solid);
+}
+
+.vol-card--legendary .vol-card__rarity,
+.vol-card--legendary .vol-card__pips,
+.vol-card--legendary .vol-card__title {
+  color: var(--vol-ui-warning-solid);
+}
+
+/* Envanterde kullanılan alçak kart — ne yaptığı görünür kalır, satır kısadır. */
+.vol-card--compact {
+  gap: var(--vol-space-xs);
+  min-height: 0;
+  padding: var(--vol-space-sm);
+}
+
+.vol-card--compact .vol-card__title {
+  font-size: var(--vol-text-body);
+}
+
+.vol-card--compact .vol-card__description {
+  font-size: var(--vol-text-label);
+  line-height: 1.3;
+}
+
+/* --- Dükkan ------------------------------------------------------------- */
+
+.vol-card-shop__reroll-row {
+  justify-content: flex-end;
+  display: flex;
+}
+
+.vol-card-shop__reroll {
+  cursor: var(--vol-cursor-link, pointer);
+  letter-spacing: 0.06em;
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-2);
+  border: 1px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-xs) var(--vol-space-md);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  font-weight: 700;
+  transition:
+    background var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-card-shop__reroll:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-card-shop__reroll:disabled {
+  cursor: var(--vol-cursor-default, default);
+  color: var(--vol-ui-disabled-text);
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+}
+
+.vol-card-shop__reroll:hover:not(:disabled),
+.vol-card-shop__reroll.vol-gamepad-hover:not(:disabled) {
+  background: var(--vol-ui-hover-fill);
+  border-color: var(--vol-ui-accent-solid);
+}
+
+.vol-card-shop__slots:empty {
+  display: none;
+}
+
+.vol-card-shop__section {
+  border-top: 1px solid var(--vol-ui-border-soft);
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+  padding-top: var(--vol-space-md);
+  display: flex;
+}
+
+.vol-card-shop__section-title {
+  letter-spacing: 0.06em;
+  color: var(--vol-ui-text-secondary);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  font-weight: 700;
+}
+
+.vol-card-shop__list {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-auto-rows: min-content;
+  align-content: start;
+  gap: var(--vol-space-sm);
+  max-height: 150px;
+  display: grid;
+  overflow-y: auto;
+}
+
+.vol-card-shop__empty {
+  color: var(--vol-ui-text-muted);
+  font-family: var(--vol-font-family-body);
+  font-size: var(--vol-text-label);
+}
+
+.vol-card-shop__balance {
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-body);
+  font-weight: 700;
+}
+
+/* Shop içindeki stat düğmesi: HUD'da yaşamaz, footer'ın yanında her zaman
+   tam dokunma hedefi bırakır. */
+.vol-card-shop__stats-toggle {
+  position: absolute;
+  top: var(--vol-space-md);
+  right: var(--vol-space-md);
+  z-index: 2;
+  flex: 0 0 auto;
+  min-width: var(--vol-hit-target-min, 44px);
+  min-height: var(--vol-hit-target-min, 44px);
+}
+
+.vol-card-shop__balance--changed {
+  animation: vol-card-balance-change var(--vol-transition-medium) ease-out both;
+}
+
+.vol-card-shop__balance--increase {
+  --vol-card-balance-feedback: var(--vol-ui-success-solid);
+}
+
+.vol-card-shop__balance--decrease {
+  --vol-card-balance-feedback: var(--vol-ui-danger-solid);
+}
+
+@keyframes vol-card-balance-change {
+  0% {
+    color: var(--vol-card-balance-feedback, var(--vol-ui-accent-solid));
+    transform: translateY(-2px);
+  }
+
+  100% {
+    color: var(--vol-ui-text);
+    transform: translateY(0);
+  }
+}
+
+.vol-card-shop__close {
+  cursor: var(--vol-cursor-link, pointer);
+  letter-spacing: 0.08em;
+  color: var(--vol-ui-on-brand);
+  background: var(--vol-ui-brand-solid);
+  border: 1px solid var(--vol-ui-brand-border);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-sm) var(--vol-space-lg);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-body);
+  font-weight: 700;
+  transition: background var(--vol-transition-fast);
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-card-shop__close:hover,
+.vol-card-shop__close.vol-gamepad-hover {
+  background: var(--vol-ui-brand-fill-hover);
+}
+
+.vol-card-shop__close:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+/*
+ * Hareket duyarlılığı olan kullanıcılar için tüm giriş/çıkış/vurgu
+ * animasyonları kapanır. Kartlar yine görünür/kaybolur, yalnızca hareket etmez.
+ */
+
+/* prettier-ignore */
+@media (prefers-reduced-motion: reduce) {
+  .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased),
+  .vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(2),
+  .vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(3),
+  .vol-card-picker:not(.vol-card-picker--shop) .vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased):nth-child(4),
+  .vol-card-picker:not([hidden]),
+  .vol-card-picker:not([hidden]) .vol-card,
+  .vol-card-picker--leaving,
+  .vol-card-picker--rerolling .vol-card-picker__grid,
+  .vol-card--leaving,
+  .vol-card--just-purchased {
+    animation: none;
+  }
+}

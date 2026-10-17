@@ -1,0 +1,688 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.00002025224852835886,
+          0.00003295579255511057
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 2,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0,
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 2,
+        "durationSeconds": 10,
+        "frames": 441000,
+        "sampleRate": 44100
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -2.1359423401793247,
+          -2.2333076869010475
+        ],
+        "channelRmsDbfs": [
+          -18.89010224568029,
+          -19.22853896071814
+        ],
+        "crestFactorDb": 16.920082387626756,
+        "integratedLufs": -16.47310901483837,
+        "maxMomentaryLufs": -12.872548817401265,
+        "rmsDbfs": -19.05602472780608,
+        "samplePeakDbfs": -2.1359423401793247,
+        "truePeakDbtp": -2.1359423401793247
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -83.75155236211668,
+          "high": -47.76282508453435,
+          "low": -21.611141756714773,
+          "mid": -29.1526888210718,
+          "sub": -23.838555191592175
+        },
+        "centroidHz": 255.9127885835549,
+        "flatness": 2.4478378314545595e-7,
+        "peakHz": 86.1328125,
+        "rolloff85Hz": 322.998046875
+      },
+      "stereo": {
+        "correlation": 0.9825859779060016,
+        "width": 0.09572309074936826
+      },
+      "temporal": {
+        "activeSeconds": 8.33,
+        "attackSeconds": 0.02,
+        "decay40Seconds": 0.7,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.02,
+        "temporalCentroidSeconds": 4.7429824550424415,
+        "trailingSilenceSeconds": 0.4399999999999995
+      }
+    },
+    "sourceRecordHash": "sha256:3ff3066c7e256349a328a29232f828fd38baae789f7768ab648ee265f545eb2a"
+  },
+  "asset": {
+    "bytes": 69801,
+    "encodedHash": "sha256:5f25ddc9ca78ff68b6b4ab5cd9d09cd786ec00526221a2d002b8ee9d6f9b910f",
+    "format": "ogg-vorbis",
+    "path": "devtools/audio-synth/reference/production/assets/music/reference-loop/mix.ogg"
+  },
+  "assetId": "reference-loop-mix",
+  "brief": {
+    "document": {
+      "affect": {
+        "arousal": 0.3,
+        "tags": [
+          "sakin",
+          "loop",
+          "zemin"
+        ],
+        "valence": -0.15
+      },
+      "assetClass": "music",
+      "avoidNotes": [
+        "Klişe kapanış kalıbı tek başına kullanılmasın (makineyle denetlenmez)."
+      ],
+      "channels": 2,
+      "form": {
+        "sections": [
+          "intro",
+          "body"
+        ]
+      },
+      "id": "reference-loop",
+      "intent": "Sakin, dönmeye uygun bir zemin parçası: menü ya da bekleme ekranı gibi dikkat istemeyen bir bağlamda sonsuza kadar dönebilmeli, dikişi duyulmamalı.",
+      "kind": "music",
+      "length": {
+        "bars": {
+          "max": 16,
+          "min": 4
+        }
+      },
+      "melodicSalience": 0.2,
+      "meter": [
+        4,
+        4
+      ],
+      "playback": "loop",
+      "provenance": {
+        "author": "agent",
+        "by": "wave-6-reference"
+      },
+      "rhythmicDensity": "moderate",
+      "schema": "AudioBriefV1",
+      "spectralPriority": {
+        "protect": [
+          {
+            "fromHz": 1800,
+            "reason": "SFX transientleri bu bantta yaşıyor",
+            "toHz": 4500
+          }
+        ]
+      },
+      "tempo": {
+        "bpm": {
+          "max": 108,
+          "min": 84
+        }
+      },
+      "themeBook": {
+        "id": "reference-theme"
+      },
+      "title": "Referans dikişsiz loop",
+      "tonal": {
+        "roots": [
+          "A2"
+        ],
+        "systems": [
+          "minor",
+          "dorian"
+        ]
+      },
+      "usage": "bed"
+    },
+    "hash": "sha256:aa14feb1df7dc2eadaf5c2f62cde18b756e6941881e3a6dfb6f7784edd63ec58",
+    "kind": "music",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "4",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:776376a3732908172132f1f9bdcf3ec8479b0f819a06259602095d847eeb1923",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 4,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 4,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "renderSurface": {
+      "hash": "sha256:bcf99cbb3db388efeaf856df360160c18068d3d2587f5b997e090d3f33c07ae8",
+      "instruments": [
+        {
+          "hash": "sha256:3801b73d72b0b44848346d95b61ab6ca618a8917b408b4f5b956edac4c5c4ace",
+          "id": "preset:harp"
+        },
+        {
+          "hash": "sha256:206aa1445a6716662b34e35120aafb53d95c29dbe5158a3c379e9c16f78475c8",
+          "id": "preset:subBass"
+        },
+        {
+          "hash": "sha256:25bd17a3e4529a9b2c7606a1f22f0e4468439767c9d12058d07cb860df7c78c6",
+          "id": "preset:warmKeys"
+        }
+      ],
+      "nodes": [],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/audio-synth",
+    "runtimeDeclaration": null,
+    "runtimeKey": "reference-loop/mix",
+    "targetKind": "reference"
+  },
+  "job": {
+    "jobId": "mix",
+    "path": "devtools/audio-synth/records/music/reference-loop/jobs/mix",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 2,
+    "image": {
+      "correlation": 0.983,
+      "dualMono": false,
+      "method": "stereo-image-v1",
+      "monoFoldLossDb": 0.049,
+      "sideDb": -20.38
+    },
+    "placement": "bed",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "music",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "mastering": {
+        "ceiling": 0.95,
+        "fadeOutSeconds": 0,
+        "gainDb": -2.947,
+        "limiter": {
+          "knee": 0.28,
+          "threshold": 0.7
+        },
+        "path": "loop-cyclic",
+        "schema": "MusicMasteringPlanV1",
+        "targetLufs": -16,
+        "trimSilence": false
+      },
+      "music": {
+        "bars": 4,
+        "delivery": {
+          "assetDir": "reference/production/assets/music/reference-loop",
+          "package": "@volstudio/audio-synth"
+        },
+        "description": "Dört ölçülük dikişsiz loop: bas, akor yatağı ve motifli arp. Loop yolunun (dikiş, döngüsel yükseklik, tek asset) uçtan uca kanıtı.",
+        "grooves": [
+          {
+            "accents": [
+              1,
+              0.82,
+              0.92,
+              0.78
+            ],
+            "id": "gentle",
+            "swing": 0.12,
+            "timingJitter": 0.008,
+            "velocityJitter": 0.18
+          }
+        ],
+        "lanes": [
+          {
+            "gain": 0.85,
+            "id": "bass",
+            "instrument": "preset:subBass",
+            "stem": "main"
+          },
+          {
+            "gain": 0.5,
+            "id": "keys",
+            "instrument": "preset:warmKeys",
+            "pan": -0.18,
+            "stem": "main"
+          },
+          {
+            "gain": 0.42,
+            "groove": "gentle",
+            "id": "lead",
+            "instrument": "preset:harp",
+            "octave": 2,
+            "pan": 0.22,
+            "stem": "main"
+          }
+        ],
+        "markers": [
+          {
+            "bar": 0,
+            "kind": "loop-start"
+          },
+          {
+            "bar": 4,
+            "kind": "loop-end"
+          }
+        ],
+        "mastering": {
+          "integratedLufs": -16
+        },
+        "meter": [
+          4,
+          4
+        ],
+        "motifs": [
+          {
+            "id": "call",
+            "notes": [
+              {
+                "beat": 0,
+                "beats": 0.5,
+                "degree": 0
+              },
+              {
+                "beat": 0.5,
+                "beats": 0.5,
+                "degree": 2
+              },
+              {
+                "beat": 1,
+                "beats": 1,
+                "degree": 4
+              },
+              {
+                "beat": 2,
+                "beats": 1,
+                "degree": 2
+              }
+            ]
+          },
+          {
+            "id": "answer",
+            "notes": [
+              {
+                "beat": 0,
+                "beats": 0.5,
+                "degree": 5
+              },
+              {
+                "beat": 0.5,
+                "beats": 0.5,
+                "degree": 4
+              },
+              {
+                "beat": 1,
+                "beats": 2,
+                "degree": 2
+              }
+            ]
+          }
+        ],
+        "musicId": "reference-loop",
+        "playback": "loop",
+        "sampleRate": 44100,
+        "schema": "MusicProgramV1",
+        "sections": [
+          {
+            "bars": [
+              0,
+              2
+            ],
+            "harmony": {
+              "chords": [
+                {
+                  "bar": 0,
+                  "beat": 0,
+                  "beats": 4,
+                  "degree": 1,
+                  "quality": "triad"
+                },
+                {
+                  "bar": 1,
+                  "beat": 0,
+                  "beats": 4,
+                  "degree": 6,
+                  "quality": "triad"
+                }
+              ],
+              "voicing": {
+                "maxMovement": 7,
+                "register": [
+                  52,
+                  76
+                ],
+                "spread": "close",
+                "voices": 3
+              }
+            },
+            "id": "intro",
+            "lanes": [
+              "bass",
+              "keys"
+            ],
+            "parts": [
+              {
+                "lane": "keys",
+                "rhythm": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 3.5,
+                    "gain": 0.95
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "beats": 3.5,
+                    "gain": 0.8
+                  }
+                ],
+                "source": "chord"
+              },
+              {
+                "lane": "bass",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 1,
+                    "note": "A2"
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 1.5,
+                    "beats": 0.5,
+                    "note": "A2"
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 2,
+                    "beats": 1.5,
+                    "note": "A2"
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "beats": 1,
+                    "note": "F2"
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 1.5,
+                    "beats": 0.5,
+                    "note": "F2"
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 2.5,
+                    "beats": 1.25,
+                    "note": "E2"
+                  }
+                ],
+                "source": "notes"
+              }
+            ],
+            "role": "intro",
+            "targetEnergy": 0.45
+          },
+          {
+            "bars": [
+              2,
+              4
+            ],
+            "harmony": {
+              "chords": [
+                {
+                  "bar": 0,
+                  "beat": 0,
+                  "beats": 2,
+                  "degree": 1,
+                  "quality": "triad"
+                },
+                {
+                  "bar": 0,
+                  "beat": 2,
+                  "beats": 2,
+                  "degree": 4,
+                  "quality": "triad"
+                },
+                {
+                  "bar": 1,
+                  "beat": 0,
+                  "beats": 2,
+                  "degree": 6,
+                  "quality": "triad"
+                },
+                {
+                  "bar": 1,
+                  "beat": 2,
+                  "beats": 2,
+                  "degree": 5,
+                  "quality": "triad"
+                }
+              ],
+              "voicing": {
+                "maxMovement": 9,
+                "register": [
+                  50,
+                  84
+                ],
+                "spread": "open",
+                "voices": 3
+              }
+            },
+            "id": "body",
+            "lanes": [
+              "bass",
+              "keys",
+              "lead"
+            ],
+            "parts": [
+              {
+                "lane": "keys",
+                "rhythm": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 1.75,
+                    "gain": 1
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 2,
+                    "beats": 1.75,
+                    "gain": 0.8
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "beats": 1.75,
+                    "gain": 0.9
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 2,
+                    "beats": 1.75,
+                    "gain": 0.7
+                  }
+                ],
+                "source": "chord"
+              },
+              {
+                "lane": "bass",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 0.75,
+                    "note": "A2"
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 1.5,
+                    "beats": 0.4,
+                    "note": "A2"
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 2,
+                    "beats": 0.75,
+                    "note": "D2"
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 3.5,
+                    "beats": 0.4,
+                    "note": "E2"
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "beats": 0.75,
+                    "note": "F2"
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 1.5,
+                    "beats": 0.4,
+                    "note": "C2"
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 2,
+                    "beats": 1.75,
+                    "note": "E2"
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "beats": 1,
+                "lane": "lead",
+                "motif": "call",
+                "placements": [
+                  {
+                    "bar": 0,
+                    "beat": 0
+                  }
+                ],
+                "source": "motif",
+                "transforms": [
+                  {
+                    "degrees": 2,
+                    "op": "transpose"
+                  }
+                ]
+              },
+              {
+                "beats": 1,
+                "lane": "lead",
+                "motif": "answer",
+                "placements": [
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "octave": -1
+                  }
+                ],
+                "source": "motif",
+                "transforms": []
+              }
+            ],
+            "role": "body",
+            "targetEnergy": 0.85
+          }
+        ],
+        "seed": 20260922,
+        "stems": [
+          {
+            "id": "main",
+            "title": "Tam mix"
+          }
+        ],
+        "tempo": {
+          "bpm": 96
+        },
+        "themeBook": {
+          "hash": "sha256:19c615b8d4becfd91ad10126a9043b54bd9441895372ff336f348937f5e04ca3",
+          "id": "reference-theme"
+        },
+        "title": "Referans dikişsiz loop",
+        "tonal": {
+          "root": "A2",
+          "system": "minor"
+        },
+        "version": 2
+      },
+      "schema": "MusicStemProgramV1",
+      "stem": "mix"
+    },
+    "hash": "sha256:3dc907ccd85b67998a7a0a1785d9cc837c2a73839d1bf37c7abc67da2c78f63d",
+    "schema": "MusicStemProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 2,
+      "format": "f32le-interleaved-clamped",
+      "frames": 441000,
+      "hash": "sha256:78c586b94ed47ea06a62d07eb3d71399b53f4adf5e5e43e9569f3e0b146f2b37",
+      "sampleRate": 44100
+    },
+    "renderId": "r-a3dc1f7eff712966",
+    "rendererVersion": 2,
+    "seed": 20260922
+  },
+  "schema": "AudioAssetManifestV1"
+}

@@ -1,0 +1,395 @@
+import { requiredAt } from '../../collections/requiredAt';
+import { UI_SIZE } from '../../constants';
+import { previousFocusTarget } from '../primitives/buttonBehavior';
+import { signalOverlay } from './overlaySignal';
+import { emitUiIntent, emitUiSignal } from '../feedback/uiIntent';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { restoreFocusAfterAction } from '../focus/restoreFocusAfterAction';
+
+export interface RadialMenuItem {
+  id: string;
+  label: string;
+  icon?: string | Node;
+  disabled?: boolean;
+}
+
+export interface RadialMenuOptions {
+  items: RadialMenuItem[];
+  onSelect: (id: string) => void;
+  /** Menü halkasının yarıçapı (piksel) — item'lar bu yarıçap üzerinde eşit açıyla dizilir. Varsayılan 96. */
+  radius?: number;
+  /** Merkezdeki "ölü bölge" yarıçapı — parmak bu alandayken hiçbir item hover/seçili sayılmaz (basılı tutulduğu noktadan çok az hareket eden bir parmağın yanlışlıkla bir item seçmesini engeller). Varsayılan 24. */
+  deadzone?: number;
+  /** Açılışta gösterilecek merkezi bir ikon/etiket (ör. hangi kategori menüsünün açıldığını hatırlatan bir simge). */
+  centerIcon?: string | Node;
+  /** Menünün erişilebilir adı (ekran okuyucu); verilmezse ad verilmez. */
+  label?: string;
+}
+
+interface ItemPosition {
+  item: RadialMenuItem;
+  angle: number;
+  x: number;
+  y: number;
+  element: HTMLButtonElement;
+}
+
+/**
+ * Basılı tutunca (veya open() ile programatik olarak) açılan, merkez
+ * etrafında dairesel dizilmiş seçim menüsü. ContextMenu'nün dikey liste
+ * modelinden farkı, item'ların yön bazlı (parmağı hangi açıya sürüklersen o
+ * item vurgulanır) seçilmesidir.
+ *
+ * Tek kullanım deseni desteklenir, kasıtlı olarak: basılı tut → sürükle →
+ * bırak. `open(x, y)` bir pointerdown ile çağrılır, bırakıldığında
+ * (`pointerup`) hover'daki item seçilir. Deadzone içinde (hiç sürüklemeden)
+ * bırakılırsa hiçbir şey seçilmez — kısa bir dokunuş kasıtlı olarak eylem tetiklemez.
+ *
+ * **Klavye ve kol:** `openFocused` ile açılan menü (tuş/kol düğmesiyle) ilk item'a odaklanır; ok tuşları
+ * ve D-pad item'lar arasında döner, Enter/Space/A seçer, Escape ve Tab seçmeden kapatır, dışarı tıklama
+ * seçmeden kapatır; kapanınca odak menüyü açan öğeye döner.
+ */
+export class RadialMenu {
+  readonly element: HTMLDivElement;
+  private readonly centerEl: HTMLDivElement;
+  private readonly items: RadialMenuItem[];
+  private readonly onSelectHandler: (id: string) => void;
+  private readonly radius: number;
+  private readonly deadzone: number;
+  private positions: ItemPosition[] = [];
+  private hoveredId: string | null = null;
+  private isOpen = false;
+  private destroyed = false;
+  /**
+   * Menüyü açan parmağın pointerId'si. Bu kontrol olmadan ekrandaki ikinci bir
+   * parmağın (joystick, ateş butonu) hareketi hover seçimini sürükleyip yanlış
+   * item seçtirebilir. `open()` pointerdown olmadan çağrıldıysa null kalır ve
+   * ilk hareket eden parmak sahiplenir.
+   */
+  private activePointerId: number | null = null;
+  /** İşaretçisiz (klavye/kol) açılış: odak menüde, seçim yalnız tuşla/etkinleştirmeyle olur. */
+  private keyboardMode = false;
+  private restoreFocusTo: HTMLElement | null = null;
+  private signalTarget: Element | null = null;
+  private readonly scope = new DisposableScope();
+  private openScope: DisposableScope | null = null;
+  private anchor = { x: 0, y: 0 };
+  private boundPointerMove: (event: PointerEvent) => void;
+  private boundPointerUp: (event: PointerEvent) => void;
+
+  constructor(options: RadialMenuOptions) {
+    this.items = options.items;
+    this.onSelectHandler = options.onSelect;
+    this.radius = options.radius ?? UI_SIZE.RADIAL_MENU_DEFAULT_RADIUS_PX;
+    this.deadzone = options.deadzone ?? UI_SIZE.RADIAL_MENU_DEFAULT_DEADZONE_PX;
+
+    this.element = document.createElement('div');
+    this.element.className = 'vol-radial-menu';
+    this.element.inert = true;
+    this.element.setAttribute('role', 'menu');
+    if (options.label) this.element.setAttribute('aria-label', options.label);
+
+    this.centerEl = document.createElement('div');
+    this.centerEl.className = 'vol-radial-menu__center';
+    if (options.centerIcon) {
+      const iconSlot = document.createElement('span');
+      iconSlot.className = 'vol-radial-menu__center-icon';
+      if (typeof options.centerIcon === 'string') {
+        iconSlot.textContent = options.centerIcon;
+      } else {
+        iconSlot.appendChild(options.centerIcon);
+      }
+      this.centerEl.appendChild(iconSlot);
+    }
+    this.element.appendChild(this.centerEl);
+
+    this.buildItems();
+
+    this.boundPointerMove = (event) => this.handlePointerMove(event);
+    this.boundPointerUp = (event) => this.handleRelease(event);
+    this.scope.addListener<KeyboardEvent>(this.element, 'keydown', (event) =>
+      this.handleKeyDown(event),
+    );
+    this.scope.addListener<FocusEvent>(this.element, 'focusin', (event) =>
+      this.handleFocusIn(event),
+    );
+  }
+
+  /**
+   * Menüyü verilen ekran koordinatında açar. `pointerId` yalnız o parmağa seçim sahipliği verir.
+   * `trigger` kayıtlı UI kökündeki kullanıcı tetikleyicisidir; verilmezse programatik açılış sessizdir.
+   */
+  open(x: number, y: number, pointerId?: number, trigger?: Element): void {
+    this.show(x, y, pointerId, false, trigger);
+  }
+
+  /**
+   * Klavye/kol için açar: ilk etkin item'a odaklanır, ok tuşları/D-pad döner, Enter/Space/A seçer, Escape/Tab ve
+   * dışarı tıklama seçmeden kapatır, kapanınca odak açan öğeye döner. Fare/dokunma sürükleme akışı için `open` kullanılır.
+   */
+  openFocused(x: number, y: number, trigger?: Element): void {
+    this.show(x, y, undefined, true, trigger);
+  }
+
+  private show(
+    x: number,
+    y: number,
+    pointerId: number | undefined,
+    keyboard: boolean,
+    trigger?: Element,
+  ): void {
+    if (this.destroyed) return;
+    const wasOpen = this.isOpen;
+    this.isOpen = true;
+    this.activePointerId = pointerId ?? null;
+    this.hoveredId = null;
+    this.anchor = { x, y };
+    this.reposition();
+    this.element.inert = false;
+    this.element.classList.add('vol-radial-menu--visible');
+    this.updateHoverVisuals();
+    this.keyboardMode = keyboard;
+    this.signalTarget = trigger ?? null;
+    if (this.keyboardMode) {
+      // Düğme tıklaması sırasında odak gövdeye düşer: açan öğeyi `previousFocusTarget` bilir.
+      const previous = previousFocusTarget();
+      this.restoreFocusTo = previous instanceof HTMLElement ? previous : null;
+      this.positions.find((pos) => !pos.item.disabled)?.element.focus();
+    }
+
+    this.openScope?.dispose();
+    this.openScope = new DisposableScope();
+    this.openScope.addListener(document, 'pointermove', this.boundPointerMove);
+    this.openScope.addListener(document, 'pointerup', this.boundPointerUp);
+    // pointercancel olmadan, sistem parmağı iptal ettiğinde (ör. Android geri jesti) menü açık asılı kalırdı.
+    this.openScope.addListener(document, 'pointercancel', this.boundPointerUp);
+    this.openScope.addListener(window, 'resize', () => this.reposition());
+    if (!wasOpen) signalOverlay('open', 'RadialMenu', this.signalTarget);
+  }
+
+  /** Menüyü kapatır; hover edilen item varsa onSelect ile bildirir, yoksa sessizce kapanır (`select:false` her durumda seçimsiz kapatır). */
+  close(select = true, sourceEvent?: Event): void {
+    if (!this.isOpen) return;
+    this.isOpen = false;
+    this.activePointerId = null;
+    this.element.classList.remove('vol-radial-menu--visible');
+    this.element.inert = true;
+    this.openScope?.dispose();
+    this.openScope = null;
+
+    const restoreTo = this.keyboardMode ? this.restoreFocusTo : null;
+    this.keyboardMode = false;
+    this.restoreFocusTo = null;
+    const signalTarget = this.signalTarget;
+    this.signalTarget = null;
+    const selected = select
+      ? this.items.find((item) => item.id === this.hoveredId && !item.disabled)
+      : undefined;
+    if (selected) {
+      if (signalTarget?.isConnected) {
+        const request = { kind: 'select' as const, origin: 'RadialMenu', target: signalTarget };
+        if (sourceEvent) emitUiIntent({ ...request, event: sourceEvent });
+        else emitUiSignal(request);
+      }
+    }
+    if (!selected) signalOverlay('close', 'RadialMenu', signalTarget);
+    this.hoveredId = null;
+    this.updateHoverVisuals();
+    restoreFocusAfterAction(restoreTo);
+    if (selected) this.onSelectHandler(selected.id);
+  }
+
+  destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
+    this.isOpen = false;
+    this.activePointerId = null;
+    this.restoreFocusTo = null;
+    this.signalTarget = null;
+    this.openScope?.dispose();
+    this.openScope = null;
+    this.scope.dispose();
+    this.element.remove();
+  }
+
+  /** Menü öğelerinin tamamı görünür alanda kalır; büyütme/IME görünüm değişimi aynı sınırı tekrar uygular. */
+  private reposition(): void {
+    let left = this.centerEl.offsetWidth / 2;
+    let right = left;
+    let top = this.centerEl.offsetHeight / 2;
+    let bottom = top;
+    for (const position of this.positions) {
+      const halfWidth = position.element.offsetWidth / 2;
+      const halfHeight = position.element.offsetHeight / 2;
+      left = Math.max(left, halfWidth - position.x);
+      right = Math.max(right, halfWidth + position.x);
+      top = Math.max(top, halfHeight - position.y);
+      bottom = Math.max(bottom, halfHeight + position.y);
+    }
+    const x =
+      window.innerWidth < left + right
+        ? window.innerWidth / 2
+        : Math.min(window.innerWidth - right, Math.max(left, this.anchor.x));
+    const y =
+      window.innerHeight < top + bottom
+        ? window.innerHeight / 2
+        : Math.min(window.innerHeight - bottom, Math.max(top, this.anchor.y));
+    this.element.style.left = `${x}px`;
+    this.element.style.top = `${y}px`;
+  }
+
+  private buildItems(): void {
+    const count = this.items.length;
+    const angleStep = (2 * Math.PI) / count;
+
+    this.positions = this.items.map((item, index) => {
+      // -90° (yukarı, saat 12 yönü) referans noktasından başlanır — saat yönünde dizilim beklentisine uyar.
+      const angle = -Math.PI / 2 + index * angleStep;
+      const x = Math.cos(angle) * this.radius;
+      const y = Math.sin(angle) * this.radius;
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'vol-radial-menu__item';
+      button.style.transform = `translate(${x}px, ${y}px)`;
+      button.disabled = Boolean(item.disabled);
+      button.setAttribute('role', 'menuitem');
+      // Klavye/kol A: odaktaki item'ın `click`i (detail 0) onu seçer; fare akışı pointerup'ta işlenir.
+      button.addEventListener('click', (event) => {
+        if (!this.isOpen || (event.detail !== 0 && !this.keyboardMode)) return;
+        this.hoveredId = item.id;
+        this.close(true, event);
+      });
+
+      if (item.icon) {
+        const iconSlot = document.createElement('span');
+        iconSlot.className = 'vol-radial-menu__item-icon';
+        if (typeof item.icon === 'string') {
+          iconSlot.textContent = item.icon;
+        } else {
+          iconSlot.appendChild(item.icon.cloneNode(true));
+        }
+        button.appendChild(iconSlot);
+      }
+
+      const label = document.createElement('span');
+      label.className = 'vol-radial-menu__item-label';
+      label.textContent = item.label;
+      button.appendChild(label);
+
+      this.element.appendChild(button);
+      return { item, angle, x, y, element: button };
+    });
+  }
+
+  /** Parmağın/farenin merkeze göre açısını hesaplayıp en yakın item'ı hover durumuna getirir (deadzone içindeyse hiçbiri). */
+  private handlePointerMove(event: PointerEvent): void {
+    if (!this.isOpen) return;
+    if (this.activePointerId === null) {
+      // Programatik açılışta menüyü ilk hareket eden parmak sahiplenir; sonrakiler yok sayılır.
+      this.activePointerId = event.pointerId;
+    } else if (event.pointerId !== this.activePointerId) {
+      return;
+    }
+
+    const rect = this.element.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const dx = event.clientX - centerX;
+    const dy = event.clientY - centerY;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance < this.deadzone) {
+      this.hoveredId = null;
+      this.updateHoverVisuals();
+      return;
+    }
+
+    const pointerAngle = Math.atan2(dy, dx);
+    let closest: ItemPosition | null = null;
+    let closestDiff = Infinity;
+
+    for (const pos of this.positions) {
+      if (pos.item.disabled) continue;
+      let diff = Math.abs(pointerAngle - pos.angle);
+      if (diff > Math.PI) diff = 2 * Math.PI - diff;
+      if (diff < closestDiff) {
+        closestDiff = diff;
+        closest = pos;
+      }
+    }
+
+    this.hoveredId = closest?.item.id ?? null;
+    this.updateHoverVisuals();
+  }
+
+  private enabledPositions(): ItemPosition[] {
+    return this.positions.filter((pos) => !pos.item.disabled);
+  }
+
+  private handleFocusIn(event: FocusEvent): void {
+    if (!this.isOpen || !this.keyboardMode) return;
+    const pos = this.positions.find((candidate) => candidate.element === event.target);
+    if (!pos) return;
+    this.hoveredId = pos.item.id;
+    this.updateHoverVisuals();
+  }
+
+  private handleKeyDown(event: KeyboardEvent): void {
+    if (!this.isOpen || !this.keyboardMode) return;
+    const enabled = this.enabledPositions();
+    if (enabled.length === 0) return;
+    const current = enabled.findIndex((pos) => pos.element === document.activeElement);
+    const move = (index: number): void => {
+      event.preventDefault();
+      requiredAt(enabled, (index + enabled.length) % enabled.length).element.focus();
+    };
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        move(current + 1);
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        move(current - 1);
+        break;
+      case 'Home':
+        move(0);
+        break;
+      case 'End':
+        move(enabled.length - 1);
+        break;
+      case 'Escape':
+        // Seçmeden kapatır; üstteki katman aynı basışla kapanmaz.
+        event.preventDefault();
+        event.stopPropagation();
+        this.close(false);
+        break;
+      case 'Tab':
+        this.close(false);
+        break;
+      default:
+    }
+  }
+
+  private handleRelease(event: PointerEvent): void {
+    // Klavye/kol açılışında dışarı tıklama seçmeden kapatır (odaktaki item yanlışlıkla seçilmez).
+    if (this.keyboardMode) {
+      if (!this.element.contains(event.target as Node | null)) this.close(false);
+      return;
+    }
+    // Menüyü açan parmaktan başkası bırakıldığında (ör. diğer elle basılan ateş butonu) menü etkilenmemeli.
+    if (this.activePointerId !== null && event.pointerId !== this.activePointerId) return;
+    // Sistem iptali (ör. Android geri jesti) bir bırakma değildir: üzerindeki öğe seçilmez.
+    this.close(event.type !== 'pointercancel', event);
+  }
+
+  private updateHoverVisuals(): void {
+    for (const pos of this.positions) {
+      pos.element.classList.toggle(
+        'vol-radial-menu__item--hovered',
+        pos.item.id === this.hoveredId,
+      );
+    }
+  }
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="38.0" height="38.0" viewBox="0 0 38.0 38.0">
+  <defs>
+    <radialGradient id="c" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#000" stop-opacity=".75"/><stop offset=".55" stop-color="#000" stop-opacity=".4"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g transform="scale(1.9 1.9)">
+
+  <g transform="translate(0 0)">
+    <circle cx="10" cy="10" r="10" fill="url(#c)"/>
+  </g>
+  </g>
+</svg>

@@ -1,0 +1,680 @@
+//! Atomik kalıcılık komutları — `TauriStoreAdapter`'ın native yarısı.
+//!
+//! Yazma: geçici dosya → fsync → güncel kayıt `.bak` olarak bağlanır →
+//! geçici dosya güncelin üstüne rename edilir → (Unix'te) dizin fsync'i.
+//! Güncel dosya hiçbir anda diskten kalkmaz. Okuma bozuk ya da eksik günceli
+//! geçici dosyadan ya da yedekten kurtarır ve `recovered` döner; hiçbir
+//! jenerasyon okunamıyorsa bozuk dosyalar karantinaya alınır ve boş kayıtla
+//! `reset` döner — iki durum da tüketiciye bildirilir, sessizce yutulmaz.
+
+use std::collections::HashMap;
+use std::fs::{self, File, OpenOptions};
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, OnceLock, Weak};
+use tauri::Manager;
+
+/// Seri hâldeki kayıt ve bütünlük işaretleri. `data` yoksa `null` döner.
+#[derive(serde::Serialize, Debug, PartialEq)]
+pub struct StoreRead {
+    pub data: Option<String>,
+    /// Güncel dosya bozuk ya da eksikti; kayıt başka bir jenerasyondan okundu.
+    pub recovered: bool,
+    /// Hiçbir jenerasyon okunamadı; bozuk dosyalar karantinada, kayıt boş.
+    pub reset: bool,
+}
+
+const RESERVED_SUFFIXES: [&str; 3] = [".bak", ".tmp", ".bak.tmp"];
+const MAX_STORE_BYTES: usize = 1024 * 1024;
+
+fn validate_size(size: usize) -> Result<(), String> {
+    if size > MAX_STORE_BYTES {
+        Err(format!("store kaydı sınırı aşıyor: {MAX_STORE_BYTES} bayt"))
+    } else {
+        Ok(())
+    }
+}
+
+fn store_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| format!("veri dizini yok: {error}"))?;
+    fs::create_dir_all(&dir).map_err(|error| format!("veri dizini yaratılamadı: {error}"))?;
+    Ok(dir)
+}
+
+/// Dosya adı tek parçadır; dizin ayracı, `..`, gizli ad ve yazıcının kendi
+/// yan dosyalarının sonekleri reddedilir.
+fn validate_name(name: &str) -> Result<(), String> {
+    let lower = name.to_ascii_lowercase();
+    let stem = lower.split('.').next().unwrap_or_default();
+    let device = matches!(stem, "con" | "prn" | "aux" | "nul")
+        || ["com", "lpt"].iter().any(|prefix| {
+            stem.strip_prefix(prefix)
+                .is_some_and(|tail| tail.len() == 1 && matches!(tail.as_bytes()[0], b'1'..=b'9'))
+        });
+    let ok = !name.is_empty()
+        && name.len() <= 128
+        && name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
+        && !name.starts_with('.')
+        && !name.ends_with('.')
+        && !device
+        && !lower.contains(".corrupt-")
+        && !RESERVED_SUFFIXES
+            .iter()
+            .any(|suffix| lower.ends_with(suffix));
+    if ok {
+        Ok(())
+    } else {
+        Err(format!("geçersiz store adı: {name:?}"))
+    }
+}
+
+/// Aynı ada yapılan okuma ve yazmalar tek sırada koşar; iki adaptör aynı
+/// dosyayı yazsa da yan dosyalar yarışmaz.
+fn name_lock(name: &str) -> Arc<Mutex<()>> {
+    static LOCKS: OnceLock<Mutex<HashMap<String, Weak<Mutex<()>>>>> = OnceLock::new();
+    let mut locks = LOCKS
+        .get_or_init(|| Mutex::new(HashMap::new()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    // Registry yalnız etkin işlerce sahip olunan kilitleri tutar; rastgele
+    // dosya adları süreç boyunca kalıcı birikim oluşturamaz.
+    locks.retain(|_, lock| lock.strong_count() > 0);
+    let key = name.to_ascii_lowercase();
+    if let Some(lock) = locks.get(&key).and_then(Weak::upgrade) {
+        return lock;
+    }
+    let lock = Arc::new(Mutex::new(()));
+    locks.insert(key, Arc::downgrade(&lock));
+    lock
+}
+
+fn read_raw(path: &Path) -> Option<Result<Vec<u8>, String>> {
+    match File::open(path) {
+        Ok(file) => {
+            let mut data = Vec::new();
+            Some(
+                file.take((MAX_STORE_BYTES + 1) as u64)
+                    .read_to_end(&mut data)
+                    .map_err(|error| format!("okuma: {error}"))
+                    .and_then(|_| validate_size(data.len()).map(|()| data)),
+            )
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => Some(Err(format!("açma: {error}"))),
+    }
+}
+
+/// Store kaydı hep JSON nesnesidir; yarım yazılmış ya da yabancı içerik bozuk sayılır.
+fn parses_as_object(data: &str) -> bool {
+    serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(data).is_ok()
+}
+
+fn valid(path: &Path) -> Result<Option<String>, String> {
+    match read_raw(path) {
+        Some(Ok(bytes)) => Ok(String::from_utf8(bytes)
+            .ok()
+            .filter(|data| parses_as_object(data))),
+        Some(Err(error)) => Err(error),
+        _ => Ok(None),
+    }
+}
+
+fn side(dir: &Path, name: &str, suffix: &str) -> PathBuf {
+    dir.join(format!("{name}{suffix}"))
+}
+
+fn quarantine(path: &Path, stamp: u128) -> Result<(), String> {
+    if !path.exists() {
+        return Ok(());
+    }
+    let mut target = path.as_os_str().to_owned();
+    target.push(format!(".corrupt-{stamp}"));
+    fs::rename(path, PathBuf::from(target)).map_err(|error| format!("karantina: {error}"))
+}
+
+fn read_in(dir: &Path, name: &str) -> Result<StoreRead, String> {
+    let current = dir.join(name);
+    let temp = side(dir, name, ".tmp");
+    let backup = side(dir, name, ".bak");
+
+    if let Some(data) = valid(&current)? {
+        return Ok(StoreRead {
+            data: Some(data),
+            recovered: false,
+            reset: false,
+        });
+    }
+    let current_present = current.exists();
+    // Geçici dosya ancak fsync'ten sonra güncelin yerine geçer; güncel yokken
+    // ya da bozukken tam bir geçici dosya en yeni jenerasyondur.
+    for candidate in [&temp, &backup] {
+        if let Some(data) = valid(candidate)? {
+            // Kurtarma yalnız RAM'de kalamaz: sonraki yazım aynı `.tmp`yi
+            // truncate eder. Önce sağlam jenerasyonu güncel ada yerleştiririz;
+            // yedekten kurtarmada kaynak yedek kopyalama boyunca korunur.
+            if candidate == &backup {
+                write_file(&temp, data.as_bytes())?;
+            }
+            fs::rename(&temp, &current)
+                .map_err(|error| format!("kurtarma yerine koyma: {error}"))?;
+            sync_dir(dir)?;
+            return Ok(StoreRead {
+                data: Some(data),
+                recovered: true,
+                reset: false,
+            });
+        }
+    }
+    if !current_present && !backup.exists() && !temp.exists() {
+        return Ok(StoreRead {
+            data: None,
+            recovered: false,
+            reset: false,
+        });
+    }
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|elapsed| elapsed.as_millis())
+        .unwrap_or(0);
+    for path in [&current, &backup, &temp] {
+        quarantine(path, stamp)?;
+    }
+    Ok(StoreRead {
+        data: None,
+        recovered: false,
+        reset: true,
+    })
+}
+
+fn write_file(path: &Path, data: &[u8]) -> Result<(), String> {
+    let mut file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(path)
+        .map_err(|error| format!("geçici açma: {error}"))?;
+    file.write_all(data)
+        .and_then(|()| file.sync_all())
+        .map_err(|error| format!("yazma/fsync: {error}"))
+}
+
+/// Günceli yedeğe bağlar. Sabit bağ desteklenmiyorsa kopyalanır; ikisinde de
+/// güncel dosyaya dokunulmaz.
+fn preserve_backup(current: &Path, backup: &Path, dir: &Path, name: &str) -> Result<(), String> {
+    match fs::remove_file(backup) {
+        Ok(()) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(format!("eski yedek silinemedi: {error}")),
+    }
+    if fs::hard_link(current, backup).is_ok() {
+        return Ok(());
+    }
+    let staged = side(dir, name, ".bak.tmp");
+    let bytes = read_raw(current).ok_or_else(|| "yedeklenecek kayıt bulunamadı".to_owned())??;
+    write_file(&staged, &bytes)?;
+    fs::rename(&staged, backup).map_err(|error| format!("yedek taşıma: {error}"))
+}
+
+fn write_in(dir: &Path, name: &str, data: &str) -> Result<(), String> {
+    validate_size(data.len())?;
+    let current = dir.join(name);
+    let backup = side(dir, name, ".bak");
+    let temp = side(dir, name, ".tmp");
+
+    // Güncel kayıt yok/bozuksa .tmp en yeni sağlam jenerasyon olabilir.
+    // Yeni yazıcı .tmp'yi truncate etmeden onu güncel ada kurtarmalıdır;
+    // aksi hâlde hem bu jenerasyon hem de bir sonraki yedek kaybolur.
+    if valid(&current)?.is_none() {
+        read_in(dir, name)?;
+    }
+    let current_valid = valid(&current)?.is_some();
+    write_file(&temp, data.as_bytes())?;
+    if current_valid {
+        preserve_backup(&current, &backup, dir, name)?;
+    }
+    // Rename güncelin üstüne atomik yazar: güncel dosya hiçbir anda eksik değildir.
+    fs::rename(&temp, &current).map_err(|error| format!("yerine koyma: {error}"))?;
+    sync_dir(dir)
+}
+
+/// Rename'in kalıcılığı dizin girdisinin fsync'ini ister. Windows'ta bu
+/// yolla dizin fsync'i uygulanmaz; güç kesintisi dayanıklılığı iddia edilmez.
+#[cfg(unix)]
+fn sync_dir(dir: &Path) -> Result<(), String> {
+    File::open(dir)
+        .and_then(|dir_file| dir_file.sync_all())
+        .map_err(|error| format!("dizin fsync: {error}"))
+}
+
+#[cfg(not(unix))]
+fn sync_dir(_dir: &Path) -> Result<(), String> {
+    Ok(())
+}
+
+async fn blocking<T: Send + 'static>(
+    job: impl FnOnce() -> Result<T, String> + Send + 'static,
+) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(job)
+        .await
+        .map_err(|error| format!("store iş parçacığı: {error}"))?
+}
+
+/// Disk işi ana iş parçacığı dışında koşar; fsync kareyi bekletmez.
+#[tauri::command]
+pub async fn vol_store_read(app: tauri::AppHandle, name: String) -> Result<StoreRead, String> {
+    validate_name(&name)?;
+    let dir = store_dir(&app)?;
+    blocking(move || {
+        let lock = name_lock(&name);
+        let _guard = lock.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        read_in(&dir, &name)
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn vol_store_write(
+    app: tauri::AppHandle,
+    name: String,
+    data: String,
+) -> Result<(), String> {
+    validate_name(&name)?;
+    validate_size(data.len())?;
+    if !parses_as_object(&data) {
+        return Err("store kaydı JSON nesnesi olmalı".to_string());
+    }
+    let dir = store_dir(&app)?;
+    blocking(move || {
+        let lock = name_lock(&name);
+        let _guard = lock.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        write_in(&dir, &name, &data)
+    })
+    .await
+}
+
+#[cfg(test)]
+mod store_tests {
+    use super::*;
+
+    #[test]
+    fn oversized_write_preserves_existing_generations() {
+        let dir = temp_dir();
+        write_in(&dir, "bounded.json", r#"{"v":1}"#).unwrap();
+        write_in(&dir, "bounded.json", r#"{"v":2}"#).unwrap();
+        let oversized = format!(r#"{{"x":"{}"}}"#, "a".repeat(1024 * 1024));
+        let result = write_in(&dir, "bounded.json", &oversized);
+        let current = fs::read_to_string(dir.join("bounded.json")).unwrap();
+        let backup = fs::read_to_string(dir.join("bounded.json.bak")).unwrap();
+        fs::remove_dir_all(dir).unwrap();
+        assert!(result.is_err(), "1 MiB üstü yazım reddedilmeli");
+        assert_eq!(current, r#"{"v":2}"#);
+        assert_eq!(backup, r#"{"v":1}"#);
+    }
+
+    #[test]
+    fn oversized_generation_rejects_without_fallback_or_quarantine() {
+        for suffix in ["", ".tmp", ".bak"] {
+            let dir = temp_dir();
+            let path = side(&dir, "bounded.json", suffix);
+            let oversized = format!(r#"{{"x":"{}"}}"#, "a".repeat(1024 * 1024));
+            fs::write(&path, &oversized).unwrap();
+            if suffix != ".bak" {
+                fs::write(dir.join("bounded.json.bak"), r#"{"v":1}"#).unwrap();
+            }
+            let result = read_in(&dir, "bounded.json");
+            let preserved = fs::read_to_string(&path).unwrap();
+            let files = fs::read_dir(&dir).unwrap().count();
+            fs::remove_dir_all(dir).unwrap();
+            assert!(
+                result.is_err(),
+                "boyut aşımı bozuk kayıt değildir: {suffix}"
+            );
+            assert_eq!(preserved, oversized);
+            assert_eq!(files, if suffix == ".bak" { 1 } else { 2 });
+        }
+    }
+
+    #[test]
+    fn exact_one_mib_record_roundtrips() {
+        let dir = temp_dir();
+        let data = format!(r#"{{"x":"{}"}}"#, "a".repeat(1024 * 1024 - 8));
+        assert_eq!(data.len(), 1024 * 1024);
+        write_in(&dir, "bounded.json", &data).unwrap();
+        let result = read_in(&dir, "bounded.json").unwrap();
+        fs::remove_dir_all(dir).unwrap();
+        assert_eq!(result.data.as_deref(), Some(data.as_str()));
+    }
+
+    #[test]
+    fn registry_does_not_retain_unused_name_locks() {
+        let first = name_lock("registry-lifetime.json");
+        let second = name_lock("REGISTRY-LIFETIME.JSON");
+        assert!(Arc::ptr_eq(&first, &second));
+        drop(second);
+        assert_eq!(Arc::strong_count(&first), 1);
+    }
+
+    fn temp_dir() -> PathBuf {
+        static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+        let dir = std::env::temp_dir().join(format!(
+            "vol-store-test-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    fn read(dir: &Path, name: &str) -> (Option<String>, bool, bool) {
+        let result = read_in(dir, name).unwrap();
+        (result.data, result.recovered, result.reset)
+    }
+
+    #[test]
+    fn guncel_okuma_hatasi_kurtarma_gecicisini_ezmez() {
+        let dir = temp_dir();
+        fs::create_dir(dir.join("a.json")).unwrap();
+        fs::write(dir.join("a.json.tmp"), r#"{"v":1}"#).unwrap();
+        assert!(write_in(&dir, "a.json", r#"{"v":2}"#).is_err());
+        assert_eq!(
+            fs::read_to_string(dir.join("a.json.tmp")).unwrap(),
+            r#"{"v":1}"#
+        );
+    }
+
+    #[test]
+    fn bozuk_utf8_kayit_yedekten_kurtarilir() {
+        let dir = temp_dir();
+        fs::write(dir.join("a.json"), [0xff, 0xfe]).unwrap();
+        fs::write(dir.join("a.json.bak"), r#"{"v":1}"#).unwrap();
+        assert_eq!(
+            read(&dir, "a.json"),
+            (Some(r#"{"v":1}"#.into()), true, false)
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_rename_reddi_son_gecerli_kaydi_korur() {
+        use std::os::windows::fs::OpenOptionsExt;
+        let dir = temp_dir();
+        write_in(&dir, "a.json", r#"{"v":1}"#).unwrap();
+        // FILE_SHARE_DELETE verilmez: Windows gerçek rename çağrısını reddeder.
+        let held = OpenOptions::new()
+            .read(true)
+            .share_mode(3)
+            .open(dir.join("a.json"))
+            .unwrap();
+        assert!(write_in(&dir, "a.json", r#"{"v":2}"#).is_err());
+        assert_eq!(
+            read(&dir, "a.json"),
+            (Some(r#"{"v":1}"#.into()), false, false)
+        );
+        assert_eq!(
+            fs::read_to_string(dir.join("a.json.tmp")).unwrap(),
+            r#"{"v":2}"#
+        );
+        drop(held);
+        write_in(&dir, "a.json", r#"{"v":2}"#).unwrap();
+        assert_eq!(
+            read(&dir, "a.json"),
+            (Some(r#"{"v":2}"#.into()), false, false)
+        );
+    }
+
+    #[test]
+    fn tek_bozuk_gecici_dosya_sessizce_yok_sayilmaz() {
+        let dir = temp_dir();
+        fs::write(dir.join("a.json.tmp"), "{yarim").unwrap();
+        assert_eq!(read(&dir, "a.json"), (None, false, true));
+        assert!(!dir.join("a.json.tmp").exists());
+    }
+
+    #[test]
+    fn dizin_okuma_hatasi_veri_bozulmasi_sayilmaz() {
+        let dir = temp_dir();
+        fs::create_dir(dir.join("a.json")).unwrap();
+        assert!(read_in(&dir, "a.json").is_err());
+        assert!(dir.join("a.json").is_dir());
+    }
+
+    #[test]
+    fn windows_alias_adlari_ve_buyuk_harf_yan_dosyalari_reddedilir() {
+        for name in [
+            "CON",
+            "nul.json",
+            "COM1.json",
+            "lpt9",
+            "a.",
+            "a.JSON.TMP",
+            "a.CORRUPT-1",
+        ] {
+            assert!(validate_name(name).is_err(), "{name}");
+        }
+    }
+
+    #[test]
+    fn yazma_hatasi_saglam_gunceli_ve_yedegi_korur() {
+        let dir = temp_dir();
+        write_in(&dir, "a.json", r#"{"v":1}"#).unwrap();
+        write_in(&dir, "a.json", r#"{"v":2}"#).unwrap();
+        fs::create_dir(dir.join("a.json.tmp")).unwrap();
+        assert!(write_in(&dir, "a.json", r#"{"v":3}"#).is_err());
+        assert_eq!(
+            fs::read_to_string(dir.join("a.json")).unwrap(),
+            r#"{"v":2}"#
+        );
+        assert_eq!(
+            fs::read_to_string(dir.join("a.json.bak")).unwrap(),
+            r#"{"v":1}"#
+        );
+    }
+
+    #[test]
+    fn yazi_ve_oku() {
+        let dir = temp_dir();
+        write_in(&dir, "a.json", r#"{"x":1}"#).unwrap();
+        assert_eq!(
+            read(&dir, "a.json"),
+            (Some(r#"{"x":1}"#.into()), false, false)
+        );
+    }
+
+    #[test]
+    fn yoksa_null_doner() {
+        let dir = temp_dir();
+        assert_eq!(read(&dir, "hic.json"), (None, false, false));
+    }
+
+    #[test]
+    fn yazma_gunceli_hic_kaldirmaz_ve_onceki_jenerasyonu_yedekler() {
+        let dir = temp_dir();
+        write_in(&dir, "b.json", r#"{"v":1}"#).unwrap();
+        write_in(&dir, "b.json", r#"{"v":2}"#).unwrap();
+        assert_eq!(
+            fs::read_to_string(dir.join("b.json")).unwrap(),
+            r#"{"v":2}"#
+        );
+        assert_eq!(
+            fs::read_to_string(dir.join("b.json.bak")).unwrap(),
+            r#"{"v":1}"#
+        );
+        assert!(!dir.join("b.json.tmp").exists());
+    }
+
+    // Çökme penceresi durum matrisi: yazıcı herhangi bir adımda ölürse diskte
+    // kalabilecek her dosya bileşimi en yeni tam kayda döner.
+    #[test]
+    fn bozuk_guncel_yedekten_kurtarilir() {
+        let dir = temp_dir();
+        fs::write(dir.join("c.json"), "{yari").unwrap();
+        fs::write(dir.join("c.json.bak"), r#"{"v":1}"#).unwrap();
+        assert_eq!(
+            read(&dir, "c.json"),
+            (Some(r#"{"v":1}"#.into()), true, false)
+        );
+    }
+
+    #[test]
+    fn guncel_yoksa_yedekten_kurtarilir() {
+        let dir = temp_dir();
+        fs::write(dir.join("d.json.bak"), r#"{"v":1}"#).unwrap();
+        assert_eq!(
+            read(&dir, "d.json"),
+            (Some(r#"{"v":1}"#.into()), true, false)
+        );
+    }
+
+    #[test]
+    fn guncel_yoksa_tam_gecici_dosya_en_yeni_jenerasyondur() {
+        let dir = temp_dir();
+        fs::write(dir.join("e.json.bak"), r#"{"v":1}"#).unwrap();
+        fs::write(dir.join("e.json.tmp"), r#"{"v":2}"#).unwrap();
+        assert_eq!(
+            read(&dir, "e.json"),
+            (Some(r#"{"v":2}"#.into()), true, false)
+        );
+    }
+
+    #[test]
+    fn kurtarilan_gecici_kayit_sonraki_yarim_yazimda_kaybolmaz() {
+        for corrupt_current in [false, true] {
+            let dir = temp_dir();
+            if corrupt_current {
+                fs::write(dir.join("recovery.json"), "{bozuk").unwrap();
+            }
+            fs::write(dir.join("recovery.json.tmp"), r#"{"shots":17}"#).unwrap();
+            assert_eq!(
+                read(&dir, "recovery.json"),
+                (Some(r#"{"shots":17}"#.into()), true, false)
+            );
+            // Sonraki yazıcının truncate sonrası ölmesi diskte bu durumu bırakır.
+            fs::write(dir.join("recovery.json.tmp"), "{yarim").unwrap();
+            assert_eq!(
+                read(&dir, "recovery.json"),
+                (Some(r#"{"shots":17}"#.into()), false, false)
+            );
+            fs::remove_dir_all(dir).unwrap();
+        }
+    }
+
+    #[test]
+    fn kurtarilan_gecici_jenerasyon_sonraki_yazimin_yedegidir() {
+        let dir = temp_dir();
+        fs::write(dir.join("recovery.json.bak"), r#"{"shots":4}"#).unwrap();
+        fs::write(dir.join("recovery.json.tmp"), r#"{"shots":17}"#).unwrap();
+        assert!(read(&dir, "recovery.json").1);
+        write_in(&dir, "recovery.json", r#"{"shots":18}"#).unwrap();
+        fs::write(dir.join("recovery.json"), "{bozuk").unwrap();
+        assert_eq!(
+            read(&dir, "recovery.json"),
+            (Some(r#"{"shots":17}"#.into()), true, false)
+        );
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn yazma_once_saglam_geciciyi_kurtarip_yedekler() {
+        for corrupt_current in [false, true] {
+            let dir = temp_dir();
+            if corrupt_current {
+                fs::write(dir.join("recovery.json"), "{bozuk").unwrap();
+            }
+            fs::write(dir.join("recovery.json.bak"), r#"{"shots":4}"#).unwrap();
+            fs::write(dir.join("recovery.json.tmp"), r#"{"shots":17}"#).unwrap();
+
+            // JS henüz read çağırmadan yeni kayıt yazarsa kurtarılabilir en
+            // güncel jenerasyon, yeni yazının yedeği olarak korunmalıdır.
+            write_in(&dir, "recovery.json", r#"{"shots":18}"#).unwrap();
+            fs::write(dir.join("recovery.json"), "{bozuk").unwrap();
+            assert_eq!(
+                read(&dir, "recovery.json"),
+                (Some(r#"{"shots":17}"#.into()), true, false)
+            );
+            fs::remove_dir_all(dir).unwrap();
+        }
+    }
+
+    #[test]
+    fn saglam_guncel_yarim_gecici_dosyayi_yok_sayar() {
+        let dir = temp_dir();
+        fs::write(dir.join("f.json"), r#"{"v":1}"#).unwrap();
+        fs::write(dir.join("f.json.tmp"), "{ya").unwrap();
+        assert_eq!(
+            read(&dir, "f.json"),
+            (Some(r#"{"v":1}"#.into()), false, false)
+        );
+        write_in(&dir, "f.json", r#"{"v":2}"#).unwrap();
+        assert_eq!(
+            read(&dir, "f.json"),
+            (Some(r#"{"v":2}"#.into()), false, false)
+        );
+    }
+
+    #[test]
+    fn hicbiri_okunamazsa_karantina_ve_bos_kayit() {
+        let dir = temp_dir();
+        fs::write(dir.join("g.json"), "{yari").unwrap();
+        fs::write(dir.join("g.json.bak"), "[[[").unwrap();
+        assert_eq!(read(&dir, "g.json"), (None, false, true));
+        assert!(!dir.join("g.json").exists());
+        let quarantined = fs::read_dir(&dir)
+            .unwrap()
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.file_name().to_string_lossy().contains(".corrupt-"))
+            .count();
+        assert_eq!(quarantined, 2);
+        write_in(&dir, "g.json", r#"{"v":1}"#).unwrap();
+        assert_eq!(
+            read(&dir, "g.json"),
+            (Some(r#"{"v":1}"#.into()), false, false)
+        );
+    }
+
+    #[test]
+    fn bozuk_guncel_yedegin_ustune_yazilmaz() {
+        let dir = temp_dir();
+        fs::write(dir.join("h.json"), "{yari").unwrap();
+        fs::write(dir.join("h.json.bak"), r#"{"v":1}"#).unwrap();
+        write_in(&dir, "h.json", r#"{"v":2}"#).unwrap();
+        assert_eq!(
+            fs::read_to_string(dir.join("h.json.bak")).unwrap(),
+            r#"{"v":1}"#
+        );
+    }
+
+    #[test]
+    fn ad_dogrulamasi_dizin_kacisini_ve_yan_dosyalari_reddeder() {
+        for kotu in [
+            "../x",
+            "a/b",
+            "a\\b",
+            "",
+            ".gizli",
+            "..",
+            "x.json.bak",
+            "x.json.tmp",
+            "x.json.bak.tmp",
+            "x.json.corrupt-1",
+        ] {
+            assert!(validate_name(kotu).is_err(), "reddedilmeli: {kotu}");
+        }
+        for iyi in ["game-store.json", "a_b.json", "x.json"] {
+            assert!(validate_name(iyi).is_ok(), "geçmeli: {iyi}");
+        }
+    }
+
+    #[test]
+    fn nesne_olmayan_kayit_bozuk_sayilir() {
+        assert!(parses_as_object(r#"{"a":1}"#));
+        assert!(!parses_as_object("[1,2]"));
+        assert!(!parses_as_object("42"));
+        assert!(!parses_as_object("{yari"));
+    }
+}

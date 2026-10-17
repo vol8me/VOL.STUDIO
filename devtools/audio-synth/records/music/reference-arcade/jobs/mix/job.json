@@ -1,0 +1,63 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-33930de1152cde5b": {
+        "hash": "sha256:085430c4465bf20a532f7431ed2682bb6f8a4add2aac175227dacd9f63e17920",
+        "path": "analyses/r-33930de1152cde5b.json"
+      },
+      "r-f0782e15f39e295a": {
+        "hash": "sha256:84c726f95e46e4d94c84fc2ef37a7cf19740bc78c3ebd846430aead37bcc8c77",
+        "path": "analyses/r-f0782e15f39e295a.json"
+      },
+      "r-f9f884d6b5e629f2": {
+        "hash": "sha256:9e4123d140e288e96f4f723d135f3efaaf12ce6396143403a40ffdec64aab5b6",
+        "path": "analyses/r-f9f884d6b5e629f2.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:f7fdffa29c18db46f58dc1519daf1e7497a5aed6e5947f7f30699e9b79e60070",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:f7fdffa29c18db46f58dc1519daf1e7497a5aed6e5947f7f30699e9b79e60070",
+      "hash": "sha256:189f34fa652a46378376d98c6272692e8354cb061780d2c63994a2c20f33dbb3",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:10bcf70add0f4c3eed5d1d481b1e62dcae45aecfc9a384ee418d12d9a7c66226",
+      "path": "devtools/audio-synth/reference/production/manifests/music/reference-arcade/mix.json"
+    },
+    "renders": {
+      "r-33930de1152cde5b": {
+        "hash": "sha256:51a4bbafc7f3da97c03fdf0ebf0466d70bcd501ffa665c7760671177d592d38a",
+        "path": "renders/r-33930de1152cde5b.json"
+      },
+      "r-f0782e15f39e295a": {
+        "hash": "sha256:cb0ecaf49177ea5e437690bb1c8bbc9762898b2e60c0ee34a0efa3bf80295c6b",
+        "path": "renders/r-f0782e15f39e295a.json"
+      },
+      "r-f9f884d6b5e629f2": {
+        "hash": "sha256:467a34a845d0e253924b1db52b51e349f2cc87beadec907c2a1a28b082be40e7",
+        "path": "renders/r-f9f884d6b5e629f2.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:ad29b534e06977c8034c485942cc8055b35e58874cf6ec61195c5581de395ef9",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "mix",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 17,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/music/reference-arcade/mix.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "reference-arcade/mix"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

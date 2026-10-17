@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:a854d3325fa073fcbee7053225477447cab57f859034c21befb5470e90bacb2d",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:48481fcc4a37540be897da5a18365607f0923afc3359f6d05059f8f0dd52c84a",
+    "familyId": "ui-steel-panel-open",
+    "kind": "family-variant",
+    "variantId": "v-d1b51b19a04bd214",
+    "variantKey": "panel-open-a"
+  }
+}

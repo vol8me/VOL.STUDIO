@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="26" viewBox="0 0 50 26">
+  <defs>
+    <linearGradient id="deck" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a4abc0"/>
+      <stop offset="0.5" stop-color="#464d62"/>
+      <stop offset="1" stop-color="#12151c"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#aeb5ca"/>
+      <stop offset="0.5" stop-color="#4d546a"/>
+      <stop offset="1" stop-color="#141720"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d4251"/>
+      <stop offset="1" stop-color="#0b0d12"/>
+    </linearGradient>
+    <linearGradient id="trim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8d9c4"/>
+      <stop offset="0.5" stop-color="#a78f72"/>
+      <stop offset="1" stop-color="#3d2f20"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="0.4" cy="0.4" r="0.65">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#ff5a3c"/>
+      <stop offset="1" stop-color="#6b1608"/>
+    </radialGradient>
+    <linearGradient id="rail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8d95a8"/>
+      <stop offset="0.5" stop-color="#383d4b"/>
+      <stop offset="1" stop-color="#0e1015"/>
+    </linearGradient>
+  </defs>
+  <path d="M38 13L37.38 10.04L36.67 8.36L35.33 6.24L33.88 4.78L31.52 3.22L29.28 2.34L25.92 1.66L23.59 1.75L21.01 2.65L19.12 3.18L16.88 3.62L15.01 3.49L12.49 2.71L10.29 2L7.21 1L5.12 1.13L2.88 2.47L1.6 4.1L0.6 6.9L0.2 9.1L0.2 13L0.2 16.9L0.6 19.1L1.6 21.9L2.88 23.53L5.12 24.87L7.21 25L10.29 24L12.49 23.29L15.01 22.51L16.88 22.38L19.12 22.82L21.01 23.35L23.59 24.25L25.92 24.34L29.28 23.66L31.52 22.78L33.88 21.22L35.33 19.76L36.67 17.64L37.38 15.96Z" fill="url(#deck)" stroke="#0d1217" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M35.2 13L34.42 10.66L33.76 9.34L32.64 7.66L31.45 6.56L29.55 5.44L27.74 4.96L25.06 4.84L23.12 5.06L20.88 5.74L19.12 6.13L16.88 6.47L15.01 6.29L12.49 5.51L10.29 4.89L7.21 4.11L5.34 4.5L3.66 6.3L2.91 8.32L2.6 13L2.91 17.68L3.66 19.7L5.34 21.5L7.21 21.89L10.29 21.11L12.49 20.49L15.01 19.71L16.88 19.53L19.12 19.87L20.88 20.26L23.12 20.94L25.06 21.16L27.74 21.04L29.55 20.56L31.45 19.44L32.64 18.34L33.76 16.66L34.42 15.34Z" fill="url(#plate)" stroke="#0d1217" stroke-opacity="0.8" stroke-width="0.75" stroke-linejoin="round"/>
+  <path d="M34 8.4L29.6 5.4L22.4 4.6" fill="none" stroke="#0d1217" stroke-opacity="0.6" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 4.6L7.5 2.8" fill="none" stroke="#0d1217" stroke-opacity="0.6" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M34 17.6L29.6 20.6L22.4 21.4" fill="none" stroke="#0d1217" stroke-opacity="0.6" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 21.4L7.5 23.2" fill="none" stroke="#0d1217" stroke-opacity="0.6" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="5" y="3.6" width="33" height="5.6" rx="1.6" fill="url(#rail)" stroke="#0d1217" stroke-width=".8"/>
+  <path d="M6 4.6L37 4.6" fill="none" stroke="#e1e5ee" stroke-opacity="0.4" stroke-width="0.45" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="27.4" cy="20.4" r="3" fill="url(#dark)" stroke="#0d1217" stroke-width="0.7"/>
+  <circle cx="27.4" cy="20.4" r="1.7" fill="url(#glass)" stroke="#0d1217" stroke-width="0.4"/>
+  <path d="M26.6 19.6L28.2 20.2" fill="none" stroke="#ffffff" stroke-opacity="0.75" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17 15.8L14.8 19.4" fill="none" stroke="#0d1217" stroke-opacity="0.6" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17 14.2L16.2 15.2" fill="none" stroke="#0d1217" stroke-opacity="0.0" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13.6 15.8L11.4 19.4" fill="none" stroke="#0d1217" stroke-opacity="0.6" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13.6 14.2L12.8 15.2" fill="none" stroke="#0d1217" stroke-opacity="0.0" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10.2 15.8L8 19.4" fill="none" stroke="#0d1217" stroke-opacity="0.6" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10.2 14.2L9.4 15.2" fill="none" stroke="#0d1217" stroke-opacity="0.0" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M21 17.4L17 21" fill="none" stroke="#ff5a3c" stroke-opacity="0.85" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="19" cy="13" r="2.6" fill="#0b0d12" fill-opacity="0.85" stroke="#0d1217" stroke-width="0.6"/>
+  <circle cx="19" cy="13" r="2.6" fill="none" stroke="#ff5a3c" stroke-width="0.45"/>
+  <ellipse cx="2" cy="7.4" rx="2.88" ry="2.4" fill="#0d1217" fill-opacity="0.9" stroke="#0d1217" stroke-width="0.2"/>
+  <ellipse cx="2" cy="7.4" rx="2.04" ry="1.78" fill="#0b0d12" stroke="#ff5a3c" stroke-width="0.5"/>
+  <ellipse cx="1.76" cy="7.4" rx="0.86" ry="0.72" fill="#ff5a3c" fill-opacity="0.92" stroke="#ff5a3c" stroke-width="0.1"/>
+  <ellipse cx="2" cy="18.6" rx="2.88" ry="2.4" fill="#0d1217" fill-opacity="0.9" stroke="#0d1217" stroke-width="0.2"/>
+  <ellipse cx="2" cy="18.6" rx="2.04" ry="1.78" fill="#0b0d12" stroke="#ff5a3c" stroke-width="0.5"/>
+  <ellipse cx="1.76" cy="18.6" rx="0.86" ry="0.72" fill="#ff5a3c" fill-opacity="0.92" stroke="#ff5a3c" stroke-width="0.1"/>
+</svg>

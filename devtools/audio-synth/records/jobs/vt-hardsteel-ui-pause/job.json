@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-4115739a55b6522d": {
+        "hash": "sha256:080aede77c90feb26373087a48aa781f788b9e2507fe96e21ebd634c5d47e229",
+        "path": "analyses/r-4115739a55b6522d.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:e2628f1f6e17a831be87a97ff0097a1c4acd20e3d8d652014be0a2bc66f793a3",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:e2628f1f6e17a831be87a97ff0097a1c4acd20e3d8d652014be0a2bc66f793a3",
+      "hash": "sha256:cb33eae95332e72945b9705516deab6e9554cfe78a13d824ee45b6471520c4b0",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:59eefebeb72837e578cdd17224d16ab0d91fc1edc92255187ccc37b147eeccff",
+      "path": "games/vol-test/audio-manifests/ui/steel/pause.json"
+    },
+    "renders": {
+      "r-4115739a55b6522d": {
+        "hash": "sha256:6b81129da78101069bd56fab17de09c374e054853056feeb62f999d5c778ba85",
+        "path": "renders/r-4115739a55b6522d.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:0b3ba243dc4b29cc85c5e904127aedb65377e812973339130ce01028594421d8",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-ui-pause",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/pause.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

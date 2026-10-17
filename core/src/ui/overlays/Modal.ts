@@ -1,16 +1,29 @@
+import { requiredAt } from '../../collections/requiredAt';
+import { restoreFocusAfterAction } from '../focus/restoreFocusAfterAction';
+import { playJuice, playJuiceSequence } from '../motion/juice';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { pushBackHandler } from '../../platform/backNavigation';
+import { FOCUSABLE_SELECTOR } from '../focus/focusable';
+import { previousFocusTarget } from '../primitives/buttonBehavior';
+import { signalOverlay } from './overlaySignal';
+
 export interface ModalOptions {
   /** Scrim'e (arka plan karartması) tıklayınca kapat. Varsayılan true. */
   closeOnScrimClick?: boolean;
   onClose?: () => void;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /** Erişilebilir rol; geri alınamaz sonuç soran diyalog `alertdialog` olur. Varsayılan `dialog`. */
+  role?: 'dialog' | 'alertdialog';
+  /** Diyaloğa ad veren öğenin kimliği (`aria-labelledby`). */
+  labelledBy?: string;
+  /** Diyaloğu açıklayan öğenin kimliği (`aria-describedby`). */
+  describedBy?: string;
+  /** Açılışta odak alacak öğe; null/undefined ise ilk odaklanabilir öğe. */
+  initialFocus?: () => HTMLElement | null | undefined;
 }
 
-const FOCUSABLE_SELECTOR =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 const BODY_LOCK_CLASS = 'vol-modal__body-locked';
-let bodyLockCount = 0;
 
 /**
  * Açık modalların yığını (son = en üstteki). Her modal `document` üzerinde
@@ -19,6 +32,16 @@ let bodyLockCount = 0;
  * sağlar.
  */
 const openModals: Modal[] = [];
+
+/**
+ * Gövde kilidini açık modal YIĞINININ uzunluğundan TÜRETİR, ayrı bir sayaç
+ * tutmaz. Sayaç tutulsaydı modal açıkken `destroy()` çağrılmadan sahne
+ * yıkıldığında hiç azalmaz, sayfa kalıcı olarak kaydırılamaz hâlde kalırdı.
+ * Yığın zaten tek doğruluk kaynağıdır; ikincisi ondan ayrışabilir.
+ */
+function syncBodyLock(): void {
+  document.body.classList.toggle(BODY_LOCK_CLASS, openModals.length > 0);
+}
 
 /**
  * `scrim` ile arka planı karartıp odağı içeride hapseden katman. Panel'den
@@ -30,12 +53,19 @@ export class Modal {
   private readonly scrim: HTMLDivElement;
   private readonly content: HTMLDivElement;
   private readonly onClose?: () => void;
+  private readonly initialFocus?: ModalOptions['initialFocus'];
   private previouslyFocused: (HTMLOrSVGElement & Element) | null = null;
   private boundKeydown: (event: KeyboardEvent) => void;
+  private onScrimClick?: () => void;
+  /** Yalnızca modal açıkken yaşar: yığın üyeliği + `document` keydown dinleyicisi. */
+  private sessionScope: DisposableScope | null = null;
+  /** `destroy()` sırasında kapanış sinyali yayılmaz (söküm kullanıcı eylemi değildir). */
+  private destroying = false;
 
   constructor(options: ModalOptions = {}) {
     const { closeOnScrimClick = true, onClose } = options;
     this.onClose = onClose;
+    this.initialFocus = options.initialFocus;
 
     this.element = document.createElement('div');
     this.element.className = ['vol-modal', options.className].filter(Boolean).join(' ');
@@ -44,22 +74,27 @@ export class Modal {
     this.scrim = document.createElement('div');
     this.scrim.className = 'vol-modal__scrim';
     if (closeOnScrimClick) {
-      this.scrim.addEventListener('click', () => this.close());
+      this.onScrimClick = () => this.close();
+      this.scrim.addEventListener('click', this.onScrimClick);
     }
 
     this.content = document.createElement('div');
     this.content.className = 'vol-modal__content';
-    this.content.setAttribute('role', 'dialog');
+    this.content.setAttribute('role', options.role ?? 'dialog');
     this.content.setAttribute('aria-modal', 'true');
+    if (options.labelledBy) this.content.setAttribute('aria-labelledby', options.labelledBy);
+    if (options.describedBy) this.content.setAttribute('aria-describedby', options.describedBy);
 
     this.element.appendChild(this.scrim);
     this.element.appendChild(this.content);
 
     this.boundKeydown = (event) => {
+      if (event.defaultPrevented) return;
       if (openModals[openModals.length - 1] !== this) {
         return;
       }
       if (event.key === 'Escape') {
+        event.preventDefault();
         this.close();
       } else if (event.key === 'Tab') {
         this.trapFocus(event);
@@ -76,17 +111,42 @@ export class Modal {
     if (this.isOpen()) {
       return;
     }
-    this.previouslyFocused = document.activeElement as (HTMLOrSVGElement & Element) | null;
+    this.previouslyFocused = previousFocusTarget() as (HTMLOrSVGElement & Element) | null;
     this.element.classList.add('vol-modal--visible');
+    this.signal('open');
+    if (!this.element.classList.contains('vol-sheet')) this.playEntry();
     this.element.inert = false;
-    openModals.push(this);
-    document.addEventListener('keydown', this.boundKeydown);
-    if (bodyLockCount++ === 0) {
-      document.body.classList.add(BODY_LOCK_CLASS);
-    }
 
-    const firstFocusable = this.content.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-    firstFocusable?.focus();
+    this.sessionScope = new DisposableScope();
+    openModals.push(this);
+    this.sessionScope.add({ dispose: () => this.removeFromStack() });
+    this.sessionScope.addListener(window, 'keydown', this.boundKeydown as EventListener);
+    this.sessionScope.addSubscription(
+      pushBackHandler(() => {
+        this.close();
+        return true;
+      }),
+    );
+    syncBodyLock();
+
+    const preferred = this.initialFocus?.();
+    const target =
+      preferred && this.content.contains(preferred)
+        ? preferred
+        : this.content.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    target?.focus();
+  }
+
+  /**
+   * Panel girişi: tek parçalı içerik hafif küçükten oturur; çok parçalı içerik (başlık, gövde,
+   * düğmeler) parça parça sıralı girer. Hareket azaltılmışta CSS çevirisizdir.
+   */
+  private playEntry(): void {
+    const parts = [...this.content.children].filter(
+      (child): child is HTMLElement => child instanceof HTMLElement,
+    );
+    if (parts.length > 1) playJuiceSequence(parts, 'enter');
+    else playJuice(this.content, 'enter');
   }
 
   close(): void {
@@ -97,10 +157,11 @@ export class Modal {
     }
     this.element.classList.remove('vol-modal--visible');
     this.element.inert = true;
-    this.removeFromStack();
-    document.removeEventListener('keydown', this.boundKeydown);
-    this.unlockBody();
-    this.previouslyFocused?.focus();
+    this.sessionScope?.dispose();
+    this.sessionScope = null;
+    syncBodyLock();
+    if (!this.destroying) this.signal('close');
+    restoreFocusAfterAction(this.previouslyFocused);
     this.onClose?.();
   }
 
@@ -108,8 +169,17 @@ export class Modal {
     return !this.element.inert;
   }
 
+  /** Açma/kapama sesi: tetikleyici (odağın önceki sahibi) kayıtlı bir UI kökündeyse niyet yayılır. */
+  private signal(kind: 'open' | 'close'): void {
+    signalOverlay(kind, 'Modal', this.previouslyFocused);
+  }
+
   destroy(): void {
+    this.destroying = true;
     this.close();
+    if (this.onScrimClick) {
+      this.scrim.removeEventListener('click', this.onScrimClick);
+    }
     this.element.remove();
   }
 
@@ -120,20 +190,14 @@ export class Modal {
     }
   }
 
-  private unlockBody(): void {
-    if (bodyLockCount > 0 && --bodyLockCount === 0) {
-      document.body.classList.remove(BODY_LOCK_CLASS);
-    }
-  }
-
   private trapFocus(event: KeyboardEvent): void {
     const focusable = Array.from(this.content.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
     if (focusable.length === 0) {
       return;
     }
 
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
+    const first = requiredAt(focusable, 0);
+    const last = requiredAt(focusable, focusable.length - 1);
 
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();

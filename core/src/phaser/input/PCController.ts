@@ -1,0 +1,256 @@
+import type Phaser from 'phaser';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { Vector2 } from '../../math/Vector2';
+import {
+  computePCInputState,
+  isPCInputActive,
+  resolvePCActions,
+  type PCActionBinding,
+  type PointerLikeState,
+  type MoveDownState,
+} from '../../input/PCInputState';
+import type { InputProvider } from '../../input/InputProvider';
+import type { InputState } from '../../input/InputState';
+import {
+  createSingleProviderSnapshot,
+  type InputSnapshot,
+  type PcInputSnapshot,
+} from '../../input/InputSnapshot';
+
+interface MoveKeys {
+  up: Phaser.Input.Keyboard.Key;
+  down: Phaser.Input.Keyboard.Key;
+  left: Phaser.Input.Keyboard.Key;
+  right: Phaser.Input.Keyboard.Key;
+}
+
+/** Hareket tuşları — dört yön için tarayıcı keyCode'ları. */
+export interface MoveKeyBindings {
+  up: number;
+  down: number;
+  left: number;
+  right: number;
+}
+
+/**
+ * WASD varsayılanı.
+ *
+ * Bu bir oyun sözlüğü DEĞİL, klavye yakınsaması: WASD'nin "hareket" demesi
+ * eylem adlarının aksine türden bağımsızdır (aynı sebeple sol fare düğmesi
+ * "birincil" demektir). Yine de `moveKeys` ile ezilebilir — yeniden atama
+ * yapan bir tüketici varsayılanı kullanmak zorunda değil.
+ *
+ * **Değerler ham `KeyboardEvent.keyCode` sayılarıdır, `Phaser.Input.Keyboard.KeyCodes`
+ * DEĞİL.** İki gerekçe:
+ * 1. `KeyCodes`'u modül seviyesinde okumak, Phaser'ı mock'layan bir tüketicide
+ *    (ör. vol-showcase testleri) import anında `Cannot read properties of
+ *    undefined` ile patlar — i18next'in modül seviyesinde çağrılmaması ile
+ *    aynı sınıf hata.
+ * 2. Eşleme SAF VERİ olmalı: bir tuş atama ekranı/kayıt dosyası da aynı
+ *    sayıları taşıyacak, enum referansı taşıyamaz.
+ *
+ * Sayılar `KeyCodes.W/S/A/D` ile birebir aynıdır (standart keyCode değerleri).
+ */
+export const DEFAULT_MOVE_KEYS: MoveKeyBindings = {
+  up: 87, // W
+  down: 83, // S
+  left: 65, // A
+  right: 68, // D
+};
+
+export interface PCControllerOptions<TAction extends string> {
+  /**
+   * Eylem → tuş/düğme eşlemesi. Eylem kümesini TÜKETİCİ tanımlar; CORE
+   * hangi eylemlerin var olduğunu bilmez.
+   */
+  actionBindings: Readonly<Record<TAction, PCActionBinding>>;
+  /** Hareket tuşları. Verilmezse `DEFAULT_MOVE_KEYS` (WASD). */
+  moveKeys?: MoveKeyBindings;
+  /**
+   * Diagnostics'te görünecek sağlayıcı kimliği. Varsayılan `'pc'`; aynı
+   * oyunda ikinci bir klavye sağlayıcısı (ör. bölünmüş ekran) kurulacaksa
+   * ayırt etmek için değiştirilir.
+   */
+  id?: string;
+}
+
+export class PCController<TAction extends string> implements InputProvider<TAction> {
+  private readonly keys: MoveKeys;
+  /** Eylem tuşları — yalnızca `source: 'key'` bağlantıları için kurulur. */
+  private readonly actionKeys = new Map<number, Phaser.Input.Keyboard.Key>();
+  private readonly actionBindings: Readonly<Record<TAction, PCActionBinding>>;
+  readonly id: string;
+  private readonly lifecycle = new DisposableScope();
+  /**
+   * Kare içinde basılıp bırakılan tuşlar. `isDown` kare başında okunur: bir
+   * kareden kısa basış (düşük FPS'te hızlı dokunuş, otomasyon) okunmadan
+   * biterdi. Okunmamış basış bir `getState` daha yaşar; `VirtualActionSource`
+   * mandalıyla aynı sözleşme.
+   */
+  private readonly latched = new Set<number>();
+  private pointerLatched = false;
+  private readonly onPointerDown = (pointer: Phaser.Input.Pointer): void => {
+    if (!pointer.wasTouch && pointer.leftButtonDown()) this.pointerLatched = true;
+  };
+  private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (this.actionKeys.has(event.keyCode)) this.latched.add(event.keyCode);
+  };
+
+  constructor(
+    private readonly scene: Phaser.Scene,
+    options: PCControllerOptions<TAction>,
+  ) {
+    const keyboard = scene.input.keyboard;
+    if (!keyboard) {
+      throw new Error('Keyboard plugin etkin değil');
+    }
+
+    this.id = options.id ?? 'pc';
+    const moveKeys = options.moveKeys ?? DEFAULT_MOVE_KEYS;
+    this.keys = {
+      up: keyboard.addKey(moveKeys.up),
+      down: keyboard.addKey(moveKeys.down),
+      left: keyboard.addKey(moveKeys.left),
+      right: keyboard.addKey(moveKeys.right),
+    };
+
+    this.actionBindings = options.actionBindings;
+    for (const action of Object.keys(this.actionBindings) as TAction[]) {
+      const binding = this.actionBindings[action];
+      // Aynı keyCode'a bağlı iki eylem tek bir Key nesnesini paylaşır;
+      // addKey'i iki kez çağırmak Phaser'da aynı tuşu iki kez kaydeder.
+      if (binding.source === 'key' && !this.actionKeys.has(binding.keyCode)) {
+        this.actionKeys.set(binding.keyCode, keyboard.addKey(binding.keyCode));
+      }
+    }
+
+    try {
+      keyboard.on('keydown', this.onKeyDown);
+      this.lifecycle.addSubscription(() => keyboard.off('keydown', this.onKeyDown));
+      this.lifecycle.addListener(window, 'blur', () => this.resetKeys());
+      if (
+        (Object.keys(this.actionBindings) as TAction[]).some(
+          (action) => this.actionBindings[action].source === 'pointerButton',
+        )
+      ) {
+        scene.input.on('pointerdown', this.onPointerDown);
+        this.lifecycle.addSubscription(() => scene.input.off('pointerdown', this.onPointerDown));
+      }
+    } catch (error) {
+      this.lifecycle.dispose();
+      throw error;
+    }
+  }
+
+  private resetKeys(): void {
+    this.keys.up.reset();
+    this.keys.down.reset();
+    this.keys.left.reset();
+    this.keys.right.reset();
+    for (const key of this.actionKeys.values()) {
+      key.reset();
+    }
+    this.latched.clear();
+    this.pointerLatched = false;
+  }
+
+  reset(options?: { preserveHeld?: boolean }): void {
+    if (options?.preserveHeld) {
+      this.latched.clear();
+      this.pointerLatched = false;
+    } else this.resetKeys();
+  }
+
+  /** activePointer çalışma anında değişebilir; referans saklanmaz. */
+  private get pointer(): Phaser.Input.Pointer {
+    return this.scene.input.activePointer;
+  }
+
+  private get moveState(): MoveDownState {
+    return {
+      up: this.keys.up.isDown,
+      down: this.keys.down.isDown,
+      left: this.keys.left.isDown,
+      right: this.keys.right.isDown,
+    };
+  }
+
+  private get pointerState(): PointerLikeState {
+    const pointer = this.pointer;
+    return {
+      x: pointer.x,
+      y: pointer.y,
+      isDown: pointer.isDown,
+      leftButtonDown: pointer.leftButtonDown(),
+      wasTouch: pointer.wasTouch,
+    };
+  }
+
+  private get actionState(): Record<TAction, boolean> {
+    return resolvePCActions(
+      this.actionBindings,
+      (keyCode) => (this.actionKeys.get(keyCode)?.isDown ?? false) || this.latched.has(keyCode),
+      {
+        ...this.pointerState,
+        leftButtonDown: this.pointerState.leftButtonDown || this.pointerLatched,
+      },
+    );
+  }
+
+  /**
+   * Fare durağan hâlde de nişan sinyali taşır — AMA son işaretçi olayı bir
+   * DOKUNUŞ ise taşımaz: o durumda `pointer` dokunuştan miras kalmış bir
+   * konumdur ve dokunmatik cihazda bayat bir yöne nişan aldırırdı.
+   */
+  get providesRestingState(): boolean {
+    return !this.pointer.wasTouch;
+  }
+
+  get isActive(): boolean {
+    return isPCInputActive(this.moveState, this.pointerState, this.actionState);
+  }
+
+  getDebugSnapshot(): InputSnapshot {
+    // Şekil AÇIKÇA tiplenir: `createSingleProviderSnapshot` gövdeyi `ProviderSnapshot`
+    // (yani `Record<string, unknown>`) olarak kabul ettiği için satır içi bir
+    // nesne hiçbir kontrolden geçmezdi ve `PcInputSnapshot` sessizce
+    // gerçeklikten kopardı.
+    const snapshot: PcInputSnapshot = {
+      move: { ...this.moveState },
+      pointer: { ...this.pointerState },
+      actions: this.actionState,
+    };
+    return createSingleProviderSnapshot(this.id, snapshot);
+  }
+
+  getState(playerPosition: Vector2): InputState<TAction> {
+    const camera = this.scene.cameras.main;
+    const target = camera.getWorldPoint(this.pointer.x, this.pointer.y);
+
+    const state = computePCInputState(
+      this.moveState,
+      this.pointerState,
+      new Vector2(target.x, target.y),
+      playerPosition,
+      this.actionState,
+    );
+    state.heldActions = resolvePCActions(
+      this.actionBindings,
+      (code) => this.actionKeys.get(code)?.isDown ?? false,
+      this.pointerState,
+    );
+    state.pressedActions = resolvePCActions(this.actionBindings, (code) => this.latched.has(code), {
+      ...this.pointerState,
+      leftButtonDown: this.pointerLatched,
+    });
+    this.latched.clear();
+    this.pointerLatched = false;
+    return state;
+  }
+
+  update(_delta: number): void {}
+
+  destroy(): void {
+    this.lifecycle.dispose();
+  }
+}

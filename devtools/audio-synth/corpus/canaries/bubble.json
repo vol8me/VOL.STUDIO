@@ -1,0 +1,57 @@
+{
+  "schema": "OrganicCanaryV1",
+  "id": "bubble",
+  "version": 1,
+  "title": "Tek kabarcık",
+  "purpose": "Minnaert rezonatörü: 3 mm yarıçaplı tek kabarcık; kısa, yükselen, sönümlü rezonans.",
+  "source": {
+    "kind": "program",
+    "program": {
+      "schema": "AcousticProgramV1",
+      "sampleRate": 48000,
+      "channels": 1,
+      "durationSeconds": 0.4,
+      "seed": 12,
+      "master": {
+        "normalize": "peak",
+        "peakDbfs": -3,
+        "fadeOutSeconds": 0.02
+      },
+      "layers": [
+        {
+          "name": "bubble",
+          "source": {
+            "primitive": "source.bubble",
+            "version": 1,
+            "params": {
+              "radius": 3,
+              "damping": 1,
+              "rise": 0.1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {
+      "kind": "descriptor",
+      "descriptor": "spectralPeakHz",
+      "min": 900,
+      "max": 1400
+    },
+    {
+      "kind": "descriptor",
+      "descriptor": "activeSeconds",
+      "max": 0.2
+    },
+    {
+      "kind": "clipping"
+    }
+  ],
+  "listeningGuide": [
+    "Kısa, hafif yükselen bir “plop” beklenir; su yüzeyinde tek bir kabarcık çağrışımı.",
+    "Hata belirtileri: düz sinüs bip, uzun çınlama, tık, perdenin düşmesi.",
+    "Not: spektral tepe rezonans frekansıdır, perde iddiası değildir; 60 ms’lik bu geçişte YIN perde vermez."
+  ]
+}

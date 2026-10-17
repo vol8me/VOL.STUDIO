@@ -1,0 +1,284 @@
+{
+  "brief": {
+    "hash": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
+    "path": "devtools/audio-synth/records/music/reference-adaptive/brief.json"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "instrumentRegistryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "rendererVersion": 2
+  },
+  "music": {
+    "hash": "sha256:4d890f5df7a0c9c0e1402c14aaf490c8ed3a001ad373f25e8dd2a83a6c0889a6",
+    "musicId": "reference-adaptive",
+    "path": "devtools/audio-synth/records/music/reference-adaptive/music.json",
+    "playback": "adaptiveLoop",
+    "seed": 4242,
+    "version": 1
+  },
+  "package": "@volstudio/audio-synth",
+  "qa": {
+    "hash": "sha256:1c49c0d42c12762d41b280d66c56c7c4401b3694c969af6ff10c3933023b3514",
+    "pass": true,
+    "path": "devtools/audio-synth/records/music/reference-adaptive/qa.json"
+  },
+  "report": {
+    "hash": "sha256:47115360ab33bd945b30e8df069ced3464bc5904510cfc84bc54799dd0abd4cb",
+    "pass": true,
+    "path": "devtools/audio-synth/records/music/reference-adaptive/report.json"
+  },
+  "schema": "MusicBundleV1",
+  "spec": {
+    "bars": 4,
+    "bpm": 112,
+    "engine": {
+      "compressor": false
+    },
+    "frames": 378000,
+    "loop": {
+      "endBar": 4,
+      "startBar": 0
+    },
+    "mastering": {
+      "gainDb": 1.084,
+      "integratedLufs": -16.132,
+      "path": "stem-linear",
+      "truePeakDbtp": -3.814
+    },
+    "meter": [
+      4,
+      4
+    ],
+    "musicId": "reference-adaptive",
+    "playback": "adaptiveLoop",
+    "referenceMix": {
+      "file": "reference/production/assets/music/reference-adaptive/mix.ogg",
+      "frames": 378000
+    },
+    "runtimeGain": 1,
+    "sampleRate": 44100,
+    "schema": "MusicAssetSpecV1",
+    "states": [
+      {
+        "id": "calm",
+        "intensity": 0
+      },
+      {
+        "id": "active",
+        "intensity": 0.5
+      },
+      {
+        "id": "peak",
+        "intensity": 1
+      }
+    ],
+    "stems": [
+      {
+        "file": "reference/production/assets/music/reference-adaptive/bed.ogg",
+        "frames": 378000,
+        "gainMap": {
+          "intensity": [
+            {
+              "gain": 0.85,
+              "threshold": 0
+            },
+            {
+              "gain": 0.95,
+              "threshold": 0.5
+            },
+            {
+              "gain": 1,
+              "threshold": 1
+            }
+          ]
+        },
+        "id": "bed"
+      },
+      {
+        "file": "reference/production/assets/music/reference-adaptive/pulse.ogg",
+        "frames": 378000,
+        "gainMap": {
+          "intensity": [
+            {
+              "gain": 0,
+              "threshold": 0
+            },
+            {
+              "gain": 0,
+              "threshold": 0.35
+            },
+            {
+              "gain": 0.85,
+              "threshold": 0.55
+            },
+            {
+              "gain": 1,
+              "threshold": 1
+            }
+          ]
+        },
+        "id": "pulse"
+      },
+      {
+        "file": "reference/production/assets/music/reference-adaptive/lead.ogg",
+        "frames": 378000,
+        "gainMap": {
+          "intensity": [
+            {
+              "gain": 0,
+              "threshold": 0
+            },
+            {
+              "gain": 0,
+              "threshold": 0.6
+            },
+            {
+              "gain": 0.75,
+              "threshold": 0.8
+            },
+            {
+              "gain": 1,
+              "threshold": 1
+            }
+          ]
+        },
+        "id": "lead"
+      }
+    ],
+    "transitions": []
+  },
+  "stems": [
+    {
+      "asset": {
+        "bytes": 48063,
+        "encodedHash": "sha256:fae239a5546bda461bb5e1adcb3a372d59efea991713ec373a39509a9a799174",
+        "path": "reference/production/assets/music/reference-adaptive/bed.ogg"
+      },
+      "frames": 378000,
+      "id": "bed",
+      "integratedLufs": -15.633195918524203,
+      "manifest": {
+        "hash": "sha256:e66abe314a4f682d21a72023f63b942f408c79e2255acc05276893e0d444549a",
+        "path": "reference/production/manifests/music/reference-adaptive/bed.json"
+      },
+      "pcmHash": "sha256:15bdf3f21651ec20966b3f981cf5121c83ba1912023a8ccbf4b8ccb5ed365ce2",
+      "truePeakDbtp": -4.507211053418007
+    },
+    {
+      "asset": {
+        "bytes": 16537,
+        "encodedHash": "sha256:a1d048512d99ef5084b1f913370f32377ef5948d850542c6ad999aa7ca4a48b1",
+        "path": "reference/production/assets/music/reference-adaptive/pulse.ogg"
+      },
+      "frames": 378000,
+      "id": "pulse",
+      "integratedLufs": -27.650966022515632,
+      "manifest": {
+        "hash": "sha256:1c84a88b3bc63c13f6ba4bb0a078278136593e8cce44db0c8e68c3566e1c8d27",
+        "path": "reference/production/manifests/music/reference-adaptive/pulse.json"
+      },
+      "pcmHash": "sha256:59a5423b260dea556faa36b3a702382e998345a6292d42813841ce53c1b3b82a",
+      "truePeakDbtp": -9.53256840148086
+    },
+    {
+      "asset": {
+        "bytes": 20021,
+        "encodedHash": "sha256:0f3e6d0462495de47f213a0b38a116c31c523dee06e385c6b17f8e9777ab2787",
+        "path": "reference/production/assets/music/reference-adaptive/lead.ogg"
+      },
+      "frames": 378000,
+      "id": "lead",
+      "integratedLufs": -20.531015517141675,
+      "manifest": {
+        "hash": "sha256:6aa747a920ec2ac33c7cb8b4644782f02507c5d85afe89faa63783c7df988916",
+        "path": "reference/production/manifests/music/reference-adaptive/lead.json"
+      },
+      "pcmHash": "sha256:7f5785ba2124a1abd59e00ba227bbb790d7b2926d89c6bf7037a020321afa97c",
+      "truePeakDbtp": -11.01178881265687
+    },
+    {
+      "asset": {
+        "bytes": 56221,
+        "encodedHash": "sha256:306be9be1bac1fa42cc247261161acfcda7724a245cb5088edf9929f031affba",
+        "path": "reference/production/assets/music/reference-adaptive/mix.ogg"
+      },
+      "frames": 378000,
+      "id": "mix",
+      "integratedLufs": -16.119799806752294,
+      "manifest": {
+        "hash": "sha256:c86d29812586ea9e8c457d303f8b5a3c59e409485943217469cb7abfabf44291",
+        "path": "reference/production/manifests/music/reference-adaptive/mix.json"
+      },
+      "pcmHash": "sha256:c0d37d78c61fed2f269a6a27157817de17c950342e6a905621db2ac0f2d480f7",
+      "truePeakDbtp": -3.775982046300039
+    }
+  ],
+  "sync": {
+    "checks": [
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "bed",
+        "lagSamples": 0,
+        "ok": true
+      },
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "pulse",
+        "lagSamples": 0,
+        "ok": true
+      },
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "lead",
+        "lagSamples": 0,
+        "ok": true
+      },
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "mix",
+        "lagSamples": 0,
+        "ok": true
+      }
+    ],
+    "method": "cross-correlation-v1",
+    "ok": true,
+    "seams": [
+      {
+        "detail": "dikiş sürekli (adım 0.0001 ≤ 2×0.0446)",
+        "id": "bed",
+        "jump": 0.000116,
+        "ok": true,
+        "typicalStep": 0.044563
+      },
+      {
+        "detail": "dikiş sürekli (adım 0.0032 ≤ 2×0.0378)",
+        "id": "pulse",
+        "jump": 0.003189,
+        "ok": true,
+        "typicalStep": 0.037836
+      },
+      {
+        "detail": "dikiş sürekli (adım 0.0000 ≤ 2×0.0132)",
+        "id": "lead",
+        "jump": 0,
+        "ok": true,
+        "typicalStep": 0.013177
+      },
+      {
+        "detail": "dikiş sürekli (adım 0.0125 ≤ 2×0.0498)",
+        "id": "mix",
+        "jump": 0.012494,
+        "ok": true,
+        "typicalStep": 0.049817
+      }
+    ]
+  },
+  "themeBook": {
+    "hash": "sha256:19c615b8d4becfd91ad10126a9043b54bd9441895372ff336f348937f5e04ca3",
+    "id": "reference-theme"
+  }
+}

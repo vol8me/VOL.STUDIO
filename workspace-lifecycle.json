@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "workspaces": [
+    {
+      "packageName": "@volstudio/core",
+      "path": "core",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/audio-synth",
+      "path": "devtools/audio-synth",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/pen.dev",
+      "path": "devtools/pen.dev",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/deck",
+      "path": "devtools/deck",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/vol-showcase",
+      "path": "devtools/vol-showcase",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/tauri-v2",
+      "path": "tauri-v2",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/vol-test",
+      "path": "games/vol-test",
+      "status": "active"
+    },
+    {
+      "packageName": "@volstudio/network",
+      "path": "network",
+      "status": "active"
+    }
+  ]
+}

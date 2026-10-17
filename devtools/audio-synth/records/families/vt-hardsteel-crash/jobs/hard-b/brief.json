@@ -1,0 +1,24 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "intensity:hard",
+    "rarity:rare",
+    "crash"
+  ],
+  "durationSeconds": {
+    "max": 0.95,
+    "min": 0.55
+  },
+  "id": "vt-hardsteel-crash-hard-b",
+  "intent": "Engel çarpması: ağır gövde, plaka çınlaması ve savrulan çakıl. Varyant hard-b (intensity:hard, rarity:rare).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST crash — hard-b"
+}

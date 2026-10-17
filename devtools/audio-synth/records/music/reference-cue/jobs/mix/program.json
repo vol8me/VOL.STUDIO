@@ -1,0 +1,312 @@
+{
+  "mastering": {
+    "ceiling": 0.95,
+    "fadeOutSeconds": 0.04,
+    "gainDb": 0.776,
+    "limiter": {
+      "knee": 0.28,
+      "threshold": 0.7
+    },
+    "path": "one-shot-limited",
+    "schema": "MusicMasteringPlanV1",
+    "targetLufs": -15,
+    "trimSilence": true
+  },
+  "music": {
+    "bars": 4,
+    "delivery": {
+      "assetDir": "reference/production/assets/music/reference-cue",
+      "package": "@volstudio/audio-synth"
+    },
+    "description": "Dört ölçülük tek seferlik cue: giriş, tepe ve kapanış. Tek seferlik yolun (kuyruk kırpma, sönüm, sınırlayıcı) uçtan uca kanıtı.",
+    "grooves": [
+      {
+        "accents": [1, 0.8, 0.9, 0.8],
+        "id": "straightish",
+        "swing": 0,
+        "timingJitter": 0.006,
+        "velocityJitter": 0.12
+      }
+    ],
+    "lanes": [
+      {
+        "gain": 0.7,
+        "id": "bass",
+        "instrument": "preset:cello",
+        "stem": "main"
+      },
+      {
+        "gain": 0.5,
+        "id": "keys",
+        "instrument": "preset:mellowKeys",
+        "pan": -0.15,
+        "stem": "main"
+      },
+      {
+        "gain": 0.45,
+        "groove": "straightish",
+        "id": "bell",
+        "instrument": "preset:vibraphone",
+        "octave": 2,
+        "pan": 0.2,
+        "stem": "main"
+      }
+    ],
+    "mastering": {
+      "integratedLufs": -15
+    },
+    "meter": [4, 4],
+    "motifs": [
+      {
+        "id": "rise",
+        "notes": [
+          {
+            "beat": 0,
+            "beats": 0.5,
+            "degree": 0
+          },
+          {
+            "beat": 0.5,
+            "beats": 0.5,
+            "degree": 3
+          },
+          {
+            "beat": 1,
+            "beats": 0.5,
+            "degree": 5
+          },
+          {
+            "beat": 1.5,
+            "beats": 1.5,
+            "degree": 7
+          }
+        ]
+      }
+    ],
+    "musicId": "reference-cue",
+    "playback": "playlistOneShot",
+    "sampleRate": 44100,
+    "schema": "MusicProgramV1",
+    "sections": [
+      {
+        "bars": [0, 1],
+        "harmony": {
+          "chords": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "beats": 4,
+              "degree": 1,
+              "quality": "triad"
+            }
+          ],
+          "voicing": {
+            "maxMovement": 7,
+            "register": [50, 74],
+            "spread": "close",
+            "voices": 3
+          }
+        },
+        "id": "opening",
+        "lanes": ["bass", "keys"],
+        "parts": [
+          {
+            "lane": "keys",
+            "rhythm": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 3.5,
+                "gain": 0.8
+              }
+            ],
+            "source": "chord"
+          },
+          {
+            "lane": "bass",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 3,
+                "note": "D2"
+              }
+            ],
+            "source": "notes"
+          }
+        ],
+        "role": "intro",
+        "targetEnergy": 0.3
+      },
+      {
+        "bars": [1, 3],
+        "harmony": {
+          "chords": [
+            {
+              "bar": 0,
+              "beat": 0,
+              "beats": 2,
+              "degree": 4,
+              "quality": "seventh"
+            },
+            {
+              "bar": 0,
+              "beat": 2,
+              "beats": 2,
+              "degree": 5,
+              "quality": "triad"
+            },
+            {
+              "bar": 1,
+              "beat": 0,
+              "beats": 4,
+              "degree": 1,
+              "quality": "seventh"
+            }
+          ],
+          "voicing": {
+            "maxMovement": 9,
+            "register": [50, 80],
+            "spread": "close",
+            "voices": 4
+          }
+        },
+        "id": "climax",
+        "lanes": ["bass", "keys", "bell"],
+        "parts": [
+          {
+            "lane": "keys",
+            "rhythm": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 1.75
+              },
+              {
+                "bar": 0,
+                "beat": 2,
+                "beats": 1.75
+              },
+              {
+                "bar": 1,
+                "beat": 0,
+                "beats": 3.5
+              }
+            ],
+            "source": "chord"
+          },
+          {
+            "lane": "bass",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 1.5,
+                "note": "G2"
+              },
+              {
+                "bar": 0,
+                "beat": 2,
+                "beats": 1.5,
+                "note": "A2"
+              },
+              {
+                "bar": 1,
+                "beat": 0,
+                "beats": 3,
+                "note": "D2"
+              }
+            ],
+            "source": "notes"
+          },
+          {
+            "beats": 1,
+            "lane": "bell",
+            "motif": "rise",
+            "placements": [
+              {
+                "bar": 0,
+                "beat": 0
+              },
+              {
+                "bar": 1,
+                "beat": 0,
+                "octave": 1
+              }
+            ],
+            "source": "motif",
+            "transforms": []
+          }
+        ],
+        "role": "peak",
+        "targetEnergy": 0.95
+      },
+      {
+        "bars": [3, 4],
+        "id": "close",
+        "lanes": ["bass", "bell"],
+        "parts": [
+          {
+            "lane": "bass",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 3.5,
+                "note": "D2"
+              }
+            ],
+            "source": "notes"
+          },
+          {
+            "lane": "bell",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 2,
+                "note": "D5"
+              }
+            ],
+            "source": "notes"
+          }
+        ],
+        "role": "outro",
+        "targetEnergy": 0.2
+      }
+    ],
+    "seed": 77120,
+    "stems": [
+      {
+        "id": "main",
+        "title": "Tam mix"
+      }
+    ],
+    "tempo": {
+      "bpm": 120
+    },
+    "themeBook": {
+      "hash": "sha256:19c615b8d4becfd91ad10126a9043b54bd9441895372ff336f348937f5e04ca3",
+      "id": "reference-theme"
+    },
+    "title": "Referans tek seferlik cue",
+    "tonal": {
+      "root": "D2",
+      "system": "dorian"
+    },
+    "transitions": [
+      {
+        "bars": 1,
+        "id": "to-loop",
+        "kind": "crossfade",
+        "seconds": 2,
+        "tempoRelation": "same",
+        "to": "reference-loop",
+        "tonalRelation": "relative"
+      }
+    ],
+    "version": 1
+  },
+  "schema": "MusicStemProgramV1",
+  "stem": "mix"
+}

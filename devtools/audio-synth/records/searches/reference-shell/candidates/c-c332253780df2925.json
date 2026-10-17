@@ -1,0 +1,74 @@
+{
+  "channels": 1,
+  "controls": [
+    {
+      "control": "control.body-size",
+      "value": 0.682763,
+      "version": 1
+    },
+    {
+      "control": "control.viscosity",
+      "value": 0.30594,
+      "version": 1
+    },
+    {
+      "control": "control.roughness",
+      "value": 0.5,
+      "version": 1
+    }
+  ],
+  "durationSeconds": 1.2,
+  "effects": [
+    {
+      "params": {
+        "amount": 0.12,
+        "decay": 0.5552899744093627
+      },
+      "primitive": "effect.reverb",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "name": "strike",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.4,
+            "decay": 1.2,
+            "frequency": 431.3968715544069,
+            "layout": "membrane",
+            "modes": 12
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        },
+        {
+          "params": {
+            "q": 20,
+            "volume": 0.29096513109674393
+          },
+          "primitive": "resonator.cavity",
+          "version": 1
+        }
+      ],
+      "routing": "parallel",
+      "source": {
+        "params": {
+          "contactTime": 0.002476863,
+          "roughness": 0.2
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "fadeOutSeconds": 0.02,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 3730083200
+}

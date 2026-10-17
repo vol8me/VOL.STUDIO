@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:7d374be7579b8d92994d5fa1d003fb62de022edfd179aefd6492cfb472ff8f0b",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:5b439fe4bba8d8ffbf4da21b548d5305f5a01019032fbc198a4d7290e17ec6ec",
+    "familyId": "ui-steel-focus",
+    "kind": "family-variant",
+    "variantId": "v-86e88f5d7cfd0454",
+    "variantKey": "focus-a"
+  }
+}

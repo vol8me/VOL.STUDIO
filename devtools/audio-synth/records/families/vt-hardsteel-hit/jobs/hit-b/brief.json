@@ -1,0 +1,23 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "hit"
+  ],
+  "durationSeconds": {
+    "max": 0.75,
+    "min": 0.4
+  },
+  "id": "vt-hardsteel-hit-hit-b",
+  "intent": "Zırh isabeti: gövdeli darbe, donuk plaka çınlaması ve kopan kırıntılar. Varyant hit-b (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST hit — hit-b"
+}

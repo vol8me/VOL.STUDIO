@@ -1,0 +1,127 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-0a5b795e4395f02b": {
+        "hash": "sha256:26d10199221e53267cfbf80acf6f2c968d3ffcd50b593643891df5ed81ee0feb",
+        "path": "analyses/r-0a5b795e4395f02b.json"
+      },
+      "r-1bd95e17a995fb83": {
+        "hash": "sha256:3d27233e9b45010eed48f679b5682df37700b4d6fa6d536aacb618938f5e01a8",
+        "path": "analyses/r-1bd95e17a995fb83.json"
+      },
+      "r-24615079ddef9fb1": {
+        "hash": "sha256:4dcfeda53537cb23907a155711851920c24dc66d8a619c9e39762cdb1dc4bdcd",
+        "path": "analyses/r-24615079ddef9fb1.json"
+      },
+      "r-394763fb60da5660": {
+        "hash": "sha256:3fac28c7cdeaa034b1041f52cab2b4c785f1747b94f0e258509adc90b25d17ec",
+        "path": "analyses/r-394763fb60da5660.json"
+      },
+      "r-41f74382e98a5051": {
+        "hash": "sha256:43b8ce4bea652181388d6dd6dd1aa0355c09ec63f884e6e4b82acab51e002c06",
+        "path": "analyses/r-41f74382e98a5051.json"
+      },
+      "r-57d91dd654f9a84c": {
+        "hash": "sha256:6de88ff3477e9ab97bfd997f4ec03dcacc0067e34192ce04ce77b76bba5539bd",
+        "path": "analyses/r-57d91dd654f9a84c.json"
+      },
+      "r-702342adf6aedbd2": {
+        "hash": "sha256:3204ae1415f0a4b00e4caa68d0a47b4fd4c2bfa26eb09bbe9216b4ba8b335455",
+        "path": "analyses/r-702342adf6aedbd2.json"
+      },
+      "r-9359dc6a02eea54d": {
+        "hash": "sha256:1fca3a65b18d722980aed222b4f24f5594cefbd999747bb758b494f7c59984b8",
+        "path": "analyses/r-9359dc6a02eea54d.json"
+      },
+      "r-9c7dc8b8356bf9b4": {
+        "hash": "sha256:695d6cddf6e23c39ae05950b7ca11a914d4c0125bf0ced35ce9ad4936d441362",
+        "path": "analyses/r-9c7dc8b8356bf9b4.json"
+      },
+      "r-c0a595235b439859": {
+        "hash": "sha256:f04e79c33473b96b2f23ff061ebb5f163742a103af7a41de3d4bf6e4fa06f895",
+        "path": "analyses/r-c0a595235b439859.json"
+      },
+      "r-eace30f9f0a96b79": {
+        "hash": "sha256:83da6ccdee3bfdd623f808a29a2c3ca21c76f973879324ad223ea5566ba8d54f",
+        "path": "analyses/r-eace30f9f0a96b79.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:f4745cc644f9bc0a67df14b648257490324bc6439d00219150240b6d9d31151a",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:f4745cc644f9bc0a67df14b648257490324bc6439d00219150240b6d9d31151a",
+      "hash": "sha256:8f58241556756415b893195fbc1f95087691ae5070461dccdf5a9b9535f3e4d2",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:9b79d61a1abc305d4ccf4623123edb60462131424cdb31dad302b7b6b71f4965",
+      "path": "games/vol-test/audio-manifests/sfx/steel/land.json"
+    },
+    "renders": {
+      "r-0a5b795e4395f02b": {
+        "hash": "sha256:c31d6fe745b9b5327fbdb115932e0989b58ec93bf15ceac3fa82983e2fa3cd97",
+        "path": "renders/r-0a5b795e4395f02b.json"
+      },
+      "r-1bd95e17a995fb83": {
+        "hash": "sha256:c22727457fe1ae94867159b2eb52e579f24f7d60f09887b4d4095da02329fa7a",
+        "path": "renders/r-1bd95e17a995fb83.json"
+      },
+      "r-24615079ddef9fb1": {
+        "hash": "sha256:ff4ce54e6dcd401bfd6a1feb4a169ecdd0c45d4757ed39293def88f359b8a927",
+        "path": "renders/r-24615079ddef9fb1.json"
+      },
+      "r-394763fb60da5660": {
+        "hash": "sha256:0a7b31940cb9e025317490fa3f71e7eb20b5f72734611c290296230ce8d27453",
+        "path": "renders/r-394763fb60da5660.json"
+      },
+      "r-41f74382e98a5051": {
+        "hash": "sha256:1c90f42ccc5bd4ec5ea8c8f346bff562d38fced40756629da5c806860b52cd80",
+        "path": "renders/r-41f74382e98a5051.json"
+      },
+      "r-57d91dd654f9a84c": {
+        "hash": "sha256:ac3ec10e9adac87ba30ab26d184a534db0859531c14a4bdbc846fb3f56870953",
+        "path": "renders/r-57d91dd654f9a84c.json"
+      },
+      "r-702342adf6aedbd2": {
+        "hash": "sha256:b054f8b6433bccf6ab69c2aa3f5fb323e01c60482bb719599e72def239f54631",
+        "path": "renders/r-702342adf6aedbd2.json"
+      },
+      "r-9359dc6a02eea54d": {
+        "hash": "sha256:aed92a9135ffb98ffda7aa31874faea89b9e496827d5ef79743d6013ba15f5c8",
+        "path": "renders/r-9359dc6a02eea54d.json"
+      },
+      "r-9c7dc8b8356bf9b4": {
+        "hash": "sha256:58ecf11e3f8ae42c93e9c4784455fb1c9942845f7779e1add19c8adee2b8a4b5",
+        "path": "renders/r-9c7dc8b8356bf9b4.json"
+      },
+      "r-c0a595235b439859": {
+        "hash": "sha256:3575dd29affa9c149d8a3f75413e54cf302c269afb7bd1a1417afc195de10a5e",
+        "path": "renders/r-c0a595235b439859.json"
+      },
+      "r-eace30f9f0a96b79": {
+        "hash": "sha256:09ba603483561c2235ecdf44f6a3917fa04c567f15848e5131064f8c79264d8e",
+        "path": "renders/r-eace30f9f0a96b79.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:6e0da89d56f475c28bd786efd8948888a83fc170639d0c368f10b73ac10ec3fe",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-land",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 50,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/land.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

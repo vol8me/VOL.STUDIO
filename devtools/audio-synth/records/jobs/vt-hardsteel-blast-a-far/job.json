@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-b2d47f33e7e8e434": {
+        "hash": "sha256:682b43d37ce30f34715bcd976427b2d32fdfa093125fd2f7973eb1ed8ea6dc5c",
+        "path": "analyses/r-b2d47f33e7e8e434.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:bbc8633ffaf5f021de18463d64f5185647e248aa2d58941d8159f471578d7d87",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:bbc8633ffaf5f021de18463d64f5185647e248aa2d58941d8159f471578d7d87",
+      "hash": "sha256:d450b9cac74c6f5f4de797f9b62e1cd756f4836a1544ce22cace2819b42acebc",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:de46dee3bb02564d9802205842ab2108b3b8d5fd9f99acc8b45c21858b42aa9a",
+      "path": "games/vol-test/audio-manifests/sfx/steel/blast-far-blast-a.json"
+    },
+    "renders": {
+      "r-b2d47f33e7e8e434": {
+        "hash": "sha256:f9ce7a66b015794363e543b0e8b4531302292de26549552731adb8c8bea8f390",
+        "path": "renders/r-b2d47f33e7e8e434.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:0f528a7a3128e6cf62686828b64a2b55b0db2766abfa90001ba657f0c9743457",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-blast-a-far",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 17,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/blast-far-blast-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "vt-hardsteel-blast/blast-a/distance-far"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

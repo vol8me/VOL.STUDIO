@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 1.062,
+    "min": 0.68
+  },
+  "id": "vt-hardsteel-snap",
+  "intent": "Parça kopması: ağır metal yırtılması, çınlama ve savrulan parçalar.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — snap"
+}

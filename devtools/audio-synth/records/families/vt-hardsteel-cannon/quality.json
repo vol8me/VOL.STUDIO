@@ -1,0 +1,129 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.89,
+        "measured": 4,
+        "median": 0.89,
+        "min": 0.89,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 407.265,
+        "measured": 4,
+        "median": 379.749,
+        "min": 356.092,
+        "scale": 0.134544
+      },
+      "maxMomentaryLufs": {
+        "max": -20.3417,
+        "measured": 4,
+        "median": -20.8537,
+        "min": -22.4222,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": 171.773,
+        "measured": 4,
+        "median": 171.757,
+        "min": 171.756,
+        "scale": 0.05
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.178556,
+    "medianDistance": 0.146583,
+    "minDistance": 0.0723528,
+    "nearIdentical": [],
+    "pairs": 6
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 7.325,
+    "medoid": "cannon-d",
+    "members": [
+      {
+        "distance": 7.325,
+        "key": "cannon-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0.957,
+        "key": "cannon-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 6.779,
+        "key": "cannon-c",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "cannon-d",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "cannon-a",
+      "nearest": {
+        "distance": 0.0723528,
+        "key": "cannon-c"
+      },
+      "pcmHash": "sha256:09f156f93a7c55b1fbefaaf29560490b34e27474116ecbd36a9e183d00e8d55b"
+    },
+    {
+      "key": "cannon-b",
+      "nearest": {
+        "distance": 0.13083,
+        "key": "cannon-a"
+      },
+      "pcmHash": "sha256:c9baed9af3909559b9ba196909e668e428a1fc2bfaadb8cad7ec03d014f5acbe"
+    },
+    {
+      "key": "cannon-c",
+      "nearest": {
+        "distance": 0.0723528,
+        "key": "cannon-a"
+      },
+      "pcmHash": "sha256:f1206b0fcfd3e02593f6441250394b0f509ccaf6a4b472cd9aa74871be1fba0c"
+    },
+    {
+      "key": "cannon-d",
+      "nearest": {
+        "distance": 0.139119,
+        "key": "cannon-c"
+      },
+      "pcmHash": "sha256:f52147ff289808cd36fff2c17ee4402745dbca9b526928db0a4432aa407bd68c"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 4
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

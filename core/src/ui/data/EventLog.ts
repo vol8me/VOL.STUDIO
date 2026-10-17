@@ -1,4 +1,4 @@
-import { i18next } from '../../systems/I18n';
+import { i18next } from '../../i18n/I18n';
 
 export type EventLogTone = 'default' | 'success' | 'warning' | 'danger' | 'info';
 
@@ -26,8 +26,12 @@ export interface EventLogOptions {
   onPinChange?: (entry: EventLogEntry, pinned: boolean) => void;
 }
 
-/** vol-event-log__row--leave CSS animasyonunun süresiyle (theme.css) eşleşmelidir. */
-const EVENT_LOG_LEAVE_DURATION_MS = 220;
+/**
+ * .vol-event-log__row--leave animasyonu bitene kadar beklenir. CSS süresinden
+ * KISA olamaz — satır animasyon ortasında kaybolur. 20 ms'lik pay bilinçli:
+ * animationend yerine timer kullanıldığı için kare gecikmesini tolere eder.
+ */
+export const EVENT_LOG_LEAVE_DURATION_MS = 220;
 
 const TONE_I18N_KEYS = {
   default: 'core:eventlog.tone.default',
@@ -50,6 +54,7 @@ export class EventLog {
   readonly element: HTMLDivElement;
   private readonly scrollArea: HTMLDivElement;
   private readonly listElement: HTMLDivElement;
+  private readonly announcer: HTMLDivElement;
   private readonly filterBar: HTMLDivElement | null;
   private readonly maxEntries: number;
   private readonly autoScrollEnabled: boolean;
@@ -57,6 +62,9 @@ export class EventLog {
   private readonly pinnable: boolean;
   private readonly onPinChangeHandler?: (entry: EventLogEntry, pinned: boolean) => void;
   private entries: InternalEntry[] = [];
+  /** Sabitleme düğmesi → kayıt (odak geri verme için) ve kayıt → güncel düğme. */
+  private pinButtons = new WeakMap<HTMLElement, InternalEntry>();
+  private pinOf = new WeakMap<InternalEntry, HTMLButtonElement>();
   private activeFilter: EventLogTone | 'all' = 'all';
   private userScrolledUp = false;
   private boundScroll: () => void;
@@ -70,7 +78,9 @@ export class EventLog {
       const buttons = this.filterBar.querySelectorAll<HTMLButtonElement>('.vol-event-log__filter');
       buttons.forEach((btn, i) => {
         const tone = tones[i];
-        btn.textContent = tone === 'all' ? i18next.t('core:eventlog.filter.all') : i18next.t(TONE_I18N_KEYS[tone]);
+        if (!tone) return;
+        btn.textContent =
+          tone === 'all' ? i18next.t('core:eventlog.filter.all') : i18next.t(TONE_I18N_KEYS[tone]);
       });
     }
     this.renderVisibleEntries();
@@ -95,6 +105,8 @@ export class EventLog {
 
     const scrollArea = document.createElement('div');
     scrollArea.className = 'vol-event-log__scroll-area';
+    // Kaydırılabilen bölge klavyeyle de kaydırılabilmeli (filtre/sabitleme yoksa içinde odaklanabilir öğe olmaz).
+    scrollArea.tabIndex = 0;
     if (options.height) {
       scrollArea.style.height = `${options.height}px`;
     }
@@ -103,8 +115,15 @@ export class EventLog {
     this.listElement = document.createElement('div');
     this.listElement.className = 'vol-event-log__list';
     this.listElement.setAttribute('role', 'log');
-    this.listElement.setAttribute('aria-live', 'polite');
+    // Liste her push'ta yeniden kurulur: canlı bölge olsaydı okuyucu bütün satırları yeniden okurdu.
+    // Yalnız yeni kayıt, aşağıdaki ayrı duyuru bölgesinden okunur.
+    this.listElement.setAttribute('aria-live', 'off');
     scrollArea.appendChild(this.listElement);
+
+    this.announcer = document.createElement('div');
+    this.announcer.className = 'vol-sr-only';
+    this.announcer.setAttribute('role', 'status');
+    this.element.appendChild(this.announcer);
 
     // Kullanıcı yukarı kaydırdıysa yeni olayda otomatik en alta zıplamak okumayı böler.
     this.boundScroll = () => {
@@ -130,6 +149,7 @@ export class EventLog {
         last.count += 1;
         last.entry = entry;
         this.lastPushedEntry = last;
+        this.announce(last);
         this.renderVisibleEntries();
         this.scrollToBottomIfNeeded();
         return;
@@ -139,9 +159,17 @@ export class EventLog {
     const newEntry: InternalEntry = { entry, count: 1, pinned: false };
     this.entries.push(newEntry);
     this.lastPushedEntry = newEntry;
+    this.announce(newEntry);
     this.trimToMaxEntries();
     this.renderVisibleEntries();
     this.scrollToBottomIfNeeded();
+  }
+
+  /** Yeni kaydı, aktif filtreyle eşleşiyorsa, duyuru bölgesine yazar (tekrarlayan metin için içerik değişsin diye sayaç eklenir). */
+  private announce(item: InternalEntry): void {
+    if (this.activeFilter !== 'all' && (item.entry.tone ?? 'default') !== this.activeFilter) return;
+    const suffix = item.count > 1 ? ` ×${item.count}` : '';
+    this.announcer.textContent = `${item.entry.timestamp ? `${item.entry.timestamp} ` : ''}${item.entry.text}${suffix}`;
   }
 
   /** Tüm kayıtları (sabitlenenler dahil) temizler. */
@@ -197,12 +225,15 @@ export class EventLog {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'vol-event-log__filter';
-      button.textContent = tone === 'all' ? i18next.t('core:eventlog.filter.all') : i18next.t(TONE_I18N_KEYS[tone]);
+      button.textContent =
+        tone === 'all' ? i18next.t('core:eventlog.filter.all') : i18next.t(TONE_I18N_KEYS[tone]);
       button.classList.toggle('vol-event-log__filter--active', tone === this.activeFilter);
+      button.setAttribute('aria-pressed', String(tone === this.activeFilter));
       button.addEventListener('click', () => {
         this.activeFilter = tone;
         bar.querySelectorAll('.vol-event-log__filter').forEach((el, index) => {
           el.classList.toggle('vol-event-log__filter--active', tones[index] === tone);
+          el.setAttribute('aria-pressed', String(tones[index] === tone));
         });
         this.renderVisibleEntries();
       });
@@ -215,6 +246,9 @@ export class EventLog {
   /** Aktif filtreye göre listElement'i tamamen yeniden çizer. Sabitlenmiş satırlar filtreden bağımsız her zaman en üstte gösterilir. */
   private renderVisibleEntries(): void {
     const wasAtBottom = !this.userScrolledUp;
+    // Satır yeniden kurulunca odaklı sabitleme düğmesi yok olur; aynı kaydın yeni düğmesine odak geri verilir.
+    const focusedItem = this.pinButtons.get(document.activeElement as HTMLElement) ?? null;
+    this.pinButtons = new WeakMap();
     this.listElement.replaceChildren();
 
     const matchesFilter = (item: InternalEntry): boolean =>
@@ -236,6 +270,7 @@ export class EventLog {
     if (wasAtBottom) {
       this.scrollArea.scrollTop = this.scrollArea.scrollHeight;
     }
+    if (focusedItem) this.pinOf.get(focusedItem)?.focus({ preventScroll: true });
   }
 
   private buildRow(item: InternalEntry): HTMLDivElement {
@@ -286,13 +321,18 @@ export class EventLog {
       pinButton.type = 'button';
       pinButton.className = 'vol-event-log__pin';
       pinButton.classList.toggle('vol-event-log__pin--active', item.pinned);
-      pinButton.setAttribute('aria-label', item.pinned ? i18next.t('core:eventlog.unpin') : i18next.t('core:eventlog.pin'));
+      pinButton.setAttribute(
+        'aria-label',
+        item.pinned ? i18next.t('core:eventlog.unpin') : i18next.t('core:eventlog.pin'),
+      );
       pinButton.appendChild(this.buildPinIcon());
       pinButton.addEventListener('click', () => {
         item.pinned = !item.pinned;
         this.onPinChangeHandler?.(item.entry, item.pinned);
         this.renderVisibleEntries();
       });
+      this.pinButtons.set(pinButton, item);
+      this.pinOf.set(item, pinButton);
       row.appendChild(pinButton);
     }
 

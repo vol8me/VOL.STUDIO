@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-61b1645f249c9e00": {
+        "hash": "sha256:0de8e6e12055fa8ce5c6b6a657e4a4cd31875736d23a470246d6110ab2e0769d",
+        "path": "analyses/r-61b1645f249c9e00.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:d45dbfc2fa30180a98cf4cebbee76dedd844c4c5d3af1f8087f8605f4de333b3",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:d45dbfc2fa30180a98cf4cebbee76dedd844c4c5d3af1f8087f8605f4de333b3",
+      "hash": "sha256:4f17c51550463936d0143113f239843c43b90c9fb3b8ffd267bd6722270286a9",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:2cd7cd0dfc6de375b29180b3fa73933a032407400760200368309385b173eee4",
+      "path": "core/audio-manifests/ui/steel/key-tap-c.json"
+    },
+    "renders": {
+      "r-61b1645f249c9e00": {
+        "hash": "sha256:a3766dd7270547ba833027cb7bc2be935eb8d576f5288ecfb9e2f2bf34e35914",
+        "path": "renders/r-61b1645f249c9e00.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:22cb471c7ad3de36c5dc9cf4cc44b69053db64ec9bdf3a8e980ef39d8fd5a49a",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "key-tap-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/key-tap-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-key-tap/key-tap-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

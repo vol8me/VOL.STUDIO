@@ -1,0 +1,521 @@
+/**
+ * `quality.json`un TEK okuyucusu ve doğrulayıcısı.
+ *
+ * Dosyayı hem `scripts/quality/cli/workspace-contract.mjs` hem paket `vitest.config.ts`
+ * tüketiyor. Doğrulama olmadan bir yazım hatası (`floor` → `flor`) bekçiyi
+ * teşhis edilemez bir çökmeye sürüklüyordu:
+ *
+ *     TypeError: Cannot convert undefined or null to object
+ *         at workspace-contract.mjs:106
+ *
+ * Kapı kırıldığı için SESSİZ bir geçiş yoktu — ama hatayı okuyan kişi
+ * `quality.json`a bakması gerektiğini anlayamıyordu. `devtools/pen.dev`
+ * metadata'sı için yazılan doğrulayıcıyla aynı gerekçe ve aynı desen:
+ * sorunlar TOPLANIR, ilk hatada durulmaz, mesaj nereye bakılacağını söyler.
+ *
+ * Harici bir şema kütüphanesi (zod vb.) bilinçli olarak eklenmedi: bu dosya
+ * build öncesi, bağımlılıksız Node ile de koşabilmelidir.
+ */
+
+import { readFileSync } from 'node:fs';
+import { validateDocumentationConfig } from './documentationConfig.mjs';
+
+/** Her paketin taşımak zorunda olduğu kapsam metrikleri. */
+export const COVERAGE_KEYS = ['lines', 'statements', 'branches', 'functions'];
+
+function isPlainObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Kapsam metrik bloğunu doğrular; bulunan sorunları `problems`a ekler.
+ * `where` mesajlarda görünen yol (ör. `packages["@volstudio/core"]`).
+ */
+function checkMetricBlock(block, where, problems) {
+  if (!isPlainObject(block)) {
+    problems.push(`${where}: nesne olmalı (gelen: ${block === undefined ? 'yok' : typeof block})`);
+    return;
+  }
+
+  for (const key of COVERAGE_KEYS) {
+    const value = block[key];
+    if (value === undefined) {
+      problems.push(`${where}.${key}: eksik`);
+      continue;
+    }
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      problems.push(`${where}.${key}: sayı olmalı (gelen: ${JSON.stringify(value)})`);
+      continue;
+    }
+    if (value < 0 || value > 100) {
+      problems.push(`${where}.${key}: yüzde olmalı, 0-100 aralığında (gelen: ${value})`);
+    }
+  }
+
+  for (const key of Object.keys(block)) {
+    if (!COVERAGE_KEYS.includes(key)) {
+      problems.push(`${where}.${key}: tanınmayan metrik. Beklenen: ${COVERAGE_KEYS.join(', ')}`);
+    }
+  }
+}
+
+/**
+ * Ayrıştırılmış `quality.json` içeriğini doğrular.
+ * @returns Sorun listesi; boşsa yapı geçerlidir.
+ */
+export function validateQualityConfig(raw) {
+  const problems = [];
+
+  if (!isPlainObject(raw)) {
+    return ['quality.json: kök bir JSON nesnesi olmalı'];
+  }
+
+  if (raw.documentation !== undefined) {
+    problems.push(...validateDocumentationConfig(raw.documentation));
+  }
+
+  checkMetricBlock(raw.floor, 'floor', problems);
+
+  if (!isPlainObject(raw.packages)) {
+    problems.push('packages: nesne olmalı (paket adı → kapsam eşikleri)');
+  } else {
+    const names = Object.keys(raw.packages);
+    if (names.length === 0) {
+      problems.push('packages: boş. Eşiksiz paket kapsam gerilemesini yakalamaz.');
+    }
+    for (const name of names) {
+      checkMetricBlock(raw.packages[name], `packages[${JSON.stringify(name)}]`, problems);
+    }
+  }
+
+  if (raw.exempt !== undefined) {
+    if (!isPlainObject(raw.exempt)) {
+      problems.push('exempt: nesne olmalı (paket adı → gerekçe metni)');
+    } else {
+      for (const [name, reason] of Object.entries(raw.exempt)) {
+        if (typeof reason !== 'string' || reason.trim() === '') {
+          problems.push(
+            `exempt[${JSON.stringify(name)}]: gerekçe boş olamaz. Sessiz muafiyet yok.`,
+          );
+        }
+      }
+    }
+  }
+
+  if (raw.bundles !== undefined) {
+    if (!isPlainObject(raw.bundles)) {
+      problems.push('bundles: nesne olmalı (paket yolu → app/vendor/css bütçesi)');
+    } else {
+      for (const [path, budget] of Object.entries(raw.bundles)) {
+        if (path.startsWith('$')) continue;
+        const where = `bundles[${JSON.stringify(path)}]`;
+        if (!isPlainObject(budget)) {
+          problems.push(`${where}: nesne olmalı`);
+          continue;
+        }
+        for (const key of ['app', 'vendor', 'css']) {
+          if (!Number.isFinite(budget[key]) || budget[key] <= 0) {
+            problems.push(`${where}.${key}: pozitif sayı olmalı`);
+          }
+        }
+        for (const key of Object.keys(budget)) {
+          if (!['app', 'vendor', 'css'].includes(key) && !key.startsWith('$')) {
+            problems.push(`${where}.${key}: tanınmayan bundle metriği`);
+          }
+        }
+      }
+    }
+  }
+
+  if (raw.scaling !== undefined) {
+    if (!isPlainObject(raw.scaling)) {
+      problems.push('scaling: nesne olmalı (paket yolu → ölçüm tarifi ve oran bütçesi)');
+    } else {
+      for (const [path, budget] of Object.entries(raw.scaling)) {
+        if (path.startsWith('$')) continue;
+        const where = `scaling[${JSON.stringify(path)}]`;
+        if (!isPlainObject(budget)) {
+          problems.push(`${where}: nesne olmalı`);
+          continue;
+        }
+        const measure = budget.$measure;
+        if (
+          !isPlainObject(measure) ||
+          ['script', 'series'].some(
+            (key) => typeof measure[key] !== 'string' || !measure[key].trim(),
+          ) ||
+          Object.keys(measure).some((key) => !['script', 'series', 'args'].includes(key)) ||
+          (measure.args !== undefined &&
+            (!Array.isArray(measure.args) || measure.args.some((arg) => typeof arg !== 'string')))
+        ) {
+          problems.push(
+            `${where}.$measure: yalnız script/series dizgileri ve isteğe bağlı args dizisi`,
+          );
+        }
+        const ratios = Object.entries(budget).filter(([key]) => !key.startsWith('$'));
+        if (ratios.length === 0) problems.push(`${where}: ölçülecek oran bütçesi yok`);
+        for (const [key, ceiling] of ratios) {
+          if (!/\d+Over\d+$/.test(key) || !Number.isFinite(ceiling) || ceiling <= 0) {
+            problems.push(`${where}.${key}: pozitif oran tavanı ve NOverM adı gerekli`);
+          }
+        }
+      }
+    }
+  }
+
+  if (raw.networkImpairment !== undefined) {
+    if (!isPlainObject(raw.networkImpairment)) {
+      problems.push('networkImpairment: nesne olmalı (paket yolu → profil adı → profil ve bütçe)');
+    } else {
+      const nonNegative = ['latencyMs', 'jitterMs', 'stallMs'];
+      const positive = ['driftMax', 'pingMaxMs'];
+      for (const [path, profiles] of Object.entries(raw.networkImpairment)) {
+        if (path.startsWith('$')) continue;
+        if (!isPlainObject(profiles) || Object.keys(profiles).every((key) => key.startsWith('$'))) {
+          problems.push(`networkImpairment[${JSON.stringify(path)}]: en az bir profil gerekli`);
+          continue;
+        }
+        for (const [name, profile] of Object.entries(profiles)) {
+          if (name.startsWith('$')) continue;
+          const where = `networkImpairment[${JSON.stringify(path)}][${JSON.stringify(name)}]`;
+          if (!isPlainObject(profile)) {
+            problems.push(`${where}: nesne olmalı`);
+            continue;
+          }
+          for (const key of nonNegative)
+            if (!Number.isFinite(profile[key]) || profile[key] < 0)
+              problems.push(`${where}.${key}: sıfır ya da pozitif sayı olmalı`);
+          for (const key of positive)
+            if (!Number.isFinite(profile[key]) || profile[key] <= 0)
+              problems.push(`${where}.${key}: pozitif bütçe olmalı`);
+          if (!Number.isFinite(profile.stallPct) || profile.stallPct < 0 || profile.stallPct > 100)
+            problems.push(`${where}.stallPct: 0–100 arası yüzde olmalı`);
+          if (!Number.isInteger(profile.snaps) || profile.snaps < 0)
+            problems.push(`${where}.snaps: sıfır ya da pozitif tam sayı olmalı`);
+        }
+      }
+    }
+  }
+
+  if (raw.fleetBudget !== undefined) {
+    if (!isPlainObject(raw.fleetBudget)) {
+      problems.push('fleetBudget: nesne olmalı (paket yolu → profil adı → yük bütçesi)');
+    } else {
+      const count = ['clients'];
+      const tolerated = [
+        'maxJoinFailures',
+        'maxDropped',
+        'maxErrors',
+        'maxActErrors',
+        'serverEvictions',
+      ];
+      const ceilings = [
+        'joinP99Ms',
+        'patchGapP99Ms',
+        'pingP99Ms',
+        'serverStepP95Ms',
+        'serverLoopP99Ms',
+      ];
+      const floors = ['minPatchesPerSecond'];
+      for (const [path, profiles] of Object.entries(raw.fleetBudget)) {
+        if (path.startsWith('$')) continue;
+        if (!isPlainObject(profiles) || Object.keys(profiles).every((key) => key.startsWith('$'))) {
+          problems.push(`fleetBudget[${JSON.stringify(path)}]: en az bir profil gerekli`);
+          continue;
+        }
+        for (const [name, budget] of Object.entries(profiles)) {
+          if (name.startsWith('$')) continue;
+          const where = `fleetBudget[${JSON.stringify(path)}][${JSON.stringify(name)}]`;
+          if (!isPlainObject(budget)) {
+            problems.push(`${where}: nesne olmalı`);
+            continue;
+          }
+          for (const key of count)
+            if (!Number.isInteger(budget[key]) || budget[key] < 1)
+              problems.push(`${where}.${key}: pozitif tam sayı olmalı`);
+          for (const key of tolerated)
+            if (!Number.isInteger(budget[key]) || budget[key] < 0)
+              problems.push(`${where}.${key}: sıfır ya da pozitif tam sayı olmalı`);
+          for (const key of [...ceilings, ...floors])
+            if (!Number.isFinite(budget[key]) || budget[key] <= 0)
+              problems.push(`${where}.${key}: pozitif bütçe olmalı`);
+          for (const key of Object.keys(budget))
+            if (
+              ![...count, ...tolerated, ...ceilings, ...floors].includes(key) &&
+              !key.startsWith('$')
+            )
+              problems.push(`${where}.${key}: tanınmayan yük bütçesi alanı`);
+        }
+      }
+    }
+  }
+
+  if (raw.coverageShape !== undefined) {
+    if (!isPlainObject(raw.coverageShape)) {
+      problems.push('coverageShape: nesne olmalı');
+    } else {
+      const { minLines, floorPct, acknowledged } = raw.coverageShape;
+      if (minLines !== undefined) {
+        if (typeof minLines !== 'number' || !Number.isInteger(minLines) || minLines < 1) {
+          problems.push('coverageShape.minLines: pozitif tam sayı olmalı');
+        }
+      }
+      if (floorPct !== undefined) {
+        if (
+          typeof floorPct !== 'number' ||
+          !Number.isFinite(floorPct) ||
+          floorPct < 0 ||
+          floorPct > 100
+        ) {
+          problems.push('coverageShape.floorPct: yüzde olmalı, 0-100 aralığında');
+        }
+      }
+      if (acknowledged !== undefined) {
+        if (!isPlainObject(acknowledged)) {
+          problems.push(
+            'coverageShape.acknowledged: nesne olmalı (dosya yolu → { reason, evidence })',
+          );
+        } else {
+          for (const [file, entry] of Object.entries(acknowledged)) {
+            const where = `coverageShape.acknowledged[${JSON.stringify(file)}]`;
+            if (!isPlainObject(entry) || typeof entry.reason !== 'string' || !entry.reason.trim()) {
+              problems.push(`${where}: gerekçe boş olamaz. Sessiz muafiyet yok.`);
+            }
+            const evidence = isPlainObject(entry) ? entry.evidence : undefined;
+            if (
+              !Array.isArray(evidence) ||
+              evidence.length === 0 ||
+              evidence.some((path) => typeof path !== 'string' || !path.trim())
+            ) {
+              problems.push(`${where}: kanıt listesi boş olamaz — gerekçeyi sınayan testi yaz.`);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (raw.coverageRuns !== undefined) {
+    if (!isPlainObject(raw.coverageRuns)) {
+      problems.push('coverageRuns: nesne olmalı (koşu adı → { only } ya da { exclude })');
+    } else {
+      for (const [run, spec] of Object.entries(raw.coverageRuns)) {
+        const where = `coverageRuns[${JSON.stringify(run)}]`;
+        const lists = isPlainObject(spec)
+          ? ['only', 'exclude'].filter((key) => spec[key] !== undefined)
+          : [];
+        if (lists.length !== 1) {
+          problems.push(`${where}: tam olarak biri olmalı — "only" ya da "exclude".`);
+          continue;
+        }
+        const names = spec[lists[0]];
+        if (
+          !Array.isArray(names) ||
+          names.some((name) => typeof name !== 'string' || !name.trim())
+        ) {
+          problems.push(`${where}.${lists[0]}: paket adı listesi olmalı.`);
+        } else if (lists[0] === 'only' && names.length === 0) {
+          problems.push(`${where}.only: boş — koşu hiçbir paketi ölçmez.`);
+        }
+      }
+    }
+  }
+
+  if (raw.scriptCoverage !== undefined) {
+    const block = raw.scriptCoverage;
+    if (!isPlainObject(block)) {
+      problems.push(
+        'scriptCoverage: nesne olmalı (lines/branches/functions/floorPct/acknowledged)',
+      );
+    } else {
+      for (const key of ['lines', 'branches', 'functions', 'floorPct']) {
+        const value = block[key];
+        if (value === undefined) continue;
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100) {
+          problems.push(`scriptCoverage.${key}: yüzde olmalı, 0-100 aralığında`);
+        }
+      }
+      if (
+        block.minLines !== undefined &&
+        !(Number.isInteger(block.minLines) && block.minLines > 0)
+      ) {
+        problems.push('scriptCoverage.minLines: pozitif tam sayı olmalı');
+      }
+      if (block.acknowledged !== undefined) {
+        if (!isPlainObject(block.acknowledged)) {
+          problems.push('scriptCoverage.acknowledged: nesne olmalı (dosya yolu → gerekçe)');
+        } else {
+          for (const [file, reason] of Object.entries(block.acknowledged)) {
+            if (typeof reason !== 'string' || !reason.trim()) {
+              problems.push(
+                `scriptCoverage.acknowledged[${JSON.stringify(file)}]: gerekçe boş olamaz. Sessiz muafiyet yok.`,
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (raw.fixedWaitBudget !== undefined) {
+    if (!isPlainObject(raw.fixedWaitBudget)) {
+      problems.push('fixedWaitBudget: nesne olmalı (test dosyası yolu → sabit bekleme sayısı)');
+    } else {
+      for (const [file, count] of Object.entries(raw.fixedWaitBudget)) {
+        if (file.startsWith('$')) continue;
+        if (!Number.isInteger(count) || count < 1) {
+          problems.push(
+            `fixedWaitBudget[${JSON.stringify(file)}]: pozitif tam sayı olmalı (bekleme kalmadıysa kaydı silin)`,
+          );
+        }
+      }
+    }
+  }
+
+  if (raw.skipBudget !== undefined) {
+    if (!isPlainObject(raw.skipBudget)) {
+      problems.push('skipBudget: nesne olmalı (aşama adı → sayım anahtarı → en çok atlama)');
+    } else {
+      for (const [stage, budget] of Object.entries(raw.skipBudget)) {
+        if (stage.startsWith('$')) continue;
+        const where = `skipBudget[${JSON.stringify(stage)}]`;
+        if (!isPlainObject(budget) || Object.keys(budget).length === 0) {
+          problems.push(`${where}: boş olmayan nesne olmalı (anahtar → en çok atlama)`);
+          continue;
+        }
+        for (const [key, value] of Object.entries(budget)) {
+          if (key.startsWith('$')) continue;
+          if (!Number.isInteger(value) || value < 0) {
+            problems.push(`${where}[${JSON.stringify(key)}]: sıfır ya da pozitif tam sayı olmalı`);
+          }
+        }
+      }
+    }
+  }
+
+  if (raw.ratchetExceptions !== undefined) {
+    if (!Array.isArray(raw.ratchetExceptions)) {
+      problems.push('ratchetExceptions: dizi olmalı ({ key, to, reason } kayıtları)');
+    } else {
+      raw.ratchetExceptions.forEach((entry, index) => {
+        const where = `ratchetExceptions[${index}]`;
+        if (!isPlainObject(entry)) {
+          problems.push(`${where}: nesne olmalı`);
+          return;
+        }
+        if (typeof entry.key !== 'string' || !entry.key.trim()) {
+          problems.push(`${where}.key: eşik yolu olmalı (ör. packages["@volstudio/core"].lines)`);
+        }
+        if (entry.to !== null && !(typeof entry.to === 'number' && Number.isFinite(entry.to))) {
+          problems.push(`${where}.to: sayı ya da null (kayıt silindi/eklendi) olmalı`);
+        }
+        if (typeof entry.reason !== 'string' || !entry.reason.trim()) {
+          problems.push(`${where}.reason: gerekçe boş olamaz. Sessiz gevşetme yok.`);
+        }
+      });
+    }
+  }
+
+  // Muaf bir paket aynı anda eşik taşıyorsa hangisinin geçerli olduğu belirsiz.
+  if (isPlainObject(raw.exempt) && isPlainObject(raw.packages)) {
+    for (const name of Object.keys(raw.exempt)) {
+      if (raw.packages[name]) {
+        problems.push(
+          `${name}: hem "exempt" hem "packages" içinde. Muafiyet mi eşik mi geçerli, belirsiz.`,
+        );
+      }
+    }
+  }
+
+  return problems;
+}
+
+/**
+ * Workspace paketleri ile `quality.json` kayıtlarının iki yönlü paritesini
+ * doğrular. Yeni paketin eşiksiz kalması kadar, silinmiş/taşınmış bir paketin
+ * eski quality kaydının gerçeği maskelemesi de sözleşme ihlalidir.
+ *
+ * `validateQualityConfig()` önce çağrılmalıdır; bu yardımcı geçerli config
+ * biçimi üzerinde çalışır.
+ */
+export function validateQualityWorkspaceParity(raw, workspacePackageNames) {
+  const problems = [];
+  const workspace = new Set(workspacePackageNames);
+  const packages = new Set(Object.keys(raw.packages ?? {}));
+  const exempt = new Set(Object.keys(raw.exempt ?? {}));
+  const registered = new Set([...packages, ...exempt]);
+
+  for (const name of workspace) {
+    if (!registered.has(name)) {
+      problems.push(
+        `${name}: workspace paketi quality.json içinde eşik veya gerekçeli muafiyet taşımıyor.`,
+      );
+    }
+  }
+
+  if (isPlainObject(raw.coverageRuns)) {
+    for (const name of packages) {
+      if (!workspace.has(name)) continue;
+      const measured = Object.values(raw.coverageRuns).some((spec) =>
+        Array.isArray(spec.only)
+          ? spec.only.includes(name)
+          : Array.isArray(spec.exclude) && !spec.exclude.includes(name),
+      );
+      if (!measured) {
+        problems.push(`${name}: hiçbir kapsam koşusu bu eşikli aktif paketi ölçmüyor.`);
+      }
+    }
+  }
+
+  for (const [run, spec] of Object.entries(raw.coverageRuns ?? {})) {
+    for (const name of [...(spec.only ?? []), ...(spec.exclude ?? [])]) {
+      if (!workspace.has(name)) {
+        problems.push(
+          `coverageRuns[${JSON.stringify(run)}]: "${name}" bir workspace paketi değil.`,
+        );
+      }
+    }
+  }
+
+  for (const name of registered) {
+    if (!workspace.has(name)) {
+      problems.push(
+        `${name}: quality.json kaydı bayat; karşılık gelen bir workspace paketi bulunamadı.`,
+      );
+    }
+  }
+
+  return problems;
+}
+
+/** Aktif oyun build'inin performans kapıları boş veriyle yeşile dönemez. */
+export function validateActiveGameBudgets(raw, activeGamePaths) {
+  const problems = [];
+  for (const path of activeGamePaths) {
+    if (!raw.bundles?.[path]) problems.push(`${path}: aktif oyun için bundle bütçesi yok`);
+    if (!raw.scaling?.[path]) problems.push(`${path}: aktif oyun için scaling bütçesi yok`);
+  }
+  return problems;
+}
+
+/**
+ * `quality.json`u okur, doğrular ve döner. Geçersizse TÜM sorunları listeleyen
+ * tek bir hata fırlatır.
+ */
+export function loadQualityConfig(path) {
+  let raw;
+  try {
+    raw = JSON.parse(readFileSync(path, 'utf8'));
+  } catch (error) {
+    throw new Error(`quality.json okunamadı (${path}): ${error.message}`, { cause: error });
+  }
+
+  const problems = validateQualityConfig(raw);
+  if (problems.length > 0) {
+    throw new Error(
+      `quality.json geçersiz (${problems.length} sorun):\n` +
+        problems.map((p) => `  ✗ ${p}`).join('\n'),
+    );
+  }
+  return raw;
+}

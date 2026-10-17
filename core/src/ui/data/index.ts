@@ -14,3 +14,4 @@ export {
   type KanbanVirtualizeOptions,
 } from './Kanban';
 export { EventLog, type EventLogEntry, type EventLogTone, type EventLogOptions } from './EventLog';
+export { KeyBindingList, type KeyBindingRow, type KeyBindingListOptions } from './KeyBindingList';

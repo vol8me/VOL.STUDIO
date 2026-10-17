@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:29db3180378af08fcb47868985f30b597b6acd31f66b0ac5adcdc22ef50a1d2f",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:bdc1414adc5cfd0da0814353b3437433b1a0ae27aef1acab7a27b212930eb1ba",
+    "familyId": "ui-steel-purchase",
+    "kind": "family-variant",
+    "variantId": "v-a4ef816084b06043",
+    "variantKey": "purchase-b"
+  }
+}

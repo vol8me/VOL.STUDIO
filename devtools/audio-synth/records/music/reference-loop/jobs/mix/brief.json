@@ -1,0 +1,55 @@
+{
+  "affect": {
+    "arousal": 0.3,
+    "tags": ["sakin", "loop", "zemin"],
+    "valence": -0.15
+  },
+  "assetClass": "music",
+  "avoidNotes": ["Klişe kapanış kalıbı tek başına kullanılmasın (makineyle denetlenmez)."],
+  "channels": 2,
+  "form": {
+    "sections": ["intro", "body"]
+  },
+  "id": "reference-loop",
+  "intent": "Sakin, dönmeye uygun bir zemin parçası: menü ya da bekleme ekranı gibi dikkat istemeyen bir bağlamda sonsuza kadar dönebilmeli, dikişi duyulmamalı.",
+  "kind": "music",
+  "length": {
+    "bars": {
+      "max": 16,
+      "min": 4
+    }
+  },
+  "melodicSalience": 0.2,
+  "meter": [4, 4],
+  "playback": "loop",
+  "provenance": {
+    "author": "agent",
+    "by": "wave-6-reference"
+  },
+  "rhythmicDensity": "moderate",
+  "schema": "AudioBriefV1",
+  "spectralPriority": {
+    "protect": [
+      {
+        "fromHz": 1800,
+        "reason": "SFX transientleri bu bantta yaşıyor",
+        "toHz": 4500
+      }
+    ]
+  },
+  "tempo": {
+    "bpm": {
+      "max": 108,
+      "min": 84
+    }
+  },
+  "themeBook": {
+    "id": "reference-theme"
+  },
+  "title": "Referans dikişsiz loop",
+  "tonal": {
+    "roots": ["A2"],
+    "systems": ["minor", "dorian"]
+  },
+  "usage": "bed"
+}

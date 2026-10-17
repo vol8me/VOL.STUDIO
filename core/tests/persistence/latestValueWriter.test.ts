@@ -1,0 +1,78 @@
+import { describe, expect, it, vi } from 'vitest';
+import { LatestValueWriter } from '../../src/persistence/LatestValueWriter';
+
+function deferred(): { promise: Promise<void>; resolve: () => void } {
+  let resolve!: () => void;
+  const promise = new Promise<void>((ok) => {
+    resolve = ok;
+  });
+  return { promise, resolve };
+}
+
+describe('LatestValueWriter', () => {
+  it('pending istekleri tek promise ve son değerde birleştirir', async () => {
+    const firstWrite = deferred();
+    const writes: number[] = [];
+    const writer = new LatestValueWriter<number>(async (value) => {
+      writes.push(value);
+      if (value === 0) await firstWrite.promise;
+    });
+
+    const running = writer.enqueue(0);
+    const pending = writer.enqueue(1);
+    const promises = Array.from({ length: 20_000 }, (_, index) => writer.enqueue(index + 2));
+
+    expect(promises.every((promise) => promise === pending)).toBe(true);
+    expect(writes).toEqual([0]);
+    firstWrite.resolve();
+    await Promise.all([running, pending]);
+    expect(writes).toEqual([0, 20_001]);
+  });
+
+  it('yazım hatasından sonra yeni batchi işlemeye devam eder', async () => {
+    const failure = new Error('disk');
+    const onError = vi.fn();
+    const write = vi
+      .fn<(value: number) => Promise<void>>()
+      .mockRejectedValueOnce(failure)
+      .mockResolvedValueOnce();
+    const writer = new LatestValueWriter(write, onError);
+
+    await expect(writer.enqueue(1)).rejects.toBe(failure);
+    await expect(writer.enqueue(2)).resolves.toBeUndefined();
+    await writer.whenIdle();
+
+    expect(write).toHaveBeenNthCalledWith(1, 1);
+    expect(write).toHaveBeenNthCalledWith(2, 2);
+    expect(onError).toHaveBeenCalledWith(failure);
+  });
+});
+
+it('beklenmeyen yazım reddini idle yutarken flush kayıpsız taşır', async () => {
+  const failure = new Error('disk');
+  const writer = new LatestValueWriter<number>(() => Promise.reject(failure));
+  void writer.enqueue(1);
+  await expect(writer.whenIdle()).resolves.toBeUndefined();
+  await expect(writer.flush()).rejects.toBe(failure);
+});
+
+it('save içinden eşzamanlı enqueue ikinci yazımı ilk yazımla çakıştırmaz', async () => {
+  const firstWrite = deferred();
+  const writes: number[] = [];
+  let nested: Promise<void> | undefined;
+  const writer = new LatestValueWriter<number>(async (value) => {
+    writes.push(value);
+    if (value === 1) {
+      nested = writer.enqueue(2);
+      await firstWrite.promise;
+    }
+  });
+
+  const first = writer.enqueue(1);
+  expect(writes).toEqual([1]);
+  firstWrite.resolve();
+  await first;
+  await nested;
+  await writer.flush();
+  expect(writes).toEqual([1, 2]);
+});

@@ -1,3 +1,6 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { inlineSign } from '../direction';
+
 export interface TreeNodeDefinition {
   id: string;
   label: string;
@@ -43,7 +46,8 @@ export class Tree {
   private readonly selectedIds = new Set<string>();
   private readonly itemElements = new Map<string, HTMLLIElement>();
   private readonly flatOrder: FlatNode[] = [];
-  private readonly rowCleanups: (() => void)[] = [];
+  /** Satır listener'ları — bkz. DisposableScope (hata izolasyonu + ters sıra). */
+  private readonly rowScope = new DisposableScope();
 
   constructor(nodes: TreeNodeDefinition[], options: TreeOptions = {}) {
     this.onSelectHandler = options.onSelect;
@@ -73,13 +77,14 @@ export class Tree {
     }
 
     const previous = this.selectedId ? this.itemElements.get(this.selectedId) : undefined;
-    previous?.querySelector(':scope > .vol-tree__row')?.setAttribute('aria-selected', 'false');
+    // `aria-selected` treeitem (li) üzerindedir; satır (div) rolsüzdür ve özniteliği taşıyamaz (axe aria-allowed-attr).
+    previous?.setAttribute('aria-selected', 'false');
     previous?.querySelector(':scope > .vol-tree__row')?.classList.remove('vol-tree__row--selected');
 
     this.selectedId = id;
     const next = this.itemElements.get(id);
     const row = next?.querySelector(':scope > .vol-tree__row');
-    row?.setAttribute('aria-selected', 'true');
+    next?.setAttribute('aria-selected', 'true');
     row?.classList.add('vol-tree__row--selected');
   }
 
@@ -89,9 +94,7 @@ export class Tree {
   }
 
   destroy(): void {
-    for (const cleanup of this.rowCleanups) {
-      cleanup();
-    }
+    this.rowScope.dispose();
     this.element.remove();
   }
 
@@ -102,11 +105,11 @@ export class Tree {
 
     if (this.selectedIds.has(id)) {
       this.selectedIds.delete(id);
-      row.setAttribute('aria-selected', 'false');
+      item?.setAttribute('aria-selected', 'false');
       row.classList.remove('vol-tree__row--selected');
     } else {
       this.selectedIds.add(id);
-      row.setAttribute('aria-selected', 'true');
+      item?.setAttribute('aria-selected', 'true');
       row.classList.add('vol-tree__row--selected');
     }
     this.onSelectionChangeHandler?.(this.getSelectedIds());
@@ -125,16 +128,16 @@ export class Tree {
     const row = document.createElement('div');
     row.className = 'vol-tree__row';
     row.style.setProperty('--vol-tree-depth', String(depth));
-    row.setAttribute('aria-selected', 'false');
+    item.setAttribute('aria-selected', 'false');
     row.tabIndex = -1;
     if (node.disabled) {
       row.classList.add('vol-tree__row--disabled');
-      row.setAttribute('aria-disabled', 'true');
+      item.setAttribute('aria-disabled', 'true');
     }
 
     const caret = document.createElement('span');
-    caret.className = 'vol-tree__caret';
-    caret.textContent = hasChildren ? '▸' : '';
+    // Ok glifi yazı tiplerinde yok: üçgen CSS ile çizilir (platformdan bağımsız).
+    caret.className = hasChildren ? 'vol-tree__caret vol-tree__caret--parent' : 'vol-tree__caret';
     row.appendChild(caret);
 
     if (this.multiSelect) {
@@ -167,24 +170,44 @@ export class Tree {
     if (hasChildren) {
       childListOuter = document.createElement('div');
       childListOuter.className = 'vol-tree__children-outer';
+      // Sarmalayıcı yalnız düzen içindir; treeitem -> group -> treeitem zincirini kesmemesi için rolsüz geçer.
+      childListOuter.setAttribute('role', 'presentation');
 
       childList = document.createElement('ul');
       childList.className = 'vol-tree__children';
+      childList.setAttribute('role', 'group');
       for (const child of node.children ?? []) {
         childList.appendChild(this.buildNode(child, depth + 1));
       }
       childListOuter.appendChild(childList);
       if (node.expanded) childListOuter.classList.add('vol-tree__children-outer--open');
+      // Kapalı dal etkileşimsizdir (Accordion paneliyle aynı): yükseklik 0'a çöken satırlar AT ağacında
+      // kalmaz ve Tab onlara ulaşmaz.
+      childListOuter.inert = !node.expanded;
     }
 
     const setExpanded = (expanded: boolean): void => {
       if (!hasChildren || !childListOuter) return;
+      // Kapanan dalın içinde odak ya da gezici sekme durağı varsa, `inert` onları sessizce yok etmeden
+      // önce belirlenir ve sahibi satıra taşınır.
+      const hadFocus = !expanded && childListOuter.contains(document.activeElement);
+      const hadStop =
+        !expanded && childListOuter.querySelector('.vol-tree__row[tabindex="0"]') !== null;
       item.setAttribute('aria-expanded', String(expanded));
       childListOuter.classList.toggle('vol-tree__children-outer--open', expanded);
+      childListOuter.inert = !expanded;
       caret.classList.toggle('vol-tree__caret--open', expanded);
       // Hemen çağrılabilir — görünürlük zaten class ile belirlidir, CSS geçişinin
       // bitmesi beklenmez.
       this.refreshFlatOrder();
+      if (hadFocus || hadStop) {
+        for (const entry of this.flatOrder) entry.row.tabIndex = -1;
+        // Kapanan dal artık sıralamada yoktur; içindeki satırlar da durak olmaktan çıkar.
+        for (const hidden of childListOuter.querySelectorAll<HTMLElement>('.vol-tree__row'))
+          hidden.tabIndex = -1;
+        row.tabIndex = 0;
+        if (hadFocus) row.focus();
+      }
     };
 
     const toggleExpanded = (): void => {
@@ -226,10 +249,12 @@ export class Tree {
 
     row.addEventListener('click', onClick);
     row.addEventListener('keydown', onKeydown);
-    this.rowCleanups.push(() => {
-      row.removeEventListener('click', onClick);
-      row.removeEventListener('keydown', onKeydown);
-      if (hasChildren) caret.removeEventListener('click', onCaretClick);
+    this.rowScope.add({
+      dispose: () => {
+        row.removeEventListener('click', onClick);
+        row.removeEventListener('keydown', onKeydown);
+        if (hasChildren) caret.removeEventListener('click', onCaretClick);
+      },
     });
 
     if (node.expanded) {
@@ -270,7 +295,17 @@ export class Tree {
         this.focusRelative(id, -1);
         return;
       }
-      case 'ArrowRight': {
+      case 'ArrowRight':
+      case 'ArrowLeft': {
+        // Aç/in okuma yönünü izler: LTR'de sağ ok açar, sol ok kapatır/ebeveyne çıkar; RTL'de tersi.
+        const opensWith = inlineSign(this.element) === -1 ? 'ArrowLeft' : 'ArrowRight';
+        if (event.key !== opensWith) {
+          event.preventDefault();
+          const expandedNow = hasChildren && item.getAttribute('aria-expanded') === 'true';
+          if (expandedNow) setExpanded(false);
+          else this.focusParent(id);
+          return;
+        }
         if (!hasChildren) return;
         event.preventDefault();
         const expanded = item.getAttribute('aria-expanded') === 'true';
@@ -278,16 +313,6 @@ export class Tree {
           setExpanded(true);
         } else {
           this.focusRelative(id, 1);
-        }
-        return;
-      }
-      case 'ArrowLeft': {
-        event.preventDefault();
-        const expanded = hasChildren && item.getAttribute('aria-expanded') === 'true';
-        if (expanded) {
-          setExpanded(false);
-        } else {
-          this.focusParent(id);
         }
         return;
       }

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:10f96174c13f997a463ffd48113f974417a3db2c422604276076d594f40fb1b8",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:24c289161bdeb7cd36b2c00a414f27cd3cd3a68780a8ee0e339be114899e76c4",
+    "familyId": "ui-steel-slider-tick",
+    "kind": "family-variant",
+    "variantId": "v-8bec8e65258e372f",
+    "variantKey": "slider-tick-a"
+  }
+}

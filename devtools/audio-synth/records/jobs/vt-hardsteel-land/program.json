@@ -1,0 +1,401 @@
+{
+  "buses": {
+    "space": {
+      "effects": [
+        {
+          "params": {
+            "amount": 0.3,
+            "damp": 0.55,
+            "decay": 0.9,
+            "preDelay": 0.012,
+            "roomSize": 0.6
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 110,
+            "order": 2,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ]
+    }
+  },
+  "channels": 1,
+  "description": "İniş: ağır gövde çöküşü, pençelerin toprağa gömülmesi ve toz.",
+  "durationSeconds": 1.1,
+  "effects": [
+    {
+      "params": {
+        "frequency": 34,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 160,
+        "gainDb": 3,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 7,
+        "mix": 0.5,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 8500,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "dust-lp": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          3000
+        ],
+        [
+          0.15,
+          900
+        ],
+        [
+          0.9,
+          260
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "gainDb": -11.91,
+      "mechanism": "pressure",
+      "name": "slam",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -10
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.95,
+          "bodyDecay": 0.55,
+          "bodyHz": 46,
+          "decay": 2.2,
+          "positive": 0.013,
+          "rise": 0.0008
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -15.85,
+      "mechanism": "pressure",
+      "name": "chest",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -12
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.24,
+          "bodyHz": 150,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -70.38,
+      "mechanism": "mechanical",
+      "name": "body",
+      "role": "mechanism",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "debris": 0.9,
+          "mass": 30,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 1.1,
+          "velocity": 3.4
+        },
+        "primitive": "source.contact",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -40.82,
+      "mechanism": "mechanical",
+      "name": "claw-a",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.6,
+          "mass": 1.2,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.18,
+          "velocity": 2
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.012
+    },
+    {
+      "gainDb": -39.32,
+      "mechanism": "mechanical",
+      "name": "claw-b",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.6,
+          "mass": 1.2,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.18,
+          "velocity": 2.1
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.026
+    },
+    {
+      "gainDb": -38.46,
+      "mechanism": "mechanical",
+      "name": "claw-c",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.6,
+          "mass": 1.2,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.18,
+          "velocity": 1.9
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.041
+    },
+    {
+      "gainDb": -36.89,
+      "mechanism": "impact",
+      "name": "frame",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.5,
+            "damping": 0.7,
+            "decay": 0.55,
+            "frequency": 250,
+            "inharmonicity": 0.002,
+            "layout": "bar",
+            "modes": 8
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -16
+        }
+      ],
+      "source": {
+        "params": {
+          "contactTime": 0.0008,
+          "roughness": 0.2
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0008,
+          "curve": "exponential",
+          "decay": 0.03,
+          "release": 0.01,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 2.6,
+      "mechanism": "noise",
+      "name": "shock",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1500,
+            "mode": "bandpass",
+            "q": 0.7
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 600,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.004,
+          "curve": "exponential",
+          "decay": 0.8,
+          "release": 0.2,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 1,
+      "gainDb": -1.41,
+      "mechanism": "noise",
+      "name": "dust",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 90,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": {
+              "gesture": "dust-lp"
+            },
+            "mode": "lowpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.01,
+          "curve": "exponential",
+          "decay": 0.4,
+          "release": 0.1,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.5,
+      "gainDb": -0.9,
+      "mechanism": "scrape",
+      "name": "settle",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 420,
+            "mode": "bandpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "granularity": 1.5,
+          "material": "metal",
+          "pressure": 0.8,
+          "roughness": 0.7,
+          "speed": 0.6
+        },
+        "primitive": "source.friction",
+        "version": 1
+      },
+      "startSeconds": 0.06
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "fadeInSeconds": 0.0005,
+    "fadeOutSeconds": 0.25,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "normalize": "peak",
+    "peakDbfs": -4
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 730303
+}

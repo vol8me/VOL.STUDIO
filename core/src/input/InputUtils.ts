@@ -1,16 +1,42 @@
 import { Vector2 } from '../math/Vector2';
+import { requireFinite } from '../math/numeric';
 import { INPUT } from '../constants';
+
+/**
+ * Deadzone ve yarıçapın YAPILANDIRMA sözleşmesi.
+ *
+ * CORE'un politikası gereği yapılandırma reddedilir, akış yok sayılır (bkz.
+ * `math/numeric.ts`). Burada reddedilmesinin somut sebebi var: `deadZone === 1`
+ * `normalizeAnalog` içinde `0 / 0` üretiyor ve tam güçle itilen bir çubukta
+ * NaN bir hareket niyeti dönüyordu. Niyet oradan gövdeye, gövdeden konuma
+ * geçer; bir kare sonra hatanın nereden geldiği görülmez.
+ */
+function assertStickBounds(deadZone: number, maxRadius: number): void {
+  requireFinite(deadZone, 'deadZone');
+  requireFinite(maxRadius, 'maxRadius');
+  if (deadZone < 0 || deadZone >= 1) {
+    throw new RangeError(`deadZone [0,1) aralığında olmalı (gelen: ${deadZone})`);
+  }
+  if (maxRadius <= 0) {
+    throw new RangeError(`maxRadius pozitif olmalı (gelen: ${maxRadius})`);
+  }
+}
 
 /**
  * Yalnızca yön gerektiren inputları (sağ joystick vb.) normalize eder; çıktı uzunluğu her zaman 0 ya da 1.
  */
 export function normalizeDirection(
   v: Vector2,
-  deadZone = INPUT.DEAD_ZONE_RATIO,
-  maxRadius = 1.0,
+  // Tipler AÇIKÇA yazılır: `INPUT` bir `as const` nesnesi olduğu için
+  // `INPUT.DEAD_ZONE_RATIO`nun tipi `number` değil `0.15` literalidir.
+  // Anotasyon olmadan parametre o literale daralır ve "ayarlanabilir"
+  // deadzone 0.15 dışında hiçbir değeri kabul etmez.
+  deadZone: number = INPUT.DEAD_ZONE_RATIO,
+  maxRadius: number = 1.0,
 ): Vector2 {
+  assertStickBounds(deadZone, maxRadius);
   const len = v.length();
-  if (len <= 0 || len / maxRadius < deadZone) {
+  if (!Number.isFinite(len) || len <= 0 || len / maxRadius < deadZone) {
     return Vector2.zero();
   }
 
@@ -23,11 +49,13 @@ export function normalizeDirection(
  */
 export function normalizeAnalog(
   v: Vector2,
-  deadZone = INPUT.DEAD_ZONE_RATIO,
-  maxRadius = 1.0,
+  // bkz. normalizeDirection — literal daralmasını önleyen açık anotasyon.
+  deadZone: number = INPUT.DEAD_ZONE_RATIO,
+  maxRadius: number = 1.0,
 ): Vector2 {
+  assertStickBounds(deadZone, maxRadius);
   const len = v.length();
-  if (len <= 0) {
+  if (!Number.isFinite(len) || len <= 0) {
     return Vector2.zero();
   }
 
@@ -38,4 +66,72 @@ export function normalizeAnalog(
 
   const magnitude = (ratio - deadZone) / (1 - deadZone);
   return v.scale(magnitude / len);
+}
+
+/**
+ * Rasterleme (backing store) pikselini, `scrollFactor: 0` bir katmanın ÇİZİM
+ * uzayına çevirir — TEK EKSEN.
+ *
+ * Kamera yakınlaştırması kameranın ORTA NOKTASI etrafında uygulanır, orijini
+ * etrafında değil (`Camera.preRender`: `applyITRS(origin, …)` ardından
+ * `translate(-scroll - origin)` ve `origin = boyut × 0.5`). Ölçeği yalnız
+ * bölmek merkeze olan uzaklığı gözden kaçırır ve sonucu
+ * `yarıBoyut × (1 − 1/zoom)` kadar kaydırır: 2.75x bir telefonda ekranın
+ * kenarında bu, parmağın yanında doğan bir joystick demektir.
+ *
+ * Ters dönüşüm: `ekran = (katman − yarıBoyut) × zoom + yarıBoyut + orijin`.
+ *
+ * @param screen Rasterleme pikseli (ör. `pointer.x`).
+ * @param cameraOrigin Kameranın görüntü alanı başlangıcı (`camera.x`/`camera.y`).
+ * @param halfSize Kamera görüntü alanının yarısı (`camera.width / 2`).
+ * @param zoom Kamera yakınlaştırması; pozitif ve sonlu değilse 1 sayılır.
+ */
+export function screenToCameraLayer(
+  screen: number,
+  cameraOrigin: number,
+  halfSize: number,
+  zoom: number,
+): number {
+  const scale = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+  return (screen - cameraOrigin - halfSize) / scale + halfSize;
+}
+
+/**
+ * Görüş alanına göre normalize edilmiş dokunma bölgesi. Değerler [0,1]
+ * aralığındadır; (0,0) sol üst, (1,1) sağ alttır.
+ */
+export interface NormalizedInputRegion {
+  readonly minX: number;
+  readonly maxX: number;
+  readonly minY: number;
+  readonly maxY: number;
+}
+
+/**
+ * Opsiyonel bölge yapılandırmasını çözer. `undefined` varsayılanı ister;
+ * `null` ise stick'i BİLİNÇLİ olarak kapatır ve varsayılana çevrilmemelidir.
+ */
+export function resolveNormalizedInputRegion(
+  region: NormalizedInputRegion | null | undefined,
+  fallback: NormalizedInputRegion,
+): NormalizedInputRegion | null {
+  return region === undefined ? fallback : region;
+}
+
+/**
+ * Normalize bir noktanın dokunma bölgesinde olup olmadığını söyler.
+ *
+ * Geçersiz veri sessizce tüm ekranı kabul etmez: NaN/Infinity ya da ters bir
+ * aralık, dokunuşu reddeder. Bir config yazım hatasının oyunun bütün ekranını
+ * görünmez joystick'e çevirmesi, kontrolün çalışmamasından daha tehlikelidir.
+ */
+export function isPointInNormalizedRegion(
+  x: number,
+  y: number,
+  region: NormalizedInputRegion,
+): boolean {
+  const values = [x, y, region.minX, region.maxX, region.minY, region.maxY];
+  if (!values.every(Number.isFinite)) return false;
+  if (region.minX > region.maxX || region.minY > region.maxY) return false;
+  return x >= region.minX && x <= region.maxX && y >= region.minY && y <= region.maxY;
 }

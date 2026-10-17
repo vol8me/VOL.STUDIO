@@ -1,0 +1,28 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "dry",
+    "weapon",
+    "treatment:distance-near"
+  ],
+  "durationSeconds": {
+    "max": 1.8,
+    "min": 0.8
+  },
+  "id": "reference-impact-distance-near",
+  "intent": "Kuru, konumsal bir silah atışı: yakın/orta/uzak ve engel/ortam/cihaz teslim varyantlarının ortak kaynağı. Kuyruk ve yansıma kaynağa değil teslim profiline aittir. Teslim profili distance-near: 5 m: ISO 9613-1 hava soğurması, atak 0 dB, yansıma payı 0.06, görüntü ×1. 1/r zayıflaması çalışma zamanınındır.",
+  "kind": "acoustic",
+  "mechanisms": [
+    "impact",
+    "pressure"
+  ],
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "treatment-profile"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Referans silah atışı — distance-near"
+}

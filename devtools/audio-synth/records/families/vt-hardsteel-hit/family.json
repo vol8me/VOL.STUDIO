@@ -1,0 +1,371 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "buses": {
+        "space": {
+          "effects": [
+            {
+              "params": {
+                "amount": 0.25,
+                "damp": 0.55,
+                "decay": 0.5,
+                "preDelay": 0.012,
+                "roomSize": 0.5
+              },
+              "primitive": "effect.reverb",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 110,
+                "order": 2,
+                "response": "highpass"
+              },
+              "primitive": "effect.eq-pass",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "channels": 1,
+      "description": "Zırh isabeti: gövdeli darbe, donuk plaka çınlaması ve kopan kırıntılar.",
+      "durationSeconds": 0.55,
+      "effects": [
+        {
+          "params": {
+            "frequency": 34,
+            "order": 3,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "edge": "low",
+            "frequency": 100,
+            "gainDb": -2
+          },
+          "primitive": "effect.eq-shelf",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 300,
+            "gainDb": 2.5,
+            "q": 0.8
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1700,
+            "gainDb": 3,
+            "q": 0.7
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "character": "tanh",
+            "driveDb": 5,
+            "mix": 0.75,
+            "outputDb": 0
+          },
+          "primitive": "effect.saturation",
+          "version": 1
+        },
+        {
+          "params": {
+            "edge": "high",
+            "frequency": 4500,
+            "gainDb": 2.5
+          },
+          "primitive": "effect.eq-shelf",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 11000,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "layers": [
+        {
+          "gainDb": -25.91,
+          "mechanism": "impact",
+          "name": "plate",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.5,
+                "damping": 0.7,
+                "decay": 0.22,
+                "frequency": 520,
+                "inharmonicity": 0.002,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -16
+            }
+          ],
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.2
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -12.51,
+          "mechanism": "pressure",
+          "name": "body",
+          "role": "body",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -14
+            }
+          ],
+          "source": {
+            "params": {
+              "body": 0.85,
+              "bodyDecay": 0.2,
+              "bodyHz": 105,
+              "decay": 1.4,
+              "positive": 0.004,
+              "rise": 0.0002
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -11.74,
+          "mechanism": "pressure",
+          "name": "thud",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.85,
+              "bodyDecay": 0.12,
+              "bodyHz": 210,
+              "decay": 1.2,
+              "positive": 0.003,
+              "rise": 0.0003
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0008,
+              "curve": "exponential",
+              "decay": 0.012,
+              "release": 0.01,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 4.12,
+          "mechanism": "noise",
+          "name": "crack",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 1700,
+                "mode": "bandpass",
+                "q": 0.7
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 700,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -58.34,
+          "mechanism": "mechanical",
+          "name": "grit",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0.6,
+              "mass": 7,
+              "materialA": "metal",
+              "materialB": "stone",
+              "size": 0.6,
+              "velocity": 2.2
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.004
+        }
+      ],
+      "master": {
+        "dcBlockHz": 20,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.08,
+        "normalize": "peak",
+        "peakDbfs": -4
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8403
+    }
+  },
+  "delivery": {
+    "assetClass": "sfx",
+    "assetDir": "public/assets/audio/sfx/steel/families/hit",
+    "durationSeconds": {
+      "max": 0.75,
+      "min": 0.4
+    },
+    "package": "@volstudio/vol-test",
+    "placement": "positional",
+    "subtype": "sfx"
+  },
+  "description": "Zırh isabeti: gövdeli darbe, donuk plaka çınlaması ve kopan kırıntılar.",
+  "dimensions": [
+    {
+      "name": "plate-decay",
+      "range": {
+        "max": 0.32,
+        "min": 0.14,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "plate",
+        "param": "decay",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "plate-pitch",
+      "range": {
+        "max": 660,
+        "min": 380,
+        "scale": "linear",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "plate",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    }
+  ],
+  "familyId": "vt-hardsteel-hit",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 2
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "plate-decay": {
+          "max": 0.32,
+          "min": 0.24
+        },
+        "plate-pitch": {
+          "max": 470,
+          "min": 380
+        }
+      },
+      "light": {
+        "plate-decay": {
+          "max": 0.2,
+          "min": 0.14
+        },
+        "plate-pitch": {
+          "max": 660,
+          "min": 560
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 8303,
+  "title": "VOL.TEST hit",
+  "variants": [
+    {
+      "key": "hit-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "hit"
+      ]
+    },
+    {
+      "key": "hit-b",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "hit"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 3
+}

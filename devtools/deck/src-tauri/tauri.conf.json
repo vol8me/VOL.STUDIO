@@ -1,0 +1,46 @@
+{
+  "productName": "vol-deck-probe",
+  "version": "../../../package.json",
+  "identifier": "studio.vol.deckprobe",
+  "build": {
+    "frontendDist": "../web"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "vol-deck-probe",
+        "width": 1280,
+        "height": 800,
+        "fullscreen": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["appimage"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true
+      },
+      "deb": {
+        "desktopTemplate": "linux.desktop.hbs"
+      },
+      "rpm": {
+        "desktopTemplate": "linux.desktop.hbs"
+      }
+    },
+    "resources": ["steam_input_manifest.vdf"]
+  }
+}

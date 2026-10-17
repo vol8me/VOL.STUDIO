@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-e36d5fc519e4eec4": {
+        "hash": "sha256:8ea2f82370c591e0e29e36e2cc86e3bdf96caf0de9ed0b79f63e60318bf08d8f",
+        "path": "analyses/r-e36d5fc519e4eec4.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:cba20f296498240fe7a43a0d3432df8be2c5389953f325a4ce181d7f072550dc",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:cba20f296498240fe7a43a0d3432df8be2c5389953f325a4ce181d7f072550dc",
+      "hash": "sha256:eefce31c813427e05bf4e69df1742187dbb76d9825835637184d63a6dd2c47dd",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:216371eaa38952b4dd74f0130f8b2347a6416e91962c9e85f7785976006aae01",
+      "path": "core/audio-manifests/ui/steel/focus-c.json"
+    },
+    "renders": {
+      "r-e36d5fc519e4eec4": {
+        "hash": "sha256:764ffa8ebd91287403692239261abdf9db4a0d7a718409a7231da075a55b0432",
+        "path": "renders/r-e36d5fc519e4eec4.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:5e3a0bf5d1a737c5ce9a52914e3b3f070097a1e0a02ce363028e308ccc009c2e",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "focus-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/focus-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-focus/focus-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

@@ -1,3 +1,6 @@
+import { requiredAt } from '../../collections/requiredAt';
+import { inlineSign } from '../direction';
+import { emitUiIntent } from '../feedback/uiIntent';
 export interface TabContent {
   element: HTMLElement;
   /** Tabs.destroy() tarafından çağrılır (verilirse). */
@@ -35,7 +38,7 @@ export class Tabs {
   private readonly panelContainer: HTMLDivElement;
   private readonly tabs: TabDefinition[];
   private readonly tabButtons = new Map<string, HTMLButtonElement>();
-  private readonly boundClickHandlers = new Map<string, () => void>();
+  private readonly boundClickHandlers = new Map<string, (event: Event) => void>();
   private readonly boundKeydownHandlers = new Map<string, (event: KeyboardEvent) => void>();
   private activeId: string;
   private readonly onChange?: (id: string) => void;
@@ -51,7 +54,7 @@ export class Tabs {
     this.tabs = tabs;
     this.onChange = options.onChange;
     this.orientation = options.orientation ?? 'horizontal';
-    this.activeId = tabs[0].id;
+    this.activeId = requiredAt(tabs, 0).id;
 
     this.element = document.createElement('div');
     this.element.className = `vol-tabs vol-tabs--${this.orientation}`;
@@ -65,6 +68,8 @@ export class Tabs {
 
     this.panelContainer = document.createElement('div');
     this.panelContainer.className = 'vol-tabs__panels';
+    // Kaydırılabilen bölge klavyeyle de kaydırılabilmeli (axe scrollable-region-focusable).
+    this.panelContainer.tabIndex = 0;
 
     for (const [index, tab] of tabs.entries()) {
       // id çifti sekme ve paneli çift yönlü bağlar: aria-controls (sekme->panel) ve aria-labelledby (panel->sekme).
@@ -81,7 +86,7 @@ export class Tabs {
       button.setAttribute('aria-controls', panelId);
       button.tabIndex = tab.id === this.activeId ? 0 : -1;
 
-      const onClick = (): void => this.select(tab.id);
+      const onClick = (event: Event): void => this.select(tab.id, event);
       const onKeydown = (event: KeyboardEvent): void => this.handleKeydown(event, index);
       button.addEventListener('click', onClick);
       button.addEventListener('keydown', onKeydown);
@@ -96,6 +101,7 @@ export class Tabs {
       tab.content.element.setAttribute('role', 'tabpanel');
       tab.content.element.setAttribute('aria-labelledby', tabId);
       tab.content.element.setAttribute('aria-hidden', String(!isActive));
+      tab.content.element.inert = !isActive;
       tab.content.element.classList.toggle('vol-tabs__panel--hidden', !isActive);
       this.panelContainer.appendChild(tab.content.element);
     }
@@ -111,7 +117,8 @@ export class Tabs {
     this.element.appendChild(this.panelContainer);
   }
 
-  select(id: string): void {
+  /** `event` verilirse (kullanıcı etkinleştirmesi) sekme geçişi `navigate` niyeti olarak duyulur. */
+  select(id: string, event?: Event): void {
     if (id === this.activeId || !this.tabButtons.has(id)) {
       return;
     }
@@ -123,6 +130,8 @@ export class Tabs {
     const previousTab = this.tabs.find((t) => t.id === this.activeId);
     if (previousTab) {
       previousTab.content.element.setAttribute('aria-hidden', 'true');
+      // Gizli panel etkileşimsizdir: içindeki denetime Tab ve okuyucu ulaşmaz (CSS gizlemesine ek güvence).
+      previousTab.content.element.inert = true;
       previousTab.content.element.classList.add('vol-tabs__panel--hidden');
     }
 
@@ -135,9 +144,13 @@ export class Tabs {
     const nextTab = this.tabs.find((t) => t.id === id);
     if (nextTab) {
       nextTab.content.element.setAttribute('aria-hidden', 'false');
+      nextTab.content.element.inert = false;
       nextTab.content.element.classList.remove('vol-tabs__panel--hidden');
     }
 
+    if (event && nextButton) {
+      emitUiIntent({ kind: 'navigate', origin: 'Tabs', target: nextButton, event });
+    }
     this.onChange?.(id);
   }
 
@@ -157,8 +170,11 @@ export class Tabs {
 
   private handleKeydown(event: KeyboardEvent, index: number): void {
     let nextIndex: number | null = null;
-    const nextKey = this.orientation === 'vertical' ? 'ArrowDown' : 'ArrowRight';
-    const prevKey = this.orientation === 'vertical' ? 'ArrowUp' : 'ArrowLeft';
+    // Yatay çubukta "sağ" okuma yönüne bağlıdır: RTL'de sol ok sonraki sekmedir.
+    const rtl = inlineSign(this.element) === -1;
+    const nextKey =
+      this.orientation === 'vertical' ? 'ArrowDown' : rtl ? 'ArrowLeft' : 'ArrowRight';
+    const prevKey = this.orientation === 'vertical' ? 'ArrowUp' : rtl ? 'ArrowRight' : 'ArrowLeft';
 
     if (event.key === nextKey) {
       nextIndex = (index + 1) % this.tabs.length;
@@ -175,8 +191,8 @@ export class Tabs {
     }
 
     event.preventDefault();
-    const nextTab = this.tabs[nextIndex];
-    this.select(nextTab.id);
+    const nextTab = requiredAt(this.tabs, nextIndex);
+    this.select(nextTab.id, event);
     this.tabButtons.get(nextTab.id)?.focus();
   }
 }

@@ -1,0 +1,362 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "yaldızlı cam ve lake · drag-pick",
+      "durationSeconds": 0.173,
+      "gestures": {
+        "lift-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              330
+            ],
+            [
+              0.07,
+              470
+            ]
+          ],
+          "version": 1
+        },
+        "thump-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              188.6
+            ],
+            [
+              0.04,
+              122.99999999999999
+            ],
+            [
+              0.08,
+              118.07999999999998
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0002,
+              "curve": "exponential",
+              "decay": 0.01,
+              "release": 0.004,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 3,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 5600,
+                "mode": "bandpass",
+                "q": 0.9
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 1500,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0015,
+              "curve": "exponential",
+              "decay": 0.06,
+              "release": 0.025,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -1,
+          "inserts": [
+            {
+              "params": {
+                "character": "tanh",
+                "driveDb": 7,
+                "mix": 1,
+                "outputDb": -3
+              },
+              "primitive": "effect.saturation",
+              "version": 1
+            }
+          ],
+          "mechanism": "mechanical",
+          "name": "thump",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 50,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 900,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "thump-pitch"
+              },
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.003,
+              "curve": "cosine",
+              "decay": 0.09,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -9,
+          "mechanism": "mechanical",
+          "name": "lift",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 160,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "lift-pitch"
+              },
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0003,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -6
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9405
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui/aurum",
+    "durationSeconds": {
+      "max": 0.32,
+      "min": 0.08
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "yaldızlı cam ve lake: drag-pick",
+  "dimensions": [
+    {
+      "name": "bright",
+      "range": {
+        "max": 6832,
+        "min": 4368,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "click",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.0756,
+        "min": 0.0444,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "thump",
+        "param": "decay",
+        "primitive": "articulation.envelope",
+        "slot": "articulation"
+      }
+    },
+    {
+      "name": "warmth",
+      "range": {
+        "max": 1100,
+        "min": 720,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 1,
+        "kind": "node-param",
+        "layer": "thump",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    }
+  ],
+  "familyId": "ui-aurum-drag-pick",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "bright": {
+          "max": 5189.33333,
+          "min": 4368
+        },
+        "decay": {
+          "max": 0.0756,
+          "min": 0.0652
+        },
+        "warmth": {
+          "max": 846.66667,
+          "min": 720
+        }
+      },
+      "light": {
+        "bright": {
+          "max": 6832,
+          "min": 6010.66667
+        },
+        "decay": {
+          "max": 0.0548,
+          "min": 0.0444
+        },
+        "warmth": {
+          "max": 1100,
+          "min": 973.33333
+        }
+      },
+      "medium": {
+        "bright": {
+          "max": 6010.66667,
+          "min": 5189.33333
+        },
+        "decay": {
+          "max": 0.0652,
+          "min": 0.0548
+        },
+        "warmth": {
+          "max": 973.33333,
+          "min": 846.66667
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9405,
+  "title": "UI aurum drag-pick",
+  "variants": [
+    {
+      "key": "drag-pick-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "drag-pick"
+      ]
+    },
+    {
+      "key": "drag-pick-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "drag-pick"
+      ]
+    },
+    {
+      "key": "drag-pick-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "drag-pick"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

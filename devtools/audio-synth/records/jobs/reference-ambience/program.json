@@ -1,0 +1,58 @@
+{
+  "channels": 2,
+  "description": "Referans ambiyans: esintili rüzgar tabanı + seyrek çeşitli damla; dikişsiz döngü.",
+  "durationSeconds": 16,
+  "layers": [
+    {
+      "durationSeconds": 16,
+      "gainDb": -7,
+      "mechanism": "wind",
+      "name": "wind-bed",
+      "pan": -0.2,
+      "role": "texture",
+      "source": {
+        "params": {
+          "gustScale": 1.6,
+          "gustiness": 0.55,
+          "speed": 8,
+          "whistle": 0.3
+        },
+        "primitive": "source.wind",
+        "version": 2
+      }
+    },
+    {
+      "durationSeconds": 16,
+      "gainDb": -13,
+      "mechanism": "rain",
+      "name": "rain-patter",
+      "pan": 0.18,
+      "role": "texture",
+      "source": {
+        "params": {
+          "dropSize": 2.4,
+          "hiss": 0.15,
+          "intensity": 240,
+          "surface": 0.22,
+          "variability": 0.65
+        },
+        "primitive": "source.rain",
+        "version": 2
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 12,
+    "limiter": {
+      "ceilingDbtp": -1
+    },
+    "loop": {
+      "crossfadeSeconds": 4
+    },
+    "normalize": "peak",
+    "peakDbfs": -9
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 4107
+}

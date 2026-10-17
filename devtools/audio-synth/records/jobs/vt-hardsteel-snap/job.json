@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-fb8b286f3026d578": {
+        "hash": "sha256:51c728c421f8b1577b833a011609596dc291ff9370cf8d0e6178a87a3cda0cf2",
+        "path": "analyses/r-fb8b286f3026d578.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:8fca971a40ff6f09dfccfa506c10098c95c725c48c2bdae127c0515ac5a6d94c",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:8fca971a40ff6f09dfccfa506c10098c95c725c48c2bdae127c0515ac5a6d94c",
+      "hash": "sha256:cd722cea193af2c3a8811cad3ef315995c8ee21e11f71dd8a446b92710858b44",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:a43825cc15d8cfdc5f7013363e98e292a995613768ebe778541990fc7006f0d1",
+      "path": "games/vol-test/audio-manifests/sfx/steel/snap.json"
+    },
+    "renders": {
+      "r-fb8b286f3026d578": {
+        "hash": "sha256:07f0f067063cba77524a4acdc9946666624a56f26777833c8ede888a96eae7cf",
+        "path": "renders/r-fb8b286f3026d578.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:b665b0fb4afeab32021a2fcec307f04017adb437e2393629002c71353b298eaf",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-snap",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 44,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/snap.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:10133ff102044c0ae8516059c7abe67bd00f70d1ba93b794c665fab23f736d07",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:1cca124fd01919b7686e49992333324f9afff3dcbff209707fe968f0f3265c83",
+    "familyId": "ui-aurum-back",
+    "kind": "family-variant",
+    "variantId": "v-0e4d9255df221993",
+    "variantKey": "back-a"
+  }
+}

@@ -1,0 +1,163 @@
+# VOL.STUDIO kalite kapıları. `just` exact pinli `rust-just` devDependency'sidir;
+# global değilse `pnpm exec just <tarif>` ya da `pnpm quick|fast|high|signoff`.
+# Ne sınadıkları: docs/gates.md.
+
+# Windows'ta PATH'teki `bash` WSL launcher'ına çözülürse tarifler Linux node
+# altında koşar ve kapılar koddan bağımsız kırılır; kabuk Git kurulumundan
+# türetilir. Tek kaynak ve teşhis: `scripts/quality/gitBash.mjs`.
+set shell := ["node", "scripts/quality/bashShell.mjs", "-euo", "pipefail", "-c"]
+
+default:
+    @just --list
+
+# === TEKİL KAPILAR ===
+
+# Aktif paketler ve kök betikler (JSDoc ile checkJs).
+typecheck:
+    node scripts/quality/runActive.mjs typecheck
+    pnpm exec tsc -p scripts/tsconfig.json
+
+lint:
+    pnpm lint
+
+lint-css:
+    pnpm lint:css
+
+format-check:
+    pnpm format:check
+
+# Kapsam eşiği uygulamaz.
+test:
+    node scripts/quality/runActive.mjs test --if-present
+
+# Örn: just test-pkg core
+test-pkg pkg:
+    pnpm --filter @volstudio/{{ pkg }} test
+
+# audio-synth'in push'ta koşan alt kümesi; tam takım ve kapsamı signoff'tadır.
+audio-test:
+    node scripts/quality/audioTests.mjs
+
+# `quality.json` → `coverageRuns` paketlerini eşikleriyle koşar; eşikten muaf paketin testini düz koşar.
+coverage:
+    node scripts/quality/coverageRun.mjs coverage
+
+coverage-audio:
+    node scripts/quality/coverageRun.mjs coverage-audio
+    node scripts/quality/cli/coverage-shape-report.mjs coverage-audio
+
+# `coverage`den sonra; yalnız o koşunun lcov'unu okur.
+coverage-shape:
+    node scripts/quality/cli/coverage-shape-report.mjs coverage
+
+# Kapılar `.node-version` ile aynı kesin Node sürümünde koşar; aksi hâlde ilk adımda durur.
+node-pin:
+    node scripts/quality/cli/node-runtime.mjs
+
+# Bekçilerin kendi testleri ve workspace sözleşmesi (takımlar: contractSuites.mjs).
+# Testler geçici depolarda git koşar; hook'un GIT_* ortamı gerçek depoya sızmaz.
+contract:
+    node scripts/quality/contractSuites.mjs
+
+build:
+    node scripts/quality/runActive.mjs build --if-present
+
+# `build`den sonra; diskteki `dist`in gzip baytını ölçer.
+bundle:
+    node scripts/quality/cli/bundle-report.mjs
+
+# Girdi dört katına çıkınca ölçülen süre oranı; tek koşu karmaşıklık kanıtı değildir.
+scaling:
+    node scripts/quality/cli/scaling-report.mjs
+
+# `build`den sonra; Chromium ve WebKit.
+e2e:
+    node scripts/quality/runActive.mjs test:e2e --if-present
+
+build-ui:
+    pnpm --filter @volstudio/vol-showcase build
+
+# Aktif Cargo manifestleri: fmt, clippy (all-targets, feature'lı), test.
+rust:
+    node scripts/quality/rust.mjs
+
+# `pnpm audit --audit-level moderate`; yalnız securityPolicy.json'da kanıtlı kayıt geçer.
+security-js:
+    node scripts/quality/jsAudit.mjs
+
+# cargo-audit; bakımsız/sağlam olmayan/yanked uyarıları da politikayla eşlenir.
+security-rust:
+    node scripts/quality/rustAudit.mjs
+
+# Yayınlanmış her sesi manifestinden yeniden render edip PCM kimliğini karşılaştırır.
+audio-verify:
+    node scripts/quality/audioVerify.mjs
+
+# UI kanıtı: yüzey kaydı ve kanıt verisi, ardından vitrinin iki motorlu tam E2E'si
+# (axe, durum fixture'ları, yerleşim, piksel). `signoff` e2e'yi içerir, `high` içermez;
+# bu tarif UI işinde push'tan önce çalıştırılacak kısa yolu tek komutta verir. Gerçek cihaz/insan kabulü değildir.
+# UI ilk referans kaydı (git dışı): just ui-baseline <etiket>; karşılaştırma için
+# node scripts/quality/cli/ui-baseline.mjs compare <önceki> <sonraki> --strict
+ui-baseline label:
+    node scripts/quality/cli/ui-baseline.mjs record {{label}}
+
+ui-check:
+    node scripts/quality/cli/ui-registry.mjs --check
+    pnpm --filter @volstudio/vol-showcase build
+    pnpm --filter @volstudio/vol-showcase test:e2e
+
+# === BİRLEŞİK KAPILAR ===
+# Burası yalnız BİLEŞİMİ söyler. `pnpm quick|fast|high|signoff` ve git kancaları
+# aşamaları `scripts/quality/gate.mjs` ile koşar: sıra ve paralellik
+# `gatePlan.mjs`de, girdisi değişmeyen aşamanın atlanması `gateCache.mjs`dedir.
+# `just <kapı>` aynı aşamaları önbelleksiz ve art arda koşar (düz yol).
+# Aşamalar ucuzdan pahalıya yazılır: düşecek kapı dakikalar harcanmadan düşer.
+
+quick: node-pin contract format-check typecheck lint lint-css
+
+fast: quick test
+
+# `coverage` aynı testleri eşikleriyle koştuğu için düz `test` tekrarlanmaz.
+# Tauri generate_context! frontendDist'i derleme sırasında okur; temiz klonda
+# frontend çıktısı Rust'tan önce üretilir.
+high: quick build bundle scaling audio-test rust coverage coverage-shape
+
+# `e2e` pre-push'ta DEĞİL, burada koşar: iki motorda ~23 dk sürer ve her push'u o kadar bekletir.
+# Push'tan önce `pnpm exec just ui-check` ile tek başına da koşulabilir.
+signoff: high e2e coverage-audio audio-verify security-js security-rust
+
+# Örn: just report high --json
+report gate='high' *flags:
+    node scripts/quality/report.mjs {{ gate }} {{ flags }}
+
+# === GELİŞTİRME ===
+
+dev:
+    pnpm dev
+
+dev-ui:
+    pnpm --filter @volstudio/vol-showcase dev
+
+fix:
+    pnpm format
+    pnpm lint:fix
+
+gen-theme:
+    pnpm gen:theme
+
+# JS/TS çıktıları, raporlar ve kapı önbelleği.
+clean:
+    node scripts/quality/cleanWorkspace.mjs
+
+# Rust hedefleri de silinir; sonraki derleme sıfırdan başlar.
+clean-all:
+    node scripts/quality/cleanWorkspace.mjs --all
+
+download-fonts:
+    pnpm --filter @volstudio/core download-fonts
+
+benchmark-core:
+    pnpm benchmark:core
+
+doctor:
+    node scripts/doctor.mjs

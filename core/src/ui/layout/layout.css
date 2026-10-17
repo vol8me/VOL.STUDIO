@@ -1,0 +1,998 @@
+/*
+ * Kaydırma çubukları kullanıcı aracısı denetimidir (WCAG 2.5.8 "User agent control"): kalınlığı yazar
+ * küçültmez, yalnız rengi verilir. `scrollbar-width: thin` ve `::-webkit-scrollbar` kalınlığı çubuğu 8-10 px'e
+ * indirip tutamağı 24 px'in çok altında bırakıyordu (dokunmatik ve trackpad'de yakalanamıyordu).
+ */
+.vol-scroll-view {
+  pointer-events: auto;
+  scrollbar-color: var(--vol-ui-border-strong) var(--vol-ui-surface-1);
+  position: relative;
+}
+
+.vol-scroll-view--vertical {
+  max-height: 100%;
+  overflow: hidden auto;
+}
+
+.vol-scroll-view--horizontal {
+  max-width: 100%;
+  overflow: auto hidden;
+}
+
+.vol-scroll-view__content {
+  padding: var(--vol-space-md);
+}
+
+.vol-scroll-view--horizontal .vol-scroll-view__content {
+  display: flex;
+}
+
+.vol-virtual-list {
+  pointer-events: auto;
+  scrollbar-color: var(--vol-ui-border-strong) var(--vol-ui-surface-1);
+  position: relative;
+  overflow: hidden auto;
+}
+
+.vol-virtual-list__spacer {
+  pointer-events: none;
+  width: 1px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.vol-virtual-list__viewport {
+  width: 100%;
+  position: relative;
+}
+
+.vol-virtual-list__row {
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  align-items: center;
+  width: 100%;
+  display: flex;
+}
+
+/* Odaklanabilir kaydırma yüzeyleri tarayıcının varsayılan halkasını değil temanın halkasını taşır (WCAG 2.4.7). */
+.vol-scroll-view:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-virtual-list:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.vol-panel {
+  justify-content: center;
+  align-items: stretch;
+  gap: var(--vol-space-md);
+  pointer-events: auto;
+  opacity: 0;
+  width: max-content;
+  max-width: 90vw;
+  transition: opacity var(--vol-transition-medium);
+  flex-direction: column;
+  display: flex;
+  position: absolute;
+}
+
+.vol-panel--visible {
+  opacity: 1;
+}
+
+@keyframes vol-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.vol-tabs {
+  pointer-events: auto;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.vol-tabs__sidebar {
+  display: contents;
+}
+
+.vol-tabs__list {
+  gap: var(--vol-space-xs);
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  padding: 0 var(--vol-space-md);
+  flex-shrink: 0;
+  display: flex;
+}
+
+.vol-tabs__tab {
+  pointer-events: auto;
+  font-family: var(--vol-font-family);
+  letter-spacing: 0.03em;
+  color: var(--vol-ui-text-muted);
+  padding: var(--vol-space-sm) var(--vol-space-md);
+  cursor: var(--vol-cursor-link, pointer);
+  transition:
+    color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  background: 0 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: var(--vol-text-body);
+  font-weight: 600;
+
+  /*
+   * bkz. .vol-button (primitives.css) — aynı gerekçe: yalnızca pointer:coarse'da
+   * devreye girer, GERÇEK kutu büyür. `.vol-tabs__list`'in `gap`i (var(--vol-space-xs))
+   * dar olduğu için görünmez bir overlay tekniği (::before) burada komşu tab'lara
+   * taşardı — bu yüzden bilinçli olarak min-height/min-width kullanıldı: flex
+   * container büyüyen kutuya göre kardeşleri otomatik aralar, örtüşme oluşmaz.
+   */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-tabs__tab:hover {
+  color: var(--vol-ui-text);
+}
+
+.vol-tabs__tab[aria-selected='true'] {
+  color: var(--vol-ui-text);
+  border-bottom-color: var(--vol-ui-brand-solid);
+}
+
+.vol-tabs__tab:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.vol-tabs__panels {
+  min-height: 0;
+  padding: var(--vol-space-xl);
+  flex: 1;
+  overflow: auto;
+
+  /*
+   * `position` kaydırma kabının kırpma yetkisidir, süs değil.
+   *
+   * `overflow` yalnızca, containing block'u KENDİSİ ya da bir torunu olan
+   * kutuları kırpar. Statik bir kap, mutlak konumlu bir torunun containing
+   * block'u olamaz; o torun kabın kırpmasından kaçar ve belgenin kaydırma
+   * alanını genişletir.
+   *
+   * Bu satır olmadan dar ekranda `.vol-sr-only` açıklamaları kabın dışına
+   * düşer ve sayfa yatay kayar (bkz. vol-showcase `layout.spec.ts`).
+   */
+  position: relative;
+}
+
+/* Dar ekranda (320 px'e kadar) 48 px'lik yan boşluk içeriği ~160 px'e sıkıştırırdı; panel yan boşluğu küçülür. */
+@media (width <= 480px) {
+  .vol-tabs__panels {
+    padding: var(--vol-space-md);
+  }
+}
+
+.vol-tabs__panels:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.vol-tabs--vertical {
+  flex-direction: row;
+}
+
+.vol-tabs--vertical .vol-tabs__sidebar {
+  border-right: 1px solid var(--vol-ui-border-soft);
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 220px;
+  height: 100%;
+  display: flex;
+}
+
+.vol-tabs--vertical .vol-tabs__list {
+  padding: var(--vol-space-md) 0;
+  border-bottom: none;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 0;
+  overflow-y: auto;
+}
+
+.vol-tabs--vertical .vol-tabs__tab {
+  text-align: left;
+  padding: var(--vol-space-sm) var(--vol-space-lg);
+  border-bottom: none;
+  border-right: 2px solid transparent;
+}
+
+.vol-tabs--vertical .vol-tabs__tab[aria-selected='true'] {
+  border-right-color: var(--vol-ui-brand-solid);
+  background: var(--vol-ui-surface-1);
+}
+
+.vol-tabs--vertical .vol-tabs__tab:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline-offset: -2px;
+}
+
+.vol-tabs__panel--hidden {
+  display: none !important;
+}
+
+.vol-settings-form {
+  display: grid;
+}
+
+/* Etiket asgari genişliğini korur; geniş denetim (açılır liste) satırı doldurmak yerine küçülür. */
+.vol-settings-row {
+  display: grid;
+  grid-template-columns: minmax(min(8em, 100%), 1fr) minmax(0, max-content);
+  gap: var(--vol-space-md);
+  align-items: center;
+  min-width: 0;
+  min-height: 56px;
+  padding: var(--vol-space-sm) 0;
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+}
+
+.vol-settings-row:last-child {
+  border-bottom: 0;
+}
+
+.vol-settings-row__label {
+  min-width: 0;
+  color: var(--vol-ui-text-secondary);
+  font-size: var(--vol-text-body);
+  overflow-wrap: anywhere;
+}
+
+.vol-settings-row__description,
+.vol-settings-row__error {
+  grid-column: 1 / -1;
+  min-width: 0;
+  font-size: var(--vol-text-micro);
+  overflow-wrap: anywhere;
+}
+
+.vol-settings-row__description {
+  color: var(--vol-ui-text-muted);
+}
+
+.vol-settings-row__error {
+  color: var(--vol-ui-text-secondary);
+  font-weight: 600;
+}
+
+/* Kaydedilmemiş (taslak) satır: marka renkli kenar; geçersiz satırın tehlike kenarı sonra gelir ve onu ezer. */
+.vol-settings-row--dirty {
+  border-left: 3px solid var(--vol-ui-brand-border);
+  padding-left: var(--vol-space-sm);
+}
+
+.vol-settings-row--invalid {
+  border-left: 3px solid var(--vol-ui-danger-solid);
+  padding-left: var(--vol-space-sm);
+}
+
+.vol-settings-row__control {
+  display: flex;
+  gap: var(--vol-space-sm);
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.vol-settings-row__reset[hidden] {
+  display: none;
+}
+
+.vol-audio-level {
+  display: flex;
+  gap: var(--vol-space-sm);
+  align-items: center;
+}
+
+.vol-audio-level > .vol-slider {
+  width: clamp(8rem, 28vw, 14rem);
+}
+
+.vol-audio-level__value {
+  min-width: 5ch;
+  color: var(--vol-ui-text-secondary);
+  font-size: var(--vol-text-micro);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.vol-settings-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vol-space-sm);
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: var(--vol-space-sm);
+  padding-top: var(--vol-space-md);
+  border-top: 1px solid var(--vol-ui-border-soft);
+}
+
+.vol-settings-form__status {
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: 1.25em;
+  color: var(--vol-ui-text-secondary);
+  font-size: var(--vol-text-micro);
+  overflow-wrap: anywhere;
+}
+
+.vol-settings-form__status--error {
+  color: var(--vol-ui-text);
+  font-weight: 600;
+}
+
+.vol-settings-row__control > .vol-select {
+  width: clamp(10rem, 32vw, 18rem);
+  max-width: 100%;
+}
+
+.vol-settings-row__control > .vol-segmented {
+  width: max-content;
+  max-width: 100%;
+}
+
+.vol-settings-row--self-labeled {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.vol-settings-row--self-labeled .vol-settings-row__control,
+.vol-settings-row--self-labeled .vol-checkbox {
+  width: 100%;
+}
+
+.vol-settings-row--self-labeled .vol-checkbox {
+  justify-content: space-between;
+}
+
+.vol-settings-row--self-labeled .vol-checkbox__track {
+  order: 2;
+}
+
+.vol-settings-row--self-labeled .vol-checkbox__label {
+  order: 1;
+}
+
+@media (width <= 400px) {
+  .vol-settings-row--stack-narrow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--vol-space-xs);
+  }
+
+  .vol-settings-row--stack-narrow .vol-settings-row__control {
+    justify-content: flex-start;
+  }
+
+  .vol-settings-row--stack-narrow .vol-settings-row__control > .vol-select {
+    width: 100%;
+  }
+}
+
+/*
+ * Aynı yığılma DAR KAPSAYICIDA da çalışır (kart, bölme, kapsamlı önizleme): görünüm penceresi geniş olsa da etiket sütunu
+ * sıfıra sıkışıp harf harf dizilmesin. Etkili olması için satırın bir atası `container-type: inline-size` olmalıdır;
+ * kapsayıcı yoksa kural hiç eşleşmez ve yukarıdaki medya sorgusu tek başına geçerlidir. `container-type` yerleşim sınırlaması
+ * getirir (içindeki `position: fixed` öğeler artık kapsayıcıya göre konumlanır): katmanların bağlandığı elemana değil, ayrı
+ * bir sarmalayıcıya verilmelidir.
+ */
+@container (width <= 400px) {
+  .vol-settings-row--stack-narrow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--vol-space-xs);
+  }
+
+  .vol-settings-row--stack-narrow .vol-settings-row__control {
+    justify-content: flex-start;
+  }
+
+  .vol-settings-row--stack-narrow .vol-settings-row__control > .vol-select {
+    width: 100%;
+  }
+}
+
+.vol-tree,
+.vol-tree__children {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vol-tree {
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+  padding: var(--vol-space-xs);
+}
+
+.vol-tree__children {
+  padding-left: var(--vol-space-lg);
+}
+
+.vol-tree__children-outer {
+  /* Kapalı dal çizilmez: yüksekliği 0'a çöken satırlar AT ağacında, bul-ve-tıkla ve ölçümde kalmaz.
+     `visibility` kapanırken geçiş bitince gizlenir, açılırken hemen görünür (animasyon bozulmaz). */
+  grid-template-rows: 0fr;
+  transition-property: grid-template-rows, visibility;
+  transition-duration: 0.26s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  visibility: hidden;
+  display: grid;
+}
+
+.vol-tree__children-outer--open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+}
+
+.vol-tree__children-outer .vol-tree__children {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.vol-tree__item {
+  position: relative;
+}
+
+.vol-tree__children .vol-tree__item::before {
+  content: '';
+  top: 0;
+  bottom: 0;
+  left: calc(var(--vol-space-lg) * -1 + 10px);
+  background: var(--vol-ui-border-soft);
+  width: 1px;
+  position: absolute;
+}
+
+.vol-tree__row {
+  pointer-events: auto;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  padding: var(--vol-space-sm);
+  border-radius: var(--vol-radius-sm);
+  cursor: var(--vol-cursor-link, pointer);
+  color: var(--vol-ui-text-secondary);
+  transition:
+    background-color var(--vol-transition-fast),
+    color var(--vol-transition-fast);
+  display: flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Fallback burada `auto` DEĞİL
+     36px: satırın masaüstünde zaten bir taban yüksekliği vardı ve token'a
+     geçerken kaybedilmemeli. Dokunmatikte token 44px'e yükseltir. */
+  min-height: var(--vol-hit-target-min, 36px);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-tree__row:hover {
+  background: var(--vol-ui-hover-fill);
+  color: var(--vol-ui-text);
+}
+
+.vol-tree__row--selected {
+  background: var(--vol-ui-selected-fill);
+  color: var(--vol-ui-text);
+}
+
+.vol-tree__row--disabled {
+  cursor: var(--vol-cursor-default, default);
+  color: var(--vol-ui-disabled-text);
+}
+
+.vol-tree__row--disabled:hover {
+  color: var(--vol-ui-disabled-text);
+  background: 0 0;
+}
+
+.vol-tree__row:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.vol-tree__caret {
+  width: 20px;
+  height: 20px;
+  color: var(--vol-ui-icon);
+  transition:
+    transform var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  border-radius: 4px;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  font-size: var(--vol-text-label);
+  display: inline-flex;
+}
+
+.vol-tree__item[aria-expanded] .vol-tree__caret {
+  cursor: var(--vol-cursor-link, pointer);
+}
+
+.vol-tree__item[aria-expanded] .vol-tree__caret:hover {
+  background: var(--vol-ui-hover-fill);
+}
+
+.vol-tree__caret--parent::before {
+  content: '';
+  border-style: solid;
+  border-width: 5px 0 5px 7px;
+  border-color: transparent transparent transparent currentcolor;
+}
+
+.vol-tree__caret--open {
+  transform: rotate(90deg);
+}
+
+.vol-tree__icon {
+  width: 18px;
+  height: 18px;
+  color: var(--vol-ui-icon);
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.vol-tree__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-tree__checkbox {
+  border: 1px solid var(--vol-ui-border-soft);
+  background: var(--vol-ui-surface-1);
+  width: 16px;
+  height: 16px;
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.vol-tree__row--selected .vol-tree__checkbox {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-tree__label {
+  font-size: var(--vol-text-body);
+}
+
+.vol-accordion {
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+  flex-direction: column;
+  display: flex;
+  overflow: hidden;
+}
+
+.vol-accordion__section + .vol-accordion__section {
+  border-top: 1px solid var(--vol-ui-border-soft);
+}
+
+.vol-accordion__header {
+  pointer-events: auto;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  width: 100%;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-1);
+  padding: var(--vol-space-md) var(--vol-space-lg);
+  cursor: var(--vol-cursor-link, pointer);
+  text-align: left;
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  border: none;
+  border-left: 2px solid transparent;
+  font-size: var(--vol-text-body);
+  font-weight: 600;
+  display: flex;
+  position: relative;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-accordion__header[aria-expanded='true'] {
+  border-left-color: var(--vol-ui-brand-solid);
+}
+
+.vol-accordion__header:hover {
+  background: var(--vol-ui-hover-fill);
+}
+
+.vol-accordion__header:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.vol-accordion__caret {
+  width: 12px;
+  color: var(--vol-ui-icon);
+  transition: transform var(--vol-transition-fast);
+  flex-shrink: 0;
+  font-size: var(--vol-text-micro);
+  display: inline-flex;
+}
+
+.vol-accordion__header[aria-expanded='true'] .vol-accordion__caret {
+  transform: rotate(90deg);
+}
+
+.vol-accordion__icon {
+  width: 16px;
+  height: 16px;
+  color: var(--vol-ui-icon);
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.vol-accordion__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-accordion__panel {
+  background: var(--vol-ui-bg-subtle);
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  display: grid;
+}
+
+.vol-accordion__panel--open {
+  grid-template-rows: 1fr;
+}
+
+.vol-accordion__panel-inner {
+  min-height: 0;
+  padding: 0 var(--vol-space-lg);
+  transition: padding 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.vol-accordion__panel--open .vol-accordion__panel-inner {
+  padding: var(--vol-space-lg);
+}
+
+.vol-wizard {
+  pointer-events: auto;
+  gap: var(--vol-space-lg);
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+}
+
+.vol-wizard__indicators {
+  align-items: flex-start;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-wizard__indicator {
+  align-items: center;
+  gap: var(--vol-space-xs);
+  flex-direction: column;
+  flex: 1;
+  display: flex;
+  position: relative;
+}
+
+.vol-wizard__indicator:not(:last-child)::after {
+  content: '';
+  background: var(--vol-ui-border-soft);
+  height: 2px;
+  transition: background-color var(--vol-transition-fast);
+  position: absolute;
+  top: 15px;
+  left: calc(50% + 20px);
+  right: calc(20px - 50%);
+}
+
+.vol-wizard__indicator--done:not(:last-child)::after {
+  background: var(--vol-ui-brand-solid);
+}
+
+.vol-wizard__indicator-dot {
+  width: 30px;
+  height: 30px;
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text-muted);
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-soft);
+  z-index: 1;
+  transition:
+    color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  border-radius: 50%;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  font-size: var(--vol-text-body);
+  font-weight: 700;
+  display: flex;
+}
+
+.vol-wizard__indicator--active .vol-wizard__indicator-dot {
+  color: var(--vol-ui-on-brand);
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-wizard__indicator--done .vol-wizard__indicator-dot {
+  color: var(--vol-ui-brand-hover);
+  background: var(--vol-ui-brand-subtle);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-wizard__indicator-label {
+  font-family: var(--vol-font-family);
+  text-align: center;
+  color: var(--vol-ui-text-muted);
+  font-size: var(--vol-text-label);
+}
+
+.vol-wizard__indicator--active .vol-wizard__indicator-label {
+  color: var(--vol-ui-text);
+  font-weight: 600;
+}
+
+.vol-wizard__content-viewport {
+  position: relative;
+  overflow: hidden;
+}
+
+.vol-wizard__content {
+  min-height: 80px;
+  transition:
+    transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.22s;
+}
+
+.vol-wizard__content--exit-forward {
+  opacity: 0;
+  transform: translate(-24px);
+}
+
+.vol-wizard__content--exit-backward,
+.vol-wizard__content--enter-forward {
+  opacity: 0;
+  transform: translate(24px);
+}
+
+.vol-wizard__content--enter-backward {
+  opacity: 0;
+  transform: translate(-24px);
+}
+
+.vol-wizard__footer {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+.vol-wizard__nav-button {
+  pointer-events: auto;
+  cursor: var(--vol-cursor-link, pointer);
+  font-family: var(--vol-font-family);
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  padding: var(--vol-space-sm) var(--vol-space-lg);
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  font-size: var(--vol-text-body);
+  font-weight: 600;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-wizard__nav-button:hover {
+  background: var(--vol-ui-hover-fill);
+}
+
+.vol-wizard__nav-button:disabled {
+  cursor: var(--vol-cursor-default, default);
+  opacity: 0.5;
+}
+
+.vol-wizard__nav-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vol-wizard__nav-button--next {
+  color: var(--vol-ui-on-brand);
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-wizard__nav-button--next:hover {
+  background: var(--vol-ui-brand-fill-hover);
+}
+
+.vol-split-pane {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  display: flex;
+  overflow: hidden;
+}
+
+/*
+ * Bölmelerin bildirilen en küçük boyutları (`minPrimary`/`minSecondary`) yerleşimde de geçerlidir: kap onların
+ * toplamından dar kalırsa ikinci bölme ezilmez, DIŞ panel kayar (pencere %200-%400 büyütüldüğünde de kullanılır
+ * kalır). İlk bölme `flex: 0 0 boyut` olduğundan kendiliğinden küçülmez; yalnız ikinci bölmenin tabanı gerekir.
+ */
+.vol-split-pane--horizontal {
+  flex-direction: row;
+  overflow: auto hidden;
+}
+
+.vol-split-pane--vertical {
+  flex-direction: column;
+  overflow: hidden auto;
+}
+
+.vol-split-pane__pane {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.vol-split-pane__pane[hidden] {
+  display: none;
+}
+
+.vol-split-pane--horizontal .vol-split-pane__pane--primary {
+  flex: 0 0 var(--vol-split-primary-size);
+}
+
+.vol-split-pane--vertical .vol-split-pane__pane--primary {
+  flex: 0 0 var(--vol-split-primary-size);
+}
+
+.vol-split-pane__pane--secondary {
+  flex: 1 1 auto;
+}
+
+.vol-split-pane--secondary-collapsed .vol-split-pane__pane--primary {
+  flex: 1 1 auto;
+}
+
+.vol-split-pane--horizontal .vol-split-pane__pane--secondary {
+  min-width: var(--vol-split-secondary-min, 0);
+}
+
+.vol-split-pane--vertical .vol-split-pane__pane--secondary {
+  min-height: var(--vol-split-secondary-min, 0);
+}
+
+/*
+ * Tutamak hedefi: ince işaretçide en az 24 px (WCAG 2.5.8), kaba işaretçide ve `large` hedef tabanında
+ * `--vol-hit-target-min` (44 px). GERÇEK kutu büyür — görünmez overlay değil — bu yüzden komşu bölmenin kaydırma
+ * çubuğunu ya da kenar düğmesini örtmez. Çizgi ve kavrama işareti kutunun ortasında kalır.
+ */
+.vol-split-pane__separator {
+  --vol-split-handle-size: max(24px, var(--vol-hit-target-min, 0px));
+
+  box-sizing: border-box;
+  flex: 0 0 var(--vol-split-handle-size);
+  background: var(--vol-ui-bg-subtle);
+  position: relative;
+  touch-action: none;
+}
+
+.vol-split-pane__separator::after {
+  content: '';
+  background: var(--vol-ui-border-soft);
+  position: absolute;
+}
+
+/* Kavrama işareti: tutamağın sürüklenebilir olduğunu görünür kılar (dokunmatikte imleç ipucu yoktur). */
+.vol-split-pane__separator::before {
+  content: '';
+  z-index: 1;
+  background: var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm);
+  position: absolute;
+}
+
+.vol-split-pane--horizontal .vol-split-pane__separator {
+  cursor: var(--vol-cursor-resize-h, col-resize);
+}
+
+.vol-split-pane--horizontal .vol-split-pane__separator::after {
+  width: 1px;
+  inset: 0 auto 0 calc(50% - 0.5px);
+}
+
+.vol-split-pane--horizontal .vol-split-pane__separator::before {
+  width: 4px;
+  height: 32px;
+  inset: calc(50% - 16px) auto auto calc(50% - 2px);
+}
+
+.vol-split-pane--vertical .vol-split-pane__separator {
+  cursor: var(--vol-cursor-resize-v, row-resize);
+}
+
+.vol-split-pane--vertical .vol-split-pane__separator::after {
+  height: 1px;
+  inset: calc(50% - 0.5px) 0 auto;
+}
+
+.vol-split-pane--vertical .vol-split-pane__separator::before {
+  width: 32px;
+  height: 4px;
+  inset: calc(50% - 2px) auto auto calc(50% - 16px);
+}
+
+.vol-split-pane__separator:hover::after,
+.vol-split-pane__separator:focus-visible:where(:root:not([data-vol-focus='quiet']) *)::after,
+.vol-split-pane--resizing .vol-split-pane__separator::after,
+.vol-split-pane__separator:hover::before,
+.vol-split-pane__separator:focus-visible:where(:root:not([data-vol-focus='quiet']) *)::before,
+.vol-split-pane--resizing .vol-split-pane__separator::before {
+  background: var(--vol-ui-brand-solid);
+}
+
+.vol-split-pane__separator:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.vol-keyed-virtual-list {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  pointer-events: auto;
+  scrollbar-color: var(--vol-ui-border-strong) var(--vol-ui-surface-1);
+  position: relative;
+  overflow: hidden auto;
+}
+
+.vol-keyed-virtual-list:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.vol-keyed-virtual-list__viewport {
+  width: 100%;
+  position: relative;
+}
+
+.vol-keyed-virtual-list__row {
+  box-sizing: border-box;
+  width: 100%;
+  position: absolute;
+  inset: 0 0 auto;
+  overflow: hidden;
+}

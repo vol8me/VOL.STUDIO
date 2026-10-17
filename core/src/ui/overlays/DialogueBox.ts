@@ -1,3 +1,8 @@
+import { requiredAt } from '../../collections/requiredAt';
+import { Icon } from '../primitives/Icon';
+import { i18next } from '../../i18n/I18n';
+import { emitUiIntent } from '../feedback/uiIntent';
+
 export interface DialogueChoice {
   label: string;
   onSelect: () => void;
@@ -39,6 +44,9 @@ export class DialogueBox {
   private readonly textLabel: HTMLDivElement;
   private readonly choicesContainer: HTMLDivElement;
   private readonly continueIndicator: HTMLDivElement;
+  private fastForwardButton: HTMLButtonElement | null = null;
+  private skipLineButton: HTMLButtonElement | null = null;
+  private readonly onLanguageChanged = (): void => this.labelControls();
   private readonly normalTypeSpeedMs: number;
   private readonly fastTypeSpeedMs: number;
   private typeSpeedMs: number;
@@ -87,18 +95,22 @@ export class DialogueBox {
 
     this.continueIndicator = document.createElement('div');
     this.continueIndicator.className = 'vol-dialogue__continue';
-    this.continueIndicator.textContent = '▼';
+    this.continueIndicator.appendChild(new Icon({ name: 'chevronDown', size: 12 }).element);
     this.element.appendChild(this.continueIndicator);
 
     if (options.showControls) {
       this.element.appendChild(this.buildControls());
+      // Açık kutuda dil değişince kontrol etiketleri güncellenir; destroy'da söküldü.
+      i18next.on('languageChanged', this.onLanguageChanged);
     }
 
     // Seçimler gösteriliyorken kutuya tıklamak ilerletmemeli (next()) — oyuncu
     // önce seçmeli. awaitingChoice bunu merkezden kontrol eder, çünkü seçim
     // butonu tıklamaları da buraya bubble eder.
-    this.boundClick = () => {
+    this.boundClick = (event) => {
       if (this.awaitingChoice) return;
+      // Satır ilerletme (yazımı bitir ya da sonraki satır) duyulur; seçim bekleyen kutuda ses seçimin kendisindedir.
+      emitUiIntent({ kind: 'select', origin: 'DialogueBox', target: this.element, event });
       this.next();
     };
     this.element.addEventListener('click', this.boundClick);
@@ -131,7 +143,7 @@ export class DialogueBox {
     clearInterval(this.typingTimer);
     this.isTyping = false;
     while (this.queue.length > 0) {
-      const line = this.queue[0];
+      const line = requiredAt(this.queue, 0);
       if (line.choices?.length) {
         // advance() normal hızda yazım başlatır; seçim butonları (onTypingDone'da
         // render edilen) yazım bitene kadar gizli kalmasın diye hemen tam-la.
@@ -157,6 +169,7 @@ export class DialogueBox {
   }
 
   destroy(): void {
+    i18next.off('languageChanged', this.onLanguageChanged);
     clearInterval(this.typingTimer);
     this.element.removeEventListener('click', this.boundClick);
     this.element.remove();
@@ -175,7 +188,7 @@ export class DialogueBox {
     fastForwardButton.type = 'button';
     fastForwardButton.className = 'vol-dialogue__control';
     fastForwardButton.appendChild(this.buildControlIcon('fast-forward'));
-    fastForwardButton.setAttribute('aria-label', 'Yazımı hızlandır');
+    this.fastForwardButton = fastForwardButton;
     fastForwardButton.setAttribute('aria-pressed', 'false');
     fastForwardButton.addEventListener('click', (event) => {
       event.stopPropagation();
@@ -190,14 +203,21 @@ export class DialogueBox {
     skipLineButton.type = 'button';
     skipLineButton.className = 'vol-dialogue__control';
     skipLineButton.appendChild(this.buildControlIcon('skip'));
-    skipLineButton.setAttribute('aria-label', 'Satırı tamamla');
+    this.skipLineButton = skipLineButton;
     skipLineButton.addEventListener('click', (event) => {
       event.stopPropagation();
       this.next();
     });
     controls.appendChild(skipLineButton);
+    this.labelControls();
 
     return controls;
+  }
+
+  /** Kontrol düğmelerinin erişilebilir adları (çevrilmiş); dil değişince yeniden uygulanır. */
+  private labelControls(): void {
+    this.fastForwardButton?.setAttribute('aria-label', i18next.t('core:dialogue.fastForward'));
+    this.skipLineButton?.setAttribute('aria-label', i18next.t('core:dialogue.skipLine'));
   }
 
   /** 'fast-forward': çift ok (▶▶). 'skip': ok + çubuk (▶|), "tamamla/sonraki" için standart medya sembolü. */
@@ -307,6 +327,7 @@ export class DialogueBox {
         // Bunun kutunun click listener'ına (next()) bubble olmasına izin verme —
         // seçim sonrası ilerleme burada açıkça ele alınır.
         event.stopPropagation();
+        emitUiIntent({ kind: 'confirm', origin: 'DialogueBox', target: button, event });
         this.awaitingChoice = false;
         this.choicesContainer.hidden = true;
         this.choicesContainer.replaceChildren();

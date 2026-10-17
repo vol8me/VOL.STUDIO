@@ -1,0 +1,311 @@
+{
+  "app": {
+    "title": "VOL.TEST",
+    "fatal": "VOL.TEST başlatılamadı"
+  },
+  "menu": {
+    "title": "VOL.TEST",
+    "subtitle": "Kalıcı savaş dünyası",
+    "play": "Savaşa katıl",
+    "practice": "Alıştırma",
+    "settings": "Ayarlar",
+    "dev": "Geliştirici",
+    "exit": "Çıkış",
+    "exitTitle": "Oyundan çıkılsın mı?",
+    "exitConfirm": "Çık",
+    "exitCancel": "Vazgeç"
+  },
+  "garage": {
+    "title": "Garaj",
+    "vehicle": "Araç",
+    "join": "Savaşa katıl",
+    "practice": "Alıştırmaya çık",
+    "back": "Geri",
+    "select": "Seç",
+    "selected": "Seçili",
+    "stat": {
+      "durability": "Dayanıklılık",
+      "speed": "Hız",
+      "firepower": "Ateş gücü"
+    },
+    "vehicles": {
+      "striker": {
+        "name": "Striker",
+        "class": "ORTA"
+      },
+      "bulwark": {
+        "name": "Bulwark",
+        "class": "AĞIR"
+      },
+      "dart": {
+        "name": "Dart",
+        "class": "HAFİF"
+      },
+      "arachnid": {
+        "name": "Arachnid",
+        "class": "YÜRÜYÜCÜ"
+      },
+      "widow": {
+        "name": "Widow",
+        "class": "YÜRÜYÜCÜ"
+      },
+      "goliath": {
+        "name": "Goliath",
+        "class": "DEV YÜRÜYÜCÜ"
+      },
+      "manta": {
+        "name": "Manta",
+        "class": "SÜZÜLEN AVCI"
+      },
+      "barracuda": {
+        "name": "Barracuda",
+        "class": "SÜZÜLEN AKINCI"
+      },
+      "leviathan": {
+        "name": "Leviathan",
+        "class": "SÜZÜLEN SAVAŞ GEMİSİ"
+      },
+      "warhound": {
+        "name": "Warhound",
+        "class": "MECH KEŞİF"
+      },
+      "templar": {
+        "name": "Templar",
+        "class": "MECH HAT"
+      },
+      "juggernaut": {
+        "name": "Juggernaut",
+        "class": "AĞIR MECH"
+      },
+      "jackal": {
+        "name": "Jackal",
+        "class": "SIÇRAYICI AKINCI"
+      },
+      "panther": {
+        "name": "Panther",
+        "class": "SIÇRAYICI NİŞANCI"
+      },
+      "rhino": {
+        "name": "Rhino",
+        "class": "AĞIR SIÇRAYICI"
+      }
+    },
+    "skillTitle": "Yetenek",
+    "skillInfo": {
+      "dash": "{{seconds, number}} sn: azami hız %{{speed}} artar.",
+      "leap": "{{seconds, number}} sn: %{{speed}} hızlanır, kayanın ve suyun üstünden sıçrar.",
+      "shield": "{{seconds, number}} sn: savaş hasarı almaz, mermiler itmez.",
+      "overdrive": "{{seconds, number}} sn: atış temposu %{{fireRate}}, hız %{{speed}} artar.",
+      "ram": "{{seconds, number}} sn: hız %{{speed}} artar; hızla çarptığın rakip {{ram, number}} kat hasar alır, sen çarpışmada %{{ramTaken}} hasar yersin.",
+      "siege": "{{seconds, number}} sn: hız %{{slow}} düşer; gelen hasar %{{takenDown}} azalır, verdiğin hasar %{{dealtUp}} artar."
+    }
+  },
+  "dev": {
+    "title": "Geliştirici",
+    "world": "Dünya",
+    "practice": "Alıştırma",
+    "season": "Mevsim",
+    "seasonOption": {
+      "auto": "Takvim akışı",
+      "spring": "İlkbahar",
+      "summer": "Yaz",
+      "autumn": "Sonbahar",
+      "winter": "Kış"
+    },
+    "weather": "Hava",
+    "weatherOption": {
+      "auto": "Mevsime göre",
+      "clear": "Açık",
+      "dust": "Toz",
+      "rain": "Yağmur",
+      "snow": "Kar"
+    },
+    "vehicle": "Araç",
+    "density": "Arka plan alayı (aynı anda araç)"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "language": "Dil",
+    "languageOption": {
+      "auto": "Otomatik",
+      "tr": "Türkçe",
+      "en": "English"
+    },
+    "back": "Geri"
+  },
+  "boot": {
+    "title": "VOL.TEST",
+    "services": "Hizmetler başlatılıyor",
+    "assets": "Tank parçaları yükleniyor",
+    "world": "Dünya kuruluyor"
+  },
+  "hud": {
+    "boost": "Hızlanma deposu",
+    "mapSummary": "Harita: siz ve {{vehicles}} diğer araç, yakınlaştırma {{zoom}}x",
+    "map": "Harita",
+    "metre": "m",
+    "fullscreen": "Tam ekran",
+    "fireReload": "Atış dolumu",
+    "health": "Araç canı",
+    "respawnIn": "Araç imha oldu · {{seconds, number}} sn sonra yeniden doğacak",
+    "protection": "Yeniden doğma koruması · {{seconds, number}} sn",
+    "skill": {
+      "dash": "Atılım deposu",
+      "leap": "Sıçrama deposu",
+      "shield": "Kalkan deposu",
+      "overdrive": "Aşırı yük deposu",
+      "ram": "Çarpma atağı deposu",
+      "siege": "Kuşatma deposu"
+    }
+  },
+  "controls": {
+    "move": "Hareket",
+    "aim": "Nişan",
+    "fire": "Ateş",
+    "boost": "Hızlanma",
+    "zoom": "Yakınlaştır",
+    "grid": "Izgara",
+    "pause": "Duraklat",
+    "menu": "Menü",
+    "brake": "Fren",
+    "skill": {
+      "dash": "Atılım",
+      "leap": "Sıçrama",
+      "shield": "Kalkan",
+      "overdrive": "Aşırı yük",
+      "ram": "Çarpma atağı",
+      "siege": "Kuşatma"
+    }
+  },
+  "touch": {
+    "boost": "Hızlan",
+    "zoomIn": "Yakınlaştır",
+    "zoomOut": "Uzaklaştır",
+    "pause": "Duraklat",
+    "menu": "Menü",
+    "brake": "Fren",
+    "skill": {
+      "dash": "Atılım",
+      "leap": "Sıçrama",
+      "shield": "Kalkan",
+      "overdrive": "Aşırı yük",
+      "ram": "Çarpma atağı",
+      "siege": "Kuşatma"
+    }
+  },
+  "integrity": {
+    "recovered": "Kaydınız bozulmuştu ve yedeğinden geri yüklendi.",
+    "reset": "Kaydınız bozulmuştu ve geri yüklenemedi; yeni kayıt başlatıldı (bozuk dosya saklandı)."
+  },
+  "pause": {
+    "settings": "Ayarlar",
+    "dev": "Geliştirici",
+    "title": "Duraklatıldı",
+    "resume": "Devam et",
+    "liveTitle": "Menü",
+    "liveResume": "Savaşa dön",
+    "liveNote": "Dünya sunucuda akmaya devam eder; menüdeyken aracın girdi vermez.",
+    "quality": "Efekt kalitesi",
+    "qualityLevel": {
+      "high": "Yüksek",
+      "low": "Düşük"
+    },
+    "volume": "Ses düzeyi",
+    "haptics": "Titreşim",
+    "grid": "Zemin ızgarası",
+    "display": "Ekran kipi",
+    "displayMode": {
+      "windowed": "Pencereli",
+      "fullscreen": "Tam ekran"
+    },
+    "scenario": "Test senaryosu",
+    "seed": "Tohum",
+    "chaos": "Kaos tempo",
+    "scenarioMode": {
+      "empty": "Boş dünya",
+      "slalom": "Slalom",
+      "targets": "Hedef atış",
+      "sandbox": "Fizik alanı",
+      "multitank": "Çoklu tank"
+    },
+    "menu": "Ana menü",
+    "resolution": "Çizim çözünürlüğü",
+    "resolutionOption": {
+      "auto": "Otomatik (önerilen)",
+      "scale": "%{{percent}}"
+    },
+    "windowSize": "Pencere boyutu",
+    "windowSizeOption": {
+      "auto": "Değiştirme",
+      "size": "{{width}} × {{height}}"
+    }
+  },
+  "war": {
+    "faction": {
+      "amber": "Kehribar",
+      "blue": "Mavi"
+    },
+    "zone": {
+      "core": "Merkez",
+      "outpostWest": "Batı Karakolu",
+      "outpostEast": "Doğu Karakolu",
+      "ridgeNorth": "Kuzey Sırtı",
+      "ridgeSouth": "Güney Sırtı",
+      "frontNorth": "Kuzey Cephesi",
+      "frontSouth": "Güney Cephesi"
+    },
+    "zoneShort": {
+      "core": "M",
+      "outpostWest": "BK",
+      "outpostEast": "DK",
+      "ridgeNorth": "KS",
+      "ridgeSouth": "GS",
+      "frontNorth": "KC",
+      "frontSouth": "GC"
+    },
+    "neutral": "Tarafsız",
+    "contested": "Çatışmalı"
+  },
+  "online": {
+    "title": "Savaşa katıl",
+    "leave": "Savaştan ayrıl",
+    "name": "Oyuncu adı",
+    "namePlaceholder": "Pilot",
+    "faction": "Cephe",
+    "factionAuto": "Dengeye göre",
+    "enter": "Katıl",
+    "cancel": "Vazgeç",
+    "connecting": "Bağlanıyor…",
+    "error": {
+      "protocol": "Sunucu bu sürümle uyumsuz; oyunu güncelleyin.",
+      "full": "Sunucu dolu.",
+      "notFound": "Açık bir savaş dünyası bulunamadı.",
+      "unreachable": "Sunucuya ulaşılamadı.",
+      "busy": "Sunucu şu an yoğun; biraz sonra yeniden deneyin.",
+      "failed": "Savaşa katılınamadı."
+    },
+    "lost": "Bağlantı kesildi; çevrimdışı dünyaya dönüldü.",
+    "reconnecting": "Bağlantı koptu — yeniden bağlanılıyor…",
+    "ping": "{{ms}} ms",
+    "board": {
+      "title": "Skor tablosu",
+      "titleLegend": "{{title}} · {{kills}} / {{deaths}}",
+      "killsShort": "Öld.",
+      "deathsShort": "Ölüm",
+      "you": "{{name}} (siz)",
+      "away": "{{name}} (bağlantı yok)",
+      "botTag": "bot",
+      "empty": "Oyuncu yok"
+    },
+    "feed": {
+      "joined": "{{name}} katıldı",
+      "left": "{{name}} ayrıldı",
+      "kill": "{{killer}} » {{victim}}",
+      "down": "{{victim}} düştü",
+      "drowned": "{{victim}} boğuldu",
+      "zoneTaken": "{{zone}} bölgesi {{faction}} cephesine geçti",
+      "zoneLost": "{{zone}} bölgesi tarafsızlaştı",
+      "warWon": "{{faction}} savaşı kazandı ({{wins}}. zafer)"
+    }
+  }
+}

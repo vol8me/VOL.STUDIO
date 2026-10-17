@@ -1,0 +1,245 @@
+{
+  "channels": 1,
+  "description": "Kaldırma pervaneleri: kanat geçişi, aşağı itki ve motor.",
+  "durationSeconds": 4,
+  "effects": [
+    {
+      "params": {
+        "frequency": 40,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 250,
+        "gainDb": 3,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 7,
+        "mix": 0.5,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 8000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "gainDb": -10.2,
+      "mechanism": "motor",
+      "name": "blades",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 2600,
+            "mode": "lowpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bearing": 0.1,
+          "count": 11,
+          "harmonics": 10,
+          "imbalance": 0.3,
+          "load": 0.6,
+          "mechanism": "fan",
+          "noise": 0.3,
+          "rpm": 3200,
+          "tilt": 0.35
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -14.15,
+      "mechanism": "motor",
+      "name": "blades2",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 2200,
+            "mode": "lowpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bearing": 0.1,
+          "count": 11,
+          "harmonics": 8,
+          "imbalance": 0.25,
+          "load": 0.5,
+          "mechanism": "fan",
+          "noise": 0.25,
+          "rpm": 3290,
+          "tilt": 0.4
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -2.85,
+      "mechanism": "airflow",
+      "name": "turbulence",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 150,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 3200,
+            "mode": "lowpass",
+            "q": 0.6
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "aperture": 28,
+          "cavity": 2,
+          "cavityMix": 0.3,
+          "pressure": 0.75,
+          "sibilance": 0.2,
+          "tilt": -0.3,
+          "turbulence": 0.9
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -3.11,
+      "mechanism": "noise",
+      "name": "downwash",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 90,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 420,
+            "mode": "lowpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -24.69,
+      "mechanism": "tonal",
+      "name": "motor",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 520,
+            "mode": "lowpass",
+            "q": 0.9
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "frequency": 118,
+          "waveform": "sawtooth"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    },
+    {
+      "gainDb": -8.61,
+      "mechanism": "noise",
+      "name": "sub",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 90,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "loop": {
+      "crossfadeSeconds": 0.3
+    },
+    "normalize": "peak",
+    "peakDbfs": -8
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 730101
+}

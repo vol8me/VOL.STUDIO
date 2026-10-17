@@ -1,0 +1,291 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "durationSeconds": 2,
+      "layers": [
+        {
+          "name": "engine",
+          "source": {
+            "params": {
+              "bearing": 0.1,
+              "count": 4,
+              "harmonics": 24,
+              "imbalance": 0.1,
+              "load": 0.5,
+              "mechanism": "engine",
+              "noise": 0.15,
+              "rpm": 1800,
+              "tilt": 0.45
+            },
+            "primitive": "source.machine",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "fadeInSeconds": 0.05,
+        "fadeOutSeconds": 0.1,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 21
+    }
+  },
+  "delivery": {
+    "assetClass": "sfx",
+    "assetDir": "reference/production/assets/sfx/families/reference-engine-states",
+    "durationSeconds": {
+      "max": 2.5,
+      "min": 1.5
+    },
+    "package": "@volstudio/audio-synth",
+    "placement": "positional",
+    "subtype": "sfx"
+  },
+  "description": "Tek motor programından türeyen oyun durumu ailesi: enerji (rölanti, normal, yüksek devir) ve bütünlük (sağlam, hasarlı) sıralı eksenleri.",
+  "dimensions": [
+    {
+      "name": "bearing",
+      "range": {
+        "max": 0.7,
+        "min": 0.03,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "engine",
+        "param": "bearing",
+        "primitive": "source.machine",
+        "slot": "source"
+      }
+    },
+    {
+      "name": "imbalance",
+      "range": {
+        "max": 0.8,
+        "min": 0.03,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "engine",
+        "param": "imbalance",
+        "primitive": "source.machine",
+        "slot": "source"
+      }
+    },
+    {
+      "name": "load",
+      "range": {
+        "max": 0.95,
+        "min": 0.1,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "engine",
+        "param": "load",
+        "primitive": "source.machine",
+        "slot": "source"
+      }
+    },
+    {
+      "name": "noise",
+      "range": {
+        "max": 0.6,
+        "min": 0.05,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "engine",
+        "param": "noise",
+        "primitive": "source.machine",
+        "slot": "source"
+      }
+    },
+    {
+      "name": "rpm",
+      "range": {
+        "max": 5200,
+        "min": 700,
+        "scale": "log",
+        "unit": "rpm"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "engine",
+        "param": "rpm",
+        "primitive": "source.machine",
+        "slot": "source"
+      }
+    }
+  ],
+  "familyId": "reference-engine-states",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 6,
+    "states": [
+      {
+        "axis": "energy",
+        "descriptor": "centroidHz",
+        "direction": 1
+      },
+      {
+        "axis": "energy",
+        "descriptor": "maxMomentaryLufs",
+        "direction": 1
+      },
+      {
+        "axis": "integrity",
+        "descriptor": "flatness",
+        "direction": 1
+      }
+    ]
+  },
+  "roles": {
+    "energy": {
+      "high": {
+        "load": {
+          "max": 0.95,
+          "min": 0.85
+        },
+        "rpm": {
+          "max": 3600,
+          "min": 3200
+        }
+      },
+      "idle": {
+        "load": {
+          "max": 0.25,
+          "min": 0.15
+        },
+        "rpm": {
+          "max": 950,
+          "min": 850
+        }
+      },
+      "normal": {
+        "load": {
+          "max": 0.55,
+          "min": 0.45
+        },
+        "rpm": {
+          "max": 1900,
+          "min": 1700
+        }
+      }
+    },
+    "integrity": {
+      "damaged": {
+        "bearing": {
+          "max": 0.4,
+          "min": 0.3
+        },
+        "imbalance": {
+          "max": 0.55,
+          "min": 0.45
+        },
+        "noise": {
+          "max": 0.3,
+          "min": 0.22
+        }
+      },
+      "intact": {
+        "bearing": {
+          "max": 0.08,
+          "min": 0.03
+        },
+        "imbalance": {
+          "max": 0.08,
+          "min": 0.03
+        },
+        "noise": {
+          "max": 0.1,
+          "min": 0.05
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 7,
+  "title": "Referans motor durumları",
+  "variants": [
+    {
+      "key": "high",
+      "roles": {
+        "energy": "high",
+        "integrity": "intact"
+      },
+      "tags": []
+    },
+    {
+      "key": "high-damaged",
+      "roles": {
+        "energy": "high",
+        "integrity": "damaged"
+      },
+      "tags": []
+    },
+    {
+      "key": "idle",
+      "roles": {
+        "energy": "idle",
+        "integrity": "intact"
+      },
+      "tags": []
+    },
+    {
+      "key": "idle-damaged",
+      "roles": {
+        "energy": "idle",
+        "integrity": "damaged"
+      },
+      "tags": []
+    },
+    {
+      "key": "normal",
+      "roles": {
+        "energy": "normal",
+        "integrity": "intact"
+      },
+      "tags": []
+    },
+    {
+      "key": "normal-damaged",
+      "roles": {
+        "energy": "normal",
+        "integrity": "damaged"
+      },
+      "tags": []
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

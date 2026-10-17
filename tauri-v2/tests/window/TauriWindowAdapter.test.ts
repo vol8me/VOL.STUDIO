@@ -1,0 +1,246 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { TauriWindowAdapter } from '../../src/window/TauriWindowAdapter';
+
+const fakes = vi.hoisted(() => ({
+  invoke: vi.fn(),
+  isTauri: vi.fn().mockReturnValue(false),
+}));
+
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: fakes.invoke,
+  isTauri: fakes.isTauri,
+}));
+
+/**
+ * Bekleyen promise zincirlerini boşaltır.
+ *
+ * Sabit sayıda `await Promise.resolve()` gözlemcinin iç mikro-görev sayısına
+ * bağımlı kalır; makro göreve düşmek zincirin derinliğinden bağımsızdır.
+ */
+function flushPromises(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function makeWindow() {
+  let resized: (() => void) | null = null;
+  const unlisten = vi.fn();
+  const target = {
+    center: vi.fn().mockResolvedValue(undefined),
+    onResized: vi.fn((handler: () => void) => {
+      resized = handler;
+      return Promise.resolve(unlisten);
+    }),
+    setFullscreen: vi.fn().mockResolvedValue(undefined),
+    setSize: vi.fn().mockResolvedValue(undefined),
+  };
+  const readFullscreen = vi.fn<() => Promise<boolean>>().mockResolvedValue(false);
+
+  return {
+    target,
+    readFullscreen,
+    unlisten,
+    emitResize: () => resized?.(),
+  };
+}
+
+describe('TauriWindowAdapter', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('native olmayan ortamda pencere çağrılarını güvenli no-op yapar', async () => {
+    const adapter = new TauriWindowAdapter({ enabled: false });
+
+    expect(adapter.isAvailable()).toBe(false);
+    await expect(adapter.isFullscreen()).resolves.toBe(false);
+    await expect(adapter.setFullscreen(true)).resolves.toBeUndefined();
+    await expect(adapter.setResolution(1280, 720)).resolves.toBeUndefined();
+
+    const stop = await adapter.onFullscreenChange(vi.fn());
+    expect(stop).toEqual(expect.any(Function));
+    expect(stop()).toBeUndefined();
+  });
+
+  it('tam ekran ve mantıksal çözünürlüğü native pencereye uygular', async () => {
+    const { target } = makeWindow();
+    const size = { type: 'Logical', width: 1600, height: 900 };
+    const adapter = new TauriWindowAdapter({
+      enabled: true,
+      window: target,
+      createLogicalSize: () => size as never,
+    });
+
+    await adapter.setFullscreen(true);
+    await adapter.setResolution(1600, 900);
+
+    expect(adapter.isAvailable()).toBe(true);
+    expect(target.setFullscreen).toHaveBeenCalledWith(true);
+    expect(target.setSize).toHaveBeenCalledWith(size);
+    expect(target.center).toHaveBeenCalledOnce();
+  });
+
+  it('gerçek tam ekran durumunu varsayılan olarak kabuk komutundan okur', async () => {
+    // Linux'ta `Window.isFullscreen()` yalnız uygulamanın kendi isteğini
+    // hatırlar; pencere yöneticisinin değişimini GDK'dan okuyan komut görür.
+    fakes.invoke.mockResolvedValue(true);
+    const { target } = makeWindow();
+    const adapter = new TauriWindowAdapter({ enabled: true, window: target });
+
+    await expect(adapter.isFullscreen()).resolves.toBe(true);
+    expect(fakes.invoke).toHaveBeenCalledExactlyOnceWith('window_fullscreen_state');
+  });
+
+  it('geçersiz çözünürlüğü reddeder ve varsayılan LogicalSize üreticisi çalışır', async () => {
+    const { target } = makeWindow();
+    const adapter = new TauriWindowAdapter({ enabled: true, window: target });
+
+    await expect(adapter.setResolution(0, 720)).rejects.toThrow(RangeError);
+    await expect(adapter.setResolution(1280.5, 720)).rejects.toThrow(RangeError);
+    expect(target.setSize).not.toHaveBeenCalled();
+
+    await adapter.setResolution(1280, 720);
+    const sent = target.setSize.mock.calls[0][0] as { type: string; width: number; height: number };
+    expect(sent.type).toBe('Logical');
+    expect(sent.width).toBe(1280);
+    expect(sent.height).toBe(720);
+    expect(target.center).toHaveBeenCalledOnce();
+  });
+
+  it('resize sonrası yalnız değişen tam ekran durumunu bildirir ve aboneliği kaldırır', async () => {
+    const { target, readFullscreen, emitResize, unlisten } = makeWindow();
+    const listener = vi.fn();
+    const adapter = new TauriWindowAdapter({
+      enabled: true,
+      window: target,
+      readFullscreen,
+    });
+    const stop = await adapter.onFullscreenChange(listener);
+
+    emitResize();
+    await flushPromises();
+    expect(listener).not.toHaveBeenCalled();
+
+    readFullscreen.mockResolvedValue(true);
+    emitResize();
+    await flushPromises();
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledWith(true);
+
+    stop();
+    stop();
+    expect(unlisten).toHaveBeenCalledOnce();
+  });
+
+  it('resize durum okuması reddedilirse listener zinciri ayakta kalır', async () => {
+    const { target, readFullscreen, emitResize } = makeWindow();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const listener = vi.fn();
+    const adapter = new TauriWindowAdapter({
+      enabled: true,
+      window: target,
+      readFullscreen,
+    });
+    const stop = await adapter.onFullscreenChange(listener);
+
+    readFullscreen.mockRejectedValueOnce(new Error('IPC kapandı'));
+    emitResize();
+    await flushPromises();
+
+    expect(listener).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalled();
+    stop();
+    warn.mockRestore();
+  });
+
+  it('taban okunurken gelen resize kaybolmaz', async () => {
+    const { target, readFullscreen, emitResize } = makeWindow();
+    const listener = vi.fn();
+
+    // Taban okuması GEÇ dönsün; tam bu sırada bir resize gelsin. Dinleyici
+    // taban okumasından SONRA bağlansaydı bu olay tamamen kaybolurdu.
+    let resolveBaseline: ((value: boolean) => void) | undefined;
+    readFullscreen
+      .mockImplementationOnce(() => new Promise<boolean>((resolve) => (resolveBaseline = resolve)))
+      .mockResolvedValue(true);
+
+    const adapter = new TauriWindowAdapter({
+      enabled: true,
+      window: target,
+      readFullscreen,
+    });
+    const subscription = adapter.onFullscreenChange(listener);
+    await flushPromises();
+    emitResize();
+    resolveBaseline?.(false);
+
+    const stop = await subscription;
+    await flushPromises();
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledWith(true);
+    stop();
+  });
+
+  it('art arda resize sorgularında sonucu sıralar, eski yanıt yenisini ezmez', async () => {
+    const { target, readFullscreen, emitResize } = makeWindow();
+    const listener = vi.fn();
+    const adapter = new TauriWindowAdapter({
+      enabled: true,
+      window: target,
+      readFullscreen,
+    });
+    const stop = await adapter.onFullscreenChange(listener);
+    await flushPromises();
+    listener.mockClear();
+
+    // İlk sorgu GEÇ, ikinci sorgu ERKEN döner. Sıralama olmasaydı geç dönen
+    // eski yanıt `lastState`i `true`ya çekip ardından `false` bildirir; yani
+    // dinleyici pencere hiç pencere kipine dönmemişken "çıktı" derdi.
+    let resolveSlow: ((value: boolean) => void) | undefined;
+    readFullscreen
+      .mockImplementationOnce(() => new Promise<boolean>((resolve) => (resolveSlow = resolve)))
+      .mockResolvedValue(false);
+
+    emitResize();
+    emitResize();
+    resolveSlow?.(true);
+    await flushPromises();
+
+    expect(listener).not.toHaveBeenCalled();
+    stop();
+  });
+});
+
+describe('TauriWindowAdapter.close', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('native yüzey varsa uygulama çıkış komutunu çağırır', async () => {
+    const { target } = makeWindow();
+    const exitApplication = vi.fn().mockResolvedValue(undefined);
+    const adapter = new TauriWindowAdapter({ enabled: true, window: target, exitApplication });
+
+    await adapter.close();
+
+    expect(exitApplication).toHaveBeenCalledTimes(1);
+  });
+
+  it('native yüzey varsa varsayılan exitApplication invoke ile exit_application çağırır', async () => {
+    fakes.invoke.mockResolvedValue(undefined);
+    const { target } = makeWindow();
+    const adapter = new TauriWindowAdapter({ enabled: true, window: target });
+
+    await adapter.close();
+
+    expect(fakes.invoke).toHaveBeenCalledTimes(1);
+    expect(fakes.invoke).toHaveBeenCalledWith('exit_application');
+  });
+
+  it('native yüzey yokken sessizce hiçbir şey yapmaz', async () => {
+    const adapter = new TauriWindowAdapter({ enabled: false });
+
+    await expect(adapter.close()).resolves.toBeUndefined();
+    expect(adapter.isAvailable()).toBe(false);
+  });
+});

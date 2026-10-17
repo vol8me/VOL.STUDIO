@@ -1,0 +1,437 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "buses": {
+        "space": {
+          "effects": [
+            {
+              "params": {
+                "amount": 0.28,
+                "damp": 0.55,
+                "decay": 0.7,
+                "preDelay": 0.012,
+                "roomSize": 0.55
+              },
+              "primitive": "effect.reverb",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 110,
+                "order": 2,
+                "response": "highpass"
+              },
+              "primitive": "effect.eq-pass",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "channels": 1,
+      "description": "Engel çarpması: ağır gövde, plaka çınlaması ve savrulan çakıl.",
+      "durationSeconds": 0.7,
+      "effects": [
+        {
+          "params": {
+            "frequency": 34,
+            "order": 3,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "edge": "low",
+            "frequency": 100,
+            "gainDb": -2
+          },
+          "primitive": "effect.eq-shelf",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 300,
+            "gainDb": 2.5,
+            "q": 0.8
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1700,
+            "gainDb": 3,
+            "q": 0.7
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "character": "tanh",
+            "driveDb": 5,
+            "mix": 0.75,
+            "outputDb": 0
+          },
+          "primitive": "effect.saturation",
+          "version": 1
+        },
+        {
+          "params": {
+            "edge": "high",
+            "frequency": 4500,
+            "gainDb": 2.5
+          },
+          "primitive": "effect.eq-shelf",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 11000,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "layers": [
+        {
+          "gainDb": -29.57,
+          "mechanism": "impact",
+          "name": "plate",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.5,
+                "damping": 0.7,
+                "decay": 0.45,
+                "frequency": 520,
+                "inharmonicity": 0.002,
+                "layout": "bar",
+                "modes": 10
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -14
+            }
+          ],
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.2
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -12.67,
+          "mechanism": "pressure",
+          "name": "body",
+          "role": "body",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -10
+            }
+          ],
+          "source": {
+            "params": {
+              "body": 0.9,
+              "bodyDecay": 0.3,
+              "bodyHz": 72,
+              "decay": 1.8,
+              "positive": 0.007,
+              "rise": 0.0002
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -14.3,
+          "mechanism": "pressure",
+          "name": "punch",
+          "role": "body",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -12
+            }
+          ],
+          "source": {
+            "params": {
+              "body": 0.85,
+              "bodyDecay": 0.18,
+              "bodyHz": 170,
+              "decay": 1.2,
+              "positive": 0.003,
+              "rise": 0.0003
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0008,
+              "curve": "exponential",
+              "decay": 0.25,
+              "release": 0.01,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -2.8,
+          "mechanism": "noise",
+          "name": "grit",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 900,
+                "mode": "bandpass",
+                "q": 0.5
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 250,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -16
+            }
+          ],
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -74.26,
+          "mechanism": "mechanical",
+          "name": "debris",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0.9,
+              "mass": 40,
+              "materialA": "metal",
+              "materialB": "stone",
+              "size": 0.9,
+              "velocity": 2
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.004
+        }
+      ],
+      "master": {
+        "dcBlockHz": 20,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.1,
+        "normalize": "peak",
+        "peakDbfs": -4
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8404
+    }
+  },
+  "delivery": {
+    "assetClass": "sfx",
+    "assetDir": "public/assets/audio/sfx/steel/families/crash",
+    "durationSeconds": {
+      "max": 0.95,
+      "min": 0.55
+    },
+    "package": "@volstudio/vol-test",
+    "placement": "positional",
+    "subtype": "sfx"
+  },
+  "description": "Engel çarpması: ağır gövde, plaka çınlaması ve savrulan çakıl.",
+  "dimensions": [
+    {
+      "name": "grit-brightness",
+      "range": {
+        "max": 2400,
+        "min": 500,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "grit",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "plate-decay",
+      "range": {
+        "max": 0.65,
+        "min": 0.25,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "plate",
+        "param": "decay",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "plate-pitch",
+      "range": {
+        "max": 640,
+        "min": 380,
+        "scale": "linear",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "plate",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    }
+  ],
+  "familyId": "vt-hardsteel-crash",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 4
+  },
+  "roles": {
+    "intensity": {
+      "hard": {
+        "plate-decay": {
+          "max": 0.65,
+          "min": 0.5
+        },
+        "plate-pitch": {
+          "max": 460,
+          "min": 380
+        }
+      },
+      "soft": {
+        "plate-decay": {
+          "max": 0.38,
+          "min": 0.25
+        },
+        "plate-pitch": {
+          "max": 640,
+          "min": 540
+        }
+      }
+    },
+    "rarity": {
+      "common": {
+        "grit-brightness": {
+          "max": 900,
+          "min": 500
+        }
+      },
+      "rare": {
+        "grit-brightness": {
+          "max": 2400,
+          "min": 1500
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 8304,
+  "title": "VOL.TEST crash",
+  "variants": [
+    {
+      "key": "hard-a",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "common"
+      },
+      "tags": [
+        "crash"
+      ]
+    },
+    {
+      "key": "hard-b",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "rare"
+      },
+      "tags": [
+        "crash"
+      ]
+    },
+    {
+      "key": "soft-a",
+      "roles": {
+        "intensity": "soft",
+        "rarity": "common"
+      },
+      "tags": [
+        "crash"
+      ]
+    },
+    {
+      "key": "soft-b",
+      "roles": {
+        "intensity": "soft",
+        "rarity": "rare"
+      },
+      "tags": [
+        "crash"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 4
+}

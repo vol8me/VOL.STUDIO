@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="13.5" height="8.6" viewBox="0 0 13.5 8.6">
+  <defs>
+    <linearGradient id="pad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#aeb5ca"/>
+      <stop offset="0.5" stop-color="#4d546a"/>
+      <stop offset="1" stop-color="#141720"/>
+    </linearGradient>
+    <linearGradient id="claw" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f2f5f8"/>
+      <stop offset="0.45" stop-color="#a3acb6"/>
+      <stop offset="1" stop-color="#3a4048"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.7 0.34Q10.8 0.69 13.1 -0.19Q10.8 1.72 4.7 2.06Z" fill="url(#claw)" stroke="#0d1217" stroke-width=".55" stroke-linejoin="round"/>
+  <path d="M4.7 3.44Q10.8 3.78 13.1 4.3Q10.8 4.82 4.7 5.16Z" fill="url(#claw)" stroke="#0d1217" stroke-width=".55" stroke-linejoin="round"/>
+  <path d="M4.7 6.54Q10.8 6.88 13.1 8.79Q10.8 7.91 4.7 8.26Z" fill="url(#claw)" stroke="#0d1217" stroke-width=".55" stroke-linejoin="round"/>
+  <path d="M0.8 4.3Q0.8 0.86 3.91 0.69Q7.83 1.03 7.83 4.3Q7.83 7.57 3.91 7.91Q0.8 7.74 0.8 4.3Z" fill="url(#pad)" stroke="#0d1217" stroke-width=".95" stroke-linejoin="round"/>
+  <path d="M1.57 2.58Q3.91 1.55 6.26 2.75" fill="none" stroke="#ffffff" stroke-opacity=".34" stroke-width=".55" stroke-linecap="round"/>
+  <circle cx="4" cy="4.3" r="1.72" fill="#0d1217" fill-opacity=".55"/>
+</svg>

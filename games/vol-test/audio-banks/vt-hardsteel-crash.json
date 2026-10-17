@@ -1,0 +1,171 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "vt-hardsteel-crash",
+    "hash": "sha256:6d4e32c70068aee8b8cd6207977bc9895359bc0bd94a5f026219eb206ff84818",
+    "path": "devtools/audio-synth/records/families/vt-hardsteel-crash/family.json",
+    "seed": 8304,
+    "variationPolicy": "role-subrange-v1",
+    "version": 4
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/vol-test",
+  "quality": {
+    "hash": "sha256:7605ae80370c44d1509be70bb78451f918f6fb7689070f7279289771d82b689f",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/vt-hardsteel-crash/quality.json"
+  },
+  "roleAxes": {
+    "intensity": [
+      "hard",
+      "soft"
+    ],
+    "rarity": [
+      "common",
+      "rare"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 9516,
+        "encodedHash": "sha256:b5695260a73d387259c42f5967cdd0018da28d26785cad1f77e196077dfb782c",
+        "path": "public/assets/audio/sfx/steel/families/crash/hard-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.68,
+        "centroidHz": 316.29318510231485,
+        "pitchHz": 224.96113283854277
+      },
+      "durationSeconds": 0.6973333333333334,
+      "key": "hard-a",
+      "loudness": {
+        "integratedLufs": -23.80813193001513,
+        "maxMomentaryLufs": -21.078275955452106,
+        "truePeakDbtp": -3.8531765775832993
+      },
+      "manifest": {
+        "hash": "sha256:b33cf0c95bdaf149da94722dfd0ffd979be8e72352e86c68e63db42f8796e83f",
+        "path": "audio-manifests/sfx/steel/families/crash/hard-a.json"
+      },
+      "pcmHash": "sha256:df53ac4fb1c064233a7da74a89f54450c2e8c617d1d1ca93d78b7e76d76724f8",
+      "programHash": "sha256:a20bba3ec5e1c02329059aa55a275793c35d7dd5edee997e66899f12eb434edf",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "common"
+      },
+      "tags": [
+        "crash"
+      ],
+      "variantId": "v-ce88553806190548"
+    },
+    {
+      "asset": {
+        "bytes": 9682,
+        "encodedHash": "sha256:dae574e0d549b51839aacf3283b0c8d1d6690c01f3de3b0ec3b1e7bae80ac5db",
+        "path": "public/assets/audio/sfx/steel/families/crash/hard-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.68,
+        "centroidHz": 634.6402002733024,
+        "pitchHz": 213.4977936454266
+      },
+      "durationSeconds": 0.6973333333333334,
+      "key": "hard-b",
+      "loudness": {
+        "integratedLufs": -23.012733133555027,
+        "maxMomentaryLufs": -20.34594788739621,
+        "truePeakDbtp": -4.28053954942326
+      },
+      "manifest": {
+        "hash": "sha256:d366cba69d51544adbf83b25319e76acbbf565e3e6f880da50292027feae2312",
+        "path": "audio-manifests/sfx/steel/families/crash/hard-b.json"
+      },
+      "pcmHash": "sha256:dddeeac6499be02f877290d2f22afa6e323bfb009ade6c2f5c4c0b32292028f4",
+      "programHash": "sha256:502eadffe9cd60d0069a1da35a669ab7b2f086df211d16760eb495cc3de4db57",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "rare"
+      },
+      "tags": [
+        "crash"
+      ],
+      "variantId": "v-2ea180af43b3f15f"
+    },
+    {
+      "asset": {
+        "bytes": 9585,
+        "encodedHash": "sha256:e1baefc78b2b17fbd31f114db1a01144b636ce5a2b12fa0e8c9cabe329676b9f",
+        "path": "public/assets/audio/sfx/steel/families/crash/soft-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.68,
+        "centroidHz": 334.3204953317605,
+        "pitchHz": 226.55690655579463
+      },
+      "durationSeconds": 0.6973333333333334,
+      "key": "soft-a",
+      "loudness": {
+        "integratedLufs": -23.421806381200465,
+        "maxMomentaryLufs": -20.61038492736339,
+        "truePeakDbtp": -4.1231995149365614
+      },
+      "manifest": {
+        "hash": "sha256:ea7d59b078cff8593b16fec44334863ee82e1fc1bfed6e54d82b9482d3b68a37",
+        "path": "audio-manifests/sfx/steel/families/crash/soft-a.json"
+      },
+      "pcmHash": "sha256:b96cbe17b7988f940c61193286406b6cf9382dac3444c1558e54e230c9fc1368",
+      "programHash": "sha256:1e0b3b49e26731aac8b9cccabaaf9c6244bf35298880f767d37ef61f256628ae",
+      "roles": {
+        "intensity": "soft",
+        "rarity": "common"
+      },
+      "tags": [
+        "crash"
+      ],
+      "variantId": "v-634d66e0c9bb96fa"
+    },
+    {
+      "asset": {
+        "bytes": 9749,
+        "encodedHash": "sha256:6e6213fbfc9fcb481abdb4845532036ac504737837ec372048ac1d9ad7b09bb0",
+        "path": "public/assets/audio/sfx/steel/families/crash/soft-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.68,
+        "centroidHz": 717.657817242798,
+        "pitchHz": 226.52128306401497
+      },
+      "durationSeconds": 0.6973333333333334,
+      "key": "soft-b",
+      "loudness": {
+        "integratedLufs": -23.222462686005994,
+        "maxMomentaryLufs": -20.369715305632266,
+        "truePeakDbtp": -4.117083932185304
+      },
+      "manifest": {
+        "hash": "sha256:5e45692aa492da233652a1acddd05c6e67b030def46ac432d2d2e66aa7b807d7",
+        "path": "audio-manifests/sfx/steel/families/crash/soft-b.json"
+      },
+      "pcmHash": "sha256:3e0be23ca61a7e07247fb3a92fd1dea0c28d0bbcc88c35c2a883e28017e32d52",
+      "programHash": "sha256:a062f716e17e61d2cbec9bb1ba93d9b315fe66494dc7559e90f6d53862ff7ff1",
+      "roles": {
+        "intensity": "soft",
+        "rarity": "rare"
+      },
+      "tags": [
+        "crash"
+      ],
+      "variantId": "v-321e976d1a8a15a2"
+    }
+  ]
+}
