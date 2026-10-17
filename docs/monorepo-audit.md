@@ -1486,7 +1486,23 @@ native paketin 197 testi ve %100 işlev kapsamı geçti.
 Rust değişmeyen kaynak makbuzunu kullandı. Kaynak `07ae25a9` olarak temiz
 ağaçta commit edildi; pre-commit `quick` geçti. Ardından taze `signoff`
 7,1 dk'da Q01'den durdu; kapsam/E2E/tam ses/güvenlik aşamaları NOT-RUN.
-Q01 düzeltildi ve odaklı Rust kapısı geçti; taze tam tekrar henüz tamamlanmadı.
+Q01 düzeltildi ve odaklı Rust kapısı geçti. `ddb7a234` temiz ağacındaki ikinci
+taze `signoff` 46,3 dk'da vitrin E2E'sinden düştü: bütün `high` aşamaları
+taze PASS; E2E'de 1.035 PASS, 20 mevcut atlama ve iki WebKit hatası vardı.
+VOL.TEST E2E ve sonraki tam ses/güvenlik aşamaları NOT-RUN kaldı.
+
+İki E2E hatası ürün kusuru olarak sayılmadı. ActionBar izinde ilk basıştan
+Enter'a en az 3.132 ms geçmişti; üç saniyelik cooldown bittiğinden ürünün
+ikinci basışı kabul etmesi doğruydu. `devtools/vol-showcase/tests/e2e/hudInteraction.spec.ts` artık kontrollü
+saatle 2.999 ms'de engeli, sonraki karede hazır durumu ve başarılı tekrar
+basışı sınar. Font testi aynı 15 sekmeyi üç tur dolaşırken 60 sn'ye takıldı;
+tarama ile ilk yükseklik ölçümü aynı ziyarette birleşti, bütün sekmeler ve
+iddialar korundu. `devtools/vol-showcase/tests/e2e/fontLoad.spec.ts` ayrıca zaman aşımından sonra bekletilmiş
+gerçek font yanıtını serbest bırakır; yerel FontFace nesneleri loaded olurken
+document.fonts boş ve bütün sekme yükseklikleri sabit kalır. Abort testi bu
+geç-dosya davranışının kanıtı sayılmaz. İki dosyanın iki motorlu odaklı koşusu
+34/34 PASS. Ara rAF'ları tek tek yürütmeden aynı sınırı sınayan son saat
+adımından sonra ActionBar 6/6 PASS; taze tam tekrar henüz tamamlanmadı.
 Kapsam, atlama veya güvenlik eşiği ve piksel temeli gevşetilmedi; genel
 timeout artırılmadı.
 

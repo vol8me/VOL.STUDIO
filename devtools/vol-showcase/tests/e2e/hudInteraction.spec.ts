@@ -16,6 +16,13 @@ async function open(page: Page, tab: 'hud' | 'touch' | 'advanced'): Promise<void
   await selectTab(page, tab);
 }
 
+async function openTimedActionBar(page: Page): Promise<void> {
+  await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
+  await open(page, 'touch');
+  // Sekme kurulumu rAF bekler; önce doğal yüklenir, etkileşimlerde süre yalnız testle ilerler.
+  await page.clock.pauseAt(new Date('2026-01-01T01:00:00Z'));
+}
+
 const cardOf = (page: Page, inner: string): Locator =>
   page.locator('.vol-showcase-card').filter({ has: page.locator(inner) });
 const probe = (card: Locator): Locator => card.locator('[data-probe="intents"]');
@@ -26,7 +33,7 @@ test.describe('ActionBar kullanılamaz slot', () => {
   test('toolbar tek sekme durağıdır; oklar gezinir; bekleyen slot odaklanabilir kalır, basış reject verir ve balon kalan süreyi söyler', async ({
     page,
   }) => {
-    await open(page, 'touch');
+    await openTimedActionBar(page);
     const card = cardOf(page, '.vol-action-bar');
     const bar = card.locator('.vol-action-bar');
     await expect(bar).toHaveAttribute('role', 'toolbar');
@@ -42,6 +49,7 @@ test.describe('ActionBar kullanılamaz slot', () => {
     await expect(tower).toHaveJSProperty('disabled', false);
     await tower.focus();
     await expect(tower).toBeFocused();
+    await page.clock.fastForward(1000);
     await page.keyboard.press('Enter');
     await expect(probe(card)).toHaveAttribute('data-log', /press:ActionBar reject:ActionBar$/);
     await expect(visibleBubble(page)).toContainText(/Build Tower \[1\]: \d s left/);
@@ -50,6 +58,10 @@ test.describe('ActionBar kullanılamaz slot', () => {
     // Ok tuşu bir sonraki slota geçer; bekleme bitince aynı slot yine çalışır.
     await page.keyboard.press('ArrowRight');
     await expect(slots.nth(1)).toBeFocused();
+    // Demo 3 saniye soğur: son milisaniyeden önce engel sürer, bitişi sonraki rAF duyurur.
+    await page.clock.fastForward(1999);
+    await expect(tower).toHaveAttribute('aria-disabled', 'true');
+    await page.clock.runFor(17);
     await expect(tower).not.toHaveAttribute('aria-disabled', 'true', { timeout: 6000 });
     await tower.click();
     await expect(probe(card)).toHaveAttribute('data-log', /reject:ActionBar press:ActionBar$/);
@@ -77,7 +89,7 @@ test.describe('ActionBar kullanılamaz slot', () => {
   });
 
   test('kısayol tuşu bekleyen kuleyi çalıştırmaz; hazır olunca çalıştırır', async ({ page }) => {
-    await open(page, 'touch');
+    await openTimedActionBar(page);
     const card = cardOf(page, '.vol-action-bar');
     await card.locator('.vol-action-bar__slot').nth(2).focus();
     await page.keyboard.press('1');
@@ -87,6 +99,21 @@ test.describe('ActionBar kullanılamaz slot', () => {
     await expect(card.locator('.vol-action-bar__slot').first()).toHaveAttribute(
       'aria-disabled',
       'true',
+    );
+    await page.clock.fastForward(2999);
+    await expect(card.locator('.vol-action-bar__slot').first()).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    await page.clock.runFor(17);
+    await expect(card.locator('.vol-action-bar__slot').first()).not.toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    await page.keyboard.press('1');
+    await expect(probe(card)).toHaveAttribute(
+      'data-log',
+      'press:ActionBar reject:ActionBar press:ActionBar',
     );
   });
 });

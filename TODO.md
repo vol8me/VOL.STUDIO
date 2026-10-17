@@ -196,7 +196,7 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
 
 ### F14 — VOL.TEST üzerinden CORE ve network sağlamlaştırması
 
-- [ ] **[P1] F14.1 — Dört ajanlı kaynak ve cihaz turu (KISMİ).** 114 tekilleştirilmiş kusur düzeltildi ve regresyonları eklendi; generic sahiplik CORE/network'e taşındı. Fast/high, 24 istemci/65 sn üretim build'i kabulü, Lenovo 18+16 native kontrol ve steamrt4 paketleme PASS. İlk taze signoff Q01 native test yolu çakışmasından düştü; düzeltme ve 32 paralel sabit-saat regresyonu geçti. Kalan: taze tam signoff ve erişimi kaybolan Deck'te güncel paket/runtime/ağ kabulü ([rapor §28](docs/monorepo-audit.md)). Kapanır: bu iki kabul kanıtlanır; üretim ağı/soak/insan kabulleri kendi F13/F09 işlerinde açık kalır.
+- [ ] **[P1] F14.1 — Dört ajanlı kaynak ve cihaz turu (KISMİ).** 114 tekilleştirilmiş kusur düzeltildi ve regresyonları eklendi; generic sahiplik CORE/network'e taşındı. Fast/high, 24 istemci/65 sn üretim build'i kabulü, Lenovo 18+16 native kontrol ve steamrt4 paketleme PASS. İlk signoff'taki Q01 disk yolu çakışması düzeltildi; ikinci taze koşuda high geçti, iki WebKit testinin zaman yönetimi E2E'yi düşürdü. Kontrollü saat, ortak sekme ölçümü ve gerçek geç-font senaryosu sonrası odaklı iki motor koşusu 34/34 PASS. Kalan: taze tam signoff ve erişimi kaybolan Deck'te güncel paket/runtime/ağ kabulü ([rapor §28](docs/monorepo-audit.md)). Kapanır: bu iki kabul kanıtlanır; üretim ağı/soak/insan kabulleri kendi F13/F09 işlerinde açık kalır.
 
 ## Kapatılanlar
 

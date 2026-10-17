@@ -1,5 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
-import { SHOWCASE_TABS, selectTab } from './support/determinism';
+import { expect, test, type Page, type Route } from '@playwright/test';
+import { SHOWCASE_TABS, selectTab, type ShowcaseTab } from './support/determinism';
 import { scan, type Finding } from './support/textFit';
 
 /**
@@ -48,10 +48,14 @@ async function boot(page: Page): Promise<void> {
 }
 
 /** Her sekmenin panel yüksekliği (yerleşim parmak izi). */
-async function tabHeights(page: Page): Promise<Record<string, number>> {
+async function tabHeights(
+  page: Page,
+  inspect?: (tab: ShowcaseTab) => Promise<void>,
+): Promise<Record<string, number>> {
   const out: Record<string, number> = {};
   for (const tab of SHOWCASE_TABS) {
     await selectTab(page, tab);
+    await inspect?.(tab);
     out[tab] = await page.evaluate(
       (id) =>
         Math.round(
@@ -102,7 +106,7 @@ test.describe('yavaş yazı tipi', () => {
 });
 
 test.describe('yazı tipi yüklenemez', () => {
-  test('uygulama sistem yedeğiyle açılır, kırpılma/taşma yok, geç dosya yerleşimi değiştirmez', async ({
+  test('uygulama sistem yedeğiyle açılır, kırpılma/taşma yok ve yerleşim kararlıdır', async ({
     page,
   }) => {
     const warnings: string[] = [];
@@ -125,16 +129,60 @@ test.describe('yazı tipi yüklenemez', () => {
     ).toBe(false);
 
     const findings: Finding[] = [];
-    for (const tab of SHOWCASE_TABS) {
-      await selectTab(page, tab);
+    // Aynı görünümde tarama ve ilk ölçüm yapılır; fazladan tam sekme turu gerekmez.
+    const fallbackHeights = await tabHeights(page, async (tab) => {
       findings.push(...(await scan(page, tab, 'fallback-1280x800')));
-    }
+    });
     expect(findings).toEqual([]);
 
-    const fallbackHeights = await tabHeights(page);
     await page.waitForTimeout(500);
     expect(await tabHeights(page)).toEqual(fallbackHeights);
     console.log('yedek yazı tipi sekme yükseklikleri', JSON.stringify(fallbackHeights));
+  });
+
+  test('zaman aşımından sonra yüklenen gerçek font dosyası yedek yerleşimi değiştirmez', async ({
+    page,
+  }) => {
+    const pending = new Set<Route>();
+    const release = async (): Promise<void> => {
+      const routes = [...pending];
+      pending.clear();
+      await Promise.all(routes.map((route) => route.continue()));
+    };
+    await page.clock.install();
+    await page.addInitScript(() => {
+      const faces: FontFace[] = [];
+      const add = document.fonts.add.bind(document.fonts);
+      document.fonts.add = (face: FontFace): FontFaceSet => {
+        faces.push(face);
+        return add(face);
+      };
+      (window as unknown as { __requestedFonts: FontFace[] }).__requestedFonts = faces;
+    });
+    await page.route(FONT_URL, (route) => {
+      pending.add(route);
+    });
+    try {
+      await page.setViewportSize(VIEWPORT);
+      // Font yanıtları beklerken load olayını beklemek bu senaryoyu kilitler.
+      await page.goto('/', { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => pending.size).toBe(2);
+      // Ürünün 30 sn font sınırını gerçek zamanı ve test timeout'unu büyütmeden geçirir.
+      await page.clock.fastForward(60_000);
+      await page.waitForSelector('[role="tablist"]');
+      expect(await page.evaluate(() => document.fonts.size)).toBe(0);
+      const before = await tabHeights(page);
+
+      await release();
+      await page.waitForFunction(() => {
+        const faces = (window as unknown as { __requestedFonts: FontFace[] }).__requestedFonts;
+        return faces.length === 2 && faces.every((face) => face.status === 'loaded');
+      });
+      expect(await page.evaluate(() => document.fonts.size)).toBe(0);
+      expect(await tabHeights(page)).toEqual(before);
+    } finally {
+      await release();
+    }
   });
 
   test('yedek yazı tipinde sekme yükseklikleri yüklü yazı tipine göre ölçülür', async ({
