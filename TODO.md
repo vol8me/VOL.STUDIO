@@ -44,7 +44,6 @@ checkbox veya toplam tutulmaz.
 
 - [ ] **[P3] F10.4 — Haptik scheduler kararı.** **Kapanır:** mevcut driver/scheduler gecikme, eşzamanlılık ve iptal örnekleriyle ölçülür; worker gerekiyorsa tek sahipli geçiş regresyonla uygulanır, gerekmiyorsa ölçümle mevcut mimari korunur.
 - [ ] **[P3] F10.5 — Yeni donanım profilleri.** **Kapanır:** OLED Deck/Steam Machine erişilebilir olduğunda ayrı kısa frame/runtime profili alınır; başka cihazın sonucu taşınmaz.
-- [ ] **F10.6 — Dal bakımı.** **Kapanır:** merge hedefleri belirlenir, eski yerel/uzak dalların erişilebilir işi korunur; Git bakımı kayıp commit/çalışma olmadan ayrı işlemde tamamlanır.
 - [ ] **[P3] F10.12 — Tauri minör geçişi.** Ön koşul: F09.1/F09.2 native temel çizgisi. **Kapanır:** planlanan Tauri geçişinde Cargo/pnpm sürüm paritesi ve Rust kapısı korunur; Windows/Android/Linux kısa native karşılaştırması yapılır, çözülen advisory kayıtları kaldırılır; toplu cargo update yapılmaz.
 
 ### F13 — Network ve mevcut oyun tüketicisi
@@ -57,6 +56,8 @@ checkbox veya toplam tutulmaz.
 - [ ] **[P1] F14.1 — Deck'in son paket ağ turu.** Son kaynakta Lenovo 18+16 ve gerçek SLR4 kol gezinmesi geçti; son Deck ağ turu erişim kaybıyla NOT-RUN kaldı. **Kapanır:** aynı paketin erken kopuş/aynı oturumla dönüş, süre aşımı/çevrimdışı dönüş, yeniden giriş ve temiz çıkış akışları kısa cihaz turunda kaydedilir; tura ait geçici süreçlerin temizliği doğrulanır. Eski paketin ağ sonucu yeniye taşınmaz.
 
 ## Kapatılanlar
+
+- [x] F10.6 — Doğrulanmış bundle ve commit atalarıyla iş kaybı olmadan 15 eski uzak/2 yerel dal kaldırıldı; dev ileri alındı, hardening dalı yayımlandı; main ve üç etiket korundu (§29).
 
 - [x] F10.2 — Desteklenen ESLint 10/stylelint 17/jsdom 30/Vitest 5 geçişleri high, tam UI, oyun E2E ve tam ses kapsamıyla doğrulandı; TypeScript parser desteğinin sınırında 6.0.3 tutuldu (§29).
 

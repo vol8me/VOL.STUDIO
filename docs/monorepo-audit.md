@@ -1837,6 +1837,13 @@ Son koddan VOL.TEST ve VOL.UI Windows release/NSIS paketleri üretildi;
 EXE/yükleyici ve sunucu bundle karmaları yerel kanıtta saklanır. Paket üretimi,
 bu açık native kullanım kabullerini kapatmaz.
 
+Dal bakımında 15 eski uzak ve iki yerel dalın uçları hem doğrulanmış tam
+Git bundle yedeğinde hem yayımlanan commit'in ataları arasında korundu.
+Uzak yayın/temizlik tek atomik push ve eski uçların birebir lease kontrolüyle
+tamamlandı; normal pre-push `high` geçti. `dev` ileri alındı, hardening dalı
+yayımlandı; `main` ve üç etiket değişmedi. Yedek git dışı yerel kanıttır;
+erişilebilir commit kaybı veya tarihçe yeniden yazımı yoktur.
+
 Yerel kanıtlar VOL.TEST'in git dışı records alanında
 `task13-high-accepted.json`, `task13-ui-check-accepted.log`,
 `task13-ui-counts.json`, `task13-ui-source-before.json`,
